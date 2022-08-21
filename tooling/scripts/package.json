@@ -1,0 +1,39 @@
+{
+  "name": "@f3/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src"
+  },
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "format": "prettier --check . --ignore-path .gitignore --ignore-path .prettierignore",
+    "script": "pnpm with-env tsx ./src/script.ts",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "devDependencies": {
+    "@f3/env": "workspace:*",
+    "@f3/eslint-config": "workspace:*",
+    "@f3/prettier-config": "workspace:*",
+    "@f3/tsconfig": "workspace:*",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  },
+  "eslintConfig": {
+    "root": true,
+    "extends": [
+      "@f3/eslint-config/base"
+    ],
+    "ignorePatterns": [
+      "**/*.js"
+    ]
+  },
+  "prettier": "@f3/prettier-config"
+}
