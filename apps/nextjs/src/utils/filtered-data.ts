@@ -76,8 +76,8 @@ export const filterData = (
 
         if (
           filters.beforeAfterDirection === "before"
-            ? stationEndTime >= filterTime
-            : stationEndTime <= filterTime
+            ? stationEndTime > filterTime
+            : stationEndTime < filterTime
         ) {
           includeThisLocationMarkerOnTime = false;
         }
