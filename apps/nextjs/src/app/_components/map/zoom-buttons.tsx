@@ -10,6 +10,7 @@ import { mapStore } from "~/utils/store/map";
 
 export const ZoomButtons = () => {
   const mapRef = mapStore.use.ref();
+  const tiles = mapStore.use.tiles();
   const [width] = useWindowSize();
   // mapRef.current.SmoothWheelZoom.disable();
 
@@ -59,6 +60,23 @@ export const ZoomButtons = () => {
         className="flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow"
       >
         <Minus size={16} className="text-foreground" />
+      </button>
+      <button
+        onClick={(e) => {
+          mapStore.setState((s) => ({
+            tiles: s.tiles === "satellite" ? "street" : "satellite",
+          }));
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-background text-black shadow"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={tiles === "street" ? "/satellite.png" : "/street.png"}
+          alt={tiles}
+          className="h-8 object-cover"
+        />
       </button>
     </div>
   );

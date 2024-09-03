@@ -143,7 +143,8 @@ export const MemoGroupMarker = memo(
   (prev, next) =>
     prev.show === next.show &&
     prev.group.id === next.group.id &&
-    prev.selectedEventIdInGroup === next.selectedEventIdInGroup,
+    prev.selectedEventIdInGroup === next.selectedEventIdInGroup &&
+    prev.group.events.length === next.group.events.length,
 );
 
 MemoGroupMarker.displayName = "MemoGroupMarker";

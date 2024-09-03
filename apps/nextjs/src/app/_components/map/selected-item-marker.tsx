@@ -12,10 +12,10 @@ export const SelectedIconMarkerLayer = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
   const eventId = selectedItemStore.use.eventId();
   const locationId = selectedItemStore.use.locationId();
-  const { data: allLocationMarkers } =
+  const { data: filteredLocationMarkers } =
     api.location.getAllLocationMarkers.useQuery();
 
-  const selectedItem = allLocationMarkers?.find(
+  const selectedItem = filteredLocationMarkers?.find(
     (location) => location.id === locationId,
   );
 
