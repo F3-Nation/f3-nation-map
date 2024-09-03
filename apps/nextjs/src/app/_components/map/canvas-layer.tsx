@@ -14,6 +14,7 @@ import { isTruthy } from "@f3/shared/common/functions";
 import { useTheme } from "@f3/ui/theme";
 
 import type { RouterOutputs } from "~/trpc/types";
+import { isTouchDevice } from "~/utils/is-touch-device";
 import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
@@ -42,6 +43,7 @@ export const CanvasIconLayer = ({
 }: {
   markerLocations: MarkerLocation[];
 }) => {
+  const isOnTouchDevice = isTouchDevice();
   const map = useMap();
   const canvasIconLayer = useRef<L.CanvasIconLayer>();
   const zoom = mapStore.use.zoom();
@@ -87,16 +89,20 @@ export const CanvasIconLayer = ({
                   icon: L.icon(iconProps),
                   data: { idx, item },
                 }),
-                // A larger clear icon to make it easier to click
-                new L.Marker<MarkerType>([item.lat, item.lon], {
-                  icon: L.icon(clearIconProps),
-                  data: { idx, item },
-                }),
+                ...(isOnTouchDevice
+                  ? [
+                      // A larger clear icon to make it easier to click
+                      new L.Marker<MarkerType>([item.lat, item.lon], {
+                        icon: L.icon(clearIconProps),
+                        data: { idx, item },
+                      }),
+                    ]
+                  : []),
               ];
         return markers;
       })
       .filter(isTruthy);
-  }, [markerLocations, filteredLocationMarkers, zoom, isDark]);
+  }, [filteredLocationMarkers, markerLocations, zoom, isDark, isOnTouchDevice]);
 
   const onZoomLevelsChange = useCallback(() => {
     if (canvasIconLayer.current && !isClose) {
