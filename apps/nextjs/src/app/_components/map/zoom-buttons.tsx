@@ -48,7 +48,7 @@ export const ZoomButtons = () => {
           e.preventDefault();
         }}
       >
-        <Plus size={16} />
+        <Plus size={16} className="text-foreground" />
       </button>
       <button
         onClick={(e) => {
@@ -58,7 +58,7 @@ export const ZoomButtons = () => {
         }}
         className="flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow"
       >
-        <Minus size={16} />
+        <Minus size={16} className="text-foreground" />
       </button>
     </div>
   );
