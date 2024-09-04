@@ -24,10 +24,12 @@ type CanvasEventData = {
 }[];
 
 const getIconSizeForZoom = (zoom: number): number => {
+  // these need to be even or else it looks like a square
   if (zoom > 11) return 13;
   if (zoom > 9) return 10;
-  if (zoom > 7) return 7;
-  if (zoom > 5) return 2;
+  if (zoom > 7) return 8;
+  if (zoom > 5) return 4;
+  if (zoom > 3) return 2;
   return 2;
 };
 
