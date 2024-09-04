@@ -21,7 +21,7 @@ export const SelectedIconMarkerLayer = () => {
 
   // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
   return (
-    <Pane name="selected-item-marker" style={{ zIndex: 1000 }}>
+    <Pane name="selected-item-marker" style={{ zIndex: 1001 }}>
       {!selectedItem ? null : (
         <MemoGroupMarker
           group={selectedItem}
