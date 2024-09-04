@@ -48,7 +48,7 @@ const SelectedItem = (props: {
 
   return (
     <>
-      <div className="pointer-events-auto relative h-40 w-full max-w-[450px] overflow-hidden overflow-y-auto rounded-lg bg-background p-2 text-sm text-foreground shadow-xl dark:border-[1px] dark:border-muted">
+      <div className="pointer-events-auto relative w-[450px] overflow-hidden overflow-y-auto rounded-lg bg-background p-2 text-sm text-foreground shadow-xl transition-all dark:border-[1px] dark:border-muted">
         <div className="text-lg font-bold">{selectedEvent.name}</div>
         <div className="mt-2 flex flex-row items-start gap-2">
           <div className="flex flex-shrink-0 flex-col items-center">

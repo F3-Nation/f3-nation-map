@@ -7,7 +7,7 @@ export const DebugInfo = () => {
   const { filteredLocationMarkers } = useFilteredMapResults();
 
   return (
-    <div className="absolute right-0 top-24 z-[1000] h-min bg-foreground/10 p-2 lg:bottom-0 lg:right-0">
+    <div className="absolute right-0 top-48 z-[1000] h-min bg-foreground/10 p-2 lg:bottom-0 lg:right-0">
       <div className="m-0 p-0">Zoom: {zoom.toFixed(1)}</div>
       <div className="m-0 p-0">North: {bounds?.getNorth().toFixed(5)}</div>
       <div className="m-0 p-0">East: {bounds?.getEast().toFixed(5)}</div>

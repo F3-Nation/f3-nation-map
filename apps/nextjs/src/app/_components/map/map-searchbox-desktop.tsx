@@ -120,7 +120,7 @@ export function MapSearchBox({
                 setIsFocused(false);
               }}
               value={text}
-              className="h-[42px] w-full rounded-full bg-foreground text-base text-background caret-background placeholder:text-background/60"
+              className="h-[42px] w-full rounded-full bg-foreground pl-5 text-base text-background caret-background placeholder:text-background/60"
               onChange={(e) => {
                 setIsLoading(true);
                 shouldRedirectOnResult.current = true;

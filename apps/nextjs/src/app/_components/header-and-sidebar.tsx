@@ -52,9 +52,9 @@ export const HeaderAndSidebar = (props: { children: React.ReactNode }) => {
             height={64}
             className="absolute left-4"
           />
-          <div className="w-2/5">
+          <div className="relative w-2/5">
             <MapSearchBox hideLogo className="" />
-            <p className="mt-1 text-center text-xs">
+            <p className="mt-1 w-full text-center text-xs">
               Search F3’s network of 4,368 free, peer-led workouts for men
             </p>
           </div>

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
-import { ExternalLink } from "lucide-react";
 import { SHORT_DAY_ORDER } from "node_modules/@f3/shared/src/app/constants";
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
@@ -11,7 +10,6 @@ import { onlyUnique } from "@f3/shared/common/functions";
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { dayjs } from "~/utils/frontendDayjs";
 import { mapStore } from "~/utils/store/map";
-import { ModalType, useModalStore } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 import BootSvgComponent from "../SVGs/boot-camp";
@@ -82,34 +80,6 @@ const SearchResultItem = (props: {
             height={48}
             alt={selectedLocation.logo ?? "F3 logo"}
           />
-          <button
-            className="cursor-pointer text-center text-xs text-blue-500 underline"
-            onClick={() =>
-              useModalStore.setState({
-                open: true,
-                type: ModalType.HOW_TO_JOIN,
-              })
-            }
-          >
-            How to join
-          </button>
-          {selectedLocation.website ? (
-            <a
-              href={
-                selectedLocation.website ? selectedLocation.website : "f3.com"
-              }
-              target="_blank"
-              className="mb-1 flex items-center justify-end text-blue-500 underline"
-              rel="noreferrer"
-            >
-              <div className="flex text-xs">Group site</div>
-              <div className="flex">
-                <ExternalLink className="m-1 h-3 w-3" />
-              </div>
-            </a>
-          ) : (
-            ""
-          )}
         </div>
         {/* Use flex-col to stack items vertically */}
         <div className="flex flex-col overflow-hidden">
