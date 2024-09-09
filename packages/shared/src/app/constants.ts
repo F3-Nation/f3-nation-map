@@ -19,6 +19,9 @@ export const SHORT_DAY_ORDER = ["Su", "M", "Tu", "W", "Th", "F", "Sa"] as const;
 export const DEFAULT_ZOOM = 2.9;
 export const DEFAULT_CENTER = [35, -80.955] as [number, number];
 
+export const CLOSE_ZOOM = 12;
+export const FAR_ZOOM = 3;
+
 export enum BreakPoints {
   LG = 1024,
 }

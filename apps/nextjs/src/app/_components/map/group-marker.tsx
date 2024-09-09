@@ -98,13 +98,13 @@ export const MemoGroupMarker = memo(
                       <button
                         key={markerIdx + "-" + id}
                         className={cn(
-                          "flex-1 cursor-pointer border-none bg-foreground py-2 text-center text-background",
+                          "flex-1 cursor-pointer bg-foreground py-2 text-center text-background",
                           // Use a class name to find the event id
                           `leaflet-eventid-${marker.id}`,
                           {
-                            "border-l-[1px]": !isStart,
+                            "border-l-[0.5px]": !isStart,
                             "rounded-r-full": isEnd,
-                            "rounded-l-full border-t-[1px]": isStart,
+                            "rounded-l-full": isStart,
                             "bg-red-600 font-bold dark:bg-red-400":
                               selectedEventIdInGroup === marker.id,
                           },

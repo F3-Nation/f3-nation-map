@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMap } from "react-leaflet";
 
+import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { isTruthy } from "@f3/shared/common/functions";
 import { useTheme } from "@f3/ui/theme";
 
@@ -54,7 +55,7 @@ export const CanvasIconLayer = ({
 
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > 12;
+  const isClose = zoom > CLOSE_ZOOM;
 
   const farMarkers = useMemo(() => {
     const markerData: (MarkerLocation | Marker)[] =
