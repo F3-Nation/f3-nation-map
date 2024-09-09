@@ -29,7 +29,7 @@ import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerLayer } from "./selected-item-marker";
 import { UserLocationIconAndMarker } from "./user-location-icon-and-marker";
 import { useUserLocation } from "./user-location-provider";
-import { ZoomButtons } from "./zoom-buttons";
+import { ZoomAndTileButtons } from "./zoom-and-tile-buttons";
 import { ZoomedMarkerPane } from "./zoomed-marker-pane";
 
 // const DEFAULT_CENTER = { lat: 36.13910556091472, lng: -81.6757511960024 };
@@ -134,7 +134,7 @@ const MapContent = ({
       <SelectedIconMarkerLayer />
       <UserLocationIconAndMarker />
       <PlaceResultIconPane />
-      <ZoomButtons />
+      <ZoomAndTileButtons />
       <CenterPointMarker />
 
       {process.env.NODE_ENV === "development" ? <DebugInfo /> : null}

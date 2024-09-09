@@ -8,7 +8,7 @@ import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
 
 import { mapStore } from "~/utils/store/map";
 
-export const ZoomButtons = () => {
+export const ZoomAndTileButtons = () => {
   const mapRef = mapStore.use.ref();
   const tiles = mapStore.use.tiles();
   const [width] = useWindowSize();
