@@ -30,3 +30,12 @@
 # Other
 
 Rebuilt git history on 9-3-24 to clean it
+
+# leaflet server component
+
+- Path is not defined. Not sure where to go from here:
+- https://github.com/pimterry/leaflet-map-server-component/blob/master/src/index.js
+- https://medium.com/@pimterry/building-a-server-rendered-map-component-part-2-using-client-side-libraries-6f1bb751f31c
+- https://github.com/pimterry/leaflet-map-server-component/blob/master/package.json
+- https://www.npmjs.com/package/sandboxed-module
+- https://github.com/felixge/node-sandboxed-module/pull/61/files
