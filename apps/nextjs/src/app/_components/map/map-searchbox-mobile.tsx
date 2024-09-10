@@ -3,7 +3,7 @@
 import type { ComponentProps } from "react";
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { XCircle } from "lucide-react";
+import { Search, XCircle } from "lucide-react";
 
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
@@ -35,6 +35,9 @@ export function MapSearchBoxMobile({
       )}
       {/* Search box component for the map */}
       <div className="relative w-full">
+        <div className="pointer-events-none absolute left-3 top-2">
+          <Search className="text-muted-foreground" />
+        </div>
         <Input
           ref={inputRef}
           type="text"
@@ -47,7 +50,7 @@ export function MapSearchBoxMobile({
             setIsFocused(false);
           }}
           value={text}
-          className="h-[42px] rounded-full bg-foreground text-base text-background caret-background placeholder:text-muted-foreground"
+          className="h-[42px] rounded-full bg-foreground pl-10 text-base text-background caret-background placeholder:text-muted-foreground"
           // enterKeyHint="done"
           onChange={(e) => {
             searchStore.setState({
@@ -81,7 +84,7 @@ export function MapSearchBoxMobile({
               setIsFocused(false);
             }}
           >
-            <XCircle color="#aaa" />
+            <XCircle className="text-muted-foreground" />
           </button>
         )}
       </div>

@@ -17,6 +17,7 @@ const initialState = {
   center: null as LatLng | null,
   ref: createRef<Map>(),
   placeResultLocation: null as LatLngLiteral | null,
+  tiles: "street" as "satellite" | "street",
 };
 
 export const mapStore = new ZustandStore({

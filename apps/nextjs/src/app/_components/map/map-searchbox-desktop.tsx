@@ -3,7 +3,7 @@
 import type { ComponentProps } from "react";
 import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
-import { XCircle } from "lucide-react";
+import { Search, XCircle } from "lucide-react";
 
 import { SnapPoint } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
@@ -120,7 +120,7 @@ export function MapSearchBox({
                 setIsFocused(false);
               }}
               value={text}
-              className="h-[42px] w-full rounded-full bg-foreground text-base text-background caret-background placeholder:text-background/60"
+              className="h-[42px] w-full rounded-full bg-foreground pl-10 text-base text-background caret-background placeholder:text-background/60"
               onChange={(e) => {
                 setIsLoading(true);
                 shouldRedirectOnResult.current = true;
@@ -144,6 +144,9 @@ export function MapSearchBox({
               }}
               onSubmit={() => onSubmit()}
             />
+            <div className="pointer-events-none absolute left-3 top-2">
+              <Search color="#aaa" />
+            </div>
             <div className="absolute right-2 top-2 flex flex-row items-center gap-2">
               {isLoading && <Spinner className="h-4 w-4 border-2" />}
               {text && (

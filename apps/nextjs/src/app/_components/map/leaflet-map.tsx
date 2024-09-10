@@ -5,6 +5,7 @@ import "~/utils/smooth-zoom-wheel"; // with modifications
 
 import "leaflet/dist/leaflet.css";
 
+import type { TileLayerProps } from "react-leaflet";
 import { useWindowSize } from "@react-hook/window-size";
 import { MapContainer, TileLayer } from "react-leaflet";
 
@@ -28,7 +29,7 @@ import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerLayer } from "./selected-item-marker";
 import { UserLocationIconAndMarker } from "./user-location-icon-and-marker";
 import { useUserLocation } from "./user-location-provider";
-import { ZoomButtons } from "./zoom-buttons";
+import { ZoomAndTileButtons } from "./zoom-and-tile-buttons";
 import { ZoomedMarkerPane } from "./zoomed-marker-pane";
 
 // const DEFAULT_CENTER = { lat: 36.13910556091472, lng: -81.6757511960024 };
@@ -82,50 +83,58 @@ const MapContent = ({
 }: {
   markerLocations: RouterOutputs["location"]["getLocationMarkersSparse"];
 }) => {
+  const tile = mapStore.use.tiles();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   RERENDER_LOGS && console.log("MapContent rerender");
-  const tileUrl = isDark
-    ? // https://github.com/CartoDB/basemap-styles
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  // const googleHybrid = L.tileLayer(
+  //   "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
+  //   {
+  //     maxZoom: 20,
+  //     subdomains: ["mt0", "mt1", "mt2", "mt3"],
+  //   },
+  // );
+  const terrainProps: TileLayerProps = {
+    url: "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
+    maxZoom: 20,
+    subdomains: ["mt0", "mt1", "mt2", "mt3"],
+  };
 
-  const attribution =
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  // https://github.com/CartoDB/basemap-styles
+  const lightStreetProps: TileLayerProps = {
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+  };
+
+  // https://github.com/CartoDB/basemap-styles
+  const darkStreetProps: TileLayerProps = {
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+  };
+
+  const tileProps: TileLayerProps & { key: string } = {
+    key: `${tile}-${isDark ? "dark" : "light"}`,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    noWrap: true,
+    ...(tile === "satellite"
+      ? terrainProps
+      : isDark
+        ? darkStreetProps
+        : lightStreetProps),
+  };
 
   return (
     <>
       <MapListener />
-      <TileLayer
-        key={isDark ? "dark" : "light"}
-        // More tile options: https://leaflet-extras.github.io/leaflet-providers/preview/
-        // url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
-
-        // Dark
-        // url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-        // attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-
-        // Smooth
-        // url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
-        // attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-
-        // Outdoors
-        // url="https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png"
-        // attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-
-        // Actually free?
-        url={tileUrl}
-        attribution={attribution}
-        subdomains="abcd"
-        noWrap
-      />
+      <TileLayer {...tileProps} />
       <ZoomedMarkerPane />
       <GeoJsonPane />
       <CanvasIconLayer markerLocations={markerLocations} />
       <SelectedIconMarkerLayer />
       <UserLocationIconAndMarker />
       <PlaceResultIconPane />
-      <ZoomButtons />
+      <ZoomAndTileButtons />
       <CenterPointMarker />
 
       {process.env.NODE_ENV === "development" ? <DebugInfo /> : null}

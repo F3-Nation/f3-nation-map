@@ -1,23 +1,26 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
-import type { InferInsertModel } from "@f3/db";
 import { env } from "@f3/env";
 import { DAY_ORDER } from "@f3/shared/app/constants";
 import { groupMarkersByLocation } from "@f3/shared/app/functions";
-import { mapData } from "@f3/shared/app/mock";
 import { onlyUnique } from "@f3/shared/common/functions";
 
+import type {
+  GroupedMapData,
+  LeafletWorkoutData,
+} from "../../shared/src/app/types";
 import { db, eq, schema } from ".";
+import { getLocationData } from "./utils/get-location-data";
 
 dayjs.extend(customParseFormat);
 
 if (!("DATABASE_URL" in env))
   throw new Error("DATABASE_URL not found on .env.development");
 
-export const organizedMapData = groupMarkersByLocation(mapData);
-
 const _reseedFromScratch = async () => {
+  const mapData = await getLocationData();
+  const organizedMapData = groupMarkersByLocation(mapData);
   SEED_LOGS && console.log("Seed start", env.DATABASE_URL);
 
   await db.delete(schema.nextAuthAccounts);
@@ -38,10 +41,10 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.orgTypes);
   await db.delete(schema.slackUsers);
 
-  await insertDatabaseStructure();
+  await insertDatabaseStructure(mapData);
 
   SEED_LOGS && console.log("Inserting data");
-  await insertMapData();
+  await insertMapData(organizedMapData);
 
   SEED_LOGS && console.log("Seed done");
 };
@@ -64,13 +67,12 @@ const SEED_LOGS = false;
 
 const { locations, events, orgs } = schema;
 
-const ORG_TYPES = ["Region"];
-const EVENT_CATEGORIES = mapData
-  .map((location) => location.Type)
-  .filter(onlyUnique);
-const EVENT_TYPES = EVENT_CATEGORIES;
-
-export async function insertDatabaseStructure() {
+export async function insertDatabaseStructure(mapData: LeafletWorkoutData[]) {
+  const ORG_TYPES = ["Region"];
+  const EVENT_CATEGORIES = mapData
+    .map((location) => location.Type)
+    .filter(onlyUnique);
+  const EVENT_TYPES = EVENT_CATEGORIES;
   await db.insert(schema.orgTypes).values(ORG_TYPES.map((name) => ({ name })));
 
   const insertedCategories = await db
@@ -87,11 +89,7 @@ export async function insertDatabaseStructure() {
   );
 }
 
-type InsertOrg = InferInsertModel<typeof orgs>;
-type InsertLocation = InferInsertModel<typeof locations>;
-type InsertEvent = InferInsertModel<typeof events>;
-
-export async function insertMapData() {
+export async function insertMapData(organizedMapData: GroupedMapData[]) {
   const [region] = await db
     .select({ id: schema.orgTypes.id, name: schema.orgTypes.name })
     .from(schema.orgTypes)
@@ -101,44 +99,51 @@ export async function insertMapData() {
     .select({ id: schema.eventTypes.id, name: schema.eventTypes.name })
     .from(schema.eventTypes);
 
-  for (const locationData of organizedMapData) {
-    const insertOrg: InsertOrg = {
-      name: locationData.Region.slice(0, 100),
-      orgTypeId: region?.id ?? 0,
-      logo: locationData.Image,
-      website: locationData.Website,
-      isActive: true,
-    };
-    SEED_LOGS && console.log("Inserting org", insertOrg);
-    const [insertedOrg] = await db
-      .insert(schema.orgs)
-      .values(insertOrg)
-      .onConflictDoUpdate({
-        target: [schema.orgs.id],
-        set: insertOrg,
-      })
-      .returning();
+  const orgList = await db
+    .insert(schema.orgs)
+    .values(
+      organizedMapData.map((locationData) => ({
+        name: locationData.Region.slice(0, 100),
+        orgTypeId: region?.id ?? 0,
+        logo: locationData.Image,
+        website: locationData.Website,
+        isActive: true,
+      })),
+    )
+    .onConflictDoNothing()
+    .returning({ id: schema.orgs.id, name: schema.orgs.name });
 
-    const insertLocation: InsertLocation = {
-      name: locationData.Location,
-      description: locationData.Location,
-      lat: Math.round(locationData.Latitude * 1e7) / 1e7,
-      lon: Math.round(locationData.Longitude * 1e7) / 1e7,
-      isActive: true,
-      orgId: insertedOrg?.id ?? 0,
-    };
-    // Insert or update location
-    // SEED_LOGS && console.log("Inserting location", insertLocation.name);
-    SEED_LOGS && console.log("Inserting locaiton", insertLocation.name);
-    const locationResult = await db
-      .insert(locations)
-      .values(insertLocation)
-      .returning({ insertedId: locations.id });
+  console.log("Inserted orgs", orgList.length);
 
-    const locationId = locationResult[0]?.insertedId;
+  const orgNameDict: Record<string, number> = orgList.reduce(
+    (acc, org) => ({ ...acc, [org.name]: org.id }),
+    {},
+  );
 
-    // Insert events for each group
-    for (const group of locationData.Groups) {
+  const locationList = await db
+    .insert(schema.locations)
+    .values(
+      organizedMapData.map((locationData) => ({
+        name: locationData.Location,
+        description: locationData.Location,
+        lat: Math.round(locationData.Latitude * 1e7) / 1e7,
+        lon: Math.round(locationData.Longitude * 1e7) / 1e7,
+        isActive: true,
+        orgId: orgNameDict[locationData.Region.slice(0, 100)],
+      })),
+    )
+    .onConflictDoNothing()
+    .returning({ id: schema.locations.id, name: schema.locations.name });
+
+  console.log("Inserted locations", locationList.length);
+
+  const locationIdDict: Record<string, number> = locationList.reduce(
+    (acc, location) => ({ ...acc, [location.name]: location.id }),
+    {},
+  );
+
+  const insertEvents = organizedMapData.flatMap((locationData) =>
+    locationData.Groups.map((group) => {
       const dayOfWeek = DAY_ORDER.indexOf(group["Day of week"]);
 
       const [startTimeRaw, endTimeRaw] = group.Time.split("-").map((time) =>
@@ -151,8 +156,8 @@ export async function insertMapData() {
       const endTime = endTimeRaw
         ? dayjs(endTimeRaw.toLowerCase(), "hh:mm a")
         : undefined;
-      const insertEvent: InsertEvent = {
-        locationId: locationId,
+      return {
+        locationId: locationIdDict[locationData.Location],
         isActive: true,
         isSeries: true,
         highlight: false,
@@ -164,16 +169,17 @@ export async function insertMapData() {
         eventTypeId: eventTypes.find((et) => et.name === group.Type)?.id, // Bootcamp
         description: group.Notes,
         recurrencePattern: "weekly",
-        meta: {
-          markerIcon: group["Marker Icon"],
-          markerColor: group["Marker Color"],
-          iconColor: group["Icon Color"],
-          customSize: group["Custom Size"],
-        },
       };
+    }),
+  );
 
-      SEED_LOGS && console.log("Inserting event", insertEvent.name);
-      await db.insert(events).values(insertEvent);
-    }
-  }
+  console.log("Inserting events", insertEvents.length);
+
+  const events = await db
+    .insert(schema.events)
+    .values(insertEvents)
+    .onConflictDoNothing()
+    .returning({ id: schema.events.id });
+
+  console.log("Inserted events", events.length);
 }

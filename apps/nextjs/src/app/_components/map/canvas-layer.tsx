@@ -10,10 +10,12 @@ import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMap } from "react-leaflet";
 
+import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { isTruthy } from "@f3/shared/common/functions";
 import { useTheme } from "@f3/ui/theme";
 
 import type { RouterOutputs } from "~/trpc/types";
+import { isTouchDevice } from "~/utils/is-touch-device";
 import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
@@ -23,10 +25,12 @@ type CanvasEventData = {
 }[];
 
 const getIconSizeForZoom = (zoom: number): number => {
+  // these need to be even or else it looks like a square
   if (zoom > 11) return 13;
   if (zoom > 9) return 10;
-  if (zoom > 7) return 7;
-  if (zoom > 5) return 2;
+  if (zoom > 7) return 8;
+  if (zoom > 5) return 4;
+  if (zoom > 3) return 2;
   return 2;
 };
 
@@ -42,6 +46,7 @@ export const CanvasIconLayer = ({
 }: {
   markerLocations: MarkerLocation[];
 }) => {
+  const isOnTouchDevice = isTouchDevice();
   const map = useMap();
   const canvasIconLayer = useRef<L.CanvasIconLayer>();
   const zoom = mapStore.use.zoom();
@@ -50,7 +55,7 @@ export const CanvasIconLayer = ({
 
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > 12;
+  const isClose = zoom > CLOSE_ZOOM;
 
   const farMarkers = useMemo(() => {
     const markerData: (MarkerLocation | Marker)[] =
@@ -87,16 +92,20 @@ export const CanvasIconLayer = ({
                   icon: L.icon(iconProps),
                   data: { idx, item },
                 }),
-                // A larger clear icon to make it easier to click
-                new L.Marker<MarkerType>([item.lat, item.lon], {
-                  icon: L.icon(clearIconProps),
-                  data: { idx, item },
-                }),
+                ...(isOnTouchDevice
+                  ? [
+                      // A larger clear icon to make it easier to click
+                      new L.Marker<MarkerType>([item.lat, item.lon], {
+                        icon: L.icon(clearIconProps),
+                        data: { idx, item },
+                      }),
+                    ]
+                  : []),
               ];
         return markers;
       })
       .filter(isTruthy);
-  }, [markerLocations, filteredLocationMarkers, zoom, isDark]);
+  }, [filteredLocationMarkers, markerLocations, zoom, isDark, isOnTouchDevice]);
 
   const onZoomLevelsChange = useCallback(() => {
     if (canvasIconLayer.current && !isClose) {

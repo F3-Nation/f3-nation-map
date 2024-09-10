@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink, X } from "lucide-react";
 
@@ -13,6 +12,7 @@ import { dayjs } from "~/utils/frontendDayjs";
 import { Responsive } from "~/utils/responsive";
 import { ModalType, useModalStore } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
+import { ImageWithFallback } from "../image-with-fallback";
 import BootSvgComponent from "../SVGs/boot-camp";
 import RuckSvgComponent from "../SVGs/ruck";
 import SwimSvgComponent from "../SVGs/swim";
@@ -48,15 +48,15 @@ const SelectedItem = (props: {
 
   return (
     <>
-      <div className="pointer-events-auto relative h-40 w-full max-w-[450px] overflow-hidden overflow-y-auto rounded-lg bg-background p-2 text-sm text-foreground shadow-xl dark:border-[1px] dark:border-muted">
+      <div className="pointer-events-auto relative w-[450px] overflow-hidden overflow-y-auto rounded-lg bg-background p-2 text-sm text-foreground shadow-xl transition-all dark:border-[1px] dark:border-muted">
         <div className="text-lg font-bold">{selectedEvent.name}</div>
         <div className="mt-2 flex flex-row items-start gap-2">
           <div className="flex flex-shrink-0 flex-col items-center">
-            <Image
-              unoptimized
+            <ImageWithFallback
               src={
                 selectedLocation.logo ? selectedLocation.logo : "/f3_logo.png"
               }
+              fallbackSrc="/f3_logo.png"
               loading="lazy"
               width={64}
               height={64}

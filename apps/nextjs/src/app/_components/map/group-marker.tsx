@@ -86,7 +86,7 @@ export const MemoGroupMarker = memo(
           className: "",
           html: ReactDOMServer.renderToString(
             <div className="flex flex-col">
-              <div className="z-10 flex flex-row">
+              <div className="flex flex-row">
                 {...events
                   .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
                   .map((marker, markerIdx, markerArray) => {
@@ -98,14 +98,15 @@ export const MemoGroupMarker = memo(
                       <button
                         key={markerIdx + "-" + id}
                         className={cn(
-                          "flex-1 cursor-pointer border-background bg-foreground py-2 text-center text-background",
+                          "flex-1 cursor-pointer border-b-[0.5px] border-t-[0.5px] bg-foreground py-2 text-center text-background",
                           // Use a class name to find the event id
                           `leaflet-eventid-${marker.id}`,
                           {
-                            "border-l-[1px] border-l-gray-600": !isStart,
+                            "border-b-0": events.length === 1,
+                            "border-l-[0.5px]": isStart,
+                            "border-r-[0.5px]": isEnd,
                             "rounded-r-full": isEnd,
-                            "rounded-l-full border-l-[1px] border-r-[1px] border-t-[1px]":
-                              isStart,
+                            "rounded-l-full": isStart,
                             "bg-red-600 font-bold dark:bg-red-400":
                               selectedEventIdInGroup === marker.id,
                           },
@@ -118,19 +119,31 @@ export const MemoGroupMarker = memo(
               </div>
               <svg
                 viewBox="0 0 40 40"
-                className="!z-0 -mt-[12px] w-[31px] self-center"
+                className="-mt-[12px] w-[31px] self-center"
               >
                 <path
                   className={cn("fill-foreground", {
                     "fill-[#dc2626] dark:fill-[#f87171]":
                       selectedEventIdInGroup !== null,
                   })}
-                  d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
+                  // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
+                  d={
+                    events.length === 1
+                      ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
+                      : "M34 14.5 L26 24.249 Q20 34.641 14 24.249 L6 14.5"
+                  }
                   stroke="none"
                 />
                 <path
-                  className="stroke-background"
-                  d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
+                  // className="stroke-background"
+                  // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
+                  d={
+                    events.length === 1
+                      ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
+                      : "M34 15 L26 24.249 Q20 34.641 14 24.249 L6 15"
+                  }
+                  stroke="background"
+                  strokeWidth={0.5}
                   fill="none"
                 />
               </svg>
@@ -143,7 +156,8 @@ export const MemoGroupMarker = memo(
   (prev, next) =>
     prev.show === next.show &&
     prev.group.id === next.group.id &&
-    prev.selectedEventIdInGroup === next.selectedEventIdInGroup,
+    prev.selectedEventIdInGroup === next.selectedEventIdInGroup &&
+    prev.group.events.length === next.group.events.length,
 );
 
 MemoGroupMarker.displayName = "MemoGroupMarker";
