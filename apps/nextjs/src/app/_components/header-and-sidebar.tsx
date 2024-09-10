@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import {
   BreakPoints,
@@ -45,13 +46,9 @@ export const HeaderAndSidebar = (props: { children: React.ReactNode }) => {
           )}
           style={{ height: HEADER_HEIGHT }}
         >
-          <Image
-            src="/f3_logo.png"
-            alt="F3 Logo"
-            width={64}
-            height={64}
-            className="absolute left-4"
-          />
+          <Link href="https://f3nation.com/" className="absolute left-4">
+            <Image src="/f3_logo.png" alt="F3 Logo" width={64} height={64} />
+          </Link>
           <div className="relative w-2/5">
             <MapSearchBox hideLogo className="" />
             <p className="mt-1 w-full text-center text-xs">
