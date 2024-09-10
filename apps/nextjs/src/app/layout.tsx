@@ -11,11 +11,14 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
+import { TooltipProvider } from "@f3/ui/tooltip";
+
 import { HeaderAndSidebar } from "./_components/header-and-sidebar";
 import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
 import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
 import { UserLocationProvider } from "./_components/map/user-location-provider";
 import ModalSwitcher from "./_components/modal/modal-switcher";
+import { ShadCnContainer } from "./_components/shad-cn-container-ref";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -55,18 +58,21 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           defaultTheme="light"
           enableSystem={false}
         >
-          <TRPCReactProvider>
-            {/* FilteredMapResultsProvider must be inside TRPCReactProvider */}
-            <UserLocationProvider>
-              <TextSearchResultsProvider>
-                <FilteredMapResultsProvider>
-                  <HeaderAndSidebar>{props.children}</HeaderAndSidebar>
-                  <ModalSwitcher />
-                </FilteredMapResultsProvider>
-              </TextSearchResultsProvider>
-            </UserLocationProvider>
-          </TRPCReactProvider>
-          <Toaster />
+          <TooltipProvider delayDuration={100}>
+            <TRPCReactProvider>
+              {/* FilteredMapResultsProvider must be inside TRPCReactProvider */}
+              <UserLocationProvider>
+                <TextSearchResultsProvider>
+                  <FilteredMapResultsProvider>
+                    <HeaderAndSidebar>{props.children}</HeaderAndSidebar>
+                    <ModalSwitcher />
+                  </FilteredMapResultsProvider>
+                </TextSearchResultsProvider>
+              </UserLocationProvider>
+            </TRPCReactProvider>
+            <Toaster />
+          </TooltipProvider>
+          <ShadCnContainer />
         </ThemeProvider>
       </body>
     </html>

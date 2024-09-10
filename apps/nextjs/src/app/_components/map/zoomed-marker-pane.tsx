@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import { useMemo } from "react";
 import { Pane } from "react-leaflet";
 
+import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { mapStore } from "~/utils/store/map";
@@ -19,7 +20,7 @@ export const ZoomedMarkerPane = () => {
   const zoom = mapStore.use.zoom();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > 12;
+  const isClose = zoom > CLOSE_ZOOM;
 
   const viewMarkers = useMemo(() => {
     return !isClose

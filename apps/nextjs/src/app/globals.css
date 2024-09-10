@@ -46,9 +46,12 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
+    .leaflet-container {
+      background-color: #262626 !important;
+    }
   }
 }
 
 .leaflet-container {
-  background-color: #2d2d2d !important;
+  background-color: #d9e7ea !important;
 }

@@ -11,7 +11,8 @@
     "clean": "rm -rf .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@f3/auth": "workspace:^0.1.0",
@@ -19,6 +20,7 @@
     "@f3/shared": "workspace:^0.1.0",
     "@f3/validators": "workspace:^0.1.0",
     "@trpc/server": "11.0.0-next-beta.264",
+    "google-spreadsheet": "^3.3.0",
     "lodash": "^4.17.21",
     "superjson": "2.2.1",
     "trpc-openapi": "^1.2.0",
@@ -29,6 +31,7 @@
     "@f3/eslint-config": "workspace:^0.2.0",
     "@f3/prettier-config": "workspace:^0.1.0",
     "@f3/tsconfig": "workspace:^0.1.0",
+    "@types/google-spreadsheet": "^3.3.2",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"

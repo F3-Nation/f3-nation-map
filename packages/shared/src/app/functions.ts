@@ -1,10 +1,9 @@
-import type { mapData } from "@f3/shared/app/mock";
-import type { GroupedMapData } from "@f3/shared/app/types";
+import type { GroupedMapData, LeafletWorkoutData } from "@f3/shared/app/types";
 import { isDDD } from "@f3/shared/app/types";
 
 import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "./constants";
 
-export function groupMarkersByLocation(_mapData: typeof mapData) {
+export function groupMarkersByLocation(_mapData: LeafletWorkoutData[]) {
   // Object to hold the results, with lat-lng as key
   const groupedMarkers: Record<string, GroupedMapData> = {};
 
@@ -17,8 +16,8 @@ export function groupMarkersByLocation(_mapData: typeof mapData) {
       groupedMarkers[locationKey] = {
         id: locationKey,
         Location: marker.Location,
-        Latitude: marker.Latitude,
-        Longitude: marker.Longitude,
+        Latitude: parseFloat(marker.Latitude),
+        Longitude: parseFloat(marker.Longitude),
         Image: marker.Image,
         Name: marker.Name.toString(),
         Region: marker.Region,

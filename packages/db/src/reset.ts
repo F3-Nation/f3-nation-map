@@ -6,6 +6,10 @@ import { db } from ".";
 
 const databaseUrl = env.DATABASE_URL;
 
+interface DbUser extends Record<string, unknown> {
+  rolname: string;
+}
+
 export const reset = async () => {
   if (!databaseUrl) return;
   if (process.env.CI) return;
@@ -23,9 +27,25 @@ export const reset = async () => {
     throw new Error("Reset cancelled");
   }
 
+  // Get all non-system users before dropping the schema
+  const users = await db.execute<DbUser>(sql`
+    SELECT rolname FROM pg_roles 
+    WHERE rolname NOT IN ('postgres', 'azure_pg_admin', 'azure_superuser', 'cloudsqlsuperuser')
+  `);
+
   await db.execute(sql`DROP SCHEMA IF EXISTS public CASCADE`);
   await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE`);
   await db.execute(sql`CREATE SCHEMA public`);
+
+  for (const user of users) {
+    await db.execute(sql`
+      GRANT USAGE ON SCHEMA public TO ${sql.raw(user.rolname)};
+      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${sql.raw(user.rolname)};
+      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${sql.raw(user.rolname)};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO ${sql.raw(user.rolname)};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO ${sql.raw(user.rolname)};
+    `);
+  }
 
   return;
 };
