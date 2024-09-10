@@ -130,7 +130,7 @@ export const MemoGroupMarker = memo(
                   d={
                     events.length === 1
                       ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
-                      : "M34 14 L26 24.249 Q20 34.641 14 24.249 L6 14"
+                      : "M34 14.5 L26 24.249 Q20 34.641 14 24.249 L6 14.5"
                   }
                   stroke="none"
                 />
@@ -140,7 +140,7 @@ export const MemoGroupMarker = memo(
                   d={
                     events.length === 1
                       ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
-                      : "M34 14 L26 24.249 Q20 34.641 14 24.249 L6 14"
+                      : "M34 15 L26 24.249 Q20 34.641 14 24.249 L6 15"
                   }
                   stroke="background"
                   strokeWidth={0.5}
