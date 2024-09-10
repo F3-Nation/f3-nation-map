@@ -65,10 +65,7 @@ const MapDrawer = () => {
         >
           <div className="max-h-svh flex-1 overflow-y-scroll" ref={scrollRef}>
             {!showResults && !!selectedLocation && !!selectedEvent ? (
-              <SelectedItem
-                selectedLocation={selectedLocation}
-                selectedEvent={selectedEvent}
-              />
+              <SelectedItem />
             ) : !showResults ? (
               <div className="flex w-full flex-row justify-center">
                 <DrawerSomeFilters />

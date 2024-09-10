@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 
@@ -13,19 +11,14 @@ import { cn } from "@f3/ui";
 import { ThemeToggle } from "@f3/ui/theme";
 
 import { Responsive } from "~/utils/responsive";
-import { filterStore } from "~/utils/store/filter";
-import { DrawerAllFilters } from "./map/drawer-all-filters";
-import { DrawerSearchResults } from "./map/drawer-search-results";
+import { DrawerFilterWrapper } from "./map/drawer-filter-wrapper";
 import { DrawerSomeFilters } from "./map/drawer-some-filters";
 import { MapSearchBox } from "./map/map-searchbox-desktop";
 import SelectedItem from "./map/selected-item";
-import { useSelectedItem } from "./map/use-selected-item";
 
 const SHOW_THEME_TOGGLE = false;
 export const HeaderAndSidebar = (props: { children: React.ReactNode }) => {
   RERENDER_LOGS && console.log("HeaderAndSidebar rerender");
-  const allFilters = filterStore.use.allFilters();
-  const { selectedLocation, selectedEvent } = useSelectedItem();
   return (
     <>
       <Responsive minWidth={BreakPoints.LG}>
@@ -38,7 +31,7 @@ export const HeaderAndSidebar = (props: { children: React.ReactNode }) => {
           <div className="flex w-full flex-row justify-center">
             <DrawerSomeFilters />
           </div>
-          {allFilters ? <DrawerAllFilters /> : <DrawerSearchResults />}
+          <DrawerFilterWrapper />
         </div>
         <div
           className={cn(
@@ -61,18 +54,14 @@ export const HeaderAndSidebar = (props: { children: React.ReactNode }) => {
           </div>
         </div>
         <div
+          className="min-h-dvh"
           style={{
             paddingLeft: SIDEBAR_WIDTH,
             paddingTop: HEADER_HEIGHT,
           }}
         >
           {props.children}
-          {selectedEvent && selectedLocation ? (
-            <SelectedItem
-              selectedEvent={selectedEvent}
-              selectedLocation={selectedLocation}
-            />
-          ) : null}
+          <SelectedItem />
         </div>
       </Responsive>
       <Responsive maxWidth={BreakPoints.LG}>

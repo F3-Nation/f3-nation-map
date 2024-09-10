@@ -69,4 +69,8 @@ export const locationRouter = createTRPCRouter({
 
     return locationEvents;
   }),
+  getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
+    const locations = await ctx.db.select().from(schema.locations).limit(10);
+    return locations;
+  }),
 });
