@@ -11,6 +11,7 @@ import { cn } from "@f3/ui";
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
 import { mapStore } from "~/utils/store/map";
+import { ModalType, useModalStore } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
@@ -70,7 +71,23 @@ export const MobileSearchResultItem = (props: {
         ) : null}
       </div>
       <div className="flex flex-row items-start gap-2">
-        <div className="flex flex-shrink-0 flex-col items-center">
+        <button
+          className="flex flex-shrink-0 flex-col items-center"
+          onClick={() =>
+            useModalStore.setState({
+              open: true,
+              type: ModalType.HOW_TO_JOIN,
+              content: searchResult.website ? (
+                <Link
+                  href={searchResult.website}
+                  className="mb-2 flex cursor-pointer text-blue-500 underline"
+                >
+                  Visit group site
+                </Link>
+              ) : null,
+            })
+          }
+        >
           <ImageWithFallback
             src={searchResult.logo ? searchResult.logo : "/f3_logo.png"}
             fallbackSrc="/f3_logo.png"
@@ -79,7 +96,10 @@ export const MobileSearchResultItem = (props: {
             height={48}
             alt={searchResult.logo ?? "F3 logo"}
           />
-        </div>
+          <p className="cursor-pointer text-center text-xs text-blue-500 underline">
+            How to join
+          </p>
+        </button>
         {/* Use flex-col to stack items vertically */}
         <div className="flex flex-col overflow-hidden">
           <div className="flex flex-row flex-wrap gap-x-2 gap-y-1 ">

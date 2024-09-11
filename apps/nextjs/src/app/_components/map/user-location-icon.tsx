@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 "use client";
 
 import { useWindowSize } from "@react-hook/window-size";
@@ -11,20 +12,48 @@ import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
 
+import { ModalType, useModalStore } from "~/utils/store/modal";
 import { useUserLocation } from "./user-location-provider";
 
 export const UserLocationIcon = () => {
   const { updateUserLocation, status, permissions } = useUserLocation();
   const [width] = useWindowSize();
 
+  const content = (
+    <div className="flex flex-col items-start gap-4">
+      <div>
+        {status === "error"
+          ? "There was an error loading your position"
+          : status === "loading"
+            ? "Your position is loading"
+            : "Your position has been successfully loaded"}
+      </div>
+      <div>
+        {permissions === "denied"
+          ? "This application does not have permissions to access your location. Please grant your browser location permissions"
+          : permissions === "granted"
+            ? "Location permissions have been granted"
+            : "Location permissions need to be granted. If the button below does not work, then you need to update your browser settings"}
+      </div>
+      <button
+        className={cn(
+          "self-center rounded-md bg-foreground px-4 py-2 text-background shadow hover:bg-foreground/90",
+        )}
+        onClick={() => updateUserLocation()}
+      >
+        Request location permissions
+      </button>
+    </div>
+  );
+
   return (
     <div
       style={{
         bottom:
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
           width < BreakPoints.LG ? MOBILE_SEARCH_RESULT_ITEM_HEIGHT + 16 : 16,
+        right: width < BreakPoints.LG ? 8 : 16,
       }}
-      className={"absolute bottom-0 right-4 z-[400] lg:bottom-4"}
+      className={"absolute z-[400]"}
     >
       <Tooltip>
         <TooltipTrigger>
@@ -33,7 +62,17 @@ export const UserLocationIcon = () => {
               variant="outline"
               size="icon"
               className="hover:bg-background focus:bg-background"
-              onClick={updateUserLocation}
+              onClick={() => {
+                if (width < BreakPoints.LG) {
+                  useModalStore.setState({
+                    open: true,
+                    type: ModalType.USER_LOCATION_INFO,
+                    content,
+                  });
+                } else {
+                  updateUserLocation();
+                }
+              }}
             >
               <div className={cn({ "animate-spin": status === "loading" })}>
                 <LocateFixed
@@ -47,20 +86,7 @@ export const UserLocationIcon = () => {
           side="bottom"
           className="mr-4 flex max-w-40 flex-col gap-2"
         >
-          <div>
-            {status === "error"
-              ? "There was an error loading your position"
-              : status === "loading"
-                ? "Your position is loading"
-                : "Your position has been successfully loaded"}
-          </div>
-          <div>
-            {permissions === "denied"
-              ? "This application does not have permissions to access your location. Please grant your browser location permissions"
-              : permissions === "granted"
-                ? "Location permissions have been granted"
-                : "Location permissions need to be granted"}
-          </div>
+          {content}
         </TooltipContent>
       </Tooltip>
     </div>

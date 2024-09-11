@@ -116,7 +116,7 @@ const SelectedItem = (props: {
               </p>
             ) : null}
             {selectedLocation.website ? (
-              <a
+              <Link
                 href={
                   selectedLocation.website ? selectedLocation.website : "f3.com"
                 }
@@ -128,7 +128,7 @@ const SelectedItem = (props: {
                 <div className="flex">
                   <ExternalLink className="m-1 h-3 w-3" />
                 </div>
-              </a>
+              </Link>
             ) : (
               ""
             )}

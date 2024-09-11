@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 export enum ModalType {
   HOW_TO_JOIN = "HOW_TO_JOIN",
+  USER_LOCATION_INFO = "USER_LOCATION_INFO",
 }
 
 export const useModalStore = create(() => ({

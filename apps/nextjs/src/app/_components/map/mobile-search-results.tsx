@@ -55,7 +55,7 @@ export const MobileSearchResults = (props: ComponentProps<"div">) => {
     <Responsive maxWidth={BreakPoints.LG}>
       <div
         className={cn("absolute bottom-2 left-0 right-0", className)}
-        style={{ zIndex: 2000 }}
+        style={{ zIndex: 1000 }}
         {...rest}
       >
         <div
