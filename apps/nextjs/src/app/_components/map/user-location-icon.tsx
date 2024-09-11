@@ -1,8 +1,12 @@
 "use client";
 
+import { useWindowSize } from "@react-hook/window-size";
 import { LocateFixed } from "lucide-react";
-import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "node_modules/@f3/shared/src/app/constants";
 
+import {
+  BreakPoints,
+  MOBILE_SEARCH_RESULT_ITEM_HEIGHT,
+} from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
@@ -11,13 +15,16 @@ import { useUserLocation } from "./user-location-provider";
 
 export const UserLocationIcon = () => {
   const { updateUserLocation, status, permissions } = useUserLocation();
+  const [width] = useWindowSize();
 
   return (
     <div
       style={{
-        bottom: MOBILE_SEARCH_RESULT_ITEM_HEIGHT + 16,
+        bottom:
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+          width < BreakPoints.LG ? MOBILE_SEARCH_RESULT_ITEM_HEIGHT + 16 : 16,
       }}
-      className={"absolute right-4 z-[400] lg:bottom-4"}
+      className={"absolute bottom-0 right-4 z-[400] lg:bottom-4"}
     >
       <Tooltip>
         <TooltipTrigger>
