@@ -5,6 +5,7 @@ import { useWindowSize } from "@react-hook/window-size";
 import { Minus, Plus } from "lucide-react";
 
 import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
+import { cn } from "@f3/ui";
 
 import { mapStore } from "~/utils/store/map";
 
@@ -28,6 +29,7 @@ export const ZoomAndTileButtons = () => {
           clientY: containerPoint.y,
         });
 
+        console.log("wheelEvent", wheelEvent);
         map.getContainer().dispatchEvent(wheelEvent);
       }
     },
@@ -42,7 +44,10 @@ export const ZoomAndTileButtons = () => {
       }}
     >
       <button
-        className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow"
+        className={cn(
+          "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow",
+          "hover:bg-accent",
+        )}
         onFocus={(e) => {
           triggerSmoothZoom("in");
           e.stopPropagation();
