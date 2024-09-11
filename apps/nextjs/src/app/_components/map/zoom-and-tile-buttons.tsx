@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useWindowSize } from "@react-hook/window-size";
 import { Minus, Plus } from "lucide-react";
 
@@ -13,7 +13,11 @@ export const ZoomAndTileButtons = () => {
   const mapRef = mapStore.use.ref();
   const tiles = mapStore.use.tiles();
   const [width] = useWindowSize();
-  // mapRef.current.SmoothWheelZoom.disable();
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
 
   const triggerSmoothZoom = useCallback(
     (direction: "in" | "out") => {
@@ -21,19 +25,48 @@ export const ZoomAndTileButtons = () => {
         const map = mapRef.current;
         const center = map.getCenter();
         const containerPoint = map.latLngToContainerPoint(center);
+        const x = width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x;
+        const y = containerPoint.y;
 
-        const wheelEvent = new WheelEvent("wheel", {
-          deltaY: direction === "in" ? -333 : 333,
-          clientX:
-            width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x,
-          clientY: containerPoint.y,
-        });
+        if (isTouchDevice) {
+          const touchEvent = new TouchEvent("touchstart", {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            touches: [new Touch({
+              identifier: Date.now(),
+              target: map.getContainer(),
+              clientX: x,
+              clientY: y,
+              screenX: x,
+              screenY: y,
+              pageX: x,
+              pageY: y,
+            })],
+          });
+          map.getContainer().dispatchEvent(touchEvent);
 
-        console.log("wheelEvent", wheelEvent);
-        map.getContainer().dispatchEvent(wheelEvent);
+          // Simulate pinch zoom
+          setTimeout(() => {
+            const scale = direction === "in" ? 2 : 0.5;
+            const gestureEvent = new CustomEvent("gesturechange", {
+              bubbles: true,
+              cancelable: true,
+              detail: { scale: scale },
+            });
+            map.getContainer().dispatchEvent(gestureEvent);
+          }, 50);
+        } else {
+          const wheelEvent = new WheelEvent("wheel", {
+            deltaY: direction === "in" ? -333 : 333,
+            clientX: x,
+            clientY: y,
+          });
+          map.getContainer().dispatchEvent(wheelEvent);
+        }
       }
     },
-    [mapRef, width],
+    [mapRef, width, isTouchDevice],
   );
 
   return (
