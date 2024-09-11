@@ -87,13 +87,6 @@ const MapContent = ({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   RERENDER_LOGS && console.log("MapContent rerender");
-  // const googleHybrid = L.tileLayer(
-  //   "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
-  //   {
-  //     maxZoom: 20,
-  //     subdomains: ["mt0", "mt1", "mt2", "mt3"],
-  //   },
-  // );
   const terrainProps: TileLayerProps = {
     url: "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
     maxZoom: 20,

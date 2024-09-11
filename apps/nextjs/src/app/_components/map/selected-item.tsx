@@ -16,6 +16,7 @@ import { ImageWithFallback } from "../image-with-fallback";
 import BootSvgComponent from "../SVGs/boot-camp";
 import RuckSvgComponent from "../SVGs/ruck";
 import SwimSvgComponent from "../SVGs/swim";
+import { useSelectedItem } from "./use-selected-item";
 
 const SelectedItem = (props: {
   selectedLocation: RouterOutputs["location"]["getAllLocationMarkers"][number];
@@ -164,10 +165,12 @@ const DesktopWrapper = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const SelectedItemWrapper = (props: {
-  selectedLocation: RouterOutputs["location"]["getAllLocationMarkers"][number];
-  selectedEvent: RouterOutputs["location"]["getAllLocationMarkers"][number]["events"][number];
-}) => {
+const SelectedItemWrapper = () => {
+  const { selectedLocation, selectedEvent } = useSelectedItem();
+  if (!selectedLocation || !selectedEvent) {
+    return null;
+  }
+  const props = { selectedLocation, selectedEvent };
   return (
     <>
       <Responsive maxWidth={BreakPoints.LG}>
