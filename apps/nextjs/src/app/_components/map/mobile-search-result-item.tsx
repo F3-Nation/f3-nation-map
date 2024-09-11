@@ -3,6 +3,7 @@
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
+import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
@@ -32,7 +33,7 @@ export const MobileSearchResultItem = (props: {
 
   return (
     <button
-      style={{ width: itemWidth }}
+      style={{ width: itemWidth, height: MOBILE_SEARCH_RESULT_ITEM_HEIGHT }}
       className={cn(
         "relative cursor-pointer overflow-clip rounded-md bg-background",
         "flex flex-col justify-start",

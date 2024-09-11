@@ -160,7 +160,7 @@ const SelectedItemWrapper = () => {
   const props = { selectedLocation, selectedEvent };
   return (
     <Responsive minWidth={BreakPoints.LG}>
-      <div className="absolute bottom-2 right-2" style={{ zIndex: 2000 }}>
+      <div className="absolute bottom-2 left-2" style={{ zIndex: 2000 }}>
         <SelectedItem {...props} />
       </div>
     </Responsive>

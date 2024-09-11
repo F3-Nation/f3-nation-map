@@ -6,6 +6,7 @@ import { Minus, Plus } from "lucide-react";
 
 import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
+import { ThemeToggle } from "@f3/ui/theme";
 
 import { mapStore } from "~/utils/store/map";
 
@@ -16,7 +17,7 @@ export const ZoomAndTileButtons = () => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
-    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
 
   const triggerSmoothZoom = useCallback(
@@ -25,37 +26,22 @@ export const ZoomAndTileButtons = () => {
         const map = mapRef.current;
         const center = map.getCenter();
         const containerPoint = map.latLngToContainerPoint(center);
-        const x = width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x;
+        const x =
+          width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x;
         const y = containerPoint.y;
 
         if (isTouchDevice) {
-          const touchEvent = new TouchEvent("touchstart", {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            touches: [new Touch({
-              identifier: Date.now(),
-              target: map.getContainer(),
-              clientX: x,
-              clientY: y,
-              screenX: x,
-              screenY: y,
-              pageX: x,
-              pageY: y,
-            })],
-          });
-          map.getContainer().dispatchEvent(touchEvent);
+          if (mapRef.current) {
+            const map = mapRef.current;
+            const currentZoom = map.getZoom();
+            const zoomChange = direction === "in" ? 1 : -1;
+            const newZoom = currentZoom + zoomChange;
 
-          // Simulate pinch zoom
-          setTimeout(() => {
-            const scale = direction === "in" ? 2 : 0.5;
-            const gestureEvent = new CustomEvent("gesturechange", {
-              bubbles: true,
-              cancelable: true,
-              detail: { scale: scale },
+            map.setZoom(newZoom, {
+              animate: true,
+              duration: 0.25, // Adjust this value to control the animation speed
             });
-            map.getContainer().dispatchEvent(gestureEvent);
-          }, 50);
+          }
         } else {
           const wheelEvent = new WheelEvent("wheel", {
             deltaY: direction === "in" ? -333 : 333,
@@ -78,14 +64,9 @@ export const ZoomAndTileButtons = () => {
     >
       <button
         className={cn(
-          "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow",
+          "pointer-events-auto flex size-[36px] items-center justify-center rounded-md bg-background text-black shadow",
           "hover:bg-accent",
         )}
-        onFocus={(e) => {
-          triggerSmoothZoom("in");
-          e.stopPropagation();
-          e.preventDefault();
-        }}
         onClick={(e) => {
           triggerSmoothZoom("in");
           e.stopPropagation();
@@ -100,7 +81,7 @@ export const ZoomAndTileButtons = () => {
           e.stopPropagation();
           e.preventDefault();
         }}
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow"
+        className="flex size-[36px] items-center justify-center rounded-md bg-background text-black shadow"
       >
         <Minus size={16} className="text-foreground" />
       </button>
@@ -112,7 +93,7 @@ export const ZoomAndTileButtons = () => {
           e.stopPropagation();
           e.preventDefault();
         }}
-        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-background text-black shadow"
+        className="flex size-[36px] items-center justify-center overflow-hidden rounded-md bg-background text-black shadow"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -121,6 +102,7 @@ export const ZoomAndTileButtons = () => {
           className="h-8 object-cover"
         />
       </button>
+      <ThemeToggle />
     </div>
   );
 };

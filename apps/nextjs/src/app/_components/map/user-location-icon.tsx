@@ -1,6 +1,7 @@
 "use client";
 
 import { LocateFixed } from "lucide-react";
+import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "node_modules/@f3/shared/src/app/constants";
 
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
@@ -12,7 +13,12 @@ export const UserLocationIcon = () => {
   const { updateUserLocation, status, permissions } = useUserLocation();
 
   return (
-    <div className={"absolute right-4 top-4 z-[400]"}>
+    <div
+      style={{
+        bottom: MOBILE_SEARCH_RESULT_ITEM_HEIGHT + 16,
+      }}
+      className={"absolute right-4 z-[400] lg:bottom-4"}
+    >
       <Tooltip>
         <TooltipTrigger>
           <div className={"flex flex-col"}>
