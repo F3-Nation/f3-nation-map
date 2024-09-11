@@ -1,18 +1,12 @@
 "use client";
 
-// Importing necessary modules and components.
 import type { ComponentProps } from "react";
 import Image from "next/image"; // Next.js Image component for optimized image rendering.
+import { X } from "lucide-react";
 
 import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
-// Importing type definitions and constants.
-
-// Importing mock data and UI components.
-
-import { DrawerHeader } from "@f3/ui/drawer"; // Drawer components from a UI library.
-
 import { useTheme } from "@f3/ui/theme";
 
 import type { FiltersType, TimeSelection } from "~/utils/store/filter";
@@ -145,20 +139,29 @@ export const DrawerAllFilters = (props: ComponentProps<"div">) => {
 
   return (
     <div {...rest} className={cn(className)}>
-      <DrawerHeader>
-        <div className="flex flex-row items-center justify-between gap-2 px-4">
-          <button
-            className="text-blue-500"
-            onClick={() => handleFilterClick("allFilters")}
-          >
-            Done
-          </button>
-          <h2 className="text-lg font-bold">Map Filters</h2>
-          <button className="text-gray-500" onClick={handleResetFilters}>
-            Reset
-          </button>
+      <div className="mt-4">
+        {/* grid where edges are small */}
+        <div className="grid grid-cols-3 px-4">
+          <div />
+          <h2 className="text-center text-lg font-bold">Map Filters</h2>
+          <div className="flex flex-row items-center justify-end gap-2">
+            <button
+              className="justify-self-center text-gray-500"
+              onClick={handleResetFilters}
+            >
+              Reset
+            </button>
+            <button
+              className="pointer-events-auto"
+              onClick={() => handleFilterClick("allFilters")}
+            >
+              <div className="rounded-full border-[1px] border-black">
+                <X />
+              </div>
+            </button>
+          </div>
         </div>
-      </DrawerHeader>
+      </div>
       <div className="mt-3 flex h-full flex-col gap-4 overflow-auto px-6">
         <div>
           <h3 className="mb-2 text-lg font-semibold">Day of Workout</h3>
