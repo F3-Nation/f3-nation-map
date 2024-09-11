@@ -10,7 +10,7 @@ import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { MemoGroupMarker } from "./group-marker";
 
-export const SelectedIconMarkerLayer = () => {
+export const SelectedIconMarkerPane = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
   const zoom = mapStore.use.zoom();
   const eventId = selectedItemStore.use.eventId();

@@ -1,3 +1,5 @@
+"use client";
+
 import { mapStore } from "~/utils/store/map";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 

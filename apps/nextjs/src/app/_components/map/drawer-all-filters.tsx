@@ -1,6 +1,7 @@
 "use client";
 
 // Importing necessary modules and components.
+import type { ComponentProps } from "react";
 import Image from "next/image"; // Next.js Image component for optimized image rendering.
 
 import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
@@ -27,8 +28,9 @@ import SwimSvgComponent from "../SVGs/swim";
 // Defining items for the filter options with their names and corresponding SVG components or image paths.
 
 // The main component for the map drawer.
-export const DrawerAllFilters = () => {
+export const DrawerAllFilters = (props: ComponentProps<"div">) => {
   RERENDER_LOGS && console.log("DrawerAllFilters rerender");
+  const { className, ...rest } = props;
   const filters = filterStore.useBoundStore();
   console.log("DrawerAllFilters filters", filters.dayW);
   const { resolvedTheme } = useTheme();
@@ -142,7 +144,7 @@ export const DrawerAllFilters = () => {
   ];
 
   return (
-    <>
+    <div {...rest} className={cn(className)}>
       <DrawerHeader>
         <div className="flex flex-row items-center justify-between gap-2 px-4">
           <button
@@ -316,6 +318,6 @@ export const DrawerAllFilters = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
