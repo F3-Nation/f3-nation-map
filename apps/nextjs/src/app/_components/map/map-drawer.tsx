@@ -18,12 +18,12 @@ import { drawerStore } from "~/utils/store/drawer";
 import { filterStore } from "~/utils/store/filter";
 import { searchStore } from "~/utils/store/search";
 import { isF3MapSearchResult } from "~/utils/types";
+import DesktopSelectedItem from "./desktop-selected-item";
 import { DrawerAllFilters } from "./drawer-all-filters";
 import { DrawerSomeFilters } from "./drawer-some-filters";
 import { MapSearchBoxMobile } from "./map-searchbox-mobile";
 import { PlaceRowF3 } from "./place-row-f3";
 import { PlaceRowMap } from "./place-row-map";
-import SelectedItem from "./selected-item";
 import { useSelectedItem } from "./use-selected-item";
 
 // Defining items for the filter options with their names and corresponding SVG components or image paths.
@@ -65,7 +65,7 @@ const MapDrawer = () => {
         >
           <div className="max-h-svh flex-1 overflow-y-scroll" ref={scrollRef}>
             {!showResults && !!selectedLocation && !!selectedEvent ? (
-              <SelectedItem />
+              <DesktopSelectedItem />
             ) : !showResults ? (
               <div className="flex w-full flex-row justify-center">
                 <DrawerSomeFilters />

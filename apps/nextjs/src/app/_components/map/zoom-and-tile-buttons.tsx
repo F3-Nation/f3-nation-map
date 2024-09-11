@@ -42,7 +42,12 @@ export const ZoomAndTileButtons = () => {
       }}
     >
       <button
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow"
+        className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-md bg-background text-black shadow"
+        onFocus={(e) => {
+          triggerSmoothZoom("in");
+          e.stopPropagation();
+          e.preventDefault();
+        }}
         onClick={(e) => {
           triggerSmoothZoom("in");
           e.stopPropagation();

@@ -37,8 +37,5 @@
     "patchedDependencies": {
       "trpc-openapi@1.2.0": "patches/trpc-openapi@1.2.0.patch"
     }
-  },
-  "dependencies": {
-    "axios": "^1.6.8"
   }
 }

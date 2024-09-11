@@ -65,8 +65,6 @@ if (require.main === module) {
 }
 const SEED_LOGS = false;
 
-const { locations, events, orgs } = schema;
-
 export async function insertDatabaseStructure(mapData: LeafletWorkoutData[]) {
   const ORG_TYPES = ["Region"];
   const EVENT_CATEGORIES = mapData
