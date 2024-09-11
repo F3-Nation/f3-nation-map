@@ -7,7 +7,6 @@ import { ZustandStore } from "@f3/shared/common/classes";
 const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   zoom: DEFAULT_ZOOM,
-  zoomAction: false,
   userGpsLocation: null as { latitude: number; longitude: number } | null,
   userInitialIpLocation: null as {
     latitude: number;

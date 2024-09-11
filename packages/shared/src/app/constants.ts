@@ -71,3 +71,5 @@ export const Z_INDEX = {
 
   HOVERED_MAP_MARKER: 10000,
 };
+
+export const MOBILE_SEARCH_RESULT_ITEM_HEIGHT = 128;

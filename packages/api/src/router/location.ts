@@ -1,4 +1,4 @@
-import { eq, schema } from "@f3/db";
+import { eq, inArray, schema } from "@f3/db";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -68,5 +68,92 @@ export const locationRouter = createTRPCRouter({
     console.log("locationEvents", locationEvents.length);
 
     return locationEvents;
+  }),
+  getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
+    const data = await ctx.db
+      .select({
+        location: schema.locations,
+        event: schema.events,
+        type: schema.eventTypes.name,
+        website: schema.orgs.website,
+        logo: schema.orgs.logo,
+        locationDescription: schema.locations.description,
+      })
+      .from(schema.locations)
+      .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+      .leftJoin(
+        schema.events,
+        eq(schema.events.locationId, schema.locations.id),
+      )
+      .leftJoin(
+        schema.eventTypes,
+        eq(schema.eventTypes.id, schema.events.eventTypeId),
+      )
+      .where(inArray(schema.locations.id, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+
+    const locationEvents = data.reduce(
+      (acc, item) => {
+        const location = item.location;
+        const event = item.event;
+        if (!acc[location.id]) {
+          acc[location.id] = {
+            location: {
+              ...location,
+              website: item.website,
+              logo: item.logo,
+              locationDescription: item.locationDescription,
+            },
+            events: [],
+          };
+        }
+        if (event) {
+          acc[location.id]?.events.push({
+            ...event,
+            type: item.type,
+            logo: item.logo,
+          });
+        }
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          location: {
+            id: number;
+            lat: number | null;
+            lon: number | null;
+            name: string;
+            isActive: boolean;
+            created: Date | null;
+            updated: Date | null;
+            meta: unknown;
+            locationDescription: string | null;
+            orgId: number | null;
+            logo: string | null;
+            website: string | null;
+          };
+          events: {
+            id: number;
+            locationId: number | null;
+            dayOfWeek: number | null;
+            startTime: string | null;
+            endTime: string | null;
+            description: string | null;
+            eventTypeId: number | null;
+            type: string | null;
+            name: string;
+            logo: string | null;
+          }[];
+        }
+      >,
+    );
+
+    console.log("preview location Events", locationEvents);
+
+    return Object.values(locationEvents).map((item) => ({
+      ...item.location,
+      distance: 0,
+      events: item.events,
+    }));
   }),
 });

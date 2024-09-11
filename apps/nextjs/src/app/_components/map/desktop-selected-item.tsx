@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { ExternalLink, X } from "lucide-react";
 
@@ -16,6 +15,7 @@ import { ImageWithFallback } from "../image-with-fallback";
 import BootSvgComponent from "../SVGs/boot-camp";
 import RuckSvgComponent from "../SVGs/ruck";
 import SwimSvgComponent from "../SVGs/swim";
+import { useSelectedItem } from "./use-selected-item";
 
 const SelectedItem = (props: {
   selectedLocation: RouterOutputs["location"]["getAllLocationMarkers"][number];
@@ -77,7 +77,7 @@ const SelectedItem = (props: {
           {/* Use flex-col to stack items vertically */}
           <div className="flex flex-col overflow-hidden">
             <div className="flex flex-row items-center">
-              <div className="mr-8 flex flex-row gap-2">
+              <div className="mr-8 flex flex-row items-center gap-2">
                 <div className="flex-shrink-0 rounded-sm bg-red-600 p-1 text-white">
                   {dayOfWeek} {startTime} ({duration}m)
                 </div>
@@ -88,7 +88,11 @@ const SelectedItem = (props: {
                     <SwimSvgComponent height={24} />
                   ) : selectedEvent.type === "Ruck" ? (
                     <RuckSvgComponent height={24} />
-                  ) : null}
+                  ) : (
+                    <p className="line-clamp-1 font-semibold">
+                      {selectedEvent.type}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -96,7 +100,7 @@ const SelectedItem = (props: {
               <Link
                 // href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation.locationDescription)}`}
                 href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.locationDescription)}`}
-                className="underline"
+                className="line-clamp-1 underline"
               >
                 {selectedLocation.locationDescription}
               </Link>
@@ -106,13 +110,13 @@ const SelectedItem = (props: {
               {selectedEvent.type}
             </div>
             {selectedEvent.description ? (
-              <div>
+              <p className="leading-4">
                 <span className="font-semibold">Notes: </span>
                 {selectedEvent.description}
-              </div>
+              </p>
             ) : null}
             {selectedLocation.website ? (
-              <a
+              <Link
                 href={
                   selectedLocation.website ? selectedLocation.website : "f3.com"
                 }
@@ -124,7 +128,7 @@ const SelectedItem = (props: {
                 <div className="flex">
                   <ExternalLink className="m-1 h-3 w-3" />
                 </div>
-              </a>
+              </Link>
             ) : (
               ""
             )}
@@ -148,39 +152,18 @@ const SelectedItem = (props: {
   );
 };
 
-const MobileWrapper = ({ children }: { children: ReactNode }) => {
+const SelectedItemWrapper = () => {
+  const { selectedLocation, selectedEvent } = useSelectedItem();
+  if (!selectedLocation || !selectedEvent) {
+    return null;
+  }
+  const props = { selectedLocation, selectedEvent };
   return (
-    <div className="pointer-events-none absolute bottom-full left-0 right-0 flex justify-end px-4">
-      {children}
-    </div>
-  );
-};
-
-const DesktopWrapper = ({ children }: { children: ReactNode }) => {
-  return (
-    <div className="absolute bottom-2 right-2" style={{ zIndex: 2000 }}>
-      {children}
-    </div>
-  );
-};
-
-const SelectedItemWrapper = (props: {
-  selectedLocation: RouterOutputs["location"]["getAllLocationMarkers"][number];
-  selectedEvent: RouterOutputs["location"]["getAllLocationMarkers"][number]["events"][number];
-}) => {
-  return (
-    <>
-      <Responsive maxWidth={BreakPoints.LG}>
-        <MobileWrapper>
-          <SelectedItem {...props} />
-        </MobileWrapper>
-      </Responsive>
-      <Responsive minWidth={BreakPoints.LG}>
-        <DesktopWrapper>
-          <SelectedItem {...props} />
-        </DesktopWrapper>
-      </Responsive>
-    </>
+    <Responsive minWidth={BreakPoints.LG}>
+      <div className="absolute bottom-2 left-2" style={{ zIndex: 2000 }}>
+        <SelectedItem {...props} />
+      </div>
+    </Responsive>
   );
 };
 

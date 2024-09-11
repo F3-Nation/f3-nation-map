@@ -10,15 +10,14 @@ import {
 import { useModalStore } from "~/utils/store/modal";
 
 export default function HowToJoinModal() {
-  const { open } = useModalStore();
+  const { open, content } = useModalStore();
 
   return (
     <Dialog
       open={open}
       onOpenChange={() => useModalStore.setState({ open: false })}
     >
-      {/* <DialogOverlay className='z-[1201] bg-black/[.5]' /> */}
-      <DialogContent className="z-[1201] sm:max-w-md">
+      <DialogContent className="z-[1201] max-w-[90%] lg:max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="text-center">
             How to join this workout
@@ -34,15 +33,16 @@ export default function HowToJoinModal() {
             You can also shoot a message to this site’s host (we call them site
             leaders) with your questions or just to touch base.
           </p>
-          <div className="mb-5 mt-5 flex justify-center gap-12">
+          <div className="mb-5 mt-5 flex flex-col items-center justify-center gap-4">
             <Link
-              className="mb-2 flex cursor-pointer text-blue-500 underline"
+              className="flex cursor-pointer text-blue-500 underline"
               href={"#"}
             >
               Contact site leader
             </Link>
+            {content}
             <Link
-              className="mb-2 flex cursor-pointer text-blue-500 underline"
+              className="flex cursor-pointer text-blue-500 underline"
               target="_blank"
               href={"https://f3nation.com/about-f3"}
             >

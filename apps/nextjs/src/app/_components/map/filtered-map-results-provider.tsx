@@ -16,11 +16,13 @@ export type LocationMarkerWithDistance =
     distance: number | null;
   };
 const FilteredMapResultsContext = createContext<{
+  isLoading: boolean;
   filteredLocationMarkers:
     | RouterOutputs["location"]["getAllLocationMarkers"]
     | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
 }>({
+  isLoading: true,
   filteredLocationMarkers: undefined,
   locationOrderedLocationMarkers: undefined,
 });
@@ -32,7 +34,7 @@ export const FilteredMapResultsProvider = ({
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const center = mapStore.use.center();
-  const { data: allLocationMarkers } =
+  const { data: allLocationMarkers, isLoading } =
     api.location.getAllLocationMarkers.useQuery();
   const filters = filterStore.useBoundStore();
 
@@ -62,7 +64,11 @@ export const FilteredMapResultsProvider = ({
 
   return (
     <FilteredMapResultsContext.Provider
-      value={{ filteredLocationMarkers, locationOrderedLocationMarkers }}
+      value={{
+        filteredLocationMarkers,
+        locationOrderedLocationMarkers,
+        isLoading,
+      }}
     >
       {children}
     </FilteredMapResultsContext.Provider>
