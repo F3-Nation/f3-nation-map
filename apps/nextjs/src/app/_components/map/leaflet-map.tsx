@@ -21,6 +21,7 @@ import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
 import { GeoJsonPane } from "./geo-json-pane";
 import { MapListener } from "./map-listener";
+import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerPane } from "./selected-item-marker-pane";
 import { UserLocationMarker } from "./user-location-marker";
 import { useUserLocation } from "./user-location-provider";
@@ -119,6 +120,7 @@ const MapContent = ({
       <GeoJsonPane />
       <CanvasIconLayer markerLocations={markerLocations} />
       <UserLocationMarker />
+      <PlaceResultIconPane />
     </>
   );
 };

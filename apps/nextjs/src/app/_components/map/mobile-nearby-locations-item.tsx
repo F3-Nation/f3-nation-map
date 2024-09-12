@@ -23,6 +23,7 @@ export const MobileNearbyLocationsItem = (props: {
   const { itemWidth } = useSearchResultSize();
 
   const locationId = selectedItemStore.use.locationId();
+  const eventId = selectedItemStore.use.eventId();
   const { searchResult } = props;
   const isSelected = searchResult.id === locationId;
   const mapRef = mapStore.use.ref();
@@ -42,8 +43,8 @@ export const MobileNearbyLocationsItem = (props: {
         "flex-shrink-0",
         "p-2",
         "h-32",
-        "border-[0.5px] border-foreground",
-        { "bg-accent": isSelected },
+        "border-2 border-foreground/10",
+        { "border-red-500": isSelected },
       )}
       onClick={() => {
         selectedItemStore.setState({
@@ -108,6 +109,9 @@ export const MobileNearbyLocationsItem = (props: {
               return (
                 <EventChip
                   key={event.id}
+                  selected={
+                    locationId === searchResult.id && event.id === eventId
+                  }
                   condensed
                   event={event}
                   location={searchResult}

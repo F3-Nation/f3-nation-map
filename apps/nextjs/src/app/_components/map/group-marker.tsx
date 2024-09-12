@@ -46,10 +46,7 @@ export const MemoGroupMarker = memo(
                     )
                     ?.split("-")[2];
                   const eventId = safeParseInt(eventIdString);
-                  selectedItemStore.setState({
-                    locationId: id,
-                    eventId,
-                  });
+                  selectedItemStore.setState({ locationId: id, eventId });
                 },
               }),
           click: (e) => {

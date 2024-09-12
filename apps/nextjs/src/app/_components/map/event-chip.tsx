@@ -14,11 +14,12 @@ import SwimSvgComponent from "../SVGs/swim";
 
 export const EventChip = (props: {
   condensed?: boolean;
+  selected?: boolean;
   event: LocationMarkerWithDistance["events"][0];
   location: LocationMarkerWithDistance;
 }) => {
   const mapRef = mapStore.use.ref();
-  const { event, location, condensed = false } = props;
+  const { event, location, condensed = false, selected } = props;
   const dayOfWeek =
     event.dayOfWeek === null ? undefined : SHORT_DAY_ORDER[event.dayOfWeek];
   const startTimeRaw =
@@ -41,8 +42,12 @@ export const EventChip = (props: {
         "flex flex-row items-center ",
         "rounded-sm hover:bg-red-400",
         "text-xs text-white",
+        "gap-1 px-1 shadow",
         // { "gap-[2px] bg-transparent text-red-600 underline": condensed },
-        { "gap-1 bg-red-600 px-1 py-[1px] text-white shadow": true },
+        { "bg-red-400": selected },
+        { "bg-red-600": !selected },
+        { "py-[1px]": condensed },
+        { "py-[2px]": !condensed },
       )}
       onMouseOver={(e) => {
         selectedItemStore.setState({
