@@ -1,106 +1,64 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+// Importing necessary modules and components.
 
-import { BreakPoints } from "@f3/shared/app/constants";
+// Importing type definitions and constants.
+import { useEffect, useRef } from "react";
+
+import { BreakPoints } from "@f3/shared/app/constants"; // Type import for SnapPoint.
+
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
-import { Spinner } from "@f3/ui/spinner";
 
-import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
+import { useTextSearchResults } from "~/app/_components/map/search-results-provider";
+// Importing mock data and UI components.
+
 import { Responsive } from "~/utils/responsive";
-import { selectedItemStore } from "~/utils/store/selected-item";
-import { useFilteredMapResults } from "./filtered-map-results-provider";
-import { MobileSearchResultItem } from "./mobile-search-result-item";
-import { SearchResultItemSkeleton } from "./search-result-item-skeleton";
+import { searchStore } from "~/utils/store/search";
+import { isF3MapSearchResult } from "~/utils/types";
+import { PlaceRowF3 } from "./place-row-f3";
+import { PlaceRowMap } from "./place-row-map";
 
-export const MobileSearchResults = (props: ComponentProps<"div">) => {
-  const { className, ...rest } = props;
-  RERENDER_LOGS && console.log("SelectedItem rerender");
-  const { locationOrderedLocationMarkers } = useFilteredMapResults();
-  const { itemWidth, itemGap, scrollBuffer } = useSearchResultSize();
-  const [scrolledItemIndex, setScrolledItemIndex] = useState<number | null>(
-    null,
-  );
-  const [visibleItemsCount, setVisibleItemsCount] = useState(6);
-  const [status, setStatus] = useState("idle" as "idle" | "loading");
+// Defining items for the filter options with their names and corresponding SVG components or image paths.
+
+// The main component for the map drawer.
+export const MobileSearchResults = () => {
+  RERENDER_LOGS && console.log("MapDrawer rerender");
+  const shouldShowResults = searchStore.use.shouldShowResults();
+  const { combinedResults } = useTextSearchResults();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Reset state when the ordered location markers change
   useEffect(() => {
-    setVisibleItemsCount(6);
-    scrollRef.current?.scrollTo({ left: 0 });
-  }, [locationOrderedLocationMarkers]);
+    scrollRef.current?.scrollTo({ top: 10000, behavior: "smooth" });
+  }, [combinedResults]);
 
-  useEffect(() => {
-    if (scrolledItemIndex === null) return;
-    selectedItemStore.setState({
-      locationId: locationOrderedLocationMarkers?.[scrolledItemIndex]?.id,
-      eventId:
-        locationOrderedLocationMarkers?.[scrolledItemIndex]?.events[0]?.id,
-    });
-  }, [locationOrderedLocationMarkers, scrolledItemIndex]);
+  const showResults = shouldShowResults && !!combinedResults.length;
 
-  const debounceIncreaseVisibleItemsCount = useCallback(() => {
-    if (status === "loading") return;
-    setStatus("loading");
-    setTimeout(() => {
-      setVisibleItemsCount((prev) => prev + 6);
-      setStatus("idle");
-    }, 250);
-  }, [status]);
-
-  return (
-    <Responsive maxWidth={BreakPoints.LG}>
-      <div
-        className={cn("absolute bottom-2 left-0 right-0", className)}
-        style={{ zIndex: 1000 }}
-        {...rest}
-      >
+  return !showResults ? null : (
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-0 z-[1000] flex flex-col",
+        { "bg-background": shouldShowResults && !!combinedResults.length },
+      )}
+    >
+      <Responsive maxWidth={BreakPoints.LG}>
         <div
+          className="pointer-events-auto max-h-svh flex-1 overflow-y-scroll"
           ref={scrollRef}
-          style={{
-            gap: itemGap,
-            paddingLeft: itemGap,
-            paddingRight: itemGap + scrollBuffer,
-          }}
-          className="flex h-full flex-row items-end overflow-x-auto"
-          onScroll={(e) => {
-            const currentlyViewedIndex = Math.floor(
-              (e.currentTarget.scrollLeft + scrollBuffer) /
-                (itemWidth + itemGap),
-            );
-            const nearEnd =
-              e.currentTarget.scrollWidth -
-                e.currentTarget.scrollLeft -
-                e.currentTarget.clientWidth <
-              scrollBuffer;
-            setScrolledItemIndex(currentlyViewedIndex);
-            if (nearEnd) {
-              debounceIncreaseVisibleItemsCount();
-            }
-          }}
         >
-          {locationOrderedLocationMarkers === undefined
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <SearchResultItemSkeleton key={index} />
-              ))
-            : locationOrderedLocationMarkers
-                ?.slice(0, visibleItemsCount)
-                .map((result) => (
-                  <MobileSearchResultItem
-                    key={result.id}
-                    searchResult={result}
-                  />
-                ))}
-          {status === "loading" && (
-            <div className="flex h-full items-center self-center">
-              <Spinner className="border-foreground border-b-transparent" />
-            </div>
-          )}
+          <div className="flex flex-col-reverse justify-end pt-[100%]">
+            {combinedResults.map((result) =>
+              isF3MapSearchResult(result) ? (
+                <PlaceRowF3 key={result.destination.id} result={result} />
+              ) : (
+                <PlaceRowMap key={result.destination.id} result={result} />
+              ),
+            )}
+          </div>
         </div>
-      </div>
-    </Responsive>
+        {/* Spacer to ensure searchbar is visible */}
+        <div className="pointer-events-none h-14 w-full" />
+      </Responsive>
+    </div>
   );
 };
