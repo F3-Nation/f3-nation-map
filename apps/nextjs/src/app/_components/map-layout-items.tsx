@@ -1,7 +1,7 @@
 import { DebugInfo } from "./map/debug-info";
 import DesktopSelectedItem from "./map/desktop-selected-item";
 import { MobileAllFilters } from "./map/mobile-all-filters";
-import { MobileFilterButton } from "./map/mobile-filter-button";
+import { MobileFilterButtons } from "./map/mobile-filter-buttons";
 import { MobileSearchResults } from "./map/mobile-search-results";
 import { UserLocationIcon } from "./map/user-location-icon";
 import { ZoomAndTileButtons } from "./map/zoom-and-tile-buttons";
@@ -12,7 +12,7 @@ export const MapLayoutItems = () => {
     <>
       <UserLocationIcon />
       <ZoomAndTileButtons />
-      <MobileFilterButton />
+      <MobileFilterButtons />
       <DesktopSelectedItem />
       <MobileSearchResults />
       <MobileAllFilters />

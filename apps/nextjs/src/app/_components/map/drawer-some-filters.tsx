@@ -6,7 +6,7 @@ import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { useTheme } from "@f3/ui/theme";
 
 import type { FiltersType } from "~/utils/store/filter";
-import { filterStore } from "~/utils/store/filter";
+import { filterStore, isAnyFilterActive } from "~/utils/store/filter";
 import AllFiltersSvgComponent from "../SVGs/allFilters"; // SVG component imports for different filter options.
 import AmSvgComponent from "../SVGs/AM";
 import PmSvgComponent from "../SVGs/PM";
@@ -34,20 +34,6 @@ export const DrawerSomeFilters = () => {
         [filterName]: newState ?? !filters[filterName],
       });
     }
-  };
-  const isAnyFilterActive = (filters: FiltersType) => {
-    const {
-      am: _am,
-      pm: _pm,
-      today: _today,
-      tomorrow: _tomorrow,
-      beforeAfterTime,
-      ...otherFilters
-    } = filters;
-    return (
-      Object.values(otherFilters).some((value) => value === true) ||
-      beforeAfterTime !== "none"
-    );
   };
   const filterItems = [
     { name: "today" as const, img: TodaySvgComponent },
