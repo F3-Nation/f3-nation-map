@@ -36,6 +36,7 @@ export default function HowToJoinModal() {
           <div className="mb-5 mt-5 flex flex-col items-center justify-center gap-4">
             <Link
               className="flex cursor-pointer text-blue-500 underline"
+              target="_blank"
               href={"#"}
             >
               Contact site leader

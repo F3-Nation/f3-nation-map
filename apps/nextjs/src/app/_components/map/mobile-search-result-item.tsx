@@ -80,6 +80,7 @@ export const MobileSearchResultItem = (props: {
               content: searchResult.website ? (
                 <Link
                   href={searchResult.website}
+                  target="_blank"
                   className="mb-2 flex cursor-pointer text-blue-500 underline"
                 >
                   Visit group site
