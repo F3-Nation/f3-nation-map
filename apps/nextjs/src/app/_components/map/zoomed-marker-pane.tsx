@@ -1,9 +1,5 @@
 "use client";
 
-import "../../../utils/leaflet-canvas-markers"; // with modifications
-
-import "leaflet/dist/leaflet.css";
-
 import { useMemo } from "react";
 import { Pane } from "react-leaflet";
 

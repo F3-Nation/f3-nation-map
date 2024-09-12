@@ -1,7 +1,6 @@
 "use client";
 
-import { SHORT_DAY_ORDER } from "node_modules/@f3/shared/src/app/constants";
-
+import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";

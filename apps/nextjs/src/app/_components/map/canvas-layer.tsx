@@ -1,13 +1,7 @@
 "use client";
 
-import L from "leaflet";
-
-// To update the canvas marker
-import "~/utils/leaflet-canvas-markers";
-// To ensure appearance is correct
-import "leaflet/dist/leaflet.css";
-
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import L from "leaflet";
 import { useMap } from "react-leaflet";
 
 import { CLOSE_ZOOM } from "@f3/shared/app/constants";

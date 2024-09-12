@@ -1,13 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
-
-import "../../../utils/leaflet-canvas-markers"; // with modifications
-
-import "leaflet/dist/leaflet.css";
-
-import { memo } from "react";
 import { Marker } from "react-leaflet";
 
 import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
-import { SHORT_DAY_ORDER } from "node_modules/@f3/shared/src/app/constants";
 
+import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
