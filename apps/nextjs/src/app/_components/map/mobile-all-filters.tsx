@@ -12,7 +12,7 @@ export const MobileAllFilters = () => {
     <Responsive maxWidth={BreakPoints.LG}>
       {!allFilters ? null : (
         <div className="absolute inset-0 z-[2001] bg-background">
-          <DrawerAllFilters style={{ zIndex: 2001 }} />
+          <DrawerAllFilters />
         </div>
       )}
     </Responsive>

@@ -148,7 +148,7 @@ export const DrawerAllFilters = (props: ComponentProps<"div">) => {
         <div className="grid grid-cols-3 px-4">
           <div />
           <h2 className="text-center text-lg font-bold">Map Filters</h2>
-          <div className="flex flex-row items-center justify-end gap-2">
+          <div className="flex flex-row items-center justify-end gap-4">
             <button
               className="justify-self-center text-gray-500"
               onClick={handleResetFilters}

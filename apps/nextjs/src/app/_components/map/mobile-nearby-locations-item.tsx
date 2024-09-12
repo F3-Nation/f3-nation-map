@@ -16,7 +16,7 @@ import { selectedItemStore } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
-export const MobileSearchResultItem = (props: {
+export const MobileNearbyLocationsItem = (props: {
   searchResult: LocationMarkerWithDistance;
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");

@@ -4,10 +4,7 @@
 import { useWindowSize } from "@react-hook/window-size";
 import { LocateFixed } from "lucide-react";
 
-import {
-  BreakPoints,
-  MOBILE_SEARCH_RESULT_ITEM_HEIGHT,
-} from "@f3/shared/app/constants";
+import { BreakPoints } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
@@ -49,8 +46,7 @@ export const UserLocationIcon = () => {
   return (
     <div
       style={{
-        bottom:
-          width < BreakPoints.LG ? MOBILE_SEARCH_RESULT_ITEM_HEIGHT + 16 : 16,
+        bottom: width < BreakPoints.LG ? 8 : 16,
         right: width < BreakPoints.LG ? 8 : 16,
       }}
       className={"absolute z-[400]"}
@@ -63,7 +59,7 @@ export const UserLocationIcon = () => {
               size="icon"
               className="hover:bg-background focus:bg-background"
               onClick={() => {
-                if (width < BreakPoints.LG) {
+                if (width < BreakPoints.LG && status !== "success") {
                   useModalStore.setState({
                     open: true,
                     type: ModalType.USER_LOCATION_INFO,
