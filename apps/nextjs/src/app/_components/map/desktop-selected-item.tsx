@@ -100,6 +100,7 @@ const SelectedItem = (props: {
               <Link
                 // href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation.locationDescription)}`}
                 href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.locationDescription)}`}
+                target="_blank"
                 className="line-clamp-1 underline"
               >
                 {selectedLocation.locationDescription}

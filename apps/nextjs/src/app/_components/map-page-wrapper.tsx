@@ -32,7 +32,11 @@ const HeaderContainer = (props: { children: React.ReactNode }) => {
 const Header = () => {
   return (
     <>
-      <Link href="https://f3nation.com/" className="absolute left-4">
+      <Link
+        href="https://f3nation.com/"
+        target="_blank"
+        className="absolute left-4"
+      >
         <Image src="/f3_logo.png" alt="F3 Logo" width={64} height={64} />
       </Link>
       <div className="relative w-2/5">

@@ -9,8 +9,12 @@ import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 import { useTheme } from "@f3/ui/theme";
 
-import type { FiltersType, TimeSelection } from "~/utils/store/filter";
-import { filterStore, initialFilterState } from "~/utils/store/filter";
+import type { FiltersType } from "~/utils/store/filter";
+import {
+  filterStore,
+  initialFilterState,
+  TimeSelection,
+} from "~/utils/store/filter";
 import BootSvgComponent from "../SVGs/boot-camp";
 import ConvergenceSvgComponent from "../SVGs/convergence";
 import csaupSvgComponent from "../SVGs/csaup";
@@ -206,7 +210,7 @@ export const DrawerAllFilters = (props: ComponentProps<"div">) => {
                 data-vaul-no-drag
                 className={cn("w-40 rounded border border-gray-300 px-2 py-1", {
                   "border-blue-500 bg-blue-100":
-                    filters.beforeAfterTime !== "none",
+                    filters.beforeAfterTime !== TimeSelection.none,
                 })}
                 value={filters.beforeAfterTime}
                 onChange={(e) => {
@@ -215,31 +219,31 @@ export const DrawerAllFilters = (props: ComponentProps<"div">) => {
                   });
                 }}
               >
-                <option value="none">--</option>
-                <option value="12am">12 AM</option>
-                <option value="1am">1 AM</option>
-                <option value="2am">2 AM</option>
-                <option value="3am">3 AM</option>
-                <option value="4am">4 AM</option>
-                <option value="5am">5 AM</option>
-                <option value="6am">6 AM</option>
-                <option value="7am">7 AM</option>
-                <option value="8am">8 AM</option>
-                <option value="9am">9 AM</option>
-                <option value="10am">10 AM</option>
-                <option value="11am">11 AM</option>
-                <option value="12pm">12 PM</option>
-                <option value="1pm">1 PM</option>
-                <option value="2pm">2 PM</option>
-                <option value="3pm">3 PM</option>
-                <option value="4pm">4 PM</option>
-                <option value="5pm">5 PM</option>
-                <option value="6pm">6 PM</option>
-                <option value="7pm">7 PM</option>
-                <option value="8pm">8 PM</option>
-                <option value="9pm">9 PM</option>
-                <option value="10pm">10 PM</option>
-                <option value="11pm">11 PM</option>
+                <option value={TimeSelection.none}>--</option>
+                <option value={TimeSelection["12am"]}>12 AM</option>
+                <option value={TimeSelection["1am"]}>1 AM</option>
+                <option value={TimeSelection["2am"]}>2 AM</option>
+                <option value={TimeSelection["3am"]}>3 AM</option>
+                <option value={TimeSelection["4am"]}>4 AM</option>
+                <option value={TimeSelection["5am"]}>5 AM</option>
+                <option value={TimeSelection["6am"]}>6 AM</option>
+                <option value={TimeSelection["7am"]}>7 AM</option>
+                <option value={TimeSelection["8am"]}>8 AM</option>
+                <option value={TimeSelection["9am"]}>9 AM</option>
+                <option value={TimeSelection["10am"]}>10 AM</option>
+                <option value={TimeSelection["11am"]}>11 AM</option>
+                <option value={TimeSelection["12pm"]}>12 PM</option>
+                <option value={TimeSelection["1pm"]}>1 PM</option>
+                <option value={TimeSelection["2pm"]}>2 PM</option>
+                <option value={TimeSelection["3pm"]}>3 PM</option>
+                <option value={TimeSelection["4pm"]}>4 PM</option>
+                <option value={TimeSelection["5pm"]}>5 PM</option>
+                <option value={TimeSelection["6pm"]}>6 PM</option>
+                <option value={TimeSelection["7pm"]}>7 PM</option>
+                <option value={TimeSelection["8pm"]}>8 PM</option>
+                <option value={TimeSelection["9pm"]}>9 PM</option>
+                <option value={TimeSelection["10pm"]}>10 PM</option>
+                <option value={TimeSelection["11pm"]}>11 PM</option>
               </select>
             </div>
           </div>

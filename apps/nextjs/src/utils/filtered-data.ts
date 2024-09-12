@@ -5,6 +5,7 @@ import { isTruthy } from "@f3/shared/common/functions";
 import type { FiltersType } from "./store/filter";
 import type { RouterOutputs } from "~/trpc/types";
 import { dayjs } from "./frontendDayjs";
+import { TimeSelection } from "./store/filter";
 
 export const filterData = (
   allLocationMarkers: RouterOutputs["location"]["getAllLocationMarkers"],
@@ -60,12 +61,14 @@ export const filterData = (
 
       // // Check if the after time filter matches the station's end time
       let includeThisLocationMarkerOnTime = true;
-      if (filters.beforeAfterTime !== "none") {
-        const [hour, period] = filters.beforeAfterTime
-          .split(/(\d+)/)
-          .filter(Boolean);
+      if (filters.beforeAfterTime !== TimeSelection.none) {
+        const hour = filters.beforeAfterTime.slice(0, -2);
+        const period = filters.beforeAfterTime.slice(-2);
+        // const [hour, period] = filters.beforeAfterTime
+        //   .split(/(\d+)/)
+        //   .filter(Boolean);
         let filterTime = parseInt(hour ?? "0", 10);
-        const stationEndTime = parseInt(
+        const stationStartTime = parseInt(
           event.startTime?.split(":")?.[0] ?? "0",
           10,
         );
@@ -76,8 +79,8 @@ export const filterData = (
 
         if (
           filters.beforeAfterDirection === "before"
-            ? stationEndTime > filterTime
-            : stationEndTime < filterTime
+            ? stationStartTime >= filterTime
+            : stationStartTime <= filterTime
         ) {
           includeThisLocationMarkerOnTime = false;
         }
