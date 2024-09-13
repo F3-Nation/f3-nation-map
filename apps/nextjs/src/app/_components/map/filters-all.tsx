@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
+import { Button } from "@f3/ui/button";
 import { useTheme } from "@f3/ui/theme";
 
 import type { FiltersType } from "~/utils/store/filter";
@@ -26,7 +27,7 @@ import SwimSvgComponent from "../SVGs/swim";
 // Defining items for the filter options with their names and corresponding SVG components or image paths.
 
 // The main component for the map drawer.
-export const DrawerAllFilters = (props: ComponentProps<"div">) => {
+export const FiltersAll = (props: ComponentProps<"div">) => {
   RERENDER_LOGS && console.log("DrawerAllFilters rerender");
   const { className, ...rest } = props;
   const filters = filterStore.useBoundStore();
@@ -142,33 +143,27 @@ export const DrawerAllFilters = (props: ComponentProps<"div">) => {
   ];
 
   return (
-    <div {...rest} className={cn(className)}>
-      <div className="mt-4">
-        {/* grid where edges are small */}
-        <div className="grid grid-cols-3 px-4">
-          <div />
-          <h2 className="text-center text-lg font-bold">Map Filters</h2>
-          <div className="flex flex-row items-center justify-end gap-4">
-            <button
-              className="justify-self-center text-gray-500"
-              onClick={handleResetFilters}
-            >
-              Reset
-            </button>
-            <button
-              className="pointer-events-auto"
-              onClick={() => handleFilterClick("allFilters")}
-            >
-              <div className="rounded-full border-[1px] border-black">
-                <X />
-              </div>
-            </button>
-          </div>
+    <div
+      className={cn(
+        "flex flex-1 flex-col items-center justify-center overflow-scroll",
+        className,
+      )}
+      {...rest}
+    >
+      <div className="mt-4 flex h-full flex-col gap-4 overflow-auto px-6 pb-20 ">
+        <div className="flex flex-row justify-between">
+          <h2 className="text-center text-xl font-bold">Map Filters</h2>
+          <button
+            className="pointer-events-auto"
+            onClick={() => handleFilterClick("allFilters")}
+          >
+            <div className="rounded-full border-[1px] border-black">
+              <X />
+            </div>
+          </button>
         </div>
-      </div>
-      <div className="mt-3 flex h-full flex-col gap-4 overflow-auto px-6">
         <div>
-          <h3 className="mb-2 text-lg font-semibold">Day of Workout</h3>
+          <h3 className="mb-2 mt-2 text-lg font-semibold">Day of Workout</h3>
           <div className="grid grid-cols-7 gap-2">
             {SHORT_DAY_ORDER.map((day, index) => (
               <button
@@ -323,6 +318,20 @@ export const DrawerAllFilters = (props: ComponentProps<"div">) => {
               </button>
             ))}
           </div>
+        </div>
+        <div className="mt-4 flex flex-row items-center justify-center gap-4">
+          <Button
+            className="w-32 justify-self-center bg-gray-500 text-white hover:bg-gray-300"
+            onClick={handleResetFilters}
+          >
+            Reset
+          </Button>
+          <Button
+            className="w-32 justify-self-center bg-blue-500 text-white hover:bg-blue-300"
+            onClick={() => handleFilterClick("allFilters")}
+          >
+            <span className="text-white">Apply</span>
+          </Button>
         </div>
       </div>
     </div>

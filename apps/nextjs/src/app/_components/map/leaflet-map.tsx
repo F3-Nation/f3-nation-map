@@ -3,8 +3,6 @@
 import "~/utils/leaflet-canvas-markers"; // with modifications
 import "~/utils/smooth-zoom-wheel"; // with modifications
 
-import "leaflet/dist/leaflet.css";
-
 import type { TileLayerProps } from "react-leaflet";
 import { useWindowSize } from "@react-hook/window-size";
 import { MapContainer, TileLayer } from "react-leaflet";
@@ -23,6 +21,7 @@ import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
 import { GeoJsonPane } from "./geo-json-pane";
 import { MapListener } from "./map-listener";
+import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerPane } from "./selected-item-marker-pane";
 import { UserLocationMarker } from "./user-location-marker";
 import { useUserLocation } from "./user-location-provider";
@@ -56,7 +55,6 @@ export const LeafletMap = ({
         }
         // https://stackoverflow.com/questions/13851888/how-can-i-change-the-default-loading-tile-color-in-leafletjs
         // tile loading background color is here:
-        // apps/nextjs/src/app/globals.css
         preferCanvas={true}
         zoom={DEFAULT_ZOOM}
         zoomSnap={0.1}
@@ -122,6 +120,7 @@ const MapContent = ({
       <GeoJsonPane />
       <CanvasIconLayer markerLocations={markerLocations} />
       <UserLocationMarker />
+      <PlaceResultIconPane />
     </>
   );
 };

@@ -137,7 +137,7 @@ const SelectedItem = (props: {
         </div>
       </div>
       <button
-        className="pointer-events-auto absolute right-5 top-6"
+        className="pointer-events-auto absolute right-3 top-3"
         onClick={() =>
           selectedItemStore.setState({
             locationId: null,

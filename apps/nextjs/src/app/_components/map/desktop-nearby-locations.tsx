@@ -6,11 +6,11 @@ import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 
 import { VersionInfo } from "../version-info";
+import { DesktopNearbyLocationItem } from "./desktop-nearby-location-item";
+import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
-import SearchResultItem from "./search-result-item";
-import { SearchResultItemSkeleton } from "./search-result-item-skeleton";
 
-export const DrawerSearchResults = ({
+export const DesktopNearbyLocations = ({
   className,
   ...rest
 }: ComponentProps<"div">) => {
@@ -30,10 +30,10 @@ export const DrawerSearchResults = ({
           ? locationOrderedLocationMarkers
               ?.slice(0, 10)
               .map((result) => (
-                <SearchResultItem key={result.id} searchResult={result} />
+                <DesktopNearbyLocationItem key={result.id} item={result} />
               ))
           : Array.from({ length: 6 }).map((_, index) => (
-              <SearchResultItemSkeleton key={index} />
+              <DesktopNearbyLocationItemSkeleton key={index} />
             ))}
       </div>
       <VersionInfo className=" w-full text-center text-xs" />

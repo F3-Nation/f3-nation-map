@@ -12,13 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
 import { Spinner } from "@f3/ui/spinner";
 
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
+import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";
 import { placesAutocomplete } from "~/utils/place-autocomplete";
 import { drawerStore } from "~/utils/store/drawer";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
 import { isF3MapSearchResult } from "~/utils/types";
 import { onClickPlaceRowF3, PlaceRowF3 } from "./place-row-f3";
-import { onClickPlaceRowMap, PlaceRowMap } from "./place-row-map";
+import { PlaceRowMap } from "./place-row-map";
 import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBox({
@@ -42,27 +43,6 @@ export function MapSearchBox({
       }
     },
   });
-
-  // This is code for redirecting
-  // useEffect(() => {
-  //   const [firstResult] = geoResults;
-  //   if (firstResult && isF3MapSearchResult(firstResult)) {
-  //     selectedItemStore.setState({
-  //       locationId: firstResult.destination.item.locationId,
-  //     });
-  //     // Only redirect if there is text too
-  //     if (shouldRedirectOnResult.current) {
-  //       shouldRedirectOnResult.current = false;
-  //       // mapRef.current?.setView(
-  //       //   {
-  //       //     lat: firstResult.destination.lat,
-  //       //     lng: firstResult.destination.lng,
-  //       //   },
-  //       //   mapStore.get("zoom"),
-  //       // );
-  //     }
-  //   }
-  // }, [combinedResults, mapRef]);
 
   const onSubmit = useCallback(() => {
     const selectedResult = combinedResults[focusedIndex];

@@ -1,16 +1,11 @@
 "use client";
 
+import { memo } from "react";
 import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
-
-import "../../../utils/leaflet-canvas-markers"; // with modifications
-
-import "leaflet/dist/leaflet.css";
-
-import { memo } from "react";
 import { Marker } from "react-leaflet";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
@@ -51,10 +46,7 @@ export const MemoGroupMarker = memo(
                     )
                     ?.split("-")[2];
                   const eventId = safeParseInt(eventIdString);
-                  selectedItemStore.setState({
-                    locationId: id,
-                    eventId,
-                  });
+                  selectedItemStore.setState({ locationId: id, eventId });
                 },
               }),
           click: (e) => {
@@ -77,7 +69,9 @@ export const MemoGroupMarker = memo(
               locationId: id,
               eventId,
             });
-            mapRef.current?.setView({ lat, lng: lon }, 15);
+            mapRef.current?.setView({ lat, lng: lon }, CLOSE_ZOOM, {
+              animate: mapStore.get("zoom") === CLOSE_ZOOM,
+            });
           },
         }}
         icon={L.divIcon({

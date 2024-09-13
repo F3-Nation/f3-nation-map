@@ -32,14 +32,16 @@ export const UserLocationIcon = () => {
             ? "Location permissions have been granted"
             : "Location permissions need to be granted. If the button below does not work, then you need to update your browser settings"}
       </div>
-      <button
-        className={cn(
-          "self-center rounded-md bg-foreground px-4 py-2 text-background shadow hover:bg-foreground/90",
-        )}
-        onClick={() => updateUserLocation()}
-      >
-        Request location permissions
-      </button>
+      {permissions !== "granted" ? (
+        <button
+          className={cn(
+            "self-center rounded-md bg-foreground px-4 py-2 text-background shadow hover:bg-foreground/90",
+          )}
+          onClick={() => updateUserLocation()}
+        >
+          Request location permissions
+        </button>
+      ) : null}
     </div>
   );
 
@@ -49,7 +51,7 @@ export const UserLocationIcon = () => {
         bottom: width < BreakPoints.LG ? 8 : 16,
         right: width < BreakPoints.LG ? 8 : 16,
       }}
-      className={"absolute z-[400]"}
+      className={"absolute z-[1001]"}
     >
       <Tooltip>
         <TooltipTrigger>
@@ -72,7 +74,8 @@ export const UserLocationIcon = () => {
             >
               <div className={cn({ "animate-spin": status === "loading" })}>
                 <LocateFixed
-                  className={cn("size-5 scale-100 text-foreground")}
+                  strokeWidth={1.25}
+                  className={cn("size-6 scale-100 text-foreground")}
                 />
               </div>
             </Button>

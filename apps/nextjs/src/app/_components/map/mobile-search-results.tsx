@@ -47,11 +47,15 @@ export const MobileSearchResults = () => {
           ref={scrollRef}
         >
           <div className="flex flex-col-reverse justify-end pt-[100%]">
-            {combinedResults.map((result) =>
+            {combinedResults.map((result, index) =>
               isF3MapSearchResult(result) ? (
                 <PlaceRowF3 key={result.destination.id} result={result} />
               ) : (
-                <PlaceRowMap key={result.destination.id} result={result} />
+                <PlaceRowMap
+                  key={result.destination.id}
+                  result={result}
+                  focused={index === 0}
+                />
               ),
             )}
           </div>

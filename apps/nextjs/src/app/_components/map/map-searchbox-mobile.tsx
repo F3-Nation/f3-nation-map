@@ -1,28 +1,47 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, XCircle } from "lucide-react";
-import { BreakPoints } from "node_modules/@f3/shared/src/app/constants";
 
+import { BreakPoints } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 
+import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
+import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";
 import { placesAutocomplete } from "~/utils/place-autocomplete";
 import { Responsive } from "~/utils/responsive";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
+import { isGeoMapSearchResult } from "~/utils/types";
+import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBoxMobile({
   className,
-  hideLogo,
   ...rest
-}: ComponentProps<"div"> & { hideLogo?: true }) {
+}: ComponentProps<"div">) {
   const text = searchStore.use.text();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const { combinedResults } = useTextSearchResults();
+
+  const onSubmit = () => {
+    const selectedResult = combinedResults[0];
+    if (selectedResult && isGeoMapSearchResult(selectedResult)) {
+      onClickPlaceRowMap(selectedResult);
+    }
+  };
+
+  const { ref: inputRef } = useOnKeyPress<HTMLInputElement>({
+    keys: ["Enter"],
+    cb: (key) => {
+      if (key === "Enter") {
+        onSubmit();
+      }
+    },
+  });
 
   return (
     <Responsive maxWidth={BreakPoints.LG}>

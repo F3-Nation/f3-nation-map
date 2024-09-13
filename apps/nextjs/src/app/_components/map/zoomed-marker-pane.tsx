@@ -1,9 +1,5 @@
 "use client";
 
-import "../../../utils/leaflet-canvas-markers"; // with modifications
-
-import "leaflet/dist/leaflet.css";
-
 import { useMemo } from "react";
 import { Pane } from "react-leaflet";
 
@@ -20,25 +16,34 @@ export const ZoomedMarkerPane = () => {
   const zoom = mapStore.use.zoom();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > CLOSE_ZOOM;
+  const isClose = zoom >= CLOSE_ZOOM;
 
   const viewMarkers = useMemo(() => {
     return !isClose
       ? []
-      : filteredLocationMarkers?.map((group, groupIdx) => {
-          const show =
-            group.lat !== null &&
-            group.lon !== null &&
-            !!bounds?.contains([group.lat, group.lon]);
-          return (
-            <MemoGroupMarker
-              key={groupIdx}
-              group={group}
-              selectedEventIdInGroup={null}
-              show={show}
-            />
-          );
-        });
+      : filteredLocationMarkers
+          ?.filter(
+            (group) =>
+              group.lat !== null &&
+              group.lon !== null &&
+              !!bounds?.contains([group.lat, group.lon]),
+          )
+          // more than 50 should only happen if there is a bug
+          .slice(0, 50)
+          .map((group, groupIdx) => {
+            const show =
+              group.lat !== null &&
+              group.lon !== null &&
+              !!bounds?.contains([group.lat, group.lon]);
+            return (
+              <MemoGroupMarker
+                key={groupIdx}
+                group={group}
+                selectedEventIdInGroup={null}
+                show={show}
+              />
+            );
+          });
   }, [filteredLocationMarkers, bounds, isClose]);
 
   return <Pane name="zoomed-marker-pane">{viewMarkers}</Pane>;

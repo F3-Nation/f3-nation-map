@@ -2,25 +2,20 @@
 
 import Image from "next/image"; // Next.js Image component for optimized image rendering.
 
+import { CalendarPlus2, Clock, Filter, Moon, Sun } from "lucide-react";
+
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { useTheme } from "@f3/ui/theme";
+import { cn } from "@f3/ui";
 
 import type { FiltersType } from "~/utils/store/filter";
 import { filterStore, isAnyFilterActive } from "~/utils/store/filter";
-import AllFiltersSvgComponent from "../SVGs/allFilters"; // SVG component imports for different filter options.
-import AmSvgComponent from "../SVGs/AM";
-import PmSvgComponent from "../SVGs/PM";
-import TodaySvgComponent from "../SVGs/today";
-import TomorrowSvgComponent from "../SVGs/tomorrow";
 
 // Defining items for the filter options with their names and corresponding SVG components or image paths.
 
 // The main component for the map drawer.
-export const DrawerSomeFilters = () => {
+export const FiltersSome = () => {
   RERENDER_LOGS && console.log("DrawerSomeFilters rerender");
   const filters = filterStore.useBoundStore();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
 
   // Function to toggle the state of a filter when clicked.
   const handleFilterClick = (
@@ -36,11 +31,14 @@ export const DrawerSomeFilters = () => {
     }
   };
   const filterItems = [
-    { name: "today" as const, img: TodaySvgComponent },
-    { name: "tomorrow" as const, img: TomorrowSvgComponent },
+    { name: "today" as const, img: Clock },
+    {
+      name: "tomorrow" as const,
+      img: CalendarPlus2,
+    },
     {
       name: "am" as const,
-      img: AmSvgComponent,
+      img: Sun,
       onClick: () => {
         handleFilterClick("am");
         handleFilterClick("pm", false);
@@ -48,7 +46,7 @@ export const DrawerSomeFilters = () => {
     },
     {
       name: "pm" as const,
-      img: PmSvgComponent,
+      img: Moon,
       onClick: () => {
         handleFilterClick("pm");
         handleFilterClick("am", false);
@@ -56,7 +54,7 @@ export const DrawerSomeFilters = () => {
     },
     {
       name: "all filters" as const,
-      img: AllFiltersSvgComponent,
+      img: Filter,
       onClick: () => handleFilterClick("allFilters"),
       active: isAnyFilterActive(filters),
     },
@@ -75,13 +73,13 @@ export const DrawerSomeFilters = () => {
           >
             {/* Container for the filter icon, changes appearance based on filter state */}
             <div
-              className={`rounded-lg border p-2 ${
-                item.active ?? filters[item.name]
-                  ? isDark
-                    ? "border-gray-300 bg-gray-300"
-                    : "border-gray-600 bg-gray-600"
-                  : "border-gray-400 bg-background"
-              }`}
+              className={cn(
+                `rounded-lg border border-foreground bg-white p-2`,
+                {
+                  "border-muted-foreground bg-muted-foreground":
+                    item.active ?? filters[item.name],
+                },
+              )}
             >
               {/* Centering container for the filter icon */}
               <div className="flex h-7 w-full items-center justify-center">
@@ -94,16 +92,10 @@ export const DrawerSomeFilters = () => {
                   />
                 ) : (
                   <item.img
-                    className="h-full w-full"
-                    fillcolor={
-                      item.active ?? filters[item.name]
-                        ? isDark
-                          ? "#000000"
-                          : "#FFFFFF" // Fill color for active state.
-                        : isDark
-                          ? "#FFFFFF"
-                          : "#4b5563" // Default fill color for inactive state.
-                    }
+                    strokeWidth={1.25}
+                    className={cn("size-8 stroke-foreground", {
+                      "stroke-background": item.active ?? filters[item.name],
+                    })}
                   />
                 )}
               </div>

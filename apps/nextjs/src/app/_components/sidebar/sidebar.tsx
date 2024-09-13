@@ -3,19 +3,19 @@
 import { cn } from "@f3/ui";
 
 import { filterStore } from "~/utils/store/filter";
-import { DrawerAllFilters } from "../map/drawer-all-filters";
-import { DrawerSearchResults } from "../map/drawer-search-results";
-import { DrawerSomeFilters } from "../map/drawer-some-filters";
+import { DesktopNearbyLocations } from "../map/desktop-nearby-locations";
+import { FiltersAll } from "../map/filters-all";
+import { FiltersSome } from "../map/filters-some";
 
 export const Sidebar = () => {
   const allFilters = filterStore.use.allFilters();
   return (
     <>
       <div className="flex w-full flex-row justify-center">
-        <DrawerSomeFilters />
+        <FiltersSome />
       </div>
-      <DrawerAllFilters className={cn({ hidden: !allFilters })} />
-      <DrawerSearchResults className={cn({ hidden: allFilters })} />
+      <FiltersAll className={cn({ hidden: !allFilters })} />
+      <DesktopNearbyLocations className={cn({ hidden: allFilters })} />
     </>
   );
 };

@@ -13,7 +13,7 @@ export const PlaceResultIconPane = () => {
         <Marker
           position={placeResultLocation}
           icon={L.divIcon({
-            iconSize: [32, 32],
+            iconSize: [31, 31],
             iconAnchor: [16, 16],
             className: "",
             html: ReactDOMServer.renderToString(
