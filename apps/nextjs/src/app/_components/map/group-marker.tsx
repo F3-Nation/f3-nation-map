@@ -69,9 +69,11 @@ export const MemoGroupMarker = memo(
               locationId: id,
               eventId,
             });
-            mapRef.current?.setView({ lat, lng: lon }, CLOSE_ZOOM, {
-              animate: mapStore.get("zoom") === CLOSE_ZOOM,
-            });
+            mapRef.current?.setView(
+              { lat, lng: lon },
+              Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+              { animate: mapStore.get("zoom") === CLOSE_ZOOM },
+            );
           },
         }}
         icon={L.divIcon({

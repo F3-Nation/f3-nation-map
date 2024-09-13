@@ -71,7 +71,7 @@ export const EventChip = (props: {
         if (location.lat !== null && location.lon !== null) {
           mapRef.current?.setView(
             { lat: location.lat, lng: location.lon },
-            CLOSE_ZOOM,
+            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
             { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }

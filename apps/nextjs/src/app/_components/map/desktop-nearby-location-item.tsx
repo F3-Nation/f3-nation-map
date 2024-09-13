@@ -57,7 +57,7 @@ export const DesktopNearbyLocationItem = (props: {
         if (item.lat !== null && item.lon !== null) {
           mapRef.current?.setView(
             { lat: item.lat, lng: item.lon },
-            CLOSE_ZOOM,
+            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
             { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }

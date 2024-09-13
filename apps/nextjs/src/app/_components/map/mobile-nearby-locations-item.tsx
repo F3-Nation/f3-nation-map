@@ -57,7 +57,7 @@ export const MobileNearbyLocationsItem = (props: {
         if (searchResult.lat !== null && searchResult.lon !== null) {
           mapRef.current?.setView(
             { lat: searchResult.lat, lng: searchResult.lon },
-            CLOSE_ZOOM,
+            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
             { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }

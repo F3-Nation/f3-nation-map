@@ -115,9 +115,11 @@ export const CanvasIconLayer = ({
       selectedItemStore.setState({ locationId: item?.id ?? null });
       if (typeof item?.lat === "number" && typeof item.lon === "number") {
         console.log("canvas-layer setView", item);
-        map.setView({ lat: item?.lat, lng: item.lon }, CLOSE_ZOOM, {
-          animate: mapStore.get("zoom") === CLOSE_ZOOM,
-        });
+        map.setView(
+          { lat: item?.lat, lng: item.lon },
+          Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+          { animate: mapStore.get("zoom") === CLOSE_ZOOM },
+        );
       }
     },
     [map],
