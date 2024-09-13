@@ -71,11 +71,11 @@ const SelectedItem = (props: {
               onClick={() =>
                 useModalStore.setState({
                   open: true,
-                  type: ModalType.HOW_TO_JOIN,
+                  type: ModalType.WORKOUT_DETAILS,
                 })
               }
             >
-              How to join
+              More details
             </button>
           </div>
           {/* Use flex-col to stack items vertically */}
