@@ -1,15 +1,12 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
+import type { GroupedMapData, LeafletWorkoutData } from "@f3/shared/app/types";
 import { env } from "@f3/env";
 import { DAY_ORDER } from "@f3/shared/app/constants";
 import { groupMarkersByLocation } from "@f3/shared/app/functions";
 import { onlyUnique } from "@f3/shared/common/functions";
 
-import type {
-  GroupedMapData,
-  LeafletWorkoutData,
-} from "../../shared/src/app/types";
 import { db, eq, schema } from ".";
 import { getLocationData } from "./utils/get-location-data";
 

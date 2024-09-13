@@ -1,6 +1,7 @@
 "use client";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
+import { cn } from "@f3/ui";
 
 import { Responsive } from "~/utils/responsive";
 import { filterStore } from "~/utils/store/filter";
@@ -11,7 +12,10 @@ export const MobileAllFilters = () => {
   return (
     <Responsive maxWidth={BreakPoints.LG}>
       {!allFilters ? null : (
-        <div className="absolute inset-0 z-[2001] bg-background">
+        <div
+          style={{ zIndex: Z_INDEX.MOBILE_ALL_FILTERS_CONTAINER }}
+          className={cn(`absolute inset-0 bg-background`)}
+        >
           <FiltersAll />
         </div>
       )}

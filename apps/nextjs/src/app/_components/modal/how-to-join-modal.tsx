@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Z_INDEX } from "node_modules/@f3/shared/src/app/constants";
 
+import { cn } from "@f3/ui";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +19,10 @@ export default function HowToJoinModal() {
       open={open}
       onOpenChange={() => useModalStore.setState({ open: false })}
     >
-      <DialogContent className="z-[1201] max-w-[90%] lg:max-w-[400px]">
+      <DialogContent
+        style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
+        className={cn(`max-w-[90%] lg:max-w-[400px]`)}
+      >
         <DialogHeader>
           <DialogTitle className="text-center">
             How to join this workout

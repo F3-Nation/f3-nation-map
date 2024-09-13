@@ -1,3 +1,5 @@
+import { Z_INDEX } from "@f3/shared/app/constants";
+import { cn } from "@f3/ui";
 import {
   Dialog,
   DialogContent,
@@ -15,8 +17,10 @@ export default function UserLocationInfoModal() {
       open={open}
       onOpenChange={() => useModalStore.setState({ open: false })}
     >
-      {/* <DialogOverlay className='z-[1201] bg-black/[.5]' /> */}
-      <DialogContent className="z-[1201] w-[400px] max-w-[90%]">
+      <DialogContent
+        style={{ zIndex: Z_INDEX.USER_LOCATION_INFO_MODAL }}
+        className={cn(`w-[400px] max-w-[90%]`)}
+      >
         <DialogHeader>
           <DialogTitle className="text-center">Using your location</DialogTitle>
         </DialogHeader>
