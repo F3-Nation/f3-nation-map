@@ -3,7 +3,10 @@
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
-import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@f3/shared/app/constants";
+import {
+  CLOSE_ZOOM,
+  MOBILE_SEARCH_RESULT_ITEM_HEIGHT,
+} from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
@@ -53,12 +56,9 @@ export const MobileNearbyLocationsItem = (props: {
         });
         if (searchResult.lat !== null && searchResult.lon !== null) {
           mapRef.current?.setView(
-            {
-              lat: searchResult.lat,
-              lng: searchResult.lon,
-            },
-            13,
-            { animate: true },
+            { lat: searchResult.lat, lng: searchResult.lon },
+            CLOSE_ZOOM,
+            { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }
       }}

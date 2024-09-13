@@ -11,9 +11,9 @@ import { Spinner } from "@f3/ui/spinner";
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
 import { Responsive } from "~/utils/responsive";
 import { selectedItemStore } from "~/utils/store/selected-item";
+import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { MobileNearbyLocationsItem } from "./mobile-nearby-locations-item";
-import { SearchResultItemSkeleton } from "./search-result-item-skeleton";
 
 export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
   const { className, ...rest } = props;
@@ -84,7 +84,7 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
         >
           {locationOrderedLocationMarkers === undefined
             ? Array.from({ length: 6 }).map((_, index) => (
-                <SearchResultItemSkeleton key={index} />
+                <DesktopNearbyLocationItemSkeleton key={index} />
               ))
             : locationOrderedLocationMarkers
                 ?.slice(0, visibleItemsCount)

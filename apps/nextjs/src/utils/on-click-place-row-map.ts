@@ -1,4 +1,4 @@
-import { SnapPoint } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, SnapPoint } from "@f3/shared/app/constants";
 
 import type { GeoMapSearchResult } from "./types";
 import { placesDetails } from "./places-details";
@@ -17,6 +17,10 @@ export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
     mapStore.setState({
       placeResultLocation: { lat: latitude, lng: longitude },
     });
-    mapStore.get("ref").current?.setView({ lat: latitude, lng: longitude }, 13);
+    mapStore
+      .get("ref")
+      .current?.setView({ lat: latitude, lng: longitude }, CLOSE_ZOOM, {
+        animate: mapStore.get("zoom") === CLOSE_ZOOM,
+      });
   });
 };

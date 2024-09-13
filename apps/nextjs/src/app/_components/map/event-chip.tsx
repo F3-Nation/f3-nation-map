@@ -1,6 +1,6 @@
 "use client";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
@@ -70,11 +70,9 @@ export const EventChip = (props: {
         });
         if (location.lat !== null && location.lon !== null) {
           mapRef.current?.setView(
-            {
-              lat: location.lat,
-              lng: location.lon,
-            },
-            13,
+            { lat: location.lat, lng: location.lon },
+            CLOSE_ZOOM,
+            { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }
       }}

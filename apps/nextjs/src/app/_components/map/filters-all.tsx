@@ -27,7 +27,7 @@ import SwimSvgComponent from "../SVGs/swim";
 // Defining items for the filter options with their names and corresponding SVG components or image paths.
 
 // The main component for the map drawer.
-export const DrawerAllFilters = (props: ComponentProps<"div">) => {
+export const FiltersAll = (props: ComponentProps<"div">) => {
   RERENDER_LOGS && console.log("DrawerAllFilters rerender");
   const { className, ...rest } = props;
   const filters = filterStore.useBoundStore();

@@ -74,7 +74,8 @@ export const UserLocationIcon = () => {
             >
               <div className={cn({ "animate-spin": status === "loading" })}>
                 <LocateFixed
-                  className={cn("size-5 scale-100 text-foreground")}
+                  strokeWidth={1.25}
+                  className={cn("size-6 scale-100 text-foreground")}
                 />
               </div>
             </Button>

@@ -49,7 +49,7 @@ export const CanvasIconLayer = ({
 
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > CLOSE_ZOOM;
+  const isClose = zoom >= CLOSE_ZOOM;
 
   const farMarkers = useMemo(() => {
     const markerData: (MarkerLocation | Marker)[] =
@@ -115,7 +115,9 @@ export const CanvasIconLayer = ({
       selectedItemStore.setState({ locationId: item?.id ?? null });
       if (typeof item?.lat === "number" && typeof item.lon === "number") {
         console.log("canvas-layer setView", item);
-        map.setView({ lat: item?.lat, lng: item.lon }, 15);
+        map.setView({ lat: item?.lat, lng: item.lon }, CLOSE_ZOOM, {
+          animate: mapStore.get("zoom") === CLOSE_ZOOM,
+        });
       }
     },
     [map],

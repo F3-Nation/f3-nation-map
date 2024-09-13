@@ -16,7 +16,7 @@ export const ZoomedMarkerPane = () => {
   const zoom = mapStore.use.zoom();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > CLOSE_ZOOM;
+  const isClose = zoom >= CLOSE_ZOOM;
 
   const viewMarkers = useMemo(() => {
     return !isClose

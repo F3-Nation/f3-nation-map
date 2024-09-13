@@ -5,7 +5,7 @@ import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
@@ -69,7 +69,9 @@ export const MemoGroupMarker = memo(
               locationId: id,
               eventId,
             });
-            mapRef.current?.setView({ lat, lng: lon }, 15);
+            mapRef.current?.setView({ lat, lng: lon }, CLOSE_ZOOM, {
+              animate: mapStore.get("zoom") === CLOSE_ZOOM,
+            });
           },
         }}
         icon={L.divIcon({

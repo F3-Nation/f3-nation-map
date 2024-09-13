@@ -1,6 +1,6 @@
 import { Skeleton } from "@f3/ui/skeleton";
 
-export const SearchResultItemSkeleton = () => {
+export const DesktopNearbyLocationItemSkeleton = () => {
   return (
     <Skeleton className="flex min-h-[160px] w-full flex-col justify-between bg-transparent p-4">
       <div className="flex flex-row justify-between">
