@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, XCircle } from "lucide-react";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 
@@ -50,7 +50,7 @@ export function MapSearchBoxMobile({
           "pointer-events-none absolute bottom-1 left-0 right-0",
           className,
         )}
-        style={{ zIndex: 1001 }}
+        style={{ zIndex: Z_INDEX.MAP_SEARCHBOX_MOBILE }}
         {...rest}
       >
         <div

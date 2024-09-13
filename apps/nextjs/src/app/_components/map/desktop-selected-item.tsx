@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { ExternalLink, X } from "lucide-react";
 
-import { BreakPoints, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import {
+  BreakPoints,
+  SHORT_DAY_ORDER,
+  Z_INDEX,
+} from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import type { RouterOutputs } from "~/trpc/types";
@@ -161,7 +165,10 @@ const SelectedItemWrapper = () => {
   const props = { selectedLocation, selectedEvent };
   return (
     <Responsive minWidth={BreakPoints.LG}>
-      <div className="absolute bottom-2 left-2" style={{ zIndex: 2000 }}>
+      <div
+        className="absolute bottom-2 left-2"
+        style={{ zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP }}
+      >
         <SelectedItem {...props} />
       </div>
     </Responsive>

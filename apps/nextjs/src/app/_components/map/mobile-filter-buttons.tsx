@@ -2,7 +2,7 @@
 
 import { CalendarIcon, Filter } from "lucide-react";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import { Responsive } from "~/utils/responsive";
@@ -18,7 +18,7 @@ export const MobileFilterButtons = () => {
     <Responsive maxWidth={BreakPoints.LG}>
       <div
         className="absolute right-2 top-2 flex flex-col gap-2"
-        style={{ zIndex: 1000 }}
+        style={{ zIndex: Z_INDEX.MOBILE_FILTER_BUTTONS }}
       >
         <button
           className={cn(

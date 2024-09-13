@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { Search, XCircle } from "lucide-react";
 
-import { SnapPoint } from "@f3/shared/app/constants";
+import { SnapPoint, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
@@ -144,7 +144,10 @@ export function MapSearchBox({
           <PopoverContent
             onOpenAutoFocus={(e) => e.preventDefault()}
             className={cn("h-[400px] overflow-scroll p-0")}
-            style={{ zIndex: 1000, width: inputRef.current?.clientWidth }}
+            style={{
+              zIndex: Z_INDEX.MAP_SEARCHBOX_POPOVER_CONTENT_DESKTOP,
+              width: inputRef.current?.clientWidth,
+            }}
           >
             {combinedResults.length === 0 ? (
               <div className="mt-4 w-full text-center">
