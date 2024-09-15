@@ -3,7 +3,7 @@
 import type { ComponentProps } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 import { Spinner } from "@f3/ui/spinner";
@@ -55,7 +55,7 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
     <Responsive maxWidth={BreakPoints.LG}>
       <div
         className={cn("absolute bottom-14 left-0 right-0", className)}
-        style={{ zIndex: 1000 }}
+        style={{ zIndex: Z_INDEX.MOBILE_NEARBY_LOCATIONS }}
         {...rest}
       >
         <div

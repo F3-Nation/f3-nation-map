@@ -5,7 +5,7 @@
 // Importing type definitions and constants.
 import { useEffect, useRef } from "react";
 
-import { BreakPoints } from "@f3/shared/app/constants"; // Type import for SnapPoint.
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants"; // Type import for SnapPoint.
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
@@ -36,10 +36,12 @@ export const MobileSearchResults = () => {
 
   return !showResults ? null : (
     <div
-      className={cn(
-        "pointer-events-none absolute inset-0 z-[1000] flex flex-col",
-        { "bg-background": shouldShowResults && !!combinedResults.length },
-      )}
+      style={{
+        zIndex: Z_INDEX.MOBILE_SEARCH_RESULTS,
+      }}
+      className={cn("pointer-events-none absolute inset-0 flex flex-col", {
+        "bg-background": shouldShowResults && !!combinedResults.length,
+      })}
     >
       <Responsive maxWidth={BreakPoints.LG}>
         <div

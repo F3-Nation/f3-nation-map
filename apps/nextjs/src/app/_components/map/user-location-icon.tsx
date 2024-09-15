@@ -4,7 +4,7 @@
 import { useWindowSize } from "@react-hook/window-size";
 import { LocateFixed } from "lucide-react";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
@@ -50,8 +50,9 @@ export const UserLocationIcon = () => {
       style={{
         bottom: width < BreakPoints.LG ? 8 : 16,
         right: width < BreakPoints.LG ? 8 : 16,
+        zIndex: Z_INDEX.USER_LOCATION_ICON,
       }}
-      className={"absolute z-[1001]"}
+      className={cn(`absolute`)}
     >
       <Tooltip>
         <TooltipTrigger>

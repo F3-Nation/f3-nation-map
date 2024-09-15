@@ -3,6 +3,7 @@
 import type { LatLngExpression } from "leaflet";
 import { useState } from "react";
 import { MapPinIcon } from "lucide-react";
+import { Z_INDEX } from "node_modules/@f3/shared/src/app/constants";
 import ReactDOMServer from "react-dom/server";
 import { Marker, Pane } from "react-leaflet";
 
@@ -14,7 +15,10 @@ export const CenterPointMarker = () => {
     mapRef.current?.getCenter(),
   );
   return (
-    <Pane name="center-point" style={{ zIndex: 1000 }}>
+    <Pane
+      name="center-point"
+      style={{ zIndex: Z_INDEX.CENTER_POINT_MARKER_PANE }}
+    >
       {curCenter ? (
         <Marker
           eventHandlers={{

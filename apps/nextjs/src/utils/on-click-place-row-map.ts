@@ -19,8 +19,10 @@ export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
     });
     mapStore
       .get("ref")
-      .current?.setView({ lat: latitude, lng: longitude }, CLOSE_ZOOM, {
-        animate: mapStore.get("zoom") === CLOSE_ZOOM,
-      });
+      .current?.setView(
+        { lat: latitude, lng: longitude },
+        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+        { animate: mapStore.get("zoom") === CLOSE_ZOOM },
+      );
   });
 };

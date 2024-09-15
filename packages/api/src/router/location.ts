@@ -1,4 +1,6 @@
-import { eq, inArray, schema } from "@f3/db";
+import { z } from "zod";
+
+import { aliasedTable, eq, inArray, schema } from "@f3/db";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -156,4 +158,60 @@ export const locationRouter = createTRPCRouter({
       events: item.events,
     }));
   }),
+  getIndividualWorkoutData: publicProcedure
+    .input(z.object({ eventId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const ao = aliasedTable(schema.orgs, "ao");
+      const region = aliasedTable(schema.orgs, "region");
+      const [data] = await ctx.db
+        .select({
+          eventId: schema.events.id,
+          eventName: schema.events.name,
+          eventAddress: schema.events.description,
+          eventMeta: schema.events.meta,
+          dayOfWeek: schema.events.dayOfWeek,
+          startTime: schema.events.startTime,
+          endTime: schema.events.endTime,
+          description: schema.events.description,
+          eventTypeId: schema.events.eventTypeId,
+
+          locationId: schema.locations.id,
+          lat: schema.locations.lat,
+          lon: schema.locations.lon,
+          locationName: schema.locations.name,
+          locationMeta: schema.locations.meta,
+          locationAddress: schema.locations.description,
+          isActive: schema.locations.isActive,
+          created: schema.locations.created,
+          updated: schema.locations.updated,
+          locationDescription: schema.locations.description,
+          orgId: schema.locations.orgId,
+
+          aoId: ao.id,
+          aoLogo: ao.logo,
+          aoWebsite: ao.website,
+          aoName: ao.name,
+
+          regionId: region.id,
+          regionLogo: region.logo,
+          regionWebsite: region.website,
+          regionName: region.name,
+
+          type: schema.eventTypes.name,
+        })
+        .from(schema.events)
+        .where(eq(schema.events.id, input.eventId))
+        .leftJoin(
+          schema.locations,
+          eq(schema.events.locationId, schema.locations.id),
+        )
+        .leftJoin(ao, eq(schema.locations.orgId, ao.id))
+        .leftJoin(region, eq(ao.parentId, region.id))
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.events.eventTypeId),
+        );
+
+      return data;
+    }),
 });

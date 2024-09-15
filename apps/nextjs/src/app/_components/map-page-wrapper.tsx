@@ -37,7 +37,13 @@ const Header = () => {
         target="_blank"
         className="absolute left-4"
       >
-        <Image src="/f3_logo.png" alt="F3 Logo" width={64} height={64} />
+        <Image
+          src="/f3_logo.png"
+          alt="F3 Logo"
+          width={64}
+          height={64}
+          className="rounded-lg"
+        />
       </Link>
       <div className="relative w-2/5">
         <MapSearchBox hideLogo className="" />

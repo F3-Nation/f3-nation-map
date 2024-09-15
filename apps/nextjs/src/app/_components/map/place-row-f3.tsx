@@ -17,9 +17,11 @@ export const onClickPlaceRowF3 = (result: F3MapSearchResult) => {
   if (typeof latitude === "number" && typeof longitude === "number") {
     mapStore
       .get("ref")
-      .current?.setView({ lat: latitude, lng: longitude }, CLOSE_ZOOM, {
-        animate: mapStore.get("zoom") === CLOSE_ZOOM,
-      });
+      .current?.setView(
+        { lat: latitude, lng: longitude },
+        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+        { animate: mapStore.get("zoom") === CLOSE_ZOOM },
+      );
     selectedItemStore.setState({
       locationId: result.destination.item.locationId,
       eventId: result.destination.item.id,
@@ -66,6 +68,7 @@ export const PlaceRowF3 = ({
           width={32}
           height={32}
           alt="item"
+          className="rounded-sm bg-black"
         />
         <div className="flex-4 text-start">
           <CardTitle>{result.header}</CardTitle>

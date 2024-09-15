@@ -2,7 +2,7 @@
 
 import { Pane } from "react-leaflet/Pane";
 
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { api } from "~/trpc/react";
@@ -23,7 +23,10 @@ export const SelectedIconMarkerPane = () => {
   );
 
   return (
-    <Pane name="selected-item-marker" style={{ zIndex: 1001 }}>
+    <Pane
+      name="selected-item-marker"
+      style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
+    >
       {!selectedItem ? null : (
         <MemoGroupMarker
           group={selectedItem}

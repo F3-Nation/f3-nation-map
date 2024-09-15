@@ -2,10 +2,9 @@
 
 import type { ComponentProps } from "react";
 import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
 import { Search, XCircle } from "lucide-react";
 
-import { SnapPoint } from "@f3/shared/app/constants";
+import { SnapPoint, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
@@ -24,11 +23,9 @@ import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBox({
   className,
-  hideLogo,
   ...rest
 }: ComponentProps<"div"> & { hideLogo?: true }) {
   const text = searchStore.use.text();
-  const snap = drawerStore.use.snap();
   const [isFocused, setIsFocused] = useState(false);
   const { combinedResults } = useTextSearchResults();
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -67,12 +64,6 @@ export function MapSearchBox({
       )}
       {...rest}
     >
-      {/* Logo */}
-      {snap === SnapPoint["pt-0.95"] || hideLogo ? null : (
-        <Image src={"/f3_logo.png"} height={42} width={42} alt="F3 logo" />
-      )}
-      {/* Search box component for the map */}
-
       <div className="relative w-full">
         <Popover open={isFocused}>
           <PopoverTrigger className="w-full">
@@ -144,7 +135,10 @@ export function MapSearchBox({
           <PopoverContent
             onOpenAutoFocus={(e) => e.preventDefault()}
             className={cn("h-[400px] overflow-scroll p-0")}
-            style={{ zIndex: 1000, width: inputRef.current?.clientWidth }}
+            style={{
+              zIndex: Z_INDEX.MAP_SEARCHBOX_POPOVER_CONTENT_DESKTOP,
+              width: inputRef.current?.clientWidth,
+            }}
           >
             {combinedResults.length === 0 ? (
               <div className="mt-4 w-full text-center">

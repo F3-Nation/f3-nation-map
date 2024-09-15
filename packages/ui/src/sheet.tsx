@@ -5,6 +5,7 @@ import { Cross2Icon } from "@radix-ui/react-icons";
 import { cva } from "class-variance-authority";
 
 import { cn } from ".";
+import { Z_INDEX } from "../../shared/src/app/constants";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -22,8 +23,9 @@ const SheetOverlay = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
+    style={{ zIndex: Z_INDEX.SHEET_OVERLAY }}
     className={cn(
-      "fixed inset-0 z-50 bg-white/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 dark:bg-zinc-950/80",
+      "fixed inset-0 bg-white/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 dark:bg-zinc-950/80",
       className,
     )}
     {...props}
@@ -33,7 +35,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-white p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out dark:bg-zinc-950",
+  `fixed gap-4 bg-white p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out dark:bg-zinc-950`,
   {
     variants: {
       side: {
@@ -63,6 +65,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
+      style={{ zIndex: Z_INDEX.SHEET_VARIANTS }}
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >

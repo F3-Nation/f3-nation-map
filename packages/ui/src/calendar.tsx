@@ -2,6 +2,8 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
+import { Z_INDEX } from "@f3/shared/app/constants";
+
 import { cn } from ".";
 import { buttonVariants } from "./button";
 
@@ -34,7 +36,10 @@ function Calendar({
         head_cell:
           "text-slate-500 rounded-md w-9 font-normal text-[0.8rem] dark:text-slate-400",
         row: "flex w-full mt-2",
-        cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-slate-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 dark:[&:has([aria-selected])]:bg-slate-800",
+        cell: cn(
+          "relative p-0 text-center text-sm focus-within:relative [&:has([aria-selected])]:bg-slate-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md dark:[&:has([aria-selected])]:bg-slate-800",
+          `focus-within:z-[${Z_INDEX.CALENDAR_CELL}]`,
+        ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100",

@@ -62,7 +62,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
     if (userGpsLocation) {
       mapRef.current?.setView(
         { lat: userGpsLocation.latitude, lng: userGpsLocation.longitude },
-        CLOSE_ZOOM,
+        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
         { animate: mapStore.get("zoom") === CLOSE_ZOOM },
       );
       return;
@@ -81,7 +81,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         if (position) {
           mapRef.current?.setView(
             { lat: position.coords.latitude, lng: position.coords.longitude },
-            CLOSE_ZOOM,
+            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
             { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }

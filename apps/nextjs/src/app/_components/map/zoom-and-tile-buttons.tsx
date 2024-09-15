@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useWindowSize } from "@react-hook/window-size";
 import { Minus, Plus } from "lucide-react";
 
-import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
+import { SIDEBAR_WIDTH, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { ThemeToggle } from "@f3/ui/theme";
 
@@ -63,9 +63,7 @@ export const ZoomAndTileButtons = () => {
   return (
     <div
       className="absolute left-2 top-2 flex flex-col gap-1"
-      style={{
-        zIndex: 1000,
-      }}
+      style={{ zIndex: Z_INDEX.ZOOM_AND_TILE_BUTTONS }}
     >
       <button
         className={cn(

@@ -2,7 +2,7 @@
 
 import Image from "next/image"; // Next.js Image component for optimized image rendering.
 
-import { CalendarPlus2, Clock, Filter, Moon, Sun } from "lucide-react";
+import { CalendarPlus2, Clock, Filter, Sunrise, Sunset } from "lucide-react";
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
@@ -38,7 +38,7 @@ export const FiltersSome = () => {
     },
     {
       name: "am" as const,
-      img: Sun,
+      img: Sunrise,
       onClick: () => {
         handleFilterClick("am");
         handleFilterClick("pm", false);
@@ -46,7 +46,7 @@ export const FiltersSome = () => {
     },
     {
       name: "pm" as const,
-      img: Moon,
+      img: Sunset,
       onClick: () => {
         handleFilterClick("pm");
         handleFilterClick("am", false);
@@ -74,7 +74,7 @@ export const FiltersSome = () => {
             {/* Container for the filter icon, changes appearance based on filter state */}
             <div
               className={cn(
-                `rounded-lg border border-foreground bg-white p-2`,
+                `rounded-lg border border-foreground bg-background p-2`,
                 {
                   "border-muted-foreground bg-muted-foreground":
                     item.active ?? filters[item.name],

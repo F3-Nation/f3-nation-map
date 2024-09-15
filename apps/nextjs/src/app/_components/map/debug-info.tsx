@@ -1,5 +1,9 @@
 "use client";
 
+import { Z_INDEX } from "node_modules/@f3/shared/src/app/constants";
+
+import { cn } from "@f3/ui";
+
 import { mapStore } from "~/utils/store/map";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 
@@ -9,7 +13,12 @@ export const DebugInfo = () => {
   const { filteredLocationMarkers } = useFilteredMapResults();
 
   return (
-    <div className="absolute right-0 top-48 z-[1000] h-min bg-foreground/10 p-2 lg:bottom-0 lg:right-0">
+    <div
+      style={{ zIndex: Z_INDEX.DEBUG_INFO }}
+      className={cn(
+        `absolute right-0 top-48 h-min bg-foreground/10 p-2 lg:bottom-0 lg:right-0`,
+      )}
+    >
       <div className="m-0 p-0">Zoom: {zoom.toFixed(1)}</div>
       <div className="m-0 p-0">North: {bounds?.getNorth().toFixed(5)}</div>
       <div className="m-0 p-0">East: {bounds?.getEast().toFixed(5)}</div>
