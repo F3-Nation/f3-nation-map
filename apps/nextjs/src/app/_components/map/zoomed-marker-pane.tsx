@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Pane } from "react-leaflet";
 
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { mapStore } from "~/utils/store/map";
@@ -35,16 +35,16 @@ export const ZoomedMarkerPane = () => {
               group.lat !== null &&
               group.lon !== null &&
               !!bounds?.contains([group.lat, group.lon]);
-            return (
-              <MemoGroupMarker
-                key={groupIdx}
-                group={group}
-                selectedEventIdInGroup={null}
-                show={show}
-              />
-            );
+            return <MemoGroupMarker key={groupIdx} group={group} show={show} />;
           });
   }, [filteredLocationMarkers, bounds, isClose]);
 
-  return <Pane name="zoomed-marker-pane">{viewMarkers}</Pane>;
+  return (
+    <Pane
+      name="zoomed-marker-pane"
+      style={{ zIndex: Z_INDEX.ZOOMED_MARKER_PANE }}
+    >
+      {viewMarkers}
+    </Pane>
+  );
 };
