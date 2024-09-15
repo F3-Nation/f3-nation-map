@@ -65,6 +65,7 @@ const SelectedItem = (props: {
               width={64}
               height={64}
               alt={selectedLocation.logo ?? "F3 logo"}
+              className="bg-black"
             />
             <button
               className="cursor-pointer text-center text-sm text-blue-500 underline"

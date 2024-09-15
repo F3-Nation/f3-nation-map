@@ -97,6 +97,7 @@ export const MobileNearbyLocationsItem = (props: {
             width={48}
             height={48}
             alt={searchResult.logo ?? "F3 logo"}
+            className="bg-black"
           />
           <p className="cursor-pointer text-center text-xs text-blue-500 underline">
             More details

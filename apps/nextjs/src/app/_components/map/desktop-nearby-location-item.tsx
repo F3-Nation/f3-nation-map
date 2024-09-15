@@ -80,6 +80,7 @@ export const DesktopNearbyLocationItem = (props: {
             width={48}
             height={48}
             alt={item.logo ?? "F3 logo"}
+            className="bg-black" // many are white png
           />
         </div>
         {/* Use flex-col to stack items vertically */}
