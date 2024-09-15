@@ -4,7 +4,7 @@ import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
 import { CLOSE_ZOOM } from "@f3/shared/app/constants";
-import { RERENDER_LOGS, isProduction } from "@f3/shared/common/constants";
+import { isProduction, RERENDER_LOGS } from "@f3/shared/common/constants";
 import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
@@ -81,7 +81,7 @@ export const DesktopNearbyLocationItem = (props: {
             width={48}
             height={48}
             alt={item.logo ?? "F3 logo"}
-            className="bg-black" // many are white png
+            className="rounded-md bg-black" // many are white png
           />
         </div>
         {/* Use flex-col to stack items vertically */}

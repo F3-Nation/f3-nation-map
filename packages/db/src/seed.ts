@@ -239,7 +239,7 @@ export async function insertData(data: {
     .onConflictDoNothing()
     .returning({ id: schema.orgTypes.id, name: schema.orgTypes.name });
 
-  console.log("inserted regions", regions.length);
+  console.log("inserted regions", regions.length, regions[0]);
 
   const uniqueAOsWithWorkouts = workoutData.reduce(
     (acc, workout) => {
@@ -318,7 +318,7 @@ export async function insertData(data: {
     )
     .returning();
 
-  console.log("inserted ao orgs", aoOrgs.length);
+  console.log("inserted ao orgs", aoOrgs.length, aoOrgs[0]);
 
   const aoOrgKeyDict = aoOrgs.reduce(
     (acc, aoOrg) => {
@@ -358,7 +358,7 @@ export async function insertData(data: {
     )
     .returning();
 
-  console.log("inserted aos", aoLocs.length);
+  console.log("inserted aos", aoLocs.length, aoLocs[0]);
 
   const eventsToInsert: InferInsertModel<typeof schema.events>[] =
     Object.values(uniqueAOsWithWorkouts).flatMap(({ ao, events }) => {
