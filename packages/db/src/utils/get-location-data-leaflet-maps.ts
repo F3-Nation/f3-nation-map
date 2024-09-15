@@ -7,7 +7,7 @@ export const creds = {
   client_email: process.env.GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL!,
 };
 
-export const getLocationData = async () => {
+export const getLocationDataFromLeafletMaps = async () => {
   // Initialize the sheet - doc ID is the long id in the sheets URL
   const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
   console.log("doc", !!doc);

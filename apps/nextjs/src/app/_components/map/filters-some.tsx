@@ -74,7 +74,7 @@ export const FiltersSome = () => {
             {/* Container for the filter icon, changes appearance based on filter state */}
             <div
               className={cn(
-                `rounded-lg border border-foreground bg-white p-2`,
+                `rounded-lg border border-foreground bg-background p-2`,
                 {
                   "border-muted-foreground bg-muted-foreground":
                     item.active ?? filters[item.name],

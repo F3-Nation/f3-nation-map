@@ -66,7 +66,13 @@ export function MapSearchBoxMobile({
             target="_blank"
             className="pointer-events-auto mx-auto"
           >
-            <Image src="/f3_logo.png" alt="F3 Logo" width={42} height={42} />
+            <Image
+              src="/f3_logo.png"
+              alt="F3 Logo"
+              width={42}
+              height={42}
+              className="rounded-md"
+            />
           </Link>
           {/* Search box component for the map */}
           <div className="pointer-events-auto relative w-full">

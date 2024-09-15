@@ -3,22 +3,15 @@
 import Link from "next/link";
 import { ExternalLink, X } from "lucide-react";
 
-import {
-  BreakPoints,
-  SHORT_DAY_ORDER,
-  Z_INDEX,
-} from "@f3/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import type { RouterOutputs } from "~/trpc/types";
-import { dayjs } from "~/utils/frontendDayjs";
 import { Responsive } from "~/utils/responsive";
 import { ModalType, useModalStore } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
-import BootSvgComponent from "../SVGs/boot-camp";
-import RuckSvgComponent from "../SVGs/ruck";
-import SwimSvgComponent from "../SVGs/swim";
+import { EventChip } from "./event-chip";
 import { useSelectedItem } from "./use-selected-item";
 
 const SelectedItem = (props: {
@@ -30,25 +23,6 @@ const SelectedItem = (props: {
   const { selectedLocation, selectedEvent } = props;
 
   // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
-
-  const dayOfWeek =
-    selectedEvent.dayOfWeek === null
-      ? undefined
-      : SHORT_DAY_ORDER[selectedEvent.dayOfWeek];
-  const startTime =
-    selectedEvent.startTime === null
-      ? undefined
-      : dayjs(selectedEvent.startTime, "HH:mm:ss").format("h:mmA");
-
-  const _endTime =
-    selectedEvent.endTime === null
-      ? undefined
-      : dayjs(selectedEvent.endTime, "HH:mm:ss").format("h:mmA");
-
-  const duration = dayjs(selectedEvent.endTime, "HH:mm:ss").diff(
-    dayjs(selectedEvent.startTime, "HH:mm:ss"),
-    "minutes",
-  );
 
   return (
     <>
@@ -65,39 +39,28 @@ const SelectedItem = (props: {
               width={64}
               height={64}
               alt={selectedLocation.logo ?? "F3 logo"}
+              className="rounded-lg bg-black"
             />
             <button
               className="cursor-pointer text-center text-sm text-blue-500 underline"
               onClick={() =>
                 useModalStore.setState({
                   open: true,
-                  type: ModalType.HOW_TO_JOIN,
+                  type: ModalType.WORKOUT_DETAILS,
+                  data: {
+                    eventId: selectedEvent.id,
+                  },
                 })
               }
             >
-              How to join
+              More details
             </button>
           </div>
           {/* Use flex-col to stack items vertically */}
           <div className="flex flex-col overflow-hidden">
             <div className="flex flex-row items-center">
               <div className="mr-8 flex flex-row items-center gap-2">
-                <div className="flex-shrink-0 rounded-sm bg-red-600 p-1 text-white">
-                  {dayOfWeek} {startTime} ({duration}m)
-                </div>
-                <div>
-                  {selectedEvent.type === "Bootcamp" ? (
-                    <BootSvgComponent height={24} />
-                  ) : selectedEvent.type === "Swimming" ? (
-                    <SwimSvgComponent height={24} />
-                  ) : selectedEvent.type === "Ruck" ? (
-                    <RuckSvgComponent height={24} />
-                  ) : (
-                    <p className="line-clamp-1 font-semibold">
-                      {selectedEvent.type}
-                    </p>
-                  )}
-                </div>
+                <EventChip event={selectedEvent} location={selectedLocation} />
               </div>
             </div>
             {selectedLocation.locationDescription ? (

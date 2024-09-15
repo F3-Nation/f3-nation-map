@@ -2,7 +2,6 @@
 
 import type { ComponentProps } from "react";
 import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
 import { Search, XCircle } from "lucide-react";
 
 import { SnapPoint, Z_INDEX } from "@f3/shared/app/constants";
@@ -24,11 +23,9 @@ import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBox({
   className,
-  hideLogo,
   ...rest
 }: ComponentProps<"div"> & { hideLogo?: true }) {
   const text = searchStore.use.text();
-  const snap = drawerStore.use.snap();
   const [isFocused, setIsFocused] = useState(false);
   const { combinedResults } = useTextSearchResults();
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -67,12 +64,6 @@ export function MapSearchBox({
       )}
       {...rest}
     >
-      {/* Logo */}
-      {snap === SnapPoint["pt-0.95"] || hideLogo ? null : (
-        <Image src={"/f3_logo.png"} height={42} width={42} alt="F3 logo" />
-      )}
-      {/* Search box component for the map */}
-
       <div className="relative w-full">
         <Popover open={isFocused}>
           <PopoverTrigger className="w-full">

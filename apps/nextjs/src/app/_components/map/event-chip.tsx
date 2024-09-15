@@ -3,7 +3,6 @@
 import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
-import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { dayjs } from "~/utils/frontendDayjs";
 import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
@@ -15,8 +14,20 @@ import SwimSvgComponent from "../SVGs/swim";
 export const EventChip = (props: {
   condensed?: boolean;
   selected?: boolean;
-  event: LocationMarkerWithDistance["events"][0];
-  location: LocationMarkerWithDistance;
+  event: {
+    dayOfWeek: number | null;
+    startTime: string | null;
+    endTime: string | null;
+    id: number;
+    locationId: number | null;
+    type: string | null;
+    name: string;
+    logo: string | null;
+  };
+  location: {
+    lat: number | null;
+    lon: number | null;
+  };
 }) => {
   const mapRef = mapStore.use.ref();
   const { event, location, condensed = false, selected } = props;

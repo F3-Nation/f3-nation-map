@@ -68,6 +68,7 @@ export const PlaceRowF3 = ({
           width={32}
           height={32}
           alt="item"
+          className="rounded-sm bg-black"
         />
         <div className="flex-4 text-start">
           <CardTitle>{result.header}</CardTitle>

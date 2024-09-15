@@ -77,16 +77,8 @@ export const MobileNearbyLocationsItem = (props: {
           onClick={() =>
             useModalStore.setState({
               open: true,
-              type: ModalType.HOW_TO_JOIN,
-              content: searchResult.website ? (
-                <Link
-                  href={searchResult.website}
-                  target="_blank"
-                  className="mb-2 flex cursor-pointer text-blue-500 underline"
-                >
-                  Visit group site
-                </Link>
-              ) : null,
+              type: ModalType.WORKOUT_DETAILS,
+              data: { eventId },
             })
           }
         >
@@ -97,9 +89,10 @@ export const MobileNearbyLocationsItem = (props: {
             width={48}
             height={48}
             alt={searchResult.logo ?? "F3 logo"}
+            className="rounded-md bg-black"
           />
           <p className="cursor-pointer text-center text-xs text-blue-500 underline">
-            How to join
+            More details
           </p>
         </button>
         {/* Use flex-col to stack items vertically */}
