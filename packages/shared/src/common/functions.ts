@@ -404,13 +404,23 @@ export const queryParamToString = (
 };
 
 export const safeParseInt = <T>(value: T) => {
-  const parsedValue = typeof value === "string" ? parseInt(value) : undefined;
+  const parsedValue =
+    typeof value === "string"
+      ? parseInt(value)
+      : typeof value === "number"
+        ? value
+        : undefined;
   const returnValue = Number.isNaN(parsedValue) ? undefined : parsedValue;
   return returnValue; // as T extends undefined ? undefined : number - dont do this since it could be NaN
 };
 
 export const safeParseFloat = <T>(value: T) => {
-  const parsedValue = typeof value === "string" ? parseFloat(value) : undefined;
+  const parsedValue =
+    typeof value === "string"
+      ? parseFloat(value)
+      : typeof value === "number"
+        ? value
+        : undefined;
   const returnValue = Number.isNaN(parsedValue) ? undefined : parsedValue;
   return returnValue; // as T extends undefined ? undefined : number - dont do this since it could be NaN
 };
