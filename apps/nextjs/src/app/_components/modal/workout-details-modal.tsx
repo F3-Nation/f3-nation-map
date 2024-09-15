@@ -120,7 +120,7 @@ export const WorkoutDetailsModal = () => {
                       <dt className="text-sm font-medium text-muted-foreground">
                         {field}
                       </dt>
-                      <dd className="mt-1 text-sm text-foreground">
+                      <dd className="mt-1 whitespace-pre text-sm text-foreground">
                         {workoutFields[field as keyof typeof workoutFields]}
                       </dd>
                     </div>
