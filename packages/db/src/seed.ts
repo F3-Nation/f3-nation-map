@@ -334,7 +334,7 @@ export async function insertData(data: {
   const aoLocs = await db
     .insert(schema.locations)
     .values(
-      Object.values(uniqueAOsWithWorkouts).map(({ ao }) => {
+      Object.values(uniqueAOsWithWorkouts).map(({ ao, events }) => {
         const aoOrg = aoOrgKeyDict[ao.key];
         const aoData: InferInsertModel<typeof schema.locations> = {
           name: "", // AO locations do not have names yet (should be "Walgreens" etc)
@@ -343,6 +343,15 @@ export async function insertData(data: {
           lat: safeParseFloat(ao.latitude),
           lon: safeParseFloat(ao.longitude),
           orgId: aoOrg?.id,
+          meta: {
+            latLonKey: ao.key,
+            address1: events[0]?.["Address 1"],
+            address2: events[0]?.["Address 2"],
+            city: events[0]?.City,
+            state: events[0]?.State,
+            postalCode: events[0]?.["Postal Code"],
+            country: events[0]?.Country,
+          },
         };
         return aoData;
       }),

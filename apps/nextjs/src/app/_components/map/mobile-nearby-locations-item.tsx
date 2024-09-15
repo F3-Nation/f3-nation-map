@@ -78,15 +78,7 @@ export const MobileNearbyLocationsItem = (props: {
             useModalStore.setState({
               open: true,
               type: ModalType.WORKOUT_DETAILS,
-              content: searchResult.website ? (
-                <Link
-                  href={searchResult.website}
-                  target="_blank"
-                  className="mb-2 flex cursor-pointer text-blue-500 underline"
-                >
-                  Visit group site
-                </Link>
-              ) : null,
+              data: { eventId },
             })
           }
         >

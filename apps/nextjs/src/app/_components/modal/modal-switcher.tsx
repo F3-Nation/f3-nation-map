@@ -3,7 +3,7 @@
 import { ModalType, useModalStore } from "~/utils/store/modal";
 import HowToJoinModal from "./how-to-join-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
-import WorkoutDetailsModal from "./workout-details-modal";
+import { WorkoutDetailsModal } from "./workout-details-modal";
 
 export default function ModalSwitcher() {
   const { type } = useModalStore();

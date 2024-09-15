@@ -11,4 +11,5 @@ export const useModalStore = create(() => ({
   open: false as boolean,
   type: "" as ModalType,
   content: "" as ReactNode,
+  data: {} as Record<string, unknown>,
 }));

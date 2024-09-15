@@ -73,6 +73,9 @@ const SelectedItem = (props: {
                 useModalStore.setState({
                   open: true,
                   type: ModalType.WORKOUT_DETAILS,
+                  data: {
+                    eventId: selectedEvent.id,
+                  },
                 })
               }
             >

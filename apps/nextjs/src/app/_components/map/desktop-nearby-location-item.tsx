@@ -4,7 +4,7 @@ import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
 import { CLOSE_ZOOM } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { RERENDER_LOGS, isProduction } from "@f3/shared/common/constants";
 import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
@@ -67,6 +67,7 @@ export const DesktopNearbyLocationItem = (props: {
         <div className="line-clamp-1 text-lg font-bold">{name}</div>
         {isNumber(item.distance) ? (
           <div className="text-xs text-foreground/40">
+            {!isProduction ? <div>({item.id})</div> : null}
             {item.distance?.toFixed(1)}mi
           </div>
         ) : null}

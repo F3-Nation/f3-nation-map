@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { eq, inArray, schema } from "@f3/db";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -156,4 +158,48 @@ export const locationRouter = createTRPCRouter({
       events: item.events,
     }));
   }),
+  getIndividualWorkoutData: publicProcedure
+    .input(z.object({ eventId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const [data] = await ctx.db
+        .select({
+          eventId: schema.events.id,
+          locationId: schema.locations.id,
+          regionId: schema.orgs.id,
+          lat: schema.locations.lat,
+          lon: schema.locations.lon,
+          locationName: schema.locations.name,
+          locationMeta: schema.locations.meta,
+          locationAddress: schema.locations.description,
+          eventAddress: schema.events.description,
+          isActive: schema.locations.isActive,
+          created: schema.locations.created,
+          updated: schema.locations.updated,
+          eventMeta: schema.events.meta,
+          locationDescription: schema.locations.description,
+          orgId: schema.locations.orgId,
+          logo: schema.orgs.logo,
+          website: schema.orgs.website,
+          dayOfWeek: schema.events.dayOfWeek,
+          startTime: schema.events.startTime,
+          endTime: schema.events.endTime,
+          description: schema.events.description,
+          eventTypeId: schema.events.eventTypeId,
+          type: schema.eventTypes.name,
+          regionName: schema.orgs.name,
+        })
+        .from(schema.events)
+        .where(eq(schema.events.id, input.eventId))
+        .leftJoin(
+          schema.locations,
+          eq(schema.events.locationId, schema.locations.id),
+        )
+        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.events.eventTypeId),
+        );
+
+      return data;
+    }),
 });
