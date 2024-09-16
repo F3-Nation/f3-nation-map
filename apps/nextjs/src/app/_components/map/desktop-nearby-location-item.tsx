@@ -9,6 +9,7 @@ import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
+import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
@@ -21,6 +22,8 @@ export const DesktopNearbyLocationItem = (props: {
 
   const eventId = selectedItemStore.use.eventId();
   const locationId = selectedItemStore.use.locationId();
+  const ignoreNextNearbyItemMouseEnter =
+    appStore.use.ignoreNextNearbyItemMouseEnter();
   const { item } = props;
   const isSelected = item.id === locationId;
   const mapRef = mapStore.use.ref();
@@ -34,10 +37,15 @@ export const DesktopNearbyLocationItem = (props: {
       className={cn(
         "text-left text-sm text-foreground",
         "relative h-32 w-full max-w-[450px] cursor-pointer p-2",
-        "overflow-clip bg-background hover:bg-foreground/5",
+        "overflow-clip bg-background",
         { "bg-foreground/5": isSelected },
       )}
-      onMouseOver={() => {
+      onMouseEnter={() => {
+        // Log to know if this was due to a mouse movement or element adjustment
+        if (ignoreNextNearbyItemMouseEnter) {
+          appStore.setState({ ignoreNextNearbyItemMouseEnter: false });
+          return;
+        }
         selectedItemStore.setState({
           locationId: item.id,
           eventId: null,
@@ -60,6 +68,8 @@ export const DesktopNearbyLocationItem = (props: {
             Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
             { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
+          // prevent the next mouse enter from triggering a change
+          appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
         }
       }}
     >
