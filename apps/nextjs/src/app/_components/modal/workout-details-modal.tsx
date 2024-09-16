@@ -54,7 +54,6 @@ export const WorkoutDetailsModal = () => {
     ) : null,
     Logo: workout?.regionLogo,
   };
-  const size = 48;
 
   return (
     <Dialog
