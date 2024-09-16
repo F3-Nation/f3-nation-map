@@ -6,6 +6,8 @@ import { Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { api } from "~/trpc/react";
+import { filterData } from "~/utils/filtered-data";
+import { filterStore } from "~/utils/store/filter";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { MemoSelectedGroupMarker } from "./selected-group-marker";
 
@@ -20,18 +22,26 @@ export const SelectedIconMarkerPane = () => {
     (location) => location.id === locationId,
   );
 
+  const filters = filterStore.useBoundStore();
+
+  const [filteredSelectedItem] = filterData(
+    selectedItem ? [selectedItem] : [],
+    filters,
+  );
+
   return (
     <Pane
       name="selected-item-marker"
       style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
       className="pointer-events-none"
     >
-      {!selectedItem ? null : (
+      {!filteredSelectedItem ? null : (
         <MemoSelectedGroupMarker
-          group={selectedItem}
+          group={filteredSelectedItem}
           selectedEventIdInGroup={
-            selectedItem.events.find((event) => event.id === eventId)?.id ??
-            selectedItem.events[0]?.id ??
+            filteredSelectedItem?.events.find((event) => event.id === eventId)
+              ?.id ??
+            filteredSelectedItem?.events[0]?.id ??
             null
           }
         />
