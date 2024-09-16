@@ -12,7 +12,7 @@ import RunSvgComponent from "../SVGs/run";
 import SwimSvgComponent from "../SVGs/swim";
 
 export const EventChip = (props: {
-  condensed?: boolean;
+  size?: "small" | "medium" | "large";
   selected?: boolean;
   event: {
     dayOfWeek: number | null;
@@ -21,8 +21,6 @@ export const EventChip = (props: {
     id: number;
     locationId: number | null;
     type: string | null;
-    name: string;
-    logo: string | null;
   };
   location: {
     lat: number | null;
@@ -30,17 +28,25 @@ export const EventChip = (props: {
   };
 }) => {
   const mapRef = mapStore.use.ref();
-  const { event, location, condensed = false, selected } = props;
-  const dayOfWeek =
+  const { event, location, size = "medium", selected } = props;
+  const calcDayOfWeek =
     event.dayOfWeek === null ? undefined : SHORT_DAY_ORDER[event.dayOfWeek];
+  const endTimeRaw =
+    event.endTime === null
+      ? undefined
+      : dayjs(event.endTime, "HH:mm:ss").format("h:mmA");
   const startTimeRaw =
     event.startTime === null
       ? undefined
       : dayjs(event.startTime, "HH:mm:ss").format("h:mmA");
 
-  const startTime = !condensed
-    ? startTimeRaw
-    : startTimeRaw?.replace(":00", "");
+  const iconSize = size === "small" ? 16 : size === "medium" ? 16 : 32;
+
+  const startTime =
+    size === "large" ? startTimeRaw : startTimeRaw?.replace(":00", "");
+
+  const endTime =
+    size === "large" ? endTimeRaw : endTimeRaw?.replace(":00", "");
 
   const duration = dayjs(event.endTime, "HH:mm:ss").diff(
     dayjs(event.startTime, "HH:mm:ss"),
@@ -54,11 +60,11 @@ export const EventChip = (props: {
         "rounded-sm hover:bg-red-400",
         "text-xs text-white",
         "gap-1 px-1 shadow",
-        // { "gap-[2px] bg-transparent text-red-600 underline": condensed },
         { "bg-red-400": selected },
         { "bg-red-600": !selected },
-        { "py-[1px]": condensed },
-        { "py-[2px]": !condensed },
+        { "py-[1px]": size === "small" },
+        { "py-[2px]": size === "medium" },
+        { "py-[3px]": size === "large" },
       )}
       onMouseOver={(e) => {
         selectedItemStore.setState({
@@ -88,19 +94,23 @@ export const EventChip = (props: {
         }
       }}
     >
-      <p>
-        {dayOfWeek} {startTime}
-        {condensed ? null : ` (${duration}m)`}
+      <p className={cn({ "text-base": size === "large" })}>
+        {calcDayOfWeek} {startTime}
+        {size === "small"
+          ? null
+          : size === "medium"
+            ? ` (${duration}m)`
+            : ` - ${endTime} (${duration}m)`}
       </p>
       <div>
         {event.type === "Bootcamp" ? (
-          <BootSvgComponent height={16} width={16} />
+          <BootSvgComponent height={iconSize} width={iconSize} />
         ) : event.type === "Swimming" ? (
-          <SwimSvgComponent height={16} width={16} />
+          <SwimSvgComponent height={iconSize} width={iconSize} />
         ) : event.type === "Ruck" ? (
-          <RuckSvgComponent height={16} width={16} />
+          <RuckSvgComponent height={iconSize} width={iconSize} />
         ) : event.type === "Run" ? (
-          <RunSvgComponent height={16} width={16} />
+          <RunSvgComponent height={iconSize} width={iconSize} />
         ) : null}
       </div>
     </button>

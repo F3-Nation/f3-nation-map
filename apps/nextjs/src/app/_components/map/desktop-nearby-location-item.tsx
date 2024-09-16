@@ -95,7 +95,7 @@ export const DesktopNearbyLocationItem = (props: {
                     event={event}
                     key={event.id}
                     location={item}
-                    condensed
+                    size="small"
                     selected={event.id === eventId && item.id === locationId}
                   />
                 );

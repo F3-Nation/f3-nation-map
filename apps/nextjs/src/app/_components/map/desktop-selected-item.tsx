@@ -60,7 +60,11 @@ const SelectedItem = (props: {
           <div className="flex flex-col overflow-hidden">
             <div className="flex flex-row items-center">
               <div className="mr-8 flex flex-row items-center gap-2">
-                <EventChip event={selectedEvent} location={selectedLocation} />
+                <EventChip
+                  event={selectedEvent}
+                  location={selectedLocation}
+                  size="medium"
+                />
               </div>
             </div>
             {selectedLocation.locationDescription ? (
