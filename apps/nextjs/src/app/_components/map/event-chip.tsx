@@ -1,6 +1,10 @@
 "use client";
 
-import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import {
+  CLOSE_ZOOM,
+  DAY_ORDER,
+  SHORT_DAY_ORDER,
+} from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import { dayjs } from "~/utils/frontendDayjs";
@@ -14,6 +18,7 @@ import SwimSvgComponent from "../SVGs/swim";
 export const EventChip = (props: {
   size?: "small" | "medium" | "large";
   selected?: boolean;
+  onClick?: () => void;
   event: {
     dayOfWeek: number | null;
     startTime: string | null;
@@ -30,23 +35,20 @@ export const EventChip = (props: {
   const mapRef = mapStore.use.ref();
   const { event, location, size = "medium", selected } = props;
   const calcDayOfWeek =
-    event.dayOfWeek === null ? undefined : SHORT_DAY_ORDER[event.dayOfWeek];
-  const endTimeRaw =
-    event.endTime === null
+    event.dayOfWeek === null
       ? undefined
-      : dayjs(event.endTime, "HH:mm:ss").format("h:mmA");
+      : size === "large"
+        ? DAY_ORDER[event.dayOfWeek]
+        : SHORT_DAY_ORDER[event.dayOfWeek];
   const startTimeRaw =
     event.startTime === null
       ? undefined
       : dayjs(event.startTime, "HH:mm:ss").format("h:mmA");
 
-  const iconSize = size === "small" ? 16 : size === "medium" ? 16 : 32;
+  const iconSize = size === "small" ? 16 : size === "medium" ? 16 : 24;
 
   const startTime =
     size === "large" ? startTimeRaw : startTimeRaw?.replace(":00", "");
-
-  const endTime =
-    size === "large" ? endTimeRaw : endTimeRaw?.replace(":00", "");
 
   const duration = dayjs(event.endTime, "HH:mm:ss").diff(
     dayjs(event.startTime, "HH:mm:ss"),
@@ -59,12 +61,12 @@ export const EventChip = (props: {
         "flex flex-row items-center ",
         "rounded-sm hover:bg-red-400",
         "text-xs text-white",
-        "gap-1 px-1 shadow",
+        "px-1 shadow",
         { "bg-red-400": selected },
         { "bg-red-600": !selected },
-        { "py-[1px]": size === "small" },
-        { "py-[2px]": size === "medium" },
-        { "py-[3px]": size === "large" },
+        { "gap-1 py-[1px]": size === "small" },
+        { "gap-1 py-[2px]": size === "medium" },
+        { "gap-2 py-[3px]": size === "large" },
       )}
       onMouseOver={(e) => {
         selectedItemStore.setState({
@@ -80,27 +82,27 @@ export const EventChip = (props: {
         });
         e.stopPropagation();
       }}
-      onClick={() => {
-        selectedItemStore.setState({
-          locationId: event.locationId,
-          eventId: event.id,
-        });
-        if (location.lat !== null && location.lon !== null) {
-          mapRef.current?.setView(
-            { lat: location.lat, lng: location.lon },
-            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-            { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-          );
-        }
-      }}
+      onClick={
+        props.onClick ??
+        ((e) => {
+          selectedItemStore.setState({
+            locationId: event.locationId,
+            eventId: event.id,
+          });
+          if (location.lat !== null && location.lon !== null) {
+            mapRef.current?.setView(
+              { lat: location.lat, lng: location.lon },
+              Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+              { animate: mapStore.get("zoom") === CLOSE_ZOOM },
+            );
+          }
+          e.stopPropagation();
+        })
+      }
     >
       <p className={cn({ "text-base": size === "large" })}>
         {calcDayOfWeek} {startTime}
-        {size === "small"
-          ? null
-          : size === "medium"
-            ? ` (${duration}m)`
-            : ` - ${endTime} (${duration}m)`}
+        {size === "small" ? null : ` (${duration}m)`}
       </p>
       <div>
         {event.type === "Bootcamp" ? (

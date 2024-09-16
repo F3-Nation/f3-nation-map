@@ -48,7 +48,7 @@ const SelectedItem = (props: {
                   open: true,
                   type: ModalType.WORKOUT_DETAILS,
                   data: {
-                    eventId: selectedEvent.id,
+                    locationId: selectedLocation.id,
                   },
                 })
               }

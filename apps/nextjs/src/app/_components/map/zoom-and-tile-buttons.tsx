@@ -100,7 +100,7 @@ export const ZoomAndTileButtons = () => {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={tiles === "street" ? "/satellite.png" : "/street.png"}
+          src={tiles === "street" ? "/satellite.jpg" : "/street.jpg"}
           alt={tiles}
           className="h-8 object-cover"
         />
