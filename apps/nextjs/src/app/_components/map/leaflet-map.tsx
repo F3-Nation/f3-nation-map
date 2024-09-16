@@ -115,8 +115,8 @@ const MapContent = ({
     <>
       <MapListener />
       <TileLayer {...tileProps} />
-      <SelectedIconMarkerPane />
       <ZoomedMarkerPane />
+      <SelectedIconMarkerPane />
       <GeoJsonPane />
       <CanvasIconLayer markerLocations={markerLocations} />
       <UserLocationMarker />

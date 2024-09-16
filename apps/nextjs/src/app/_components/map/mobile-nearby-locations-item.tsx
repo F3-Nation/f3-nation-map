@@ -105,7 +105,7 @@ export const MobileNearbyLocationsItem = (props: {
                   selected={
                     locationId === searchResult.id && event.id === eventId
                   }
-                  condensed
+                  size="small"
                   event={event}
                   location={searchResult}
                 />

@@ -13,10 +13,7 @@ import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
 import { useModalStore } from "~/utils/store/modal";
 import { ImageWithFallback } from "../image-with-fallback";
-import BootSvgComponent from "../SVGs/boot-camp";
-import RuckSvgComponent from "../SVGs/ruck";
-import RunSvgComponent from "../SVGs/run";
-import SwimSvgComponent from "../SVGs/swim";
+import { EventChip } from "../map/event-chip";
 
 export const WorkoutDetailsModal = () => {
   const { open, data } = useModalStore();
@@ -57,7 +54,6 @@ export const WorkoutDetailsModal = () => {
     ) : null,
     Logo: workout?.regionLogo,
   };
-  const size = 48;
 
   return (
     <Dialog
@@ -72,30 +68,7 @@ export const WorkoutDetailsModal = () => {
           <WorkoutDetailsSkeleton />
         ) : (
           <>
-            <DialogHeader className="flex flex-row items-end justify-between">
-              <div className="flex flex-col items-start">
-                <DialogTitle className="mt-8 text-left text-lg font-bold sm:text-2xl">
-                  {workout?.eventName ?? "Workout Information"}
-                </DialogTitle>
-                {workout ? (
-                  <div className="flex flex-row items-center gap-2">
-                    <div className="rounded-sm bg-red-600 px-2 py-1 text-white">
-                      {getWhenFromWorkout(workout)}
-                    </div>
-                    <div>
-                      {workout.type === "Bootcamp" ? (
-                        <BootSvgComponent height={size} width={size} />
-                      ) : workout.type === "Swimming" ? (
-                        <SwimSvgComponent height={size} width={size} />
-                      ) : workout.type === "Ruck" ? (
-                        <RuckSvgComponent height={size} width={size} />
-                      ) : workout.type === "Run" ? (
-                        <RunSvgComponent height={size} width={size} />
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+            <DialogHeader className="mt-8 flex flex-row flex-wrap items-end justify-start gap-x-2">
               <div className="flex flex-shrink-0 flex-col items-center">
                 <ImageWithFallback
                   src={workout.aoLogo ? workout.aoLogo : "/f3_logo.png"}
@@ -106,6 +79,28 @@ export const WorkoutDetailsModal = () => {
                   alt={workout.aoLogo ?? "F3 logo"}
                   className="rounded-lg bg-black"
                 />
+              </div>
+              <div className="flex flex-col items-start">
+                <DialogTitle className="text-left text-lg font-bold sm:text-2xl">
+                  {workout?.eventName ?? "Workout Information"}
+                </DialogTitle>
+                {workout ? (
+                  <EventChip
+                    event={{
+                      id: workout.eventId,
+                      locationId: workout.locationId,
+                      dayOfWeek: workout.dayOfWeek,
+                      startTime: workout.startTime,
+                      endTime: workout.endTime,
+                      type: workout.type,
+                    }}
+                    location={{
+                      lat: workout.lat,
+                      lon: workout.lon,
+                    }}
+                    size={"large"}
+                  />
+                ) : null}
               </div>
             </DialogHeader>
             <div className="w-full">
@@ -120,7 +115,7 @@ export const WorkoutDetailsModal = () => {
                       <dt className="text-sm font-medium text-muted-foreground">
                         {field}
                       </dt>
-                      <dd className="mt-1 text-sm text-foreground">
+                      <dd className="mt-1 whitespace-pre text-sm text-foreground">
                         {workoutFields[field as keyof typeof workoutFields]}
                       </dd>
                     </div>

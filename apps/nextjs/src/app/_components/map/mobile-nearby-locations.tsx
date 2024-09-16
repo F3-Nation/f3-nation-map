@@ -54,7 +54,7 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
   return (
     <Responsive maxWidth={BreakPoints.LG}>
       <div
-        className={cn("absolute bottom-14 left-0 right-0", className)}
+        className={cn("absolute bottom-12 left-0 right-0", className)}
         style={{ zIndex: Z_INDEX.MOBILE_NEARBY_LOCATIONS }}
         {...rest}
       >
@@ -64,6 +64,7 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
             gap: itemGap,
             paddingLeft: itemGap,
             paddingRight: itemGap + scrollBuffer,
+            paddingBottom: 8, // so scrollbar doesn't overlap items
           }}
           className="flex h-full flex-row items-end overflow-x-auto"
           onScroll={(e) => {

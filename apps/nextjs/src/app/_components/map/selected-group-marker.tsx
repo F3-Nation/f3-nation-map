@@ -2,70 +2,33 @@
 
 import { memo } from "react";
 import L from "leaflet";
-import isNumber from "lodash/isNumber";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
-import { safeParseInt } from "@f3/shared/common/functions";
+import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import type { RouterOutputs } from "~/trpc/types";
-import { mapStore } from "~/utils/store/map";
-import { selectedItemStore } from "~/utils/store/selected-item";
 
-export const MemoGroupMarker = memo(
+export const MemoSelectedGroupMarker = memo(
   ({
     group,
-    show,
+    selectedEventIdInGroup,
   }: {
     group: RouterOutputs["location"]["getAllLocationMarkers"][number];
-    show: boolean;
+    selectedEventIdInGroup: number | null;
   }) => {
-    const mapRef = mapStore.use.ref();
     const { lat, lon, events, id } = group;
-    if (!show || lat === null || lon === null) return null;
+    if (lat === null || lon === null) return null;
     return (
       <Marker
+        // Allow move movements to go to the zoomed marker pane below
+        interactive={false}
         position={[lat, lon]}
-        eventHandlers={{
-          mousemove: (e) => {
-            const eventIdString = Array.from(
-              (e.originalEvent.target as HTMLDivElement)?.classList,
-            )
-              // Use a class name to find the event id
-              .find((className) => className.startsWith("leaflet-eventid-"))
-              ?.split("-")[2];
-            const eventId = safeParseInt(eventIdString);
-            // Only send eventId if it is a valid number
-            selectedItemStore.setState({
-              locationId: id,
-              ...(isNumber(eventId) ? { eventId } : {}),
-            });
-          },
-          click: (e) => {
-            const eventIdString = Array.from(
-              (e.originalEvent.target as HTMLDivElement)?.classList,
-            )
-              // Use a class name to find the event id
-              .find((className) => className.startsWith("leaflet-eventid-"))
-              ?.split("-")[2];
-            const eventId = safeParseInt(eventIdString);
-            selectedItemStore.setState({
-              locationId: id,
-              eventId,
-            });
-            mapRef.current?.setView(
-              { lat, lng: lon },
-              Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-              { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-            );
-          },
-        }}
         icon={L.divIcon({
           iconSize: [events.length * 30, 30],
           iconAnchor: [(events.length * 30) / 2, 30 + 15],
-          className: "",
+          className: "pointer-events-none",
           html: ReactDOMServer.renderToString(
             <div className="flex flex-col">
               <div className="flex flex-row">
@@ -80,7 +43,7 @@ export const MemoGroupMarker = memo(
                       <button
                         key={markerIdx + "-" + id}
                         className={cn(
-                          "flex-1 cursor-pointer border-b-[0.5px] border-t-[0.5px] bg-foreground py-2 text-center text-background",
+                          "pointer-events-none flex-1 cursor-pointer border-b-[0.5px] border-t-[0.5px] bg-foreground py-2 text-center text-background",
                           // Use a class name to find the event id
                           `leaflet-eventid-${marker.id}`,
                           {
@@ -89,6 +52,8 @@ export const MemoGroupMarker = memo(
                             "border-r-[0.5px]": isEnd,
                             "rounded-r-full": isEnd,
                             "rounded-l-full": isStart,
+                            "bg-red-600 font-bold dark:bg-red-400":
+                              selectedEventIdInGroup === marker.id,
                           },
                         )}
                       >
@@ -99,10 +64,13 @@ export const MemoGroupMarker = memo(
               </div>
               <svg
                 viewBox="0 0 40 40"
-                className="-mt-[12px] w-[31px] self-center"
+                className="pointer-events-none -mt-[12px] w-[31px] self-center"
               >
                 <path
-                  className={cn("fill-foreground")}
+                  className={cn("fill-foreground", {
+                    "fill-[#dc2626] dark:fill-[#f87171]": true,
+                  })}
+                  // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
                   d={
                     events.length === 1
                       ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
@@ -111,6 +79,8 @@ export const MemoGroupMarker = memo(
                   stroke="none"
                 />
                 <path
+                  // className="stroke-background"
+                  // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
                   d={
                     events.length === 1
                       ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
@@ -128,9 +98,9 @@ export const MemoGroupMarker = memo(
     );
   },
   (prev, next) =>
-    prev.show === next.show &&
     prev.group.id === next.group.id &&
-    prev.group.events.length === next.group.events.length,
+    prev.group.events.length === next.group.events.length &&
+    prev.selectedEventIdInGroup === next.selectedEventIdInGroup,
 );
 
-MemoGroupMarker.displayName = "MemoGroupMarker";
+MemoSelectedGroupMarker.displayName = "MemoSelectedGroupMarker";
