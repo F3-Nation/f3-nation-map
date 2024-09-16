@@ -1,4 +1,7 @@
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useWindowWidth } from "@react-hook/window-size";
+import { isNumber } from "lodash";
 
 import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
 import {
@@ -17,42 +20,61 @@ import { EventChip } from "../map/event-chip";
 
 export const WorkoutDetailsModal = () => {
   const { open, data } = useModalStore();
-  const eventId = typeof data.eventId === "number" ? data.eventId : -1;
-  const { data: workout, isLoading } =
-    api.location.getIndividualWorkoutData.useQuery(
-      { eventId },
-      { enabled: eventId >= 0 },
-    );
+  const locationId = typeof data.locationId === "number" ? data.locationId : -1;
+  const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
+    { locationId },
+    { enabled: locationId >= 0 && open },
+  );
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const workout = useMemo(
+    () => results?.events.find((event) => event.eventId === selectedEventId),
+    [selectedEventId, results],
+  );
+  const location = useMemo(() => results?.location, [results]);
+  const width = useWindowWidth();
+  const isLarge = width > 1024;
+  const isMedium = width > 640;
+
+  useEffect(() => {
+    const resultsEventId = results?.events[0]?.eventId;
+    if (isNumber(resultsEventId)) {
+      setSelectedEventId(resultsEventId);
+    }
+  }, [results]);
 
   const workoutFields = {
     Name: workout?.eventName,
     What: workout?.type,
-    Where: workout?.locationAddress ? (
+    Where: location?.locationAddress ? (
       <Link
-        href={`https://maps.google.com/?q=${encodeURIComponent(workout?.locationAddress)}`}
+        href={`https://maps.google.com/?q=${encodeURIComponent(location?.locationAddress)}`}
         target="_blank"
         className="underline"
       >
-        {workout.locationAddress}
+        {location.locationAddress}
       </Link>
     ) : null,
     When: workout ? getWhenFromWorkout(workout) : "",
-    Website: workout?.aoWebsite ? (
-      <Link href={workout?.aoWebsite} target="_blank" className="underline">
-        {workout.aoWebsite}
+    Website: location?.aoWebsite ? (
+      <Link href={location.aoWebsite} target="_blank" className="underline">
+        {location.aoWebsite}
       </Link>
     ) : null,
     Notes: workout?.description,
   };
 
   const regionFields = {
-    Name: workout?.regionName,
-    Website: workout?.regionWebsite ? (
-      <Link href={workout?.regionWebsite} target="_blank" className="underline">
-        {workout.regionWebsite}
+    Name: location?.regionName,
+    Website: location?.regionWebsite ? (
+      <Link
+        href={location?.regionWebsite}
+        target="_blank"
+        className="underline"
+      >
+        {location.regionWebsite}
       </Link>
     ) : null,
-    Logo: workout?.regionLogo,
+    Logo: location?.regionLogo,
   };
 
   return (
@@ -64,45 +86,54 @@ export const WorkoutDetailsModal = () => {
         style={{ zIndex: Z_INDEX.WORKOUT_DETAILS_MODAL }}
         className="px-4 sm:px-6 lg:px-8"
       >
-        {!workout || isLoading ? (
+        {!results?.location || !results.events.length || isLoading ? (
           <WorkoutDetailsSkeleton />
         ) : (
           <>
-            <DialogHeader className="mt-8 flex flex-row flex-wrap items-end justify-start gap-x-2">
+            <DialogHeader className="mt-8 flex flex-row flex-wrap items-center justify-start gap-x-2">
               <div className="flex flex-shrink-0 flex-col items-center">
                 <ImageWithFallback
-                  src={workout.aoLogo ? workout.aoLogo : "/f3_logo.png"}
+                  src={location?.aoLogo ? location.aoLogo : "/f3_logo.png"}
                   fallbackSrc="/f3_logo.png"
                   loading="lazy"
                   width={64}
                   height={64}
-                  alt={workout.aoLogo ?? "F3 logo"}
+                  alt={location?.aoLogo ?? "F3 logo"}
                   className="rounded-lg bg-black"
                 />
               </div>
-              <div className="flex flex-col items-start">
-                <DialogTitle className="text-left text-lg font-bold sm:text-2xl">
-                  {workout?.eventName ?? "Workout Information"}
-                </DialogTitle>
-                {workout ? (
+              <DialogTitle className="text-left text-2xl font-bold sm:text-4xl">
+                {workout?.eventName ?? "Workout Information"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div>
+              {(results?.events.length ?? 0) > 1
+                ? `There are ${results?.events.length} workouts at this location`
+                : null}
+              <div className="flex flex-row flex-wrap gap-1">
+                {results?.events.map((event) => (
                   <EventChip
+                    key={event.eventId}
+                    onClick={() => setSelectedEventId(event.eventId)}
+                    selected={selectedEventId === event.eventId}
                     event={{
-                      id: workout.eventId,
-                      locationId: workout.locationId,
-                      dayOfWeek: workout.dayOfWeek,
-                      startTime: workout.startTime,
-                      endTime: workout.endTime,
-                      type: workout.type,
+                      id: event.eventId,
+                      locationId: results.location.locationId,
+                      dayOfWeek: event.dayOfWeek,
+                      startTime: event.startTime,
+                      endTime: event.endTime,
+                      type: event.type,
                     }}
                     location={{
-                      lat: workout.lat,
-                      lon: workout.lon,
+                      lat: results.location.lat,
+                      lon: results.location.lon,
                     }}
-                    size={"large"}
+                    size={isLarge ? "large" : isMedium ? "medium" : "small"}
                   />
-                ) : null}
+                ))}
               </div>
-            </DialogHeader>
+            </div>
             <div className="w-full">
               <dl className="grid grid-cols-1 gap-x-4 gap-y-4 break-words sm:grid-cols-2">
                 {Object.keys(workoutFields)
@@ -115,7 +146,7 @@ export const WorkoutDetailsModal = () => {
                       <dt className="text-sm font-medium text-muted-foreground">
                         {field}
                       </dt>
-                      <dd className="mt-1 whitespace-pre text-sm text-foreground">
+                      <dd className="mt-1 whitespace-pre-line text-sm text-foreground">
                         {workoutFields[field as keyof typeof workoutFields]}
                       </dd>
                     </div>

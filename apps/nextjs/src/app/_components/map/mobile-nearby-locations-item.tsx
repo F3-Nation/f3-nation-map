@@ -78,7 +78,7 @@ export const MobileNearbyLocationsItem = (props: {
             useModalStore.setState({
               open: true,
               type: ModalType.WORKOUT_DETAILS,
-              data: { eventId },
+              data: { locationId: searchResult.id },
             })
           }
         >
