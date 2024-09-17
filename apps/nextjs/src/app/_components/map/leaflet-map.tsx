@@ -3,8 +3,6 @@
 import "~/utils/leaflet-canvas-markers"; // with modifications
 import "~/utils/smooth-zoom-wheel"; // with modifications
 
-import "leaflet/dist/leaflet.css";
-
 import type { TileLayerProps } from "react-leaflet";
 import { useWindowSize } from "@react-hook/window-size";
 import { MapContainer, TileLayer } from "react-leaflet";
@@ -21,15 +19,12 @@ import { useTheme } from "@f3/ui/theme";
 import type { RouterOutputs } from "~/trpc/types";
 import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
-import { CenterPointMarker } from "./center-point-marker";
-import { DebugInfo } from "./debug-info";
 import { GeoJsonPane } from "./geo-json-pane";
 import { MapListener } from "./map-listener";
 import { PlaceResultIconPane } from "./place-result-icon-pane";
-import { SelectedIconMarkerLayer } from "./selected-item-marker";
-import { UserLocationIconAndMarker } from "./user-location-icon-and-marker";
+import { SelectedIconMarkerPane } from "./selected-item-marker-pane";
+import { UserLocationMarker } from "./user-location-marker";
 import { useUserLocation } from "./user-location-provider";
-import { ZoomAndTileButtons } from "./zoom-and-tile-buttons";
 import { ZoomedMarkerPane } from "./zoomed-marker-pane";
 
 // const DEFAULT_CENTER = { lat: 36.13910556091472, lng: -81.6757511960024 };
@@ -60,7 +55,6 @@ export const LeafletMap = ({
         }
         // https://stackoverflow.com/questions/13851888/how-can-i-change-the-default-loading-tile-color-in-leafletjs
         // tile loading background color is here:
-        // apps/nextjs/src/app/globals.css
         preferCanvas={true}
         zoom={DEFAULT_ZOOM}
         zoomSnap={0.1}
@@ -87,13 +81,6 @@ const MapContent = ({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   RERENDER_LOGS && console.log("MapContent rerender");
-  // const googleHybrid = L.tileLayer(
-  //   "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
-  //   {
-  //     maxZoom: 20,
-  //     subdomains: ["mt0", "mt1", "mt2", "mt3"],
-  //   },
-  // );
   const terrainProps: TileLayerProps = {
     url: "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
     maxZoom: 20,
@@ -129,15 +116,11 @@ const MapContent = ({
       <MapListener />
       <TileLayer {...tileProps} />
       <ZoomedMarkerPane />
+      <SelectedIconMarkerPane />
       <GeoJsonPane />
       <CanvasIconLayer markerLocations={markerLocations} />
-      <SelectedIconMarkerLayer />
-      <UserLocationIconAndMarker />
+      <UserLocationMarker />
       <PlaceResultIconPane />
-      <ZoomAndTileButtons />
-      <CenterPointMarker />
-
-      {process.env.NODE_ENV === "development" ? <DebugInfo /> : null}
     </>
   );
 };

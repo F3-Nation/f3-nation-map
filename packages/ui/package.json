@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@f3/shared": "workspace:*",
     "@hookform/resolvers": "^3.3.4",
     "@radix-ui/react-alert-dialog": "^1.0.4",
     "@radix-ui/react-avatar": "^1.0.4",

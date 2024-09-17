@@ -9,11 +9,11 @@ import { Toaster } from "@f3/ui/toast";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
 
+import "leaflet/dist/leaflet.css";
 import "~/app/globals.css";
 
 import { TooltipProvider } from "@f3/ui/tooltip";
 
-import { HeaderAndSidebar } from "./_components/header-and-sidebar";
 import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
 import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
 import { UserLocationProvider } from "./_components/map/user-location-provider";
@@ -53,28 +53,32 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           GeistMono.variable,
         )}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-        >
-          <TooltipProvider delayDuration={100}>
-            <TRPCReactProvider>
-              {/* FilteredMapResultsProvider must be inside TRPCReactProvider */}
-              <UserLocationProvider>
-                <TextSearchResultsProvider>
-                  <FilteredMapResultsProvider>
-                    <HeaderAndSidebar>{props.children}</HeaderAndSidebar>
-                    <ModalSwitcher />
-                  </FilteredMapResultsProvider>
-                </TextSearchResultsProvider>
-              </UserLocationProvider>
-            </TRPCReactProvider>
-            <Toaster />
-          </TooltipProvider>
-          <ShadCnContainer />
-        </ThemeProvider>
+        <DataProvider>
+          <ElementProvider>{props.children}</ElementProvider>
+        </DataProvider>
       </body>
     </html>
   );
 }
+const DataProvider = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <TRPCReactProvider>
+      <UserLocationProvider>
+        <TextSearchResultsProvider>
+          <FilteredMapResultsProvider>{children}</FilteredMapResultsProvider>
+        </TextSearchResultsProvider>
+      </UserLocationProvider>
+    </TRPCReactProvider>
+  );
+};
+
+const ElementProvider = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <TooltipProvider delayDuration={100}>{children}</TooltipProvider>
+      <Toaster />
+      <ShadCnContainer />
+      <ModalSwitcher />
+    </ThemeProvider>
+  );
+};

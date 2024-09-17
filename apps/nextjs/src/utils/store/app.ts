@@ -5,6 +5,7 @@ import { ZustandStore } from "@f3/shared/common/classes";
 const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   shadCnContainterRef: createRef<HTMLDivElement>(),
+  ignoreNextNearbyItemMouseEnter: false,
 };
 
 export const appStore = new ZustandStore({

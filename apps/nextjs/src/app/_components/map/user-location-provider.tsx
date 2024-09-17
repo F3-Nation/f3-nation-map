@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 
+import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { mapStore } from "~/utils/store/map";
@@ -60,11 +61,9 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   const updateUserLocation = useCallback(() => {
     if (userGpsLocation) {
       mapRef.current?.setView(
-        {
-          lat: userGpsLocation.latitude,
-          lng: userGpsLocation.longitude,
-        },
-        13,
+        { lat: userGpsLocation.latitude, lng: userGpsLocation.longitude },
+        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+        { animate: mapStore.get("zoom") === CLOSE_ZOOM },
       );
       return;
     }
@@ -81,11 +80,9 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         });
         if (position) {
           mapRef.current?.setView(
-            {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-            13,
+            { lat: position.coords.latitude, lng: position.coords.longitude },
+            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+            { animate: mapStore.get("zoom") === CLOSE_ZOOM },
           );
         }
       },

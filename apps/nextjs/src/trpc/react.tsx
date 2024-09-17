@@ -20,7 +20,19 @@ const ReactQueryDevtoolsProduction = React.lazy(() =>
 );
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 60 * 5, // 5 minutes
+            refetchOnMount: false,
+            refetchOnReconnect: false,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
 
   const [showDevtools, setShowDevtools] = useState(
     process.env.NODE_ENV === "development" && false,

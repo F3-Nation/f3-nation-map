@@ -38,7 +38,15 @@ export const orgs = pgSqlTable(
     slackId: varchar("slack_id", { length: 30 }),
     slackAppSettings: json("slack_app_settings"),
     lastAnnualReview: date("last_annual_review"),
-    meta: json("meta"),
+    meta: json("meta").$type<{
+      latLonKey?: string;
+      address1?: string;
+      address2?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
+    }>(),
     created: timestamp("created").defaultNow(),
     updated: timestamp("updated").$onUpdate(() => new Date()),
   },

@@ -1,4 +1,4 @@
-import { SnapPoint } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, SnapPoint } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { CardDescription, CardHeader, CardTitle } from "@f3/ui/card";
 
@@ -15,7 +15,13 @@ export const onClickPlaceRowF3 = (result: F3MapSearchResult) => {
   const latitude = result.destination.lat;
   const longitude = result.destination.lng;
   if (typeof latitude === "number" && typeof longitude === "number") {
-    mapStore.get("ref").current?.setView({ lat: latitude, lng: longitude }, 13);
+    mapStore
+      .get("ref")
+      .current?.setView(
+        { lat: latitude, lng: longitude },
+        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
+        { animate: mapStore.get("zoom") === CLOSE_ZOOM },
+      );
     selectedItemStore.setState({
       locationId: result.destination.item.locationId,
       eventId: result.destination.item.id,
@@ -62,6 +68,7 @@ export const PlaceRowF3 = ({
           width={32}
           height={32}
           alt="item"
+          className="rounded-sm bg-black"
         />
         <div className="flex-4 text-start">
           <CardTitle>{result.header}</CardTitle>

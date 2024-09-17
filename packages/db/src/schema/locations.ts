@@ -7,7 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { customNumeric } from "../utils/customFields";
+import { customNumeric } from "../utils/custom-fields";
 import { pgSqlTable } from "./_table";
 import { orgs } from "./orgs";
 

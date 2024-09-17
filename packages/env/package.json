@@ -9,10 +9,11 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "env:load": "tsx src/load-env.ts",
+    "env:load": "pnpm with-env tsx src/load-env.ts",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.9.2",

@@ -31,10 +31,7 @@ export async function placesAutocomplete({
     return axios
       .post<{ suggestions: PlaceResult[] }>(
         `https://places.googleapis.com/v1/places:autocomplete`,
-        {
-          input,
-          locationBias,
-        },
+        { input, locationBias },
         {
           headers: {
             "Content-Type": "application/json",

@@ -1,13 +1,9 @@
 "use client";
 
-import "../../../utils/leaflet-canvas-markers"; // with modifications
-
-import "leaflet/dist/leaflet.css";
-
 import { useMemo } from "react";
 import { Pane } from "react-leaflet";
 
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { mapStore } from "~/utils/store/map";
@@ -20,26 +16,35 @@ export const ZoomedMarkerPane = () => {
   const zoom = mapStore.use.zoom();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
-  const isClose = zoom > CLOSE_ZOOM;
+  const isClose = zoom >= CLOSE_ZOOM;
 
   const viewMarkers = useMemo(() => {
     return !isClose
       ? []
-      : filteredLocationMarkers?.map((group, groupIdx) => {
-          const show =
-            group.lat !== null &&
-            group.lon !== null &&
-            !!bounds?.contains([group.lat, group.lon]);
-          return (
-            <MemoGroupMarker
-              key={groupIdx}
-              group={group}
-              selectedEventIdInGroup={null}
-              show={show}
-            />
-          );
-        });
+      : filteredLocationMarkers
+          ?.filter(
+            (group) =>
+              group.lat !== null &&
+              group.lon !== null &&
+              !!bounds?.contains([group.lat, group.lon]),
+          )
+          // more than 50 should only happen if there is a bug
+          .slice(0, 50)
+          .map((group, groupIdx) => {
+            const show =
+              group.lat !== null &&
+              group.lon !== null &&
+              !!bounds?.contains([group.lat, group.lon]);
+            return <MemoGroupMarker key={groupIdx} group={group} show={show} />;
+          });
   }, [filteredLocationMarkers, bounds, isClose]);
 
-  return <Pane name="zoomed-marker-pane">{viewMarkers}</Pane>;
+  return (
+    <Pane
+      name="zoomed-marker-pane"
+      style={{ zIndex: Z_INDEX.ZOOMED_MARKER_PANE }}
+    >
+      {viewMarkers}
+    </Pane>
+  );
 };

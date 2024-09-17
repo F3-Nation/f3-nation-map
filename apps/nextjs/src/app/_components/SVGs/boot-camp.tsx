@@ -2,9 +2,12 @@ import type { SVGProps } from "react";
 
 import { useTheme } from "@f3/ui/theme";
 
-export default function BootSvgComponent(props: SVGProps<SVGSVGElement>) {
+export default function BootSvgComponent({
+  mode,
+  ...props
+}: SVGProps<SVGSVGElement> & { mode?: "light" | "dark" }) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const isDark = mode === "dark" || (!mode && resolvedTheme === "dark");
   const primary = isDark ? "#fff" : "#222";
   const secondary = isDark ? "#555" : "#fff";
   return (

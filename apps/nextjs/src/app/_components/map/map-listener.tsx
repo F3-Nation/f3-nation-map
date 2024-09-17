@@ -64,16 +64,12 @@ export const MapListener = () => {
     // },
     zoomstart: () => {
       console.log("mapEvents zoomstart");
-      mapStore.setState({
-        zoomAction: true,
-      });
     },
     // Need this for zoom events
     zoomend: () => {
       console.log("mapEvents zoomend");
       mapStore.setState({
         zoom: mapEvents.getZoom(),
-        zoomAction: false,
       });
     },
     //Remnants of troubleshooting zoom issue on change station
