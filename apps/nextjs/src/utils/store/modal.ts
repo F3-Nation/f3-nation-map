@@ -5,6 +5,7 @@ export enum ModalType {
   HOW_TO_JOIN = "HOW_TO_JOIN",
   USER_LOCATION_INFO = "USER_LOCATION_INFO",
   WORKOUT_DETAILS = "WORKOUT_DETAILS",
+  INFO = "INFO",
 }
 
 export const useModalStore = create(() => ({
