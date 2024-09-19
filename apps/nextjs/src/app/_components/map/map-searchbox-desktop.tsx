@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { useCallback, useRef, useState } from "react";
 import { Search, XCircle } from "lucide-react";
 
-import { SnapPoint, Z_INDEX } from "@f3/shared/app/constants";
+import { DEFAULT_CENTER, SnapPoint, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
@@ -103,8 +103,8 @@ export function MapSearchBox({
                   void placesAutocomplete({
                     input: e.target.value,
                     center: mapStore.get("center") ?? {
-                      lat: 37.7937,
-                      lng: -122.3965,
+                      lat: DEFAULT_CENTER[0] ?? 37.7937,
+                      lng: DEFAULT_CENTER[1] ?? -122.3965,
                     },
                     zoom: mapStore.get("zoom"),
                   }).then((results) => {

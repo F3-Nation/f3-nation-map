@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, XCircle } from "lucide-react";
 
-import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
+import { BreakPoints, DEFAULT_CENTER, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 
@@ -18,6 +18,7 @@ import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
 import { isGeoMapSearchResult } from "~/utils/types";
 import { useTextSearchResults } from "./search-results-provider";
+import WithLove from "./with-love";
 
 export function MapSearchBoxMobile({
   className,
@@ -76,47 +77,50 @@ export function MapSearchBoxMobile({
           </Link>
           {/* Search box component for the map */}
           <div className="pointer-events-auto relative w-full">
-            <div className="pointer-events-none absolute left-3 top-2">
+            <div className="pointer-events-none absolute left-2 top-[5px]">
               <Search className="text-muted-foreground" />
             </div>
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Search by location, zip, etc."
-              onFocus={() => {
-                inputRef.current?.select();
-                setIsFocused(true);
-              }}
-              onBlur={() => {
-                setIsFocused(false);
-              }}
-              value={text}
-              className="h-[42px] rounded-full bg-foreground pl-10 text-base text-background caret-background placeholder:text-muted-foreground"
-              // enterKeyHint="done"
-              onChange={(e) => {
-                searchStore.setState({
-                  text: e.target.value,
-                  shouldShowResults: true,
-                });
-
-                if (!e.target.value) {
-                  searchStore.setState({ placesResults: [] });
-                } else if (e.target.value.length > 2) {
-                  const center = mapStore.get("center") ?? {
-                    lat: 37.7937,
-                    lng: -122.3965,
-                  };
-                  const zoom = mapStore.get("zoom");
-                  void placesAutocomplete({
-                    input: e.target.value,
-                    center,
-                    zoom,
-                  }).then((results) => {
-                    searchStore.setState({ placesResults: results });
+            <div className="flex flex-col items-center justify-center">
+              <Input
+                ref={inputRef}
+                type="text"
+                placeholder="Search by location, zip, etc."
+                onFocus={() => {
+                  inputRef.current?.select();
+                  setIsFocused(true);
+                }}
+                onBlur={() => {
+                  setIsFocused(false);
+                }}
+                value={text}
+                className="h-[34px] rounded-full bg-foreground pl-10 text-base text-background caret-background placeholder:text-muted-foreground"
+                // enterKeyHint="done"
+                onChange={(e) => {
+                  searchStore.setState({
+                    text: e.target.value,
+                    shouldShowResults: true,
                   });
-                }
-              }}
-            />
+
+                  if (!e.target.value) {
+                    searchStore.setState({ placesResults: [] });
+                  } else if (e.target.value.length > 2) {
+                    const center = mapStore.get("center") ?? {
+                      lat: DEFAULT_CENTER[0] ?? 37.7937,
+                      lng: DEFAULT_CENTER[1] ?? -122.3965,
+                    };
+                    const zoom = mapStore.get("zoom");
+                    void placesAutocomplete({
+                      input: e.target.value,
+                      center,
+                      zoom,
+                    }).then((results) => {
+                      searchStore.setState({ placesResults: results });
+                    });
+                  }
+                }}
+              />
+              <WithLove />
+            </div>
             {(text || isFocused) && (
               <button
                 className="absolute right-2 top-2"

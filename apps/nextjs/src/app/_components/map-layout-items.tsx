@@ -1,3 +1,6 @@
+"use client";
+
+import { mapStore } from "~/utils/store/map";
 import { DebugInfo } from "./map/debug-info";
 import DesktopSelectedItem from "./map/desktop-selected-item";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
@@ -10,6 +13,12 @@ import { ZoomAndTileButtons } from "./map/zoom-and-tile-buttons";
 
 const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
+  const showDebugStore = mapStore.use.showDebug();
+
+  const showDebug =
+    showDebugStore || (process.env.NODE_ENV === "development" && SHOW_DEBUG)
+      ? true
+      : false;
   return (
     <>
       <UserLocationIcon />
@@ -20,9 +29,7 @@ export const MapLayoutItems = () => {
       <MobileAllFilters />
       <MapSearchBoxMobile />
       <MobileSearchResults />
-      {process.env.NODE_ENV !== "development" ? null : (
-        <>{SHOW_DEBUG && <DebugInfo />}</>
-      )}
+      {showDebug ? <DebugInfo /> : null}
     </>
   );
 };
