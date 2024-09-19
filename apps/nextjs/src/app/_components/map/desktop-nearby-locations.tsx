@@ -5,10 +5,10 @@ import type { ComponentProps } from "react";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 
-import { VersionInfo } from "../version-info";
 import { DesktopNearbyLocationItem } from "./desktop-nearby-location-item";
 import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
+import WithLove from "./with-love";
 
 export const DesktopNearbyLocations = ({
   className,
@@ -21,7 +21,7 @@ export const DesktopNearbyLocations = ({
     <>
       <div
         className={cn(
-          "flex flex-1 flex-wrap justify-center divide-y divide-solid overflow-scroll",
+          "flex flex-1 flex-wrap justify-center divide-y divide-solid overflow-y-scroll",
           className,
         )}
         {...rest}
@@ -36,7 +36,7 @@ export const DesktopNearbyLocations = ({
               <DesktopNearbyLocationItemSkeleton key={index} />
             ))}
       </div>
-      <VersionInfo className=" w-full text-center text-xs" />
+      <WithLove />
     </>
   );
 };

@@ -23,16 +23,16 @@ import { ShadCnContainer } from "./_components/shad-cn-container-ref";
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
-      ? "https://f3.vercel.app"
+      ? "https://maps.f3nation.com"
       : "http://localhost:3000",
   ),
-  title: "F3 Map",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  title: "F3 Nation Map",
+  description: "Find F3 locations near you",
   openGraph: {
-    title: "F3 Map",
-    description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://f3.vercel.app",
-    siteName: "F3 Map",
+    title: "F3 Nation Map",
+    description: "Find F3 locations near you",
+    url: "https://maps.f3nation.com",
+    siteName: "F3 Nation Map",
   },
 };
 

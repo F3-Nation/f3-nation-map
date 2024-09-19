@@ -17,7 +17,8 @@ export const DAY_ORDER = [
 export const SHORT_DAY_ORDER = ["Su", "M", "Tu", "W", "Th", "F", "Sa"] as const;
 
 export const DEFAULT_ZOOM = 2.9;
-export const DEFAULT_CENTER = [35, -80.955] as [number, number];
+export const BOONE_CENTER = [36.2, -81.66] as [number, number];
+export const DEFAULT_CENTER = BOONE_CENTER;
 
 export const CLOSE_ZOOM = 13;
 export const FAR_ZOOM = 3;
@@ -64,12 +65,12 @@ export const Z_INDEX = {
   MOBILE_SEARCH_RESULTS: 1000,
   NON_HOVERED_MAP_MARKER: 1000,
   ZOOM_AND_TILE_BUTTONS: 1000,
-  
+
   MAP_SEARCHBOX_MOBILE: 1001,
   ZOOMED_MARKER_PANE: 1001,
   SELECTED_ICON_MARKER_PANE: 1002,
   SELECTED_ITEM_CONTAINER_DESKTOP: 1002,
-  
+
   DIALOG_OVERLAY: 1201,
   USER_LOCATION_ICON: 1201,
   USER_LOCATION_INFO_MODAL: 1201,
