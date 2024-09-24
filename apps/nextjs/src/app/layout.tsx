@@ -3,22 +3,11 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
 import { cn } from "@f3/ui";
-import { ThemeProvider } from "@f3/ui/theme";
-import { Toaster } from "@f3/ui/toast";
 
 import { env } from "~/env";
-import { TRPCReactProvider } from "~/trpc/react";
 
 import "leaflet/dist/leaflet.css";
 import "~/app/globals.css";
-
-import { TooltipProvider } from "@f3/ui/tooltip";
-
-import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
-import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
-import { UserLocationProvider } from "./_components/map/user-location-provider";
-import ModalSwitcher from "./_components/modal/modal-switcher";
-import { ShadCnContainer } from "./_components/shad-cn-container-ref";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -53,32 +42,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           GeistMono.variable,
         )}
       >
-        <DataProvider>
-          <ElementProvider>{props.children}</ElementProvider>
-        </DataProvider>
+        {props.children}
       </body>
     </html>
   );
 }
-const DataProvider = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <TRPCReactProvider>
-      <UserLocationProvider>
-        <TextSearchResultsProvider>
-          <FilteredMapResultsProvider>{children}</FilteredMapResultsProvider>
-        </TextSearchResultsProvider>
-      </UserLocationProvider>
-    </TRPCReactProvider>
-  );
-};
-
-const ElementProvider = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <TooltipProvider delayDuration={100}>{children}</TooltipProvider>
-      <Toaster />
-      <ShadCnContainer />
-      <ModalSwitcher />
-    </ThemeProvider>
-  );
-};
