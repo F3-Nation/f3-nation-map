@@ -10,7 +10,7 @@ export default function WithLove() {
   return (
     <div className="my-[1px] flex flex-row items-center justify-center gap-4">
       <div className="whitespace-nowrap text-xs text-foreground opacity-60">
-        Made with <span className="opacity-70 text-[9px]">❤️</span> by{" "}
+        Made with <span className="text-[9px] opacity-70">❤️</span> by{" "}
         <Link
           target="_blank"
           className="text-blue-600 underline underline-offset-2"
