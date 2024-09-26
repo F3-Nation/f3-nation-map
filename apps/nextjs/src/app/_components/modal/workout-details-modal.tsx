@@ -15,6 +15,7 @@ import { Skeleton } from "@f3/ui/skeleton";
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
 import { useModalStore } from "~/utils/store/modal";
+import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
@@ -60,7 +61,7 @@ export const WorkoutDetailsModal = () => {
         {location.aoWebsite}
       </Link>
     ) : null,
-    Notes: workout?.description,
+    Notes: workout?.description ? textLink(workout.description) : null,
   };
 
   const regionFields = {
@@ -165,7 +166,7 @@ export const WorkoutDetailsModal = () => {
               </dl>
             </div>
             <DialogTitle className="mt-4">Region Information</DialogTitle>
-            <div className="w-full">
+            <div className="w-full [&_dd]:[overflow-wrap:anywhere]">
               <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
                 {Object.keys(regionFields)
                   .filter(
