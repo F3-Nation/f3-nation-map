@@ -57,17 +57,11 @@ export const WorkoutDetailsModal = () => {
     ) : null,
     When: workout ? getWhenFromWorkout(workout) : "",
     Website: location?.aoWebsite ? (
-      <Link
-        href={location.aoWebsite}
-        target="_blank"
-        className="underline [overflow-wrap:anywhere]"
-      >
+      <Link href={location.aoWebsite} target="_blank" className="underline">
         {location.aoWebsite}
       </Link>
     ) : null,
-    Notes: workout?.description
-      ? (textLink(workout.description) as JSX.Element)
-      : null,
+    Notes: workout?.description ? textLink(workout.description) : null,
   };
 
   const regionFields = {
@@ -172,7 +166,7 @@ export const WorkoutDetailsModal = () => {
               </dl>
             </div>
             <DialogTitle className="mt-4">Region Information</DialogTitle>
-            <div className="w-full">
+            <div className="w-full [&_dd]:[overflow-wrap:anywhere]">
               <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
                 {Object.keys(regionFields)
                   .filter(
