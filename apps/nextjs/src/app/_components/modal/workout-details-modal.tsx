@@ -15,6 +15,7 @@ import { Skeleton } from "@f3/ui/skeleton";
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
 import { useModalStore } from "~/utils/store/modal";
+import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
@@ -56,11 +57,17 @@ export const WorkoutDetailsModal = () => {
     ) : null,
     When: workout ? getWhenFromWorkout(workout) : "",
     Website: location?.aoWebsite ? (
-      <Link href={location.aoWebsite} target="_blank" className="underline">
+      <Link
+        href={location.aoWebsite}
+        target="_blank"
+        className="underline [overflow-wrap:anywhere]"
+      >
         {location.aoWebsite}
       </Link>
     ) : null,
-    Notes: workout?.description,
+    Notes: workout?.description
+      ? (textLink(workout.description) as JSX.Element)
+      : null,
   };
 
   const regionFields = {
