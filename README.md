@@ -1,3 +1,17 @@
+# Environment variable management with Doppler
+
+Environment variables are managed with Doppler. Running the `./tooling/scripts/doppler.sh` script will help you push/pull env variables between Doppler and local .env files. You will first need to [install the Doppler CLI](https://docs.doppler.com/docs/cli) and then run `doppler login` and `doppler setup`.
+
+Usage:
+
+```bash
+# download all configs from Doppler to local .env files
+pnpm doppler download
+
+# Uploads the vars in .env.dev, .env.stg, and .env.prd files
+pnpm doppler upload
+```
+
 # Bugs / Features
 
 - [ ] Allow people to submit location updates (F3 Expansion request)
