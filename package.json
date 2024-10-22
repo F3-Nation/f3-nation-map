@@ -15,7 +15,6 @@
     "db:generate": "pnpm -F db generate",
     "db:migrate": "pnpm -F db migrate",
     "dev": "turbo dev --parallel",
-    "env:load": "turbo env:load",
     "format": "turbo format --continue -- --cache --cache-location node_modules/.cache/.prettiercache",
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
@@ -23,7 +22,8 @@
     "lint:ws": "pnpm dlx sherif@latest",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "with-env": "dotenv -e .env --"
+    "with-env": "dotenv -e .env --",
+    "doppler": "pnpm exec ./tooling/scripts/doppler.sh"
   },
   "devDependencies": {
     "@f3/prettier-config": "workspace:^0.1.0",
