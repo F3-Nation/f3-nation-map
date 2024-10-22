@@ -38,6 +38,7 @@ export const LeafletMap = ({
   RERENDER_LOGS && console.log("LeafletMap rerender");
   const ref = mapStore.use.ref();
   const [width, height] = useWindowSize();
+
   return (
     <div
       style={
@@ -47,7 +48,9 @@ export const LeafletMap = ({
       }
     >
       <MapContainer
-        ref={ref}
+        ref={(map) => {
+          ref.current = map;
+        }}
         center={
           userLocation
             ? { lat: userLocation.latitude, lng: userLocation.longitude }
