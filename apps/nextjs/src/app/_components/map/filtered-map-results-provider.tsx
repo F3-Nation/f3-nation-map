@@ -44,7 +44,9 @@ export const FilteredMapResultsProvider = ({
   );
 
   const locationOrderedLocationMarkers = useMemo(() => {
-    if (!filteredLocationMarkers || !center) return [];
+    if (!filteredLocationMarkers || !center) {
+      return [];
+    }
     const locationMarkersWithDistances = filteredLocationMarkers.map(
       (location) => {
         const distance = latLngToDistance(

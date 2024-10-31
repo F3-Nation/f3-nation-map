@@ -1,22 +1,28 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, XCircle } from "lucide-react";
 
+import type { ExpansionUserResponse } from "@f3/shared/app/schema/ExpansionUserSchema";
 import { BreakPoints, DEFAULT_CENTER, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 
+import { api } from "~/trpc/react";
+import { filterDataWithinMiles } from "~/utils/filtered-data";
+import { getExpansionNearbyUsers } from "~/utils/get-expansion-nearby-users";
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
 import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";
 import { placesAutocomplete } from "~/utils/place-autocomplete";
 import { Responsive } from "~/utils/responsive";
+import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
 import { isGeoMapSearchResult } from "~/utils/types";
+import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { useTextSearchResults } from "./search-results-provider";
 import WithLove from "./with-love";
 
@@ -24,9 +30,17 @@ export function MapSearchBoxMobile({
   className,
   ...rest
 }: ComponentProps<"div">) {
+  const { latitude, longitude } = filterStore.get("position");
   const text = searchStore.use.text();
   const [isFocused, setIsFocused] = useState(false);
   const { combinedResults } = useTextSearchResults();
+  const { locationOrderedLocationMarkers } = useFilteredMapResults();
+  const locationWithinRadius = filterDataWithinMiles({
+    data: locationOrderedLocationMarkers,
+  });
+  const hasLocationMarkers = locationWithinRadius?.length ?? 0 > 0;
+  const { data: expansionUsers } =
+    api.expansionUsers.getExpansionUsers.useQuery();
 
   const onSubmit = () => {
     const selectedResult = combinedResults[0];
@@ -34,6 +48,14 @@ export function MapSearchBoxMobile({
       onClickPlaceRowMap(selectedResult);
     }
   };
+
+  useEffect(() => {
+    if (!hasLocationMarkers && expansionUsers) {
+      getExpansionNearbyUsers({
+        expansionUsers: expansionUsers as unknown as ExpansionUserResponse[],
+      });
+    }
+  }, [hasLocationMarkers, expansionUsers, longitude, latitude]);
 
   const { ref: inputRef } = useOnKeyPress<HTMLInputElement>({
     keys: ["Enter"],
@@ -123,7 +145,7 @@ export function MapSearchBoxMobile({
             </div>
             {(text || isFocused) && (
               <button
-                className="absolute right-2 top-2"
+                className="absolute right-2 top-[0.3rem]"
                 onClick={() => {
                   searchStore.setState({ text: "", shouldShowResults: false });
                   setIsFocused(false);

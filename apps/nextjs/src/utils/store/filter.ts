@@ -50,6 +50,7 @@ export const initialFilterState = {
   CSAUPs: false,
   Convergence: false,
   GTE: false,
+  position: { latitude: 0, longitude: 0 },
 };
 
 export type FiltersType = typeof initialFilterState;

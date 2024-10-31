@@ -1,6 +1,7 @@
 "use client";
 
 import { ModalType, useModalStore } from "~/utils/store/modal";
+import ExpansionFeedbackModal from "../map/expansion-feedback-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
@@ -18,6 +19,8 @@ export default function ModalSwitcher() {
       return <WorkoutDetailsModal />;
     case ModalType.INFO:
       return <MapInfoModal />;
+    case ModalType.EXPANSION_FORM:
+      return <ExpansionFeedbackModal />;
     default:
       return null;
   }

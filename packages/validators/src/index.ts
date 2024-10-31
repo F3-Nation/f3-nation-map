@@ -6,6 +6,10 @@ import { schema } from "@f3/db";
 export const EventInsertSchema = createInsertSchema(schema.events);
 export const EventSelectSchema = createSelectSchema(schema.events);
 
+export const ExpansionUserInsertSchema = createInsertSchema(
+  schema.expansionUsers,
+);
+
 export const CreateEventSchema = EventInsertSchema.omit({
   id: true,
   createdAt: true,

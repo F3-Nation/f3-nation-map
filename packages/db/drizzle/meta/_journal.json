@@ -8,6 +8,13 @@
       "when": 1725127140148,
       "tag": "0000_smart_ultragirl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1728053560787,
+      "tag": "0001_naive_mongu",
+      "breakpoints": true
     }
   ]
 }

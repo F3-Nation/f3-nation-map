@@ -16,7 +16,18 @@ const initialState = {
   ref: {
     current: null as Map | null,
   },
+  placeResultArea: null as string | null,
   placeResultLocation: null as LatLngLiteral | null,
+  expansionNearbyUsers: {
+    center: null as LatLngLiteral | null,
+    nearbyUsers: [] as { lat: number; lng: number; id: string; area: string }[],
+  },
+  expansionPopupOpen: true,
+  expansionAreaSelected: {
+    area: null as string | null,
+    lat: null as number | null,
+    lng: null as number | null,
+  },
   tiles: "street" as "satellite" | "street",
   showDebug: false,
 };

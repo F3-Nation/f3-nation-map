@@ -3,6 +3,7 @@ import { CLOSE_ZOOM, SnapPoint } from "@f3/shared/app/constants";
 import type { GeoMapSearchResult } from "./types";
 import { placesDetails } from "./places-details";
 import { drawerStore } from "./store/drawer";
+import { filterStore } from "./store/filter";
 import { mapStore } from "./store/map";
 import { searchStore } from "./store/search";
 import { selectedItemStore } from "./store/selected-item";
@@ -15,7 +16,9 @@ export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
     const latitude = place.location.latitude;
     const longitude = place.location.longitude;
     mapStore.setState({
+      placeResultArea: place.displayName.text,
       placeResultLocation: { lat: latitude, lng: longitude },
+      expansionAreaSelected: { area: null, lat: null, lng: null },
     });
     mapStore
       .get("ref")
@@ -24,5 +27,9 @@ export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
         Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
         { animate: mapStore.get("zoom") === CLOSE_ZOOM },
       );
+    setTimeout(() => {
+      mapStore.get("ref").current?.invalidateSize();
+    }, 0);
+    filterStore.setState({ position: { latitude, longitude } });
   });
 };

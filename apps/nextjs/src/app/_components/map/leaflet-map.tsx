@@ -19,8 +19,10 @@ import { useTheme } from "@f3/ui/theme";
 import type { RouterOutputs } from "~/trpc/types";
 import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
+import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { GeoJsonPane } from "./geo-json-pane";
 import { MapListener } from "./map-listener";
+import { PlaceExpansionNearbyUsersPane } from "./place-expansion-nearby-users";
 import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerPane } from "./selected-item-marker-pane";
 import { UserLocationMarker } from "./user-location-marker";
@@ -37,14 +39,24 @@ export const LeafletMap = ({
   const { userLocation } = useUserLocation();
   RERENDER_LOGS && console.log("LeafletMap rerender");
   const ref = mapStore.use.ref();
+  const { locationOrderedLocationMarkers } = useFilteredMapResults();
   const [width, height] = useWindowSize();
+  const expansionCenter = mapStore.use.expansionNearbyUsers().center;
 
   return (
     <div
       style={
         width >= 1024
           ? { height: height - HEADER_HEIGHT, width: width - SIDEBAR_WIDTH }
-          : { height, width: "100%" }
+          : {
+              height:
+                !locationOrderedLocationMarkers ||
+                locationOrderedLocationMarkers?.length > 0 ||
+                expansionCenter === null
+                  ? height
+                  : "43vh",
+              width: "100%",
+            }
       }
     >
       <MapContainer
@@ -124,6 +136,7 @@ const MapContent = ({
       <CanvasIconLayer markerLocations={markerLocations} />
       <UserLocationMarker />
       <PlaceResultIconPane />
+      <PlaceExpansionNearbyUsersPane />
     </>
   );
 };

@@ -54,7 +54,7 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
   return (
     <Responsive maxWidth={BreakPoints.LG}>
       <div
-        className={cn("absolute bottom-[58px] left-0 right-0", className)}
+        className={cn("absolute bottom-[65px] left-0 right-0", className)}
         style={{ zIndex: Z_INDEX.MOBILE_NEARBY_LOCATIONS }}
         {...rest}
       >

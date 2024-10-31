@@ -4,6 +4,7 @@ import { CalendarIcon, Filter } from "lucide-react";
 
 import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
+import { useTheme } from "@f3/ui/theme";
 
 import { Responsive } from "~/utils/responsive";
 import { filterStore, isAnyFilterActive } from "~/utils/store/filter";
@@ -14,6 +15,9 @@ export const MobileFilterButtons = () => {
   // Remove tomorrow since we have a separate button for it
   const isFilterActive = isAnyFilterActive({ ...filters, tomorrow: false });
 
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   return (
     <Responsive maxWidth={BreakPoints.LG}>
       <div
@@ -23,6 +27,7 @@ export const MobileFilterButtons = () => {
         <button
           className={cn(
             "pointer-events-auto flex size-[36px] items-center justify-center rounded-md bg-white text-foreground shadow",
+            isDark ? "bg-black" : "bg-white",
             { "bg-muted-foreground": isFilterActive },
           )}
           onClick={(e) => {
@@ -39,6 +44,7 @@ export const MobileFilterButtons = () => {
         <button
           className={cn(
             "pointer-events-auto relative flex size-[36px] items-center justify-center rounded-md bg-white text-foreground shadow",
+            isDark ? "bg-black" : "bg-white",
             { "bg-muted-foreground": tomorrow },
           )}
           onClick={(e) => {
