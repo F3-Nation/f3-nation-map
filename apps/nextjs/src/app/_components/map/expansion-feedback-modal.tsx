@@ -228,8 +228,7 @@ const ExpansionFeedbackModal = () => {
               <li>
                 <div className="flex flex-col gap-2">
                   <FormLabel className="leading-tight">
-                    If yes to above, how can we get in touch with you about
-                    organizing?
+                    How can we get in touch with you about this new group?
                   </FormLabel>
                   <FormField
                     control={form.control}
