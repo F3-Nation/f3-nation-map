@@ -44,3 +44,15 @@ pnpm doppler upload
 # Other
 
 Rebuilt git history on 9-3-24 to clean it
+
+# Deploying
+
+1. Generate the image with `docker-compose -f docker-compose.yml up --build`
+2. Create the tag `docker tag aquadata-nextjs europe-west1-docker.pkg.dev/peskas/aquadata-nextjs/aquadata-image:v2`
+3. Push the image to the registry `docker push europe-west1-docker.pkg.dev/peskas/aquadata-nextjs/aquadata-image:v2`
+4. Edit and deploy new revision: `https://console.cloud.google.com/run/detail/europe-west1/aquadata-image/revisions?authuser=1&project=peskas`
+
+- Select the new tag for "Container image URL"
+- Leave all other settings 512Mb memory, 1 CPU, 1 instance
+
+- RE: Migration to doppler. Right now we run build with `RUN doppler run -- sh -c "pnpm turbo build --filter=nextjs && pnpm -F db migrate"` but we might need to actually download the env in the future. If there are errors with deployment
