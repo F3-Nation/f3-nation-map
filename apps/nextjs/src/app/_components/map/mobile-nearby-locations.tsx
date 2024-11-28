@@ -3,13 +3,12 @@
 import type { ComponentProps } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 import { Spinner } from "@f3/ui/spinner";
 
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
-import { Responsive } from "~/utils/responsive";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
@@ -52,56 +51,56 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
   }, [status]);
 
   return (
-    <Responsive maxWidth={BreakPoints.LG}>
+    <div
+      className={cn(
+        "absolute bottom-[65px] left-0 right-0 block lg:hidden",
+        className,
+      )}
+      style={{ zIndex: Z_INDEX.MOBILE_NEARBY_LOCATIONS }}
+      {...rest}
+    >
       <div
-        className={cn("absolute bottom-[65px] left-0 right-0", className)}
-        style={{ zIndex: Z_INDEX.MOBILE_NEARBY_LOCATIONS }}
-        {...rest}
+        ref={scrollRef}
+        style={{
+          gap: itemGap,
+          paddingLeft: itemGap,
+          paddingRight: itemGap + scrollBuffer,
+          paddingBottom: 2, // so scrollbar doesn't overlap items
+        }}
+        className="flex h-full flex-row items-end overflow-x-auto"
+        onScroll={(e) => {
+          const currentlyViewedIndex = Math.floor(
+            (e.currentTarget.scrollLeft + scrollBuffer) / (itemWidth + itemGap),
+          );
+          const nearEnd =
+            e.currentTarget.scrollWidth -
+              e.currentTarget.scrollLeft -
+              e.currentTarget.clientWidth <
+            scrollBuffer;
+          setScrolledItemIndex(currentlyViewedIndex);
+          if (nearEnd) {
+            debounceIncreaseVisibleItemsCount();
+          }
+        }}
       >
-        <div
-          ref={scrollRef}
-          style={{
-            gap: itemGap,
-            paddingLeft: itemGap,
-            paddingRight: itemGap + scrollBuffer,
-            paddingBottom: 2, // so scrollbar doesn't overlap items
-          }}
-          className="flex h-full flex-row items-end overflow-x-auto"
-          onScroll={(e) => {
-            const currentlyViewedIndex = Math.floor(
-              (e.currentTarget.scrollLeft + scrollBuffer) /
-                (itemWidth + itemGap),
-            );
-            const nearEnd =
-              e.currentTarget.scrollWidth -
-                e.currentTarget.scrollLeft -
-                e.currentTarget.clientWidth <
-              scrollBuffer;
-            setScrolledItemIndex(currentlyViewedIndex);
-            if (nearEnd) {
-              debounceIncreaseVisibleItemsCount();
-            }
-          }}
-        >
-          {locationOrderedLocationMarkers === undefined
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <DesktopNearbyLocationItemSkeleton key={index} />
-              ))
-            : locationOrderedLocationMarkers
-                ?.slice(0, visibleItemsCount)
-                .map((result) => (
-                  <MobileNearbyLocationsItem
-                    key={result.id}
-                    searchResult={result}
-                  />
-                ))}
-          {status === "loading" && (
-            <div className="flex h-full items-center self-center">
-              <Spinner className="border-foreground border-b-transparent" />
-            </div>
-          )}
-        </div>
+        {locationOrderedLocationMarkers === undefined
+          ? Array.from({ length: 6 }).map((_, index) => (
+              <DesktopNearbyLocationItemSkeleton key={index} />
+            ))
+          : locationOrderedLocationMarkers
+              ?.slice(0, visibleItemsCount)
+              .map((result) => (
+                <MobileNearbyLocationsItem
+                  key={result.id}
+                  searchResult={result}
+                />
+              ))}
+        {status === "loading" && (
+          <div className="flex h-full items-center self-center">
+            <Spinner className="border-foreground border-b-transparent" />
+          </div>
+        )}
       </div>
-    </Responsive>
+    </div>
   );
 };

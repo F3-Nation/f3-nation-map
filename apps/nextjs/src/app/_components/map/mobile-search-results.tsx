@@ -5,7 +5,7 @@
 // Importing type definitions and constants.
 import { useEffect, useRef } from "react";
 
-import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants"; // Type import for SnapPoint.
+import { Z_INDEX } from "@f3/shared/app/constants"; // Type import for SnapPoint.
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { classNames } from "@f3/shared/common/functions";
@@ -15,7 +15,6 @@ import { useTextSearchResults } from "~/app/_components/map/search-results-provi
 import { filterDataWithinMiles } from "~/utils/filtered-data";
 // Importing mock data and UI components.
 
-import { Responsive } from "~/utils/responsive";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
 import { isF3MapSearchResult } from "~/utils/types";
@@ -57,36 +56,34 @@ export const MobileSearchResults = () => {
         "bg-background": shouldShowResults && !!combinedResults.length,
       })}
     >
-      <Responsive maxWidth={BreakPoints.LG}>
+      <div
+        className={classNames(
+          "pointer-events-auto flex flex-1 items-end lg:hidden",
+          hasLocationMarkers ? "max-h-svh" : "max-h-[43vh]",
+        )}
+        ref={scrollRef}
+      >
         <div
           className={classNames(
-            "pointer-events-auto flex flex-1 items-end",
-            hasLocationMarkers ? "max-h-svh" : "max-h-[43vh]",
+            "mt-auto flex flex-1 flex-col-reverse overflow-y-scroll",
+            hasLocationMarkers ? "" : "max-h-[43vh]",
           )}
-          ref={scrollRef}
         >
-          <div
-            className={classNames(
-              "mt-auto flex flex-1 flex-col-reverse overflow-y-scroll",
-              hasLocationMarkers ? "" : "max-h-[43vh]",
-            )}
-          >
-            {combinedResults.map((result, index) =>
-              isF3MapSearchResult(result) ? (
-                <PlaceRowF3 key={result.destination.id} result={result} />
-              ) : (
-                <PlaceRowMap
-                  key={result.destination.id}
-                  result={result}
-                  focused={index === 0}
-                />
-              ),
-            )}
-          </div>
+          {combinedResults.map((result, index) =>
+            isF3MapSearchResult(result) ? (
+              <PlaceRowF3 key={result.destination.id} result={result} />
+            ) : (
+              <PlaceRowMap
+                key={result.destination.id}
+                result={result}
+                focused={index === 0}
+              />
+            ),
+          )}
         </div>
-        {/* Spacer to ensure searchbar is visible */}
-        <div className="pointer-events-none h-14 w-full" />
-      </Responsive>
+      </div>
+      {/* Spacer to ensure searchbar is visible */}
+      <div className="pointer-events-none h-14 w-full" />
     </div>
   );
 };

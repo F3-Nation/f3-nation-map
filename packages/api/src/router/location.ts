@@ -150,8 +150,6 @@ export const locationRouter = createTRPCRouter({
       >,
     );
 
-    console.log("preview location Events", locationEvents);
-
     return Object.values(locationEvents).map((item) => ({
       ...item.location,
       distance: 0,

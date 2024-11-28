@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { ExternalLink, X } from "lucide-react";
 
-import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import type { RouterOutputs } from "~/trpc/types";
-import { Responsive } from "~/utils/responsive";
 import { ModalType, useModalStore } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
@@ -131,14 +130,12 @@ const SelectedItemWrapper = () => {
   }
   const props = { selectedLocation, selectedEvent };
   return (
-    <Responsive minWidth={BreakPoints.LG}>
-      <div
-        className="absolute bottom-2 left-2"
-        style={{ zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP }}
-      >
-        <SelectedItem {...props} />
-      </div>
-    </Responsive>
+    <div
+      className="absolute bottom-2 left-2 hidden lg:block"
+      style={{ zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP }}
+    >
+      <SelectedItem {...props} />
+    </div>
   );
 };
 

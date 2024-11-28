@@ -9,7 +9,7 @@ jiti("@f3/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  output: "standalone",
+  // output: "standalone",
   reactStrictMode: true,
 
   /** Enables hot reloading for local packages without a build step */
@@ -34,6 +34,15 @@ const config = {
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+  redirects: async () => {
+    return [
+      {
+        source: "/map",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default config;

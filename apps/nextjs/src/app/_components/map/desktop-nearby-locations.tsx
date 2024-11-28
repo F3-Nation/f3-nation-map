@@ -23,6 +23,8 @@ export const DesktopNearbyLocations = ({
   RERENDER_LOGS && console.log("DrawerSearchResults rerender");
   const { latitude, longitude } = filterStore.get("position");
   const { locationOrderedLocationMarkers, isLoading } = useFilteredMapResults();
+  const { data: previewLocationMarkers } =
+    api.location.getPreviewLocations.useQuery();
   const locationWithinRadius = filterDataWithinMiles({
     data: locationOrderedLocationMarkers,
   });
@@ -54,9 +56,13 @@ export const DesktopNearbyLocations = ({
               .map((result) => (
                 <DesktopNearbyLocationItem key={result.id} item={result} />
               ))
-          : Array.from({ length: 6 }).map((_, index) => (
-              <DesktopNearbyLocationItemSkeleton key={index} />
-            ))}
+          : previewLocationMarkers
+            ? previewLocationMarkers?.map((result) => (
+                <DesktopNearbyLocationItem key={result.id} item={result} />
+              ))
+            : Array.from({ length: 6 }).map((_, index) => (
+                <DesktopNearbyLocationItemSkeleton key={index} />
+              ))}
       </div>
       <WithLove />
     </>
