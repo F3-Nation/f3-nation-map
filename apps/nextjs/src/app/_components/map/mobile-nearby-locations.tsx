@@ -9,7 +9,7 @@ import { cn } from "@f3/ui";
 import { Spinner } from "@f3/ui/spinner";
 
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
-import { selectedItemStore } from "~/utils/store/selected-item";
+import { setSelectedItem } from "~/utils/store/selected-item";
 import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { MobileNearbyLocationsItem } from "./mobile-nearby-locations-item";
@@ -34,7 +34,7 @@ export const MobileNearbyLocations = (props: ComponentProps<"div">) => {
 
   useEffect(() => {
     if (scrolledItemIndex === null) return;
-    selectedItemStore.setState({
+    setSelectedItem({
       locationId: locationOrderedLocationMarkers?.[scrolledItemIndex]?.id,
       eventId:
         locationOrderedLocationMarkers?.[scrolledItemIndex]?.events[0]?.id,

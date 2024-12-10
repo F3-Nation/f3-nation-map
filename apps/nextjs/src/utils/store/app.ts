@@ -6,6 +6,7 @@ const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   shadCnContainterRef: createRef<HTMLDivElement>(),
   ignoreNextNearbyItemMouseEnter: false,
+  isMobileDeviceWidth: false,
 };
 
 export const appStore = new ZustandStore({

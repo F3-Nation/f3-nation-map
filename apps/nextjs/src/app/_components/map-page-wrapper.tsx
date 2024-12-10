@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { HEADER_HEIGHT, SIDEBAR_WIDTH } from "@f3/shared/app/constants";
+import { HEADER_HEIGHT } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 
@@ -58,16 +58,7 @@ export const MapPageWrapper = (props: { children: React.ReactNode }) => {
       <DesktopSidebarContainer>
         <Sidebar />
       </DesktopSidebarContainer>
-      <DesktopHeaderContainer>
-        <Header />
-      </DesktopHeaderContainer>
-      <div
-        className="hidden lg:block"
-        style={{ paddingLeft: SIDEBAR_WIDTH, paddingTop: HEADER_HEIGHT }}
-      >
-        {props.children}
-      </div>
-      <div className="block lg:hidden">{props.children}</div>
+      <div className={cn(`lg:pl-360 pl-0`)}>{props.children}</div>
     </>
   );
 };

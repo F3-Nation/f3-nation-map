@@ -5,17 +5,22 @@ import { isTruthy } from "@f3/shared/common/functions";
 
 import type { FiltersType } from "./store/filter";
 import type { LocationMarkerWithDistance } from "~/app/_components/map/filtered-map-results-provider";
-import type { RouterOutputs } from "~/trpc/types";
 import { dayjs } from "./frontendDayjs";
 import { filterStore, TimeSelection } from "./store/filter";
 import { mapStore } from "./store/map";
 
-export const filterData = (
-  allLocationMarkers: RouterOutputs["location"]["getAllLocationMarkers"],
+export const filterData = <
+  T extends {
+    events: {
+      dayOfWeek: number | null;
+      startTime: string | null;
+      type: string | null;
+    }[];
+  },
+>(
+  allLocationMarkers: T[],
   filters: FiltersType,
-): RouterOutputs["location"]["getAllLocationMarkers"] => {
-  const currentDay = dayjs().day();
-
+): T[] => {
   const filteredLocationMarkers = allLocationMarkers.map((locationMarker) => {
     const filteredEvents = locationMarker.events.filter((event) => {
       // Check if at least one of the selected day filters matches the station's day
@@ -28,8 +33,8 @@ export const filterData = (
         filters.dayTh,
         filters.dayF,
         filters.daySa,
-        filters.today,
-        filters.tomorrow,
+        // filters.todayVar,
+        // filters.tomorrowVar,
       ].every((f) => f === false);
 
       const specificDayFilterMatch = [
@@ -40,8 +45,8 @@ export const filterData = (
         filters.dayTh && event.dayOfWeek === 4,
         filters.dayF && event.dayOfWeek === 5,
         filters.daySa && event.dayOfWeek === 6,
-        filters.today && event.dayOfWeek === currentDay,
-        filters.tomorrow && event.dayOfWeek === getNextDay(currentDay),
+        // filters.today && event.dayOfWeek === currentDay,
+        // filters.tomorrow && event.dayOfWeek === getNextDay(currentDay),
       ].some((f) => f === true);
 
       const includeThisLocationMarkerOnDays =

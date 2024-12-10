@@ -29,9 +29,10 @@ import { db } from "@f3/db";
  */
 export const createTRPCContext = async (opts: {
   headers: Headers | null;
-  session: Session | null;
+  session: Session | null | "none";
 }) => {
-  const session = opts.session ?? (await auth());
+  const session =
+    opts.session === "none" ? null : opts.session ?? (await auth());
   const source = opts.headers?.get("x-trpc-source") ?? "unknown";
   const xRealIp = opts.headers?.get("x-real-ip") ?? "unknown";
   const xForwardedFor = opts.headers?.get("x-forwarded-for") ?? "unknown";

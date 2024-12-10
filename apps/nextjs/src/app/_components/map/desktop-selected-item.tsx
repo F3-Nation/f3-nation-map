@@ -1,140 +1,97 @@
 "use client";
 
-import Link from "next/link";
-import { ExternalLink, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import cloneDeep from "lodash/cloneDeep";
+import debounce from "lodash/debounce";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import {
+  SELECTED_ITEM_DEBOUNCE_TIME_MS,
+  Z_INDEX,
+} from "@f3/shared/app/constants";
+import { cn } from "@f3/ui";
 
-import type { RouterOutputs } from "~/trpc/types";
-import { ModalType, useModalStore } from "~/utils/store/modal";
+import { api } from "~/trpc/react";
+import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
-import { ImageWithFallback } from "../image-with-fallback";
-import { EventChip } from "./event-chip";
+import { SelectedItem } from "./selected-item";
 import { useSelectedItem } from "./use-selected-item";
 
-const SelectedItem = (props: {
-  selectedLocation: RouterOutputs["location"]["getAllLocationMarkers"][number];
-  selectedEvent: RouterOutputs["location"]["getAllLocationMarkers"][number]["events"][number];
-}) => {
-  RERENDER_LOGS && console.log("SelectedItem rerender");
-
-  const { selectedLocation, selectedEvent } = props;
-
-  // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
-
-  return (
-    <>
-      <div className="pointer-events-auto relative w-[450px] overflow-hidden overflow-y-auto rounded-lg bg-background p-2 text-sm text-foreground shadow-xl transition-all dark:border-[1px] dark:border-muted">
-        <div className="text-lg font-bold">{selectedEvent.name}</div>
-        <div className="mt-2 flex flex-row items-start gap-2">
-          <div className="flex flex-shrink-0 flex-col items-center">
-            <ImageWithFallback
-              src={
-                selectedLocation.logo ? selectedLocation.logo : "/f3_logo.png"
-              }
-              fallbackSrc="/f3_logo.png"
-              loading="lazy"
-              width={64}
-              height={64}
-              alt={selectedLocation.logo ?? "F3 logo"}
-              className="rounded-lg bg-black"
-            />
-            <button
-              className="cursor-pointer text-center text-sm text-blue-500 underline"
-              onClick={() =>
-                useModalStore.setState({
-                  open: true,
-                  type: ModalType.WORKOUT_DETAILS,
-                  data: {
-                    locationId: selectedLocation.id,
-                  },
-                })
-              }
-            >
-              More details
-            </button>
-          </div>
-          {/* Use flex-col to stack items vertically */}
-          <div className="flex flex-col overflow-hidden">
-            <div className="flex flex-row items-center">
-              <div className="mr-8 flex flex-row items-center gap-2">
-                <EventChip
-                  event={selectedEvent}
-                  location={selectedLocation}
-                  size="medium"
-                />
-              </div>
-            </div>
-            {selectedLocation.locationDescription ? (
-              <Link
-                // href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation.locationDescription)}`}
-                href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.locationDescription)}`}
-                target="_blank"
-                className="line-clamp-1 underline"
-              >
-                {selectedLocation.locationDescription}
-              </Link>
-            ) : null}
-            <div>
-              <span className="font-semibold">Type: </span>
-              {selectedEvent.type}
-            </div>
-            {selectedEvent.description ? (
-              <p className="leading-4">
-                <span className="font-semibold">Notes: </span>
-                {selectedEvent.description}
-              </p>
-            ) : null}
-            {selectedLocation.website ? (
-              <Link
-                href={
-                  selectedLocation.website ? selectedLocation.website : "f3.com"
-                }
-                target="_blank"
-                className="mb-1 flex items-center justify-end"
-                rel="noreferrer"
-              >
-                <div className="flex text-xs">Visit group site</div>
-                <div className="flex">
-                  <ExternalLink className="m-1 h-3 w-3" />
-                </div>
-              </Link>
-            ) : (
-              ""
-            )}
-          </div>
-        </div>
-      </div>
-      <button
-        className="pointer-events-auto absolute right-3 top-3"
-        onClick={() =>
-          selectedItemStore.setState({
-            locationId: null,
-            eventId: null,
-          })
-        }
-      >
-        <div className="rounded-full border-[1px] border-black">
-          <X />
-        </div>
-      </button>
-    </>
-  );
-};
-
 const SelectedItemWrapper = () => {
-  const { selectedLocation, selectedEvent } = useSelectedItem();
-  if (!selectedLocation || !selectedEvent) {
+  const hideSelectedItem = selectedItemStore.use.hideSelectedItem();
+  const dragging = mapStore.use.dragging();
+  const selectedItem = useSelectedItem();
+  // const previousSelectedLocationId = useRef(selectedItem.selectedLocation?.id);
+  const utils = api.useUtils();
+
+  const [debouncedSelectedItem1, setDebouncedSelectedItem] =
+    useState(selectedItem);
+
+  // Create memoized debounced function
+  const debouncedSetSelectedItem = useMemo(
+    () =>
+      debounce((newPosition: typeof selectedItem) => {
+        setDebouncedSelectedItem(cloneDeep(newPosition));
+      }, SELECTED_ITEM_DEBOUNCE_TIME_MS),
+    [],
+  );
+
+  // // Update debounced position when pagePosition changes
+  useEffect(() => {
+    if (typeof selectedItem.selectedLocation?.id === "number") {
+      void utils.location.getLocationMarker.prefetch({
+        id: selectedItem.selectedLocation?.id,
+      });
+
+      // Cancel the previous location marker if it's different from the current one
+      // if (
+      //   typeof previousSelectedLocationId.current === "number" &&
+      //   previousSelectedLocationId.current !== selectedItem.selectedLocation?.id
+      // ) {
+      //   void utils.location.getLocationMarker.cancel({
+      //     id: previousSelectedLocationId.current,
+      //   });
+      // }
+    }
+
+    debouncedSetSelectedItem(selectedItem);
+
+    // Cleanup
+    return () => {
+      debouncedSetSelectedItem.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedItem object doesn't change but the properties do
+  }, [
+    selectedItem.pagePosition,
+    selectedItem.selectedLocation,
+    selectedItem.selectedEvent,
+    debouncedSetSelectedItem,
+  ]);
+
+  if (
+    !debouncedSelectedItem1.selectedLocation ||
+    !debouncedSelectedItem1.selectedEvent ||
+    dragging
+  ) {
     return null;
   }
-  const props = { selectedLocation, selectedEvent };
+
   return (
     <div
-      className="absolute bottom-2 left-2 hidden lg:block"
-      style={{ zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP }}
+      className={cn("absolute hidden lg:block", {
+        "lg:hidden": hideSelectedItem,
+      })}
+      style={{
+        zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP,
+        top: debouncedSelectedItem1.pagePosition?.y,
+        left: debouncedSelectedItem1.pagePosition?.x,
+        transform: "translate(-50%, 5px)",
+      }}
     >
-      <SelectedItem {...props} />
+      <SelectedItem
+        selectedLocation={debouncedSelectedItem1.selectedLocation}
+        selectedEvent={debouncedSelectedItem1.selectedEvent}
+        hideCloseButton
+      />
     </div>
   );
 };

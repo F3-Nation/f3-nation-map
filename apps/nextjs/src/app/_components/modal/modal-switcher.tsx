@@ -1,7 +1,10 @@
 "use client";
 
+import { useWindowSize } from "@react-hook/window-size";
+
+import { BreakPoints } from "@f3/shared/app/constants";
+
 import { ModalType, useModalStore } from "~/utils/store/modal";
-import ExpansionFeedbackModal from "../map/expansion-feedback-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
@@ -9,6 +12,7 @@ import { WorkoutDetailsModal } from "./workout-details-modal";
 
 export default function ModalSwitcher() {
   const { type } = useModalStore();
+  const [width] = useWindowSize();
 
   switch (type) {
     case ModalType.HOW_TO_JOIN:
@@ -16,11 +20,10 @@ export default function ModalSwitcher() {
     case ModalType.USER_LOCATION_INFO:
       return <UserLocationInfoModal />;
     case ModalType.WORKOUT_DETAILS:
-      return <WorkoutDetailsModal />;
+      // Hide on desktop
+      return width >= Number(BreakPoints.LG) ? null : <WorkoutDetailsModal />;
     case ModalType.INFO:
       return <MapInfoModal />;
-    case ModalType.EXPANSION_FORM:
-      return <ExpansionFeedbackModal />;
     default:
       return null;
   }

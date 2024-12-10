@@ -1,36 +1,46 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Search, XCircle } from "lucide-react";
 
-import { DEFAULT_CENTER, SnapPoint, Z_INDEX } from "@f3/shared/app/constants";
+import {
+  DEFAULT_CENTER,
+  SIDEBAR_WIDTH,
+  SnapPoint,
+  Z_INDEX,
+} from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Input } from "@f3/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
 import { Spinner } from "@f3/ui/spinner";
 
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
+import { useKeyPress } from "~/utils/key-press/hook";
 import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";
 import { placesAutocomplete } from "~/utils/place-autocomplete";
 import { drawerStore } from "~/utils/store/drawer";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
 import { isF3MapSearchResult } from "~/utils/types";
+import { F3Logo } from "./f3-logo";
 import { onClickPlaceRowF3, PlaceRowF3 } from "./place-row-f3";
 import { PlaceRowMap } from "./place-row-map";
 import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBox({
   className,
+  hideLogo,
   ...rest
 }: ComponentProps<"div"> & { hideLogo?: true }) {
+  !!hideLogo; // TODO: Remove this
   const text = searchStore.use.text();
   const [isFocused, setIsFocused] = useState(false);
   const { combinedResults } = useTextSearchResults();
   const [focusedIndex, setFocusedIndex] = useState(0);
   const shouldRedirectOnResult = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { pressedKeys } = useKeyPress();
 
   const { ref: inputRef } = useOnKeyPress<HTMLInputElement>({
     keys: ["Enter"],
@@ -56,14 +66,21 @@ export function MapSearchBox({
     }
   }, [combinedResults, focusedIndex, inputRef]);
 
+  useEffect(() => {
+    if (pressedKeys.has("Escape")) {
+      setIsFocused(false);
+    }
+  }, [pressedKeys]);
+
   return (
     <div
       className={cn(
-        "flex flex-row items-center gap-4 px-4 transition-all",
+        "-ml-1 flex flex-row items-center gap-2 px-4 transition-all",
         className,
       )}
       {...rest}
     >
+      <F3Logo className={cn("transition-all", { hidden: isFocused })} />
       <div className="relative w-full">
         <Popover open={isFocused}>
           <PopoverTrigger className="w-full">
@@ -79,10 +96,15 @@ export function MapSearchBox({
                   e.preventDefault();
                 }
               }}
-              ref={inputRef}
+              ref={(node) => {
+                if (node) {
+                  inputRef.current = node;
+                }
+              }}
               aria-expanded={isFocused}
               type="text"
-              placeholder="Search by location, zip, etc."
+              // placeholder="Search by location, zip, etc."
+              placeholder={`Search 4,368 free, peer-led workouts`}
               onFocus={() => {
                 setIsFocused(true);
                 setFocusedIndex(0);
@@ -91,7 +113,10 @@ export function MapSearchBox({
                 setIsFocused(false);
               }}
               value={text}
-              className="h-[42px] w-full rounded-full bg-foreground pl-10 text-base text-background caret-background placeholder:text-background/60"
+              className={cn(
+                "h-[42px] w-full rounded-full bg-foreground pl-10 text-base text-background caret-background placeholder:text-sm placeholder:text-background/60",
+                "transition-all",
+              )}
               onChange={(e) => {
                 setIsLoading(true);
                 shouldRedirectOnResult.current = true;
@@ -137,12 +162,12 @@ export function MapSearchBox({
             className={cn("h-[400px] overflow-scroll p-0")}
             style={{
               zIndex: Z_INDEX.MAP_SEARCHBOX_POPOVER_CONTENT_DESKTOP,
-              width: inputRef.current?.clientWidth,
+              width: SIDEBAR_WIDTH,
             }}
           >
             {combinedResults.length === 0 ? (
-              <div className="mt-4 w-full text-center">
-                Search for a place or F3 workout
+              <div className="mt-4 w-full text-center text-sm text-gray-700">
+                Search for a place or F3 workout by location, city, zip, etc.
               </div>
             ) : (
               combinedResults

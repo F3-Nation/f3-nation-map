@@ -17,7 +17,6 @@ import { eventTags } from "./schema/eventTags";
 import { eventTagsXOrg } from "./schema/eventTagsXOrg";
 import { eventTypes } from "./schema/eventTypes";
 import { eventTypesXOrg } from "./schema/eventTypesXOrg";
-import { expansionUsers } from "./schema/expansionUsers";
 import { locations } from "./schema/locations";
 import { orgs } from "./schema/orgs";
 import { orgTypes } from "./schema/orgTypes";
@@ -42,7 +41,6 @@ export const schema = {
   locations,
   orgTypes,
   slackUsers,
-  expansionUsers,
 };
 
 export { pgSqlTable as tableCreator } from "./schema/_table";
