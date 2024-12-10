@@ -1,30 +1,33 @@
 "use client";
 
+import type { LatLngLiteral } from "leaflet";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
-import type { RouterOutputs } from "~/trpc/types";
+import type { SparseF3Marker } from "~/utils/types";
 import { api } from "~/trpc/react";
 import { filterData } from "~/utils/filtered-data";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
 
-export type LocationMarkerWithDistance =
-  RouterOutputs["location"]["getAllLocationMarkers"][number] & {
-    distance: number | null;
-  };
+export type LocationMarkerWithDistance = SparseF3Marker & {
+  distance: number | null;
+};
+
 const FilteredMapResultsContext = createContext<{
   isLoading: boolean;
-  filteredLocationMarkers:
-    | RouterOutputs["location"]["getAllLocationMarkers"]
-    | undefined;
+  nearbyLocationCenter: (LatLngLiteral & { name?: string }) | null;
+  filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
+  allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
   isLoading: true,
+  nearbyLocationCenter: null,
   filteredLocationMarkers: undefined,
   locationOrderedLocationMarkers: undefined,
+  allLocationMarkersWithLatLngAndFilterData: undefined,
 });
 
 export const FilteredMapResultsProvider = ({
@@ -33,25 +36,69 @@ export const FilteredMapResultsProvider = ({
   children: ReactNode;
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
-  const center = mapStore.use.center();
+  const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
+
   const { data: allLocationMarkers, isLoading } =
-    api.location.getAllLocationMarkers.useQuery();
+    api.location.getLocationMarkersSparse.useQuery();
+  const { data: allLocationMarkerFilterData } =
+    api.location.allLocationMarkerFilterData.useQuery();
   const filters = filterStore.useBoundStore();
 
-  const filteredLocationMarkers = useMemo(
-    () => filterData(allLocationMarkers ?? [], filters),
-    [allLocationMarkers, filters],
-  );
+  const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
+    if (!allLocationMarkers || !allLocationMarkerFilterData) return undefined;
+
+    const locationIdToLatLng = allLocationMarkers.reduce(
+      (acc, location) => {
+        acc[location.id] = {
+          lat: location.lat,
+          lon: location.lon,
+          locationDescription: location.locationDescription,
+        };
+        return acc;
+      },
+      {} as Record<
+        number,
+        {
+          lat: number | null;
+          lon: number | null;
+          locationDescription: string | null;
+        }
+      >,
+    );
+
+    return allLocationMarkerFilterData.map((location) => {
+      return {
+        ...location,
+        lat: locationIdToLatLng[location.id]?.lat ?? null,
+        lon: locationIdToLatLng[location.id]?.lon ?? null,
+        locationDescription:
+          locationIdToLatLng[location.id]?.locationDescription ?? null,
+      };
+    });
+  }, [allLocationMarkerFilterData, allLocationMarkers]);
+
+  const filteredLocationMarkers = useMemo(() => {
+    if (!allLocationMarkersWithLatLngAndFilterData) return undefined;
+
+    const filteredLocationMarkers = filterData(
+      allLocationMarkersWithLatLngAndFilterData,
+      filters,
+    );
+    return filteredLocationMarkers;
+  }, [allLocationMarkersWithLatLngAndFilterData, filters]);
 
   const locationOrderedLocationMarkers = useMemo(() => {
-    if (!filteredLocationMarkers || !center) return [];
+    if (!filteredLocationMarkers || !nearbyLocationCenter) {
+      return undefined;
+    }
+
     const locationMarkersWithDistances = filteredLocationMarkers.map(
       (location) => {
         const distance = latLngToDistance(
-          location.lat,
-          location.lon,
-          center?.lat ?? null,
-          center?.lng ?? null,
+          location.lat ?? null,
+          location.lon ?? null,
+          nearbyLocationCenter?.lat ?? null,
+          nearbyLocationCenter?.lng ?? null,
         );
         return { ...location, distance };
       },
@@ -60,13 +107,15 @@ export const FilteredMapResultsProvider = ({
       if (a.distance === null || b.distance === null) return 0;
       return a.distance - b.distance;
     });
-  }, [center, filteredLocationMarkers]);
+  }, [nearbyLocationCenter, filteredLocationMarkers]);
 
   return (
     <FilteredMapResultsContext.Provider
       value={{
         filteredLocationMarkers,
         locationOrderedLocationMarkers,
+        allLocationMarkersWithLatLngAndFilterData,
+        nearbyLocationCenter,
         isLoading,
       }}
     >

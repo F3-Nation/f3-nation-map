@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import { ZustandStore } from "@f3/shared/common/classes";
 
 export enum TimeSelection {
@@ -29,8 +31,8 @@ export enum TimeSelection {
 }
 
 export const initialFilterState = {
-  today: false,
-  tomorrow: false,
+  // today: false,
+  // tomorrow: false,
   am: false,
   pm: false,
   allFilters: false,
@@ -50,6 +52,7 @@ export const initialFilterState = {
   CSAUPs: false,
   Convergence: false,
   GTE: false,
+  position: { latitude: 0, longitude: 0 },
 };
 
 export type FiltersType = typeof initialFilterState;
@@ -65,16 +68,52 @@ export const filterStore = new ZustandStore({
 });
 
 export const isAnyFilterActive = (filters: FiltersType) => {
-  const {
-    am: _am,
-    pm: _pm,
-    today: _today,
-    tomorrow: _tomorrow,
-    beforeAfterTime,
-    ...otherFilters
-  } = filters;
+  const { am: _am, pm: _pm, beforeAfterTime, ...otherFilters } = filters;
   return (
     Object.values(otherFilters).some((value) => value === true) ||
     beforeAfterTime !== TimeSelection.none
   );
+};
+
+const NUMBER_TO_DAY_KEY = [
+  "daySu",
+  "dayM",
+  "dayTu",
+  "dayW",
+  "dayTh",
+  "dayF",
+  "daySa",
+] as const;
+
+export const useTodayAndTomorrowFilters = () => {
+  const dayNumber = dayjs().day();
+  const dayM = filterStore.use.dayM();
+  const dayTu = filterStore.use.dayTu();
+  const dayW = filterStore.use.dayW();
+  const dayTh = filterStore.use.dayTh();
+  const dayF = filterStore.use.dayF();
+  const daySa = filterStore.use.daySa();
+  const daySu = filterStore.use.daySu();
+  const today =
+    (dayNumber === 0 && daySu) ||
+    (dayNumber === 1 && dayM) ||
+    (dayNumber === 2 && dayTu) ||
+    (dayNumber === 3 && dayW) ||
+    (dayNumber === 4 && dayTh) ||
+    (dayNumber === 5 && dayF) ||
+    (dayNumber === 6 && daySa);
+
+  const tomorrow =
+    (dayNumber === 6 && daySu) ||
+    (dayNumber === 0 && dayM) ||
+    (dayNumber === 1 && dayTu) ||
+    (dayNumber === 2 && dayW) ||
+    (dayNumber === 3 && dayTh) ||
+    (dayNumber === 4 && dayF) ||
+    (dayNumber === 5 && daySa);
+
+  const todayVar = NUMBER_TO_DAY_KEY[dayNumber] ?? "dayM";
+  const tomorrowVar = NUMBER_TO_DAY_KEY[(dayNumber + 1) % 7] ?? "dayTu";
+
+  return { today, tomorrow, todayVar, tomorrowVar };
 };

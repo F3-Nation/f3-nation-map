@@ -1,4 +1,5 @@
 import type { LatLng, LatLngBounds, LatLngLiteral, Map } from "leaflet";
+import type { MutableRefObject } from "react";
 import { createRef } from "react";
 
 import { DEFAULT_ZOOM } from "@f3/shared/app/constants";
@@ -14,10 +15,15 @@ const initialState = {
   } | null,
   bounds: null as LatLngBounds | null,
   center: null as LatLng | null,
-  ref: createRef<Map>(),
+  ref: createRef<Map>() as MutableRefObject<Map | null>,
+  // This is updated in the map listener on pan and is used to convert latlng to container point - definitely a hack
+  placeResultArea: null as string | null,
   placeResultLocation: null as LatLngLiteral | null,
+  nearbyLocationCenter: null as (LatLngLiteral & { name?: string }) | null,
   tiles: "street" as "satellite" | "street",
   showDebug: false,
+  loaded: false,
+  dragging: false,
 };
 
 export const mapStore = new ZustandStore({

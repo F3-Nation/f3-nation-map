@@ -1,7 +1,6 @@
 "use client";
 
-import { Z_INDEX } from "node_modules/@f3/shared/src/app/constants";
-
+import { Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import { mapStore } from "~/utils/store/map";

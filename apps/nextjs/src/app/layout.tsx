@@ -14,6 +14,7 @@ import "~/app/globals.css";
 
 import { TooltipProvider } from "@f3/ui/tooltip";
 
+import { KeyPressProvider } from "~/utils/key-press/provider";
 import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
 import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
 import { UserLocationProvider } from "./_components/map/user-location-provider";
@@ -48,7 +49,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-dvh w-screen bg-background font-sans text-foreground antialiased",
+          "min-h-dvh w-screen overflow-hidden bg-background font-sans text-foreground antialiased",
           GeistSans.variable,
           GeistMono.variable,
         )}
@@ -64,9 +65,12 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TRPCReactProvider>
       <UserLocationProvider>
-        <TextSearchResultsProvider>
-          <FilteredMapResultsProvider>{children}</FilteredMapResultsProvider>
-        </TextSearchResultsProvider>
+        <FilteredMapResultsProvider>
+          {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
+          <TextSearchResultsProvider>
+            <KeyPressProvider>{children}</KeyPressProvider>
+          </TextSearchResultsProvider>
+        </FilteredMapResultsProvider>
       </UserLocationProvider>
     </TRPCReactProvider>
   );

@@ -1,16 +1,17 @@
+"use client";
+
 import Link from "next/link";
 
-import { BOONE_CENTER, CLOSE_ZOOM } from "@f3/shared/app/constants";
+import { BOONE_CENTER } from "@f3/shared/app/constants";
 
-import { mapStore } from "~/utils/store/map";
+import { setView } from "~/utils/set-view";
 import { VersionInfo } from "../version-info";
 
 export default function WithLove() {
-  const mapRef = mapStore.use.ref();
   return (
     <div className="my-[1px] flex flex-row items-center justify-center gap-4">
       <div className="whitespace-nowrap text-xs text-foreground opacity-60">
-        Made with <span className="opacity-70 text-[9px]">❤️</span> by{" "}
+        Made with <span className="text-[7px] opacity-70">🖤️</span> by{" "}
         <Link
           target="_blank"
           className="text-blue-600 underline underline-offset-2"
@@ -21,11 +22,7 @@ export default function WithLove() {
         (
         <button
           onClick={() => {
-            mapRef.current?.setView(
-              BOONE_CENTER,
-              Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-              { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-            );
+            setView({ lat: BOONE_CENTER[0], lng: BOONE_CENTER[1] });
           }}
         >
           F3 Boone

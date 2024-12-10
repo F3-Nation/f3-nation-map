@@ -8,14 +8,18 @@ import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { isTruthy } from "@f3/shared/common/functions";
 import { useTheme } from "@f3/ui/theme";
 
-import type { RouterOutputs } from "~/trpc/types";
+import type { F3Marker, F3MarkerLocation } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";
+import { setView } from "~/utils/set-view";
 import { mapStore } from "~/utils/store/map";
-import { selectedItemStore } from "~/utils/store/selected-item";
+import {
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 
 type CanvasEventData = {
-  data: { options: { data: { item: MarkerLocation | Marker } } };
+  data: { options: { data: { item: F3MarkerLocation | F3Marker } } };
 }[];
 
 const getIconSizeForZoom = (zoom: number): number => {
@@ -28,17 +32,14 @@ const getIconSizeForZoom = (zoom: number): number => {
   return 2;
 };
 
-type MarkerLocation =
-  RouterOutputs["location"]["getLocationMarkersSparse"][number];
-type Marker = RouterOutputs["location"]["getAllLocationMarkers"][number];
 interface MarkerType {
   idx: number;
-  item: MarkerLocation | Marker;
+  item: F3MarkerLocation | F3Marker;
 }
 export const CanvasIconLayer = ({
   markerLocations,
 }: {
-  markerLocations: MarkerLocation[];
+  markerLocations: F3MarkerLocation[];
 }) => {
   const isOnTouchDevice = isTouchDevice();
   const map = useMap();
@@ -52,7 +53,7 @@ export const CanvasIconLayer = ({
   const isClose = zoom >= CLOSE_ZOOM;
 
   const farMarkers = useMemo(() => {
-    const markerData: (MarkerLocation | Marker)[] =
+    const markerData: (F3MarkerLocation | F3Marker)[] =
       filteredLocationMarkers ?? markerLocations;
     const iconUrl =
       zoom < 7
@@ -68,6 +69,7 @@ export const CanvasIconLayer = ({
       .map((item, idx) => {
         const iconSize = getIconSizeForZoom(zoom);
         const iconProps: L.IconOptions = {
+          // TODO Investigate if I could use a className instead
           iconUrl,
           iconSize: [iconSize, iconSize],
           iconAnchor: [iconSize / 2, iconSize / 2],
@@ -110,26 +112,34 @@ export const CanvasIconLayer = ({
   const onClick = useCallback(
     (_: L.LeafletMouseEvent, data: CanvasEventData) => {
       const item = data[0]?.data?.options?.data?.item;
-      console.log("canvas-layer click", item);
-      if (item?.id === selectedItemStore.get("locationId")) return;
-      selectedItemStore.setState({ locationId: item?.id ?? null });
+      // if (item?.id === selectedItemStore.get("locationId")) return;
       if (typeof item?.lat === "number" && typeof item.lon === "number") {
-        console.log("canvas-layer setView", item);
-        map.setView(
-          { lat: item?.lat, lng: item.lon },
-          Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-          { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-        );
+        // This is used to center the map on the nearby location
+        mapStore.setState({
+          nearbyLocationCenter: {
+            lat: item.lat,
+            lng: item.lon,
+            name: "name" in item ? item.name : undefined,
+          },
+        });
+
+        setView({ lat: item.lat, lng: item.lon });
+        setTimeout(() => {
+          setSelectedItem({
+            locationId: item?.id ?? null,
+            eventId: null,
+          });
+        }, 250);
       }
     },
-    [map],
+    [],
   );
 
   const onHover = useCallback(
     (_: L.LeafletMouseEvent, data: CanvasEventData) => {
       const item = data[0]?.data?.options?.data?.item;
       if (item?.id === selectedItemStore.get("locationId")) return;
-      selectedItemStore.setState({
+      setSelectedItem({
         locationId: item?.id ?? null,
         eventId: null,
       });
@@ -146,7 +156,8 @@ export const CanvasIconLayer = ({
       console.log("canvas-layer add things");
       canvasIconLayer.current = L.canvasIconLayer({}).addTo(map);
       canvasIconLayer.current.addOnClickListener(onClick);
-      canvasIconLayer.current.addOnHoverListener(onHover);
+      // Turning off hover for now as it is overwhelming
+      // canvasIconLayer.current.addOnHoverListener(onHover);
       canvasIconLayer.current?.addMarkers(farMarkers.flat());
     } else if (isClose && canvasIconLayer.current) {
       canvasIconLayer.current.remove();

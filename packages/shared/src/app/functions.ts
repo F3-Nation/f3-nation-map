@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type { GroupedMapData, LeafletWorkoutData } from "@f3/shared/app/types";
 import { isDDD } from "@f3/shared/app/types";
 
@@ -60,3 +62,44 @@ export function zoomToRadius(zoom: number): number {
 
   return Math.min(Math.max(radius, 0), MAX_PLACES_AUTOCOMPLETE_RADIUS);
 }
+
+export default function isWithinRadius({
+  miles,
+  basePosition,
+  checkPosition,
+}: {
+  miles: number;
+  basePosition: { lat: number; long: number };
+  checkPosition: { lat: number; long: number };
+}): boolean {
+  const toRadians = (degree: number) => degree * (Math.PI / 180);
+  const R = 3958.8; // Radius of the Earth in miles
+
+  const dLat = toRadians(checkPosition.lat - basePosition.lat);
+  const dLong = toRadians(checkPosition.long - basePosition.long);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(basePosition.lat)) *
+      Math.cos(toRadians(checkPosition.lat)) *
+      Math.sin(dLong / 2) *
+      Math.sin(dLong / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+
+  return distance <= miles;
+}
+
+const isoDateRegExp = new RegExp(
+  /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/,
+);
+
+// Could do this with a custom zod preprocess, but this may be simpler
+// https://github.com/colinhacks/zod#preprocess
+const isISODate = (str: string): boolean => {
+  return isoDateRegExp.test(str);
+};
+
+export const dateOrIso = z.union([
+  z.date(),
+  z.string().refine(isISODate, { message: "Not a valid ISO string date " }),
+]);

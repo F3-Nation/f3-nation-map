@@ -4,23 +4,25 @@ import "~/utils/leaflet-canvas-markers"; // with modifications
 import "~/utils/smooth-zoom-wheel"; // with modifications
 
 import type { TileLayerProps } from "react-leaflet";
+import { useEffect } from "react";
 import { useWindowSize } from "@react-hook/window-size";
 import { MapContainer, TileLayer } from "react-leaflet";
 
 import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
-  HEADER_HEIGHT,
   SIDEBAR_WIDTH,
 } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { useTheme } from "@f3/ui/theme";
 
-import type { RouterOutputs } from "~/trpc/types";
+import type { F3MarkerLocation } from "~/utils/types";
+import { clientUtils } from "~/trpc/server-side-react-helpers";
 import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
 import { GeoJsonPane } from "./geo-json-pane";
 import { MapListener } from "./map-listener";
+import { useMapRef } from "./map-ref-provider";
 import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerPane } from "./selected-item-marker-pane";
 import { UserLocationMarker } from "./user-location-marker";
@@ -30,24 +32,35 @@ import { ZoomedMarkerPane } from "./zoomed-marker-pane";
 // const DEFAULT_CENTER = { lat: 36.13910556091472, lng: -81.6757511960024 };
 
 export const LeafletMap = ({
-  markerLocations,
+  sparseLocations,
 }: {
-  markerLocations: RouterOutputs["location"]["getLocationMarkersSparse"];
+  sparseLocations: F3MarkerLocation[];
 }) => {
   const { userLocation } = useUserLocation();
   RERENDER_LOGS && console.log("LeafletMap rerender");
-  const ref = mapStore.use.ref();
   const [width, height] = useWindowSize();
+  const { mapRef } = useMapRef();
+
+  // TODO: Find a better way to load server side data into the query cache
+  useEffect(() => {
+    clientUtils.location.getLocationMarkersSparse.setData(
+      undefined,
+      sparseLocations,
+    );
+  }, [sparseLocations]);
+
   return (
     <div
-      style={
-        width >= 1024
-          ? { height: height - HEADER_HEIGHT, width: width - SIDEBAR_WIDTH }
-          : { height, width: "100%" }
-      }
+      style={{
+        height,
+        width: width >= 1024 ? width - SIDEBAR_WIDTH : width,
+      }}
     >
       <MapContainer
-        ref={ref}
+        ref={(map) => {
+          mapRef.current = map;
+          mapStore.setState({ loaded: true });
+        }}
         center={
           userLocation
             ? { lat: userLocation.latitude, lng: userLocation.longitude }
@@ -66,7 +79,7 @@ export const LeafletMap = ({
         attributionControl={false}
         zoomControl={false}
       >
-        <MapContent markerLocations={markerLocations} />
+        <MapContent markerLocations={sparseLocations} />
       </MapContainer>
     </div>
   );
@@ -75,7 +88,7 @@ export const LeafletMap = ({
 const MapContent = ({
   markerLocations,
 }: {
-  markerLocations: RouterOutputs["location"]["getLocationMarkersSparse"];
+  markerLocations: F3MarkerLocation[];
 }) => {
   const tile = mapStore.use.tiles();
   const { resolvedTheme } = useTheme();
@@ -99,8 +112,7 @@ const MapContent = ({
     subdomains: "abcd",
   };
 
-  const tileProps: TileLayerProps & { key: string } = {
-    key: `${tile}-${isDark ? "dark" : "light"}`,
+  const tileProps: TileLayerProps = {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     noWrap: true,
@@ -114,7 +126,7 @@ const MapContent = ({
   return (
     <>
       <MapListener />
-      <TileLayer {...tileProps} />
+      <TileLayer key={`${tile}-${isDark ? "dark" : "light"}`} {...tileProps} />
       <ZoomedMarkerPane />
       <SelectedIconMarkerPane />
       <GeoJsonPane />

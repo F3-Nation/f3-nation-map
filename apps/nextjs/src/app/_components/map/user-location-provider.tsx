@@ -9,9 +9,10 @@ import {
   useState,
 } from "react";
 
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
+import { getRandomLocation } from "~/utils/random-location";
+import { setView } from "~/utils/set-view";
 import { mapStore } from "~/utils/store/map";
 
 const UserLocationContext = createContext<{
@@ -28,62 +29,83 @@ const UserLocationContext = createContext<{
 
 export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   RERENDER_LOGS && console.log("UserLocationProvider rerender");
-  const mapRef = mapStore.use.ref();
   const userGpsLocation = mapStore.use.userGpsLocation();
   const [permissions, setPermissions] = useState<PermissionState | null>(null);
-  const [status, setStatus] = useState(
-    "loading" as "loading" | "error" | "success",
+  const [status, setStatus] = useState<"loading" | "error" | "success">(
+    "loading",
   );
 
-  // Initial load
-  useEffect(() => {
-    setStatus("loading");
-    void navigator.permissions.query({ name: "geolocation" }).then((result) => {
-      setPermissions(result.state);
+  const setUserGpsLocation = useCallback((position: GeolocationPosition) => {
+    mapStore.setState({
+      // If the nearby location center is already set, don't override it
+      ...(!mapStore.get("nearbyLocationCenter")
+        ? {
+            nearbyLocationCenter: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              name: "you",
+            },
+          }
+        : {}),
+      userGpsLocation: {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      },
     });
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setStatus("success");
+  }, []);
+
+  const handlePermissions = useCallback((result: PermissionStatus) => {
+    console.log(
+      "UserLocationProvider navigator.permissions.query result",
+      result,
+    );
+    setPermissions(result.state);
+    if (result.state === "denied") {
+      setStatus("error");
+      // Set the nearbyLocationCenter to a random location
+      const randomLocation = getRandomLocation();
+      console.log("randomLocation", randomLocation);
+      if (
+        typeof randomLocation?.lat === "number" &&
+        typeof randomLocation?.lon === "number"
+      ) {
         mapStore.setState({
-          userGpsLocation: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+          nearbyLocationCenter: {
+            lat: randomLocation.lat,
+            lng: randomLocation.lon,
+            name: "random",
           },
         });
-      },
-      () => {
-        setStatus("error");
-        console.log("Error getting user location");
-      },
-    );
+      }
+    } else {
+      setStatus("success");
+    }
+  }, []);
+
+  const handlePermissionsCatch = useCallback(() => {
+    setStatus("error");
+    console.log("Error getting user location");
   }, []);
 
   const updateUserLocation = useCallback(() => {
     if (userGpsLocation) {
-      mapRef.current?.setView(
-        { lat: userGpsLocation.latitude, lng: userGpsLocation.longitude },
-        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-        { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-      );
+      setView({
+        lat: userGpsLocation.latitude,
+        lng: userGpsLocation.longitude,
+      });
       return;
     }
 
-    // Otherwise get the location
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        setPermissions("granted");
         setStatus("success");
-        mapStore.setState({
-          userGpsLocation: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          },
-        });
+        setUserGpsLocation(position);
         if (position) {
-          mapRef.current?.setView(
-            { lat: position.coords.latitude, lng: position.coords.longitude },
-            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-            { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-          );
+          setView({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
         }
       },
       () => {
@@ -91,7 +113,26 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         console.log("Error getting user location");
       },
     );
-  }, [mapRef, userGpsLocation]);
+
+    // void navigator.permissions
+    //   .query({ name: "geolocation" })
+    //   .then(handlePermissions);
+  }, [setUserGpsLocation, userGpsLocation]);
+
+  // Initial load
+  useEffect(() => {
+    console.log("UserLocationProvider useEffect");
+    setStatus("loading");
+    void navigator.permissions
+      .query({ name: "geolocation" })
+      .then(handlePermissions)
+      .catch(handlePermissionsCatch);
+  }, [handlePermissions, handlePermissionsCatch]);
+
+  useEffect(() => {
+    if (!permissions || permissions === "denied") return;
+    updateUserLocation();
+  }, [permissions, updateUserLocation]);
 
   return (
     <UserLocationContext.Provider

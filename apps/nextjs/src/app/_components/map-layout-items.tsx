@@ -1,19 +1,27 @@
 "use client";
 
+import type { ComponentProps } from "react";
+
+import { Z_INDEX } from "@f3/shared/app/constants";
+
 import { mapStore } from "~/utils/store/map";
 import { DebugInfo } from "./map/debug-info";
+import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
+import { DesktopLocationPanelContent } from "./map/desktop-location-panel-content";
 import DesktopSelectedItem from "./map/desktop-selected-item";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
 import { MobileFilterButtons } from "./map/mobile-filter-buttons";
-import { MobileNearbyLocations } from "./map/mobile-nearby-locations";
-import { MobileSearchResults } from "./map/mobile-search-results";
+import { MobileSearchResultsAndNearbyLocations } from "./map/mobile-search-results-and-nearby-locations";
+import { MobileSelectedItem } from "./map/mobile-selected-item";
+import { TileButton } from "./map/tile-button";
 import { UserLocationIcon } from "./map/user-location-icon";
-import { ZoomAndTileButtons } from "./map/zoom-and-tile-buttons";
+import { ZoomButtons } from "./map/zoom-buttons";
 
 const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
   const showDebugStore = mapStore.use.showDebug();
+  const loaded = mapStore.use.loaded();
 
   const showDebug =
     showDebugStore || (process.env.NODE_ENV === "development" && SHOW_DEBUG)
@@ -21,15 +29,86 @@ export const MapLayoutItems = () => {
       : false;
   return (
     <>
-      <UserLocationIcon />
-      <ZoomAndTileButtons />
-      <MobileFilterButtons />
+      {loaded && (
+        <DesktopTopLeftButtons>
+          <DesktopFilterButtons />
+        </DesktopTopLeftButtons>
+      )}
+      <DesktopTopRightButtons></DesktopTopRightButtons>
+      {loaded && (
+        <DesktopBottomLeftButtons>
+          <TileButton />
+        </DesktopBottomLeftButtons>
+      )}
+      <DesktopBottomRightButtons>
+        <UserLocationIcon />
+        <ZoomButtons />
+      </DesktopBottomRightButtons>
       <DesktopSelectedItem />
-      <MobileNearbyLocations />
+      <DesktopLocationPanel>
+        <DesktopLocationPanelContent />
+      </DesktopLocationPanel>
+
+      {/* Mobile */}
+      <MobileAboveSearchBox>
+        <div className="mb-[2px] flex flex-row gap-2 overflow-auto px-2 pb-[6px]">
+          <MobileFilterButtons />
+        </div>
+        <MobileSelectedItem />
+      </MobileAboveSearchBox>
       <MobileAllFilters />
+      <MobileSearchResultsAndNearbyLocations />
       <MapSearchBoxMobile />
-      <MobileSearchResults />
       {showDebug ? <DebugInfo /> : null}
     </>
   );
 };
+const DesktopTopLeftButtons = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute left-2 top-2 hidden flex-row gap-1 lg:flex"
+    {...props}
+  />
+);
+
+const DesktopTopRightButtons = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute right-2 top-2 hidden flex-col gap-1 lg:flex"
+    {...props}
+  />
+);
+
+const DesktopBottomLeftButtons = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute bottom-2 left-2 hidden flex-col gap-1 lg:flex"
+    {...props}
+  />
+);
+
+const DesktopBottomRightButtons = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute bottom-2 right-2 hidden flex-col gap-1 lg:flex"
+    {...props}
+  />
+);
+
+const DesktopLocationPanel = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.LOCATION_PANEL }}
+    // max-w-md must match to MAX_DESKTOP_WORKOUT_PANEL_WIDTH
+    className="absolute left-2 top-12 hidden w-1/2 max-w-md lg:block"
+    {...props}
+  />
+);
+
+const MobileAboveSearchBox = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    // 46px and 6px to keep the slider in the middle between them
+    className="absolute bottom-[44px] left-0 right-0 block lg:hidden"
+    {...props}
+  />
+);

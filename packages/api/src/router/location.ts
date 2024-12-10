@@ -14,25 +14,17 @@ export const locationRouter = createTRPCRouter({
         id: schema.locations.id,
         lat: schema.locations.lat,
         lon: schema.locations.lon,
+        locationDescription: schema.locations.description,
       })
       .from(schema.locations);
   }),
-  getAllLocationMarkers: publicProcedure.query(async ({ ctx }) => {
+  allLocationMarkerFilterData: publicProcedure.query(async ({ ctx }) => {
     const [locations, events] = await Promise.all([
       ctx.db
         .select({
           id: schema.locations.id,
-          lat: schema.locations.lat,
-          lon: schema.locations.lon,
           name: schema.locations.name,
-          isActive: schema.locations.isActive,
-          created: schema.locations.created,
-          updated: schema.locations.updated,
-          meta: schema.locations.meta,
-          locationDescription: schema.locations.description,
-          orgId: schema.locations.orgId,
           logo: schema.orgs.logo,
-          website: schema.orgs.website,
         })
         .from(schema.locations)
         .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id)),
@@ -43,7 +35,6 @@ export const locationRouter = createTRPCRouter({
           dayOfWeek: schema.events.dayOfWeek,
           startTime: schema.events.startTime,
           endTime: schema.events.endTime,
-          description: schema.events.description,
           eventTypeId: schema.events.eventTypeId,
           type: schema.eventTypes.name,
           name: schema.events.name,
@@ -59,18 +50,134 @@ export const locationRouter = createTRPCRouter({
 
     // combine locations and events
     const locationEvents = locations.map((location) => {
-      const eventsForThisLocation = events
-        .filter((event) => event.locationId === location.id)
-        .map((event) => ({ ...event, logo: location.logo }));
+      const eventsForThisLocation = events.filter(
+        (event) => event.locationId === location.id,
+      );
       return {
         ...location,
         events: eventsForThisLocation,
       };
     });
-    console.log("locationEvents", locationEvents.length);
 
     return locationEvents;
   }),
+  getLocationMarker: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const locationsAndEvents = await ctx.db
+        .select({
+          // TODO: Reduce the properties as much as possible
+          locations: {
+            id: schema.locations.id,
+            lat: schema.locations.lat,
+            lon: schema.locations.lon,
+            name: schema.locations.name,
+            isActive: schema.locations.isActive,
+            created: schema.locations.created,
+            updated: schema.locations.updated,
+            meta: schema.locations.meta,
+            locationDescription: schema.locations.description,
+            orgId: schema.locations.orgId,
+            logo: schema.orgs.logo,
+            website: schema.orgs.website,
+          },
+          events: {
+            id: schema.events.id,
+            locationId: schema.events.locationId,
+            dayOfWeek: schema.events.dayOfWeek,
+            startTime: schema.events.startTime,
+            endTime: schema.events.endTime,
+            description: schema.events.description,
+            eventTypeId: schema.events.eventTypeId,
+            type: schema.eventTypes.name,
+            name: schema.events.name,
+          },
+          // locations: { id: schema.locations.id },
+          // events: { id: schema.events.id },
+        })
+        .from(schema.locations)
+        .where(eq(schema.locations.id, input.id))
+        .innerJoin(
+          schema.events,
+          eq(schema.events.locationId, schema.locations.id),
+        )
+        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.events.eventTypeId),
+        );
+      const locationEvents = locationsAndEvents.reduce(
+        (acc, item) => {
+          const location = item.locations;
+          const event = item.events;
+          acc[location.id] = {
+            ...location,
+            events: [...(acc[location.id]?.events ?? []), event],
+          };
+          return acc;
+        },
+        {} as Record<
+          number,
+          (typeof locationsAndEvents)[0]["locations"] & {
+            events: (typeof locationsAndEvents)[0]["events"][];
+          }
+        >,
+      );
+      return locationEvents[input.id];
+    }),
+  // getAllLocationMarkersBackup: publicProcedure.query(async ({ ctx }) => {
+  //   const [locations, events] = await Promise.all([
+  //     ctx.db
+  //       .select({
+  //         id: schema.locations.id,
+  //         lat: schema.locations.lat,
+  //         lon: schema.locations.lon,
+  //         name: schema.locations.name,
+  //         isActive: schema.locations.isActive,
+  //         created: schema.locations.created,
+  //         updated: schema.locations.updated,
+  //         meta: schema.locations.meta,
+  //         locationDescription: schema.locations.description,
+  //         orgId: schema.locations.orgId,
+  //         logo: schema.orgs.logo,
+  //         website: schema.orgs.website,
+  //       })
+  //       .from(schema.locations)
+  //       .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id)),
+  //     ctx.db
+  //       .select({
+  //         id: schema.events.id,
+  //         locationId: schema.events.locationId,
+  //         dayOfWeek: schema.events.dayOfWeek,
+  //         startTime: schema.events.startTime,
+  //         endTime: schema.events.endTime,
+  //         description: schema.events.description,
+  //         eventTypeId: schema.events.eventTypeId,
+  //         type: schema.eventTypes.name,
+  //         name: schema.events.name,
+  //       })
+  //       .from(schema.events)
+  //       .leftJoin(
+  //         schema.eventTypes,
+  //         eq(schema.eventTypes.id, schema.events.eventTypeId),
+  //       ),
+  //   ]);
+  //   // console.log("locations", locations.length, locations[0]);
+  //   // console.log("events", events.length, events[0]);
+
+  //   // combine locations and events
+  //   const locationEvents = locations.map((location) => {
+  //     const eventsForThisLocation = events
+  //       .filter((event) => event.locationId === location.id)
+  //       .map((event) => ({ ...event, logo: location.logo }));
+  //     return {
+  //       ...location,
+  //       events: eventsForThisLocation,
+  //     };
+  //   });
+
+  //   return locationEvents;
+  // }),
   getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
     const data = await ctx.db
       .select({
@@ -149,8 +256,6 @@ export const locationRouter = createTRPCRouter({
         }
       >,
     );
-
-    console.log("preview location Events", locationEvents);
 
     return Object.values(locationEvents).map((item) => ({
       ...item.location,

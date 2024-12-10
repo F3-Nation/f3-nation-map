@@ -1,6 +1,6 @@
 {
   "name": "@f3/nextjs",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -33,6 +33,8 @@
     "@trpc/server": "11.0.0-next-beta.264",
     "axios": "^1.6.8",
     "dayjs": "^1.11.10",
+    "dompurify": "^3.1.7",
+    "dotenv-cli": "^7.3.0",
     "geist": "^1.2.2",
     "leaflet": "^1.9.4",
     "leaflet-canvas-marker": "^0.2.0",
@@ -61,6 +63,7 @@
     "@f3/tsconfig": "workspace:^0.1.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^15.0.2",
+    "@types/dompurify": "^3.0.5",
     "@types/leaflet": "^1.9.8",
     "@types/lodash": "^4.14.195",
     "@types/node": "^20.11.13",
@@ -69,7 +72,6 @@
     "@types/testing-library__jest-dom": "^6.0.0",
     "@vitejs/plugin-react": "^4.2.1",
     "cross-fetch": "^4.0.0",
-    "dotenv-cli": "^7.3.0",
     "eslint": "^8.56.0",
     "jiti": "^1.21.0",
     "jsdom": "^24.0.0",
