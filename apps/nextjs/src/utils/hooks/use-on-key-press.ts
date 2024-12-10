@@ -7,7 +7,7 @@ export const useOnKeyPress = <T extends HTMLElement>({
   keys?: string[];
   cb: (key?: string) => void;
 }) => {
-  const ref = React.useRef<T>(null);
+  const ref = React.useRef<T>();
 
   useEffect(() => {
     const refCurrent = ref.current;

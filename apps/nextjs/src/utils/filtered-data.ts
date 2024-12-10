@@ -1,19 +1,26 @@
 // filteredData.ts
 
+import isWithinRadius from "@f3/shared/app/functions";
 import { isTruthy } from "@f3/shared/common/functions";
 
 import type { FiltersType } from "./store/filter";
-import type { RouterOutputs } from "~/trpc/types";
+import type { LocationMarkerWithDistance } from "~/app/_components/map/filtered-map-results-provider";
 import { dayjs } from "./frontendDayjs";
-import { TimeSelection } from "./store/filter";
+import { filterStore, TimeSelection } from "./store/filter";
+import { mapStore } from "./store/map";
 
-export const filterData = (
-  allLocationMarkers: RouterOutputs["location"]["getAllLocationMarkers"],
+export const filterData = <
+  T extends {
+    events: {
+      dayOfWeek: number | null;
+      startTime: string | null;
+      type: string | null;
+    }[];
+  },
+>(
+  allLocationMarkers: T[],
   filters: FiltersType,
-): RouterOutputs["location"]["getAllLocationMarkers"] => {
-  const currentDay = dayjs().day();
-
-  console.log("currentDay", currentDay);
+): T[] => {
   const filteredLocationMarkers = allLocationMarkers.map((locationMarker) => {
     const filteredEvents = locationMarker.events.filter((event) => {
       // Check if at least one of the selected day filters matches the station's day
@@ -26,8 +33,8 @@ export const filterData = (
         filters.dayTh,
         filters.dayF,
         filters.daySa,
-        filters.today,
-        filters.tomorrow,
+        // filters.todayVar,
+        // filters.tomorrowVar,
       ].every((f) => f === false);
 
       const specificDayFilterMatch = [
@@ -38,8 +45,8 @@ export const filterData = (
         filters.dayTh && event.dayOfWeek === 4,
         filters.dayF && event.dayOfWeek === 5,
         filters.daySa && event.dayOfWeek === 6,
-        filters.today && event.dayOfWeek === currentDay,
-        filters.tomorrow && event.dayOfWeek === getNextDay(currentDay),
+        // filters.today && event.dayOfWeek === currentDay,
+        // filters.tomorrow && event.dayOfWeek === getNextDay(currentDay),
       ].some((f) => f === true);
 
       const includeThisLocationMarkerOnDays =
@@ -100,6 +107,46 @@ export const filterData = (
           ...locationMarker,
           events: filteredEvents,
         };
+  });
+
+  return filteredLocationMarkers.filter(isTruthy);
+};
+
+export const filterDataWithinMiles = ({
+  data,
+  miles = 20,
+}: {
+  data: LocationMarkerWithDistance[] | undefined;
+  miles?: number;
+}) => {
+  if (!data) {
+    return [];
+  }
+
+  const filteredLocationMarkers = data.map((locationMarker) => {
+    let location = mapStore?.get("userGpsLocation");
+    const filterPosition = filterStore?.get("position");
+
+    if (filterPosition) {
+      location = {
+        latitude: filterPosition.latitude,
+        longitude: filterPosition.longitude,
+      };
+    }
+
+    const includeThisLocationMarkerOnRadius = isWithinRadius({
+      miles,
+      checkPosition: {
+        lat: locationMarker.lat ?? 0,
+        long: locationMarker.lon ?? 0,
+      },
+      basePosition: {
+        lat: location?.latitude ?? 0,
+        long: location?.longitude ?? 0,
+      },
+    });
+
+    return includeThisLocationMarkerOnRadius;
   });
 
   return filteredLocationMarkers.filter(isTruthy);

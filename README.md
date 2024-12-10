@@ -1,3 +1,24 @@
+# Environment variable management with Doppler
+
+Environment variables are managed with Doppler. Running the `./tooling/scripts/doppler.sh` script will help you push/pull env variables between Doppler and local .env files. You will first need to [install the Doppler CLI](https://docs.doppler.com/docs/cli) and then run `doppler login` and `doppler setup`.
+
+Usage:
+
+```bash
+# download all configs from Doppler to local .env files
+pnpm doppler download
+
+# Uploads the vars in .env.dev, .env.stg, and .env.prd files
+pnpm doppler upload
+```
+
+# Deploying
+
+1. Generate the image with `docker-compose -f docker-compose.yml up --build`
+2. Create the tag `docker tag f3-2 us-central1-docker.pkg.dev/pin-mastery/cloud-run-source-deploy/f3-2/f3-2`
+3. Push the image to the registry `docker push us-central1-docker.pkg.dev/pin-mastery/cloud-run-source-deploy/f3-2/f3-2`
+4. Edit and deploy new revision: `https://console.cloud.google.com/run/detail/us-central1/f3-2/revisions?project=pin-master`
+
 # Bugs / Features
 
 - [ ] Allow people to submit location updates (F3 Expansion request)
@@ -30,3 +51,8 @@
 # Other
 
 Rebuilt git history on 9-3-24 to clean it
+
+# Static state
+
+- https://github.com/trpc/trpc/pull/4547/files
+- https://github.com/tanguyMichardiere/wishgrid/blob/develop/src/utils/server-queries/index.ts

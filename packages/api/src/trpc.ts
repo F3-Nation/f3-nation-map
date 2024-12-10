@@ -28,13 +28,14 @@ import { db } from "@f3/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: {
-  headers: Headers;
-  session: Session | null;
+  headers: Headers | null;
+  session: Session | null | "none";
 }) => {
-  const session = opts.session ?? (await auth());
-  const source = opts.headers.get("x-trpc-source") ?? "unknown";
-  const xRealIp = opts.headers.get("x-real-ip") ?? "unknown";
-  const xForwardedFor = opts.headers.get("x-forwarded-for") ?? "unknown";
+  const session =
+    opts.session === "none" ? null : opts.session ?? (await auth());
+  const source = opts.headers?.get("x-trpc-source") ?? "unknown";
+  const xRealIp = opts.headers?.get("x-real-ip") ?? "unknown";
+  const xForwardedFor = opts.headers?.get("x-forwarded-for") ?? "unknown";
 
   const ip = xForwardedFor ?? xRealIp;
 

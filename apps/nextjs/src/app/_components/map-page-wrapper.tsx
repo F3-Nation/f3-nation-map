@@ -1,26 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import {
-  BreakPoints,
-  HEADER_HEIGHT,
-  SIDEBAR_WIDTH,
-} from "@f3/shared/app/constants";
+import { HEADER_HEIGHT } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { cn } from "@f3/ui";
 
-import { Responsive } from "~/utils/responsive";
 import { MapSearchBox } from "./map/map-searchbox-desktop";
+import { DesktopSidebarContainer } from "./sidebar/desktop-sidebar-container";
 import { Sidebar } from "./sidebar/sidebar";
-import { SidebarContainer } from "./sidebar/sidebar-container";
 
-const HeaderContainer = (props: { children: React.ReactNode }) => {
+const _DesktopHeaderContainer = (props: { children: React.ReactNode }) => {
   return (
     <div
       className={cn(
         `absolute left-0 right-0 top-0`,
-        `flex items-center justify-center`,
+        `items-center justify-center`,
         `border-b-2 border-ring bg-background px-2`,
+        `hidden lg:flex`,
       )}
       style={{ height: HEADER_HEIGHT }}
     >
@@ -29,7 +25,7 @@ const HeaderContainer = (props: { children: React.ReactNode }) => {
   );
 };
 
-const Header = () => {
+const _Header = () => {
   return (
     <>
       <Link
@@ -59,18 +55,10 @@ export const MapPageWrapper = (props: { children: React.ReactNode }) => {
   RERENDER_LOGS && console.log("HeaderAndSidebar rerender");
   return (
     <>
-      <Responsive minWidth={BreakPoints.LG}>
-        <SidebarContainer>
-          <Sidebar />
-        </SidebarContainer>
-        <HeaderContainer>
-          <Header />
-        </HeaderContainer>
-        <div style={{ paddingLeft: SIDEBAR_WIDTH, paddingTop: HEADER_HEIGHT }}>
-          {props.children}
-        </div>
-      </Responsive>
-      <Responsive maxWidth={BreakPoints.LG}>{props.children}</Responsive>
+      <DesktopSidebarContainer>
+        <Sidebar />
+      </DesktopSidebarContainer>
+      <div className={cn(`lg:pl-360 pl-0`)}>{props.children}</div>
     </>
   );
 };

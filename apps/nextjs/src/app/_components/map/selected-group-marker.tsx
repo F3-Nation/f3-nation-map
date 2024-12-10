@@ -8,15 +8,19 @@ import { Marker } from "react-leaflet";
 import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
-import type { RouterOutputs } from "~/trpc/types";
+import type { SparseF3Marker } from "~/utils/types";
 
 export const MemoSelectedGroupMarker = memo(
   ({
     group,
     selectedEventIdInGroup,
+    alwaysShowFillInsteadOfOutline,
+    panel,
   }: {
-    group: RouterOutputs["location"]["getAllLocationMarkers"][number];
+    group: SparseF3Marker;
     selectedEventIdInGroup: number | null;
+    alwaysShowFillInsteadOfOutline?: boolean;
+    panel?: boolean;
   }) => {
     const { lat, lon, events, id } = group;
     if (lat === null || lon === null) return null;
@@ -26,12 +30,12 @@ export const MemoSelectedGroupMarker = memo(
         interactive={false}
         position={[lat, lon]}
         icon={L.divIcon({
-          iconSize: [events.length * 30, 30],
-          iconAnchor: [(events.length * 30) / 2, 30 + 15],
+          iconSize: [events.length * 30 + 4, 34],
+          iconAnchor: [(events.length * 30 + 4) / 2, 34 + 15],
           className: "pointer-events-none",
           html: ReactDOMServer.renderToString(
-            <div className="flex flex-col">
-              <div className="flex flex-row">
+            <div className="relative flex flex-col">
+              <div className="flex flex-row" style={{ zIndex: 1 }}>
                 {...events
                   .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
                   .map((marker, markerIdx, markerArray) => {
@@ -43,16 +47,18 @@ export const MemoSelectedGroupMarker = memo(
                       <button
                         key={markerIdx + "-" + id}
                         className={cn(
-                          "pointer-events-none flex-1 cursor-pointer border-b-[0.5px] border-t-[0.5px] bg-foreground py-2 text-center text-background",
+                          "pointer-events-none flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
+                          "border-l-2 border-r-2",
                           // Use a class name to find the event id
                           `leaflet-eventid-${marker.id}`,
                           {
-                            "border-b-0": events.length === 1,
-                            "border-l-[0.5px]": isStart,
-                            "border-r-[0.5px]": isEnd,
+                            "opacity-0": selectedEventIdInGroup !== marker.id,
                             "rounded-r-full": isEnd,
                             "rounded-l-full": isStart,
-                            "bg-red-600 font-bold dark:bg-red-400":
+                            "border-red-600 font-bold dark:bg-red-400":
+                              selectedEventIdInGroup === marker.id,
+                            "bg-red-600":
+                              (!!panel || alwaysShowFillInsteadOfOutline) &&
                               selectedEventIdInGroup === marker.id,
                           },
                         )}
@@ -64,11 +70,12 @@ export const MemoSelectedGroupMarker = memo(
               </div>
               <svg
                 viewBox="0 0 40 40"
-                className="pointer-events-none -mt-[12px] w-[31px] self-center"
+                className="pointer-events-none -mt-[10.5px] w-[28px] self-center"
+                style={{ zIndex: 0 }}
               >
                 <path
                   className={cn("fill-foreground", {
-                    "fill-[#dc2626] dark:fill-[#f87171]": true,
+                    "fill-[#dc2626] dark:fill-[#f87171]": false,
                   })}
                   // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
                   d={
@@ -98,6 +105,7 @@ export const MemoSelectedGroupMarker = memo(
     );
   },
   (prev, next) =>
+    prev.panel === next.panel &&
     prev.group.id === next.group.id &&
     prev.group.events.length === next.group.events.length &&
     prev.selectedEventIdInGroup === next.selectedEventIdInGroup,

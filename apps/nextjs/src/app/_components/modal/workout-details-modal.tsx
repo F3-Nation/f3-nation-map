@@ -14,7 +14,8 @@ import { Skeleton } from "@f3/ui/skeleton";
 
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
-import { useModalStore } from "~/utils/store/modal";
+import { closeModal, useModalStore } from "~/utils/store/modal";
+import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
@@ -60,7 +61,7 @@ export const WorkoutDetailsModal = () => {
         {location.aoWebsite}
       </Link>
     ) : null,
-    Notes: workout?.description,
+    Notes: workout?.description ? textLink(workout.description) : null,
   };
 
   const regionFields = {
@@ -80,17 +81,19 @@ export const WorkoutDetailsModal = () => {
   return (
     <Dialog
       open={open}
-      onOpenChange={() => useModalStore.setState({ open: false })}
+      onOpenChange={() => {
+        closeModal();
+      }}
     >
       <DialogContent
         style={{ zIndex: Z_INDEX.WORKOUT_DETAILS_MODAL }}
-        className="px-4 sm:px-6 lg:px-8"
+        className="mb-40 rounded-lg px-4 sm:px-6 lg:rounded-none lg:px-8"
       >
         {!results?.location || !results.events.length || isLoading ? (
           <WorkoutDetailsSkeleton />
         ) : (
           <>
-            <DialogHeader className="mt-8 flex flex-row flex-wrap items-center justify-start gap-x-2">
+            <DialogHeader className="flex flex-row flex-wrap items-center justify-start gap-x-2">
               <div className="flex flex-shrink-0 flex-col items-center">
                 <ImageWithFallback
                   src={location?.aoLogo ? location.aoLogo : "/f3_logo.png"}
@@ -115,10 +118,13 @@ export const WorkoutDetailsModal = () => {
                 {results?.events.map((event) => (
                   <EventChip
                     key={event.eventId}
-                    onClick={() => setSelectedEventId(event.eventId)}
+                    onClick={() => {
+                      setSelectedEventId(event.eventId);
+                    }}
                     selected={selectedEventId === event.eventId}
                     event={{
                       id: event.eventId,
+                      name: event.eventName,
                       locationId: results.location.locationId,
                       dayOfWeek: event.dayOfWeek,
                       startTime: event.startTime,
@@ -128,8 +134,9 @@ export const WorkoutDetailsModal = () => {
                     location={{
                       lat: results.location.lat,
                       lon: results.location.lon,
+                      id: results.location.locationId,
                     }}
-                    size={isLarge ? "large" : isMedium ? "medium" : "small"}
+                    size={isLarge ? "large" : isMedium ? "medium" : "large"}
                   />
                 ))}
               </div>
@@ -165,7 +172,7 @@ export const WorkoutDetailsModal = () => {
               </dl>
             </div>
             <DialogTitle className="mt-4">Region Information</DialogTitle>
-            <div className="w-full">
+            <div className="w-full [&_dd]:[overflow-wrap:anywhere]">
               <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
                 {Object.keys(regionFields)
                   .filter(
@@ -191,9 +198,15 @@ export const WorkoutDetailsModal = () => {
             >
               FAQs
             </Link>
-            <div className="h-8" />
+            <div className="h-2" />
           </>
         )}
+        <button
+          className="text-foreground-500 flex w-full cursor-pointer justify-center text-center underline"
+          onClick={() => closeModal()}
+        >
+          close
+        </button>
       </DialogContent>
     </Dialog>
   );

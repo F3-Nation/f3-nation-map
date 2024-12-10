@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Z_INDEX } from "node_modules/@f3/shared/src/app/constants";
 
+import { Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import {
   Dialog,
@@ -9,16 +9,13 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
-import { useModalStore } from "~/utils/store/modal";
+import { closeModal, useModalStore } from "~/utils/store/modal";
 
 export default function HowToJoinModal() {
   const { open, content } = useModalStore();
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={() => useModalStore.setState({ open: false })}
-    >
+    <Dialog open={open} onOpenChange={() => closeModal()}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
         className={cn(`max-w-[90%] lg:max-w-[400px]`)}

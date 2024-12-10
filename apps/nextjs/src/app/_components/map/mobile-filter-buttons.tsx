@@ -1,65 +1,109 @@
 "use client";
 
-import { CalendarIcon, Filter } from "lucide-react";
+import {
+  CalendarIcon,
+  CalendarPlus2,
+  SlidersHorizontal,
+  Sunrise,
+  Sunset,
+} from "lucide-react";
 
-import { BreakPoints, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
-import { Responsive } from "~/utils/responsive";
-import { filterStore, isAnyFilterActive } from "~/utils/store/filter";
+import {
+  filterStore,
+  isAnyFilterActive,
+  useTodayAndTomorrowFilters,
+} from "~/utils/store/filter";
+
+const filterButtonClassName =
+  "text-sm font-semibold pointer-events-auto flex items-center justify-center gap-2 rounded-md bg-background px-2 py-1 shadow text-foreground flex-shrink-0";
 
 export const MobileFilterButtons = () => {
-  const tomorrow = filterStore.use.tomorrow();
+  const { today, tomorrow, todayVar, tomorrowVar } =
+    useTodayAndTomorrowFilters();
+  const am = filterStore.use.am();
+  const pm = filterStore.use.pm();
   const filters = filterStore.useBoundStore();
   // Remove tomorrow since we have a separate button for it
-  const isFilterActive = isAnyFilterActive({ ...filters, tomorrow: false });
+  const isFilterActive = isAnyFilterActive({
+    ...filters,
+    [tomorrowVar]: false,
+    [todayVar]: false,
+  });
 
   return (
-    <Responsive maxWidth={BreakPoints.LG}>
-      <div
-        className="absolute right-2 top-2 flex flex-col gap-2"
-        style={{ zIndex: Z_INDEX.MOBILE_FILTER_BUTTONS }}
+    <>
+      {/* All filters */}
+      <button
+        className={cn(filterButtonClassName, {
+          "bg-red-500 text-white": isFilterActive,
+        })}
+        onClick={(e) => {
+          filterStore.setState((fs) => ({ allFilters: !fs.allFilters }));
+          e.stopPropagation();
+          e.preventDefault();
+        }}
       >
-        <button
-          className={cn(
-            "pointer-events-auto flex size-[36px] items-center justify-center rounded-md bg-white text-foreground shadow",
-            { "bg-muted-foreground": isFilterActive },
-          )}
-          onClick={(e) => {
-            filterStore.setState({ allFilters: true });
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-        >
-          <Filter
-            strokeWidth={1.25}
-            className={cn("size-6", { "text-background": isFilterActive })}
-          />
-        </button>
-        <button
-          className={cn(
-            "pointer-events-auto relative flex size-[36px] items-center justify-center rounded-md bg-white text-foreground shadow",
-            { "bg-muted-foreground": tomorrow },
-          )}
-          onClick={(e) => {
-            filterStore.setState((fs) => ({ tomorrow: !fs.tomorrow }));
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-        >
-          <CalendarIcon
-            strokeWidth={1.25}
-            className={cn("size-6", { "text-background": tomorrow })}
-          />
-          <div
-            className={cn("absolute top-[16px] text-[8px] font-semibold", {
-              "text-background": tomorrow,
-            })}
-          >
-            +1
-          </div>
-        </button>
-      </div>
-    </Responsive>
+        <SlidersHorizontal strokeWidth={2} className={cn("size-4")} />
+        All filters
+      </button>
+      {/* Today */}
+      <button
+        className={cn(filterButtonClassName, {
+          "bg-red-500 text-white": today,
+        })}
+        onClick={(e) => {
+          filterStore.setState((fs) => ({ [todayVar]: !fs[todayVar] }));
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        <CalendarIcon strokeWidth={2} className={cn("size-4")} />
+        Today
+      </button>
+      {/* Tomorrow */}
+      <button
+        className={cn(filterButtonClassName, {
+          "bg-red-500 text-white": tomorrow,
+        })}
+        onClick={(e) => {
+          filterStore.setState((fs) => ({ [tomorrowVar]: !fs[tomorrowVar] }));
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        <CalendarPlus2 strokeWidth={2} className={cn("size-4")} />
+        Tomorrow
+      </button>
+      {/* AM */}
+      <button
+        className={cn(filterButtonClassName, {
+          "bg-red-500 text-white": am,
+        })}
+        onClick={(e) => {
+          filterStore.setState((fs) => ({ am: !fs.am }));
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        <Sunrise strokeWidth={2} className={cn("size-4")} />
+        AM
+      </button>
+      {/* PM */}
+      <button
+        className={cn(filterButtonClassName, {
+          "bg-red-500 text-white": pm,
+        })}
+        onClick={(e) => {
+          filterStore.setState((fs) => ({ pm: !fs.pm }));
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        <Sunset strokeWidth={2} className={cn("size-4")} />
+        PM
+      </button>
+    </>
   );
 };
