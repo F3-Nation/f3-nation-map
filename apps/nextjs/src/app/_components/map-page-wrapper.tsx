@@ -9,7 +9,7 @@ import { MapSearchBox } from "./map/map-searchbox-desktop";
 import { DesktopSidebarContainer } from "./sidebar/desktop-sidebar-container";
 import { Sidebar } from "./sidebar/sidebar";
 
-const DesktopHeaderContainer = (props: { children: React.ReactNode }) => {
+const _DesktopHeaderContainer = (props: { children: React.ReactNode }) => {
   return (
     <div
       className={cn(
@@ -25,7 +25,7 @@ const DesktopHeaderContainer = (props: { children: React.ReactNode }) => {
   );
 };
 
-const Header = () => {
+const _Header = () => {
   return (
     <>
       <Link
