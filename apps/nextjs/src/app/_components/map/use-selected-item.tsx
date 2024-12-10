@@ -1,19 +1,35 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { api } from "~/trpc/react";
-import { selectedItemStore } from "~/utils/store/selected-item";
+import {
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
+import { useMapRef } from "./map-ref-provider";
 
 export const useSelectedItem = () => {
   RERENDER_LOGS && console.log("useSelectedItem rerender");
   const locationId = selectedItemStore.use.locationId();
   const eventId = selectedItemStore.use.eventId();
-  const { data: allLocationMarkers } =
-    api.location.getAllLocationMarkers.useQuery();
-  const selectedLocation = allLocationMarkers?.find(
-    (locationMarker) => locationMarker.id === locationId,
+  const { data: selectedLocation } = api.location.getLocationMarker.useQuery(
+    { id: locationId ?? -1 },
+    { enabled: !!locationId },
   );
+  const { mapRef } = useMapRef();
+  const position = useMemo(() => {
+    if (
+      typeof selectedLocation?.lat !== "number" ||
+      typeof selectedLocation?.lon !== "number"
+    )
+      return undefined;
+    return mapRef.current?.latLngToContainerPoint({
+      lat: selectedLocation.lat,
+      lng: selectedLocation.lon,
+    });
+  }, [selectedLocation?.lat, selectedLocation?.lon, mapRef]);
+
   const selectedEvent = !selectedLocation
     ? undefined
     : // check for null or undefined
@@ -23,8 +39,9 @@ export const useSelectedItem = () => {
         selectedLocation.events.find((event) => event.id == eventId);
 
   useEffect(() => {
+    console.log("useSelectedItem useEffect", eventId, selectedLocation);
     if (selectedLocation && eventId === null) {
-      selectedItemStore.setState({
+      setSelectedItem({
         eventId: selectedLocation.events[0]?.id,
       });
     }
@@ -32,7 +49,10 @@ export const useSelectedItem = () => {
 
   // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
   return {
+    locationId,
+    eventId,
     selectedLocation,
     selectedEvent,
+    pagePosition: position,
   };
 };

@@ -4,15 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useWindowSize } from "@react-hook/window-size";
 import { Minus, Plus } from "lucide-react";
 
-import { SIDEBAR_WIDTH, Z_INDEX } from "@f3/shared/app/constants";
+import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { ThemeToggle } from "@f3/ui/theme";
 
-import { mapStore } from "~/utils/store/map";
+import { useMapRef } from "./map-ref-provider";
 
-export const ZoomAndTileButtons = () => {
-  const mapRef = mapStore.use.ref();
-  const tiles = mapStore.use.tiles();
+export const ZoomButtons = () => {
+  const { mapRef } = useMapRef();
   const [width] = useWindowSize();
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
@@ -61,51 +60,37 @@ export const ZoomAndTileButtons = () => {
   );
 
   return (
-    <div
-      className="absolute left-2 top-2 flex flex-col gap-1"
-      style={{ zIndex: Z_INDEX.ZOOM_AND_TILE_BUTTONS }}
-    >
-      <button
-        className={cn(
-          "pointer-events-auto flex size-[36px] items-center justify-center rounded-md bg-background text-black shadow",
-          "hover:bg-accent",
-        )}
-        onClick={(e) => {
-          triggerSmoothZoom("in");
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-      >
-        <Plus size={16} className="text-foreground" />
-      </button>
-      <button
-        onClick={(e) => {
-          triggerSmoothZoom("out");
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        className="flex size-[36px] items-center justify-center rounded-md bg-background text-black shadow"
-      >
-        <Minus size={16} className="text-foreground" />
-      </button>
-      <button
-        onClick={(e) => {
-          mapStore.setState((s) => ({
-            tiles: s.tiles === "satellite" ? "street" : "satellite",
-          }));
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        className="flex size-[36px] items-center justify-center overflow-hidden rounded-md bg-background text-black shadow"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={tiles === "street" ? "/satellite.jpg" : "/street.jpg"}
-          alt={tiles}
-          className="h-8 object-cover"
-        />
-      </button>
+    <>
+      <div>
+        <button
+          className={cn(
+            "pointer-events-auto flex size-[36px] items-center justify-center rounded-t-md bg-background text-black shadow",
+            "hover:bg-accent",
+          )}
+          onClick={(e) => {
+            triggerSmoothZoom("in");
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+        >
+          <Plus size={16} className="text-foreground" />
+        </button>
+        <div className="h-[1px] w-full bg-accent" />
+        <button
+          onClick={(e) => {
+            triggerSmoothZoom("out");
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          className={cn(
+            "pointer-events-auto flex size-[36px] items-center justify-center rounded-b-md bg-background text-black shadow",
+            "hover:bg-accent",
+          )}
+        >
+          <Minus size={16} className="text-foreground" />
+        </button>
+      </div>
       <ThemeToggle />
-    </div>
+    </>
   );
 };

@@ -1,13 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
+import { useWindowWidth } from "@react-hook/window-size";
 import { useMapEvents } from "react-leaflet";
 
-import { SnapPoint } from "@f3/shared/app/constants";
+import { BreakPoints, SnapPoint } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
+import { isTouchDevice } from "~/utils/is-touch-device";
+import { appStore } from "~/utils/store/app";
 import { drawerStore } from "~/utils/store/drawer";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
+import { closeModal, ModalType, useModalStore } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 
 /**
@@ -16,11 +21,28 @@ import { selectedItemStore } from "~/utils/store/selected-item";
  */
 export const MapListener = () => {
   RERENDER_LOGS && console.log("MapListener rerender");
+  const width = useWindowWidth();
+
+  useEffect(() => {
+    appStore.setState({ isMobileDeviceWidth: width < Number(BreakPoints.LG) });
+  }, [width]);
 
   const mapEvents = useMapEvents({
+    // This is a hack to get the map ref to update
     click: () => {
       console.log("mapEvents click");
-      selectedItemStore.setState({ locationId: null, eventId: null });
+      // setSelectedItem({ locationId: null, eventId: null });
+      selectedItemStore.setState({
+        locationId: null,
+        eventId: null,
+        // closePanel();
+        panelLocationId: null,
+        panelEventId: null,
+      });
+      const modalState = useModalStore.getState();
+      if (modalState.open && modalState.type === ModalType.WORKOUT_DETAILS) {
+        closeModal();
+      }
       drawerStore.setState((s) =>
         s.snap === SnapPoint["pt-150px"] ? s : { snap: SnapPoint["pt-150px"] },
       );
@@ -29,28 +51,32 @@ export const MapListener = () => {
         s.allFilters === true ? { allFilters: false } : s,
       );
     },
+    dragstart: () => {
+      mapStore.setState({ dragging: true });
+    },
     dragend: () => {
-      console.log("mapEvents dragend");
-      mapStore.setState({
-        bounds: mapEvents.getBounds(),
-        center: mapEvents.getCenter(),
-      });
+      // console.log("mapEvents dragend", JSON.stringify(mapEvents.getBounds()));
+      const center = mapEvents.getCenter();
+      const bounds = mapEvents.getBounds();
+      const isMobile = isTouchDevice();
+      mapStore.setState({ bounds, center, dragging: false });
+      if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
     },
     moveend: () => {
-      console.log("mapEvents moveend");
-      mapStore.setState({
-        bounds: mapEvents.getBounds(),
-        center: mapEvents.getCenter(),
-      });
+      // console.log("mapEvents moveend");
+      const center = mapEvents.getCenter();
+      const isMobile = isTouchDevice();
+      mapStore.setState({ bounds: mapEvents.getBounds(), center });
+      if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
     },
     // zoomlevelschange fires when the map first loads
     zoomlevelschange: () => {
-      console.log("mapEvents zoomlevelschange");
-      mapStore.setState({
-        zoom: mapEvents.getZoom(),
-        bounds: mapEvents.getBounds(),
-        center: mapEvents.getCenter(),
-      });
+      // console.log("mapEvents zoomlevelschange");
+      const center = mapEvents.getCenter();
+      const bounds = mapEvents.getBounds();
+      const isMobile = isTouchDevice();
+      mapStore.setState({ zoom: mapEvents.getZoom(), bounds, center });
+      if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
     },
     // zoom: () => {
     //   console.log("mapEvents zoom");
@@ -84,7 +110,7 @@ export const MapListener = () => {
     // zoom: () => console.log("zoom"),
     // move: () => console.log("move"),
     // autopanstart: () => console.log("autopanstart"),
-    // dragstart: () => console.log("dragstart"),
+    // // dragstart: () => console.log("dragstart"),
     // drag: () => console.log("drag"),
     // add: () => console.log("add"),
     // remove: () => console.log("remove"),
@@ -100,6 +126,7 @@ export const MapListener = () => {
     // tooltipclose: () => console.log("tooltipclose"),
     // locationerror: () => console.log("locationerror"),
     // locationfound: () => console.log("locationfound"),
+    // load: () => console.log("load"),
     // // click: () => console.log('click'),
     // dblclick: () => console.log("dblclick"),
     // mousedown: () => console.log("mousedown"),

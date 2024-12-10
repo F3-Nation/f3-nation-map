@@ -5,21 +5,29 @@ import { Pane } from "react-leaflet/Pane";
 import { Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
-import { api } from "~/trpc/react";
 import { filterData } from "~/utils/filtered-data";
+import { isTouchDevice } from "~/utils/is-touch-device";
 import { filterStore } from "~/utils/store/filter";
 import { selectedItemStore } from "~/utils/store/selected-item";
+import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { MemoSelectedGroupMarker } from "./selected-group-marker";
 
+// NOT USED
 export const SelectedIconMarkerPane = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
+  const isMobile = isTouchDevice();
   const eventId = selectedItemStore.use.eventId();
   const locationId = selectedItemStore.use.locationId();
-  const { data: filteredLocationMarkers } =
-    api.location.getAllLocationMarkers.useQuery();
+  const panelLocationId = selectedItemStore.use.panelLocationId();
+  const panelEventId = selectedItemStore.use.panelEventId();
+  const { allLocationMarkersWithLatLngAndFilterData } = useFilteredMapResults();
 
-  const selectedItem = filteredLocationMarkers?.find(
+  const selectedItem = allLocationMarkersWithLatLngAndFilterData?.find(
     (location) => location.id === locationId,
+  );
+
+  const panelItem = allLocationMarkersWithLatLngAndFilterData?.find(
+    (location) => location.id === panelLocationId,
   );
 
   const filters = filterStore.useBoundStore();
@@ -29,23 +37,47 @@ export const SelectedIconMarkerPane = () => {
     filters,
   );
 
+  const [filteredPanelItem] = filterData(panelItem ? [panelItem] : [], filters);
+
   return (
-    <Pane
-      name="selected-item-marker"
-      style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
-      className="pointer-events-none"
-    >
-      {!filteredSelectedItem ? null : (
-        <MemoSelectedGroupMarker
-          group={filteredSelectedItem}
-          selectedEventIdInGroup={
-            filteredSelectedItem?.events.find((event) => event.id === eventId)
-              ?.id ??
-            filteredSelectedItem?.events[0]?.id ??
-            null
-          }
-        />
-      )}
-    </Pane>
+    <>
+      <Pane
+        name="selected-item-marker"
+        style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
+        className="pointer-events-none"
+      >
+        {!filteredSelectedItem ? null : (
+          <MemoSelectedGroupMarker
+            alwaysShowFillInsteadOfOutline={isMobile}
+            group={filteredSelectedItem}
+            selectedEventIdInGroup={
+              filteredSelectedItem?.events.find((event) => event.id === eventId)
+                ?.id ??
+              filteredSelectedItem?.events[0]?.id ??
+              null
+            }
+          />
+        )}
+      </Pane>
+      <Pane
+        name="panel-item-marker"
+        style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
+        className="pointer-events-none"
+      >
+        {!filteredPanelItem ? null : (
+          <MemoSelectedGroupMarker
+            panel
+            group={filteredPanelItem}
+            selectedEventIdInGroup={
+              filteredPanelItem?.events.find(
+                (event) => event.id === panelEventId,
+              )?.id ??
+              filteredPanelItem?.events[0]?.id ??
+              null
+            }
+          />
+        )}
+      </Pane>
+    </>
   );
 };

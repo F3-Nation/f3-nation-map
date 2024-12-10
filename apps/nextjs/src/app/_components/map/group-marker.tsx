@@ -6,30 +6,36 @@ import isNumber from "lodash/isNumber";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { CLOSE_ZOOM, SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
 import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
-import type { RouterOutputs } from "~/trpc/types";
-import { mapStore } from "~/utils/store/map";
-import { selectedItemStore } from "~/utils/store/selected-item";
+import type { SparseF3Marker } from "~/utils/types";
+import { groupMarkerClick } from "~/utils/actions/group-marker-click";
+import { isTouchDevice } from "~/utils/is-touch-device";
+import {
+  clearSelectedItem,
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
 
 export const MemoGroupMarker = memo(
-  ({
-    group,
-    show,
-  }: {
-    group: RouterOutputs["location"]["getAllLocationMarkers"][number];
-    show: boolean;
-  }) => {
-    const mapRef = mapStore.use.ref();
+  ({ group, show }: { group: SparseF3Marker; show: boolean }) => {
     const { lat, lon, events, id } = group;
     if (!show || lat === null || lon === null) return null;
     return (
       <Marker
         position={[lat, lon]}
         eventHandlers={{
-          mousemove: (e) => {
+          mouseout: () => {
+            if (isTouchDevice()) return;
+            if (selectedItemStore.get("locationId") !== id) return;
+            clearSelectedItem();
+          },
+
+          // Main feature is a mouseover
+          mouseover: (e) => {
+            if (isTouchDevice()) return;
             const eventIdString = Array.from(
               (e.originalEvent.target as HTMLDivElement)?.classList,
             )
@@ -38,8 +44,29 @@ export const MemoGroupMarker = memo(
               ?.split("-")[2];
             const eventId = safeParseInt(eventIdString);
             // Only send eventId if it is a valid number
-            selectedItemStore.setState({
+            setSelectedItem({
               locationId: id,
+              ...(isNumber(eventId) ? { eventId } : {}),
+            });
+          },
+          // Use mousemove to update the selected item
+          mousemove: (e) => {
+            if (isTouchDevice()) return;
+            if (selectedItemStore.get("locationId") !== id) return;
+            const eventIdString = Array.from(
+              (e.originalEvent.target as HTMLDivElement)?.classList,
+            )
+              // Use a class name to find the event id
+              .find((className) => className.startsWith("leaflet-eventid-"))
+              ?.split("-")[2];
+            const eventId = safeParseInt(eventIdString);
+            if (
+              selectedItemStore.get("eventId") === eventId ||
+              eventId === undefined
+            )
+              return;
+            // Only send eventId if it is a valid number
+            setSelectedItem({
               ...(isNumber(eventId) ? { eventId } : {}),
             });
           },
@@ -51,24 +78,16 @@ export const MemoGroupMarker = memo(
               .find((className) => className.startsWith("leaflet-eventid-"))
               ?.split("-")[2];
             const eventId = safeParseInt(eventIdString);
-            selectedItemStore.setState({
-              locationId: id,
-              eventId,
-            });
-            mapRef.current?.setView(
-              { lat, lng: lon },
-              Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-              { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-            );
+            groupMarkerClick({ locationId: id, eventId });
           },
         }}
         icon={L.divIcon({
-          iconSize: [events.length * 30, 30],
-          iconAnchor: [(events.length * 30) / 2, 30 + 15],
+          iconSize: [events.length * 30 + 4, 34],
+          iconAnchor: [(events.length * 30 + 4) / 2, 34 + 15],
           className: "",
           html: ReactDOMServer.renderToString(
             <div className="flex flex-col">
-              <div className="flex flex-row">
+              <div className="flex flex-row" style={{ zIndex: 1 }}>
                 {...events
                   .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
                   .map((marker, markerIdx, markerArray) => {
@@ -80,13 +99,11 @@ export const MemoGroupMarker = memo(
                       <button
                         key={markerIdx + "-" + id}
                         className={cn(
-                          "flex-1 cursor-pointer border-b-[0.5px] border-t-[0.5px] bg-foreground py-2 text-center text-background",
+                          "flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
+                          "border-l-2 border-r-2",
                           // Use a class name to find the event id
                           `leaflet-eventid-${marker.id}`,
                           {
-                            "border-b-0": events.length === 1,
-                            "border-l-[0.5px]": isStart,
-                            "border-r-[0.5px]": isEnd,
                             "rounded-r-full": isEnd,
                             "rounded-l-full": isStart,
                           },
@@ -99,8 +116,10 @@ export const MemoGroupMarker = memo(
               </div>
               <svg
                 viewBox="0 0 40 40"
-                className="-mt-[12px] w-[31px] self-center"
+                className="-mt-[10.5px] w-[28px] self-center"
+                style={{ zIndex: 0 }}
               >
+                {/* Line */}
                 <path
                   className={cn("fill-foreground")}
                   d={

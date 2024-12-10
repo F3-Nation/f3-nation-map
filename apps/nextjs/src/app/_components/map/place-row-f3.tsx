@@ -1,31 +1,47 @@
-import { CLOSE_ZOOM, SnapPoint } from "@f3/shared/app/constants";
+import { SnapPoint } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
-import { CardDescription, CardHeader, CardTitle } from "@f3/ui/card";
+import { CardHeader, CardTitle } from "@f3/ui/card";
 
 import type { F3MapSearchResult } from "~/utils/types";
+import { isTouchDevice } from "~/utils/is-touch-device";
+import { setView } from "~/utils/set-view";
+import { appStore } from "~/utils/store/app";
 import { drawerStore } from "~/utils/store/drawer";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
-import { selectedItemStore } from "~/utils/store/selected-item";
+import {
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 
 export const onClickPlaceRowF3 = (result: F3MapSearchResult) => {
+  console.log("onClickPlaceRowF3", result);
   searchStore.setState({ shouldShowResults: false });
   drawerStore.setState({ snap: SnapPoint["pt-150px"] });
+  appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
+  selectedItemStore.setState({
+    panelLocationId: null,
+    panelEventId: null,
+  });
   const latitude = result.destination.lat;
   const longitude = result.destination.lng;
   if (typeof latitude === "number" && typeof longitude === "number") {
-    mapStore
-      .get("ref")
-      .current?.setView(
-        { lat: latitude, lng: longitude },
-        Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-        { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-      );
-    selectedItemStore.setState({
-      locationId: result.destination.item.locationId,
-      eventId: result.destination.item.id,
+    mapStore.setState({
+      nearbyLocationCenter: {
+        lat: latitude,
+        lng: longitude,
+        name: result.header,
+      },
     });
+    setView({ lat: latitude, lng: longitude });
+    // Use a timeout to allow the map animation to finish
+    setTimeout(() => {
+      setSelectedItem({
+        locationId: result.destination.item.locationId,
+        eventId: result.destination.item.id,
+      });
+    }, 250);
   }
 };
 
@@ -40,14 +56,19 @@ export const PlaceRowF3 = ({
     <button
       className="w-full"
       onMouseOver={() => {
-        selectedItemStore.setState({
-          locationId: result.destination.item.locationId,
-          eventId: null,
-        });
+        const isMobile = isTouchDevice();
+        if (isMobile) {
+          onClickPlaceRowF3(result);
+        } else {
+          setSelectedItem({
+            locationId: result.destination.id,
+            eventId: null,
+          });
+        }
       }}
       onFocus={() => {
-        selectedItemStore.setState({
-          locationId: result.destination.item.locationId,
+        setSelectedItem({
+          locationId: result.destination.id,
           eventId: null,
         });
       }}
@@ -62,8 +83,7 @@ export const PlaceRowF3 = ({
       >
         <ImageWithFallback
           loading="lazy"
-          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- could be ''
-          src={result.destination.item.logo || "/f3_logo.png"}
+          src={result.destination.logo || "/f3_logo.png"}
           fallbackSrc="/f3_logo.png"
           width={32}
           height={32}
@@ -72,9 +92,9 @@ export const PlaceRowF3 = ({
         />
         <div className="flex-4 text-start">
           <CardTitle>{result.header}</CardTitle>
-          <CardDescription className="line-clamp-1">
+          {/* <CardDescription className="line-clamp-1">
             {result.description}
-          </CardDescription>
+          </CardDescription> */}
         </div>
       </CardHeader>
     </button>

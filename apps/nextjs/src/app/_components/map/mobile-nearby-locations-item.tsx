@@ -1,21 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
-import {
-  CLOSE_ZOOM,
-  MOBILE_SEARCH_RESULT_ITEM_HEIGHT,
-} from "@f3/shared/app/constants";
+import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { onlyUnique } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
-import { mapStore } from "~/utils/store/map";
-import { ModalType, useModalStore } from "~/utils/store/modal";
-import { selectedItemStore } from "~/utils/store/selected-item";
+import { setView } from "~/utils/set-view";
+import { searchStore } from "~/utils/store/search";
+import {
+  openPanel,
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
@@ -24,12 +24,12 @@ export const MobileNearbyLocationsItem = (props: {
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");
   const { itemWidth } = useSearchResultSize();
+  const searchBarRef = searchStore.use.searchBarRef();
 
   const locationId = selectedItemStore.use.locationId();
   const eventId = selectedItemStore.use.eventId();
   const { searchResult } = props;
   const isSelected = searchResult.id === locationId;
-  const mapRef = mapStore.use.ref();
 
   const name = searchResult.events
     .map((event) => event.name)
@@ -50,16 +50,13 @@ export const MobileNearbyLocationsItem = (props: {
         { "border-red-500": isSelected },
       )}
       onClick={() => {
-        selectedItemStore.setState({
+        searchBarRef.current?.blur();
+        setSelectedItem({
           locationId: searchResult.id,
           eventId: searchResult.events[0]?.id,
         });
         if (searchResult.lat !== null && searchResult.lon !== null) {
-          mapRef.current?.setView(
-            { lat: searchResult.lat, lng: searchResult.lon },
-            Math.max(mapStore.get("zoom"), CLOSE_ZOOM),
-            { animate: mapStore.get("zoom") === CLOSE_ZOOM },
-          );
+          setView({ lat: searchResult.lat, lng: searchResult.lon });
         }
       }}
     >
@@ -74,13 +71,7 @@ export const MobileNearbyLocationsItem = (props: {
       <div className="flex flex-row items-start gap-2">
         <button
           className="flex flex-shrink-0 flex-col items-center"
-          onClick={() =>
-            useModalStore.setState({
-              open: true,
-              type: ModalType.WORKOUT_DETAILS,
-              data: { locationId: searchResult.id },
-            })
-          }
+          onClick={() => openPanel({ locationId: searchResult.id })}
         >
           <ImageWithFallback
             src={searchResult.logo ? searchResult.logo : "/f3_logo.png"}
@@ -112,7 +103,7 @@ export const MobileNearbyLocationsItem = (props: {
               );
             })}
           </div>
-          {searchResult.locationDescription ? (
+          {/* {searchResult.locationDescription ? (
             <Link
               href={`https://maps.google.com/?q=${encodeURIComponent(searchResult.locationDescription)}`}
               target="_blank"
@@ -126,7 +117,7 @@ export const MobileNearbyLocationsItem = (props: {
               <span className="font-semibold">Notes: </span>
               {searchResult.events[0]?.description}
             </div>
-          ) : null}
+          ) : null} */}
         </div>
       </div>
     </button>

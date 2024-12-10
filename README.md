@@ -51,3 +51,8 @@ pnpm doppler upload
 # Other
 
 Rebuilt git history on 9-3-24 to clean it
+
+# Static state
+
+- https://github.com/trpc/trpc/pull/4547/files
+- https://github.com/tanguyMichardiere/wishgrid/blob/develop/src/utils/server-queries/index.ts

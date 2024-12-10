@@ -31,7 +31,6 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
   RERENDER_LOGS && console.log("DrawerAllFilters rerender");
   const { className, ...rest } = props;
   const filters = filterStore.useBoundStore();
-  console.log("DrawerAllFilters filters", filters.dayW);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -40,7 +39,6 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
     filterName: keyof FiltersType,
     newState?: boolean,
   ) => {
-    console.log("DrawerAllFilters handleFilterClick", filterName);
     if (filterName === "allFilters") {
       filterStore.setState((s) => ({ allFilters: !s.allFilters }));
     } else {
@@ -54,7 +52,6 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
     filterName: "Bootcamp" | "Ruck" | "Run" | "Swim",
     newState?: boolean,
   ) => {
-    console.log("DrawerAllFilters handleTypeClick", filterName);
     filterStore.setState((s) => ({
       Bootcamp: false,
       Ruck: false,
@@ -68,7 +65,6 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
     filterName: keyof FiltersType,
     newState?: boolean,
   ) => {
-    console.log("DrawerAllFilters handleEventClick", filterName);
     if (filterName === "allFilters") {
       filterStore.setState((s) => ({ allFilters: !s.allFilters }));
     } else {
@@ -83,7 +79,6 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
   };
 
   const handleResetFilters = () => {
-    console.log("DrawerAllFilters handleResetFilters");
     filterStore.setState(initialFilterState);
   };
 

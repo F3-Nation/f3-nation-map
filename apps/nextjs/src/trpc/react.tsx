@@ -21,13 +21,13 @@ const ReactQueryDevtoolsProduction = React.lazy(() =>
 );
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => globalQueryClient);
+  // const [queryClient] = useState(() => globalQueryClient);
 
   const [showDevtools, setShowDevtools] = useState(
     process.env.NODE_ENV === "development" && false,
   );
 
-  const [trpcClient] = useState(() => globalTrpcClient);
+  // const [trpcClient] = useState(() => globalTrpcClient);
 
   useEffect(() => {
     // @ts-expect-error -- add toggleDevtools to window
@@ -35,8 +35,8 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <api.Provider client={trpcClient} queryClient={queryClient}>
+    <QueryClientProvider client={globalQueryClient}>
+      <api.Provider client={globalTrpcClient} queryClient={globalQueryClient}>
         {props.children}
         {showDevtools && (
           <Suspense fallback={null}>

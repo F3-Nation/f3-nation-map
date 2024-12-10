@@ -1,21 +1,14 @@
 import { MapPinIcon } from "lucide-react";
-import { Z_INDEX } from "node_modules/@f3/shared/src/app/constants";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet/Marker";
 import { Pane } from "react-leaflet/Pane";
 
-import { filterDataWithinMiles } from "~/utils/filtered-data";
+import { Z_INDEX } from "@f3/shared/app/constants";
+
 import { mapStore } from "~/utils/store/map";
-import FeedbackTooltip from "./feedback-tooltip";
-import { useFilteredMapResults } from "./filtered-map-results-provider";
 
 export const PlaceResultIconPane = () => {
   const placeResultLocation = mapStore.use.placeResultLocation();
-  const { locationOrderedLocationMarkers } = useFilteredMapResults();
-  const locationWithinRadius = filterDataWithinMiles({
-    data: locationOrderedLocationMarkers,
-  });
-  const expansionPopupOpen = mapStore.use.expansionPopupOpen();
 
   return (
     <Pane
@@ -34,22 +27,7 @@ export const PlaceResultIconPane = () => {
                 <MapPinIcon className="fill-red-600 text-foreground" />,
               ),
             })}
-            eventHandlers={{
-              click: () => {
-                mapStore.setState({
-                  expansionAreaSelected: {
-                    area: null,
-                    lat: null,
-                    lng: null,
-                  },
-                  expansionPopupOpen: true,
-                });
-              },
-            }}
-          >
-            {(!locationWithinRadius || locationWithinRadius.length === 0) &&
-              expansionPopupOpen && <FeedbackTooltip />}
-          </Marker>
+          ></Marker>
         </>
       ) : null}
     </Pane>
