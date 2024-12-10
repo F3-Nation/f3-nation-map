@@ -14,8 +14,12 @@ pnpm doppler upload
 
 # Deploying
 
-1. Generate the image with `docker-compose -f docker-compose.yml up --build`
-2. Create the tag `docker tag f3-2 us-central1-docker.pkg.dev/pin-mastery/cloud-run-source-deploy/f3-2/f3-2`
+1. Generate the image with `DOPPLER_TOKEN=... docker-compose -f docker-compose.yml up --build`
+
+- `DOPPLER_TOKEN` is in declan's bitwarden and in doppler
+- Must delete the aquadata container or any that are named nextjs
+
+2. Create the tag `docker tag f3-2-nextjs us-central1-docker.pkg.dev/pin-mastery/cloud-run-source-deploy/f3-2/f3-2`
 3. Push the image to the registry `docker push us-central1-docker.pkg.dev/pin-mastery/cloud-run-source-deploy/f3-2/f3-2`
 4. Edit and deploy new revision: `https://console.cloud.google.com/run/detail/us-central1/f3-2/revisions?project=pin-master`
 
