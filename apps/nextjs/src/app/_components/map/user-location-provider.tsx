@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { DEFAULT_CENTER } from "node_modules/@f3/shared/src/app/constants";
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
@@ -29,6 +30,7 @@ const UserLocationContext = createContext<{
 
 export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   RERENDER_LOGS && console.log("UserLocationProvider rerender");
+  const center = mapStore.use.center();
   const userGpsLocation = mapStore.use.userGpsLocation();
   const [permissions, setPermissions] = useState<PermissionState | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "success">(
@@ -88,6 +90,15 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateUserLocation = useCallback(() => {
+    // Don't redirect if we've moved the map more than 10 meters
+    if (
+      center &&
+      (Math.abs(center.lat - DEFAULT_CENTER[0]) > 0.0001 ||
+        Math.abs(center.lng - DEFAULT_CENTER[1]) > 0.0001)
+    ) {
+      console.log("Not redirecting because we've moved the map");
+      return;
+    }
     if (userGpsLocation) {
       setView({
         lat: userGpsLocation.latitude,
