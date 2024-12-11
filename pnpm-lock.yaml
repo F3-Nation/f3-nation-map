@@ -40,9 +40,15 @@ importers:
       '@f3/db':
         specifier: workspace:^0.1.0
         version: link:../../packages/db
+      '@f3/env':
+        specifier: workspace:^0.1.0
+        version: link:../../packages/env
       '@f3/shared':
         specifier: workspace:^0.1.0
         version: link:../../packages/shared
+      '@f3/tailwind-config':
+        specifier: workspace:^0.1.0
+        version: link:../../tooling/tailwind
       '@f3/ui':
         specifier: workspace:^0.1.0
         version: link:../../packages/ui
@@ -152,20 +158,14 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(@types/react@18.2.55)(react@18.2.0)
     devDependencies:
-      '@f3/env':
-        specifier: workspace:^0.1.0
-        version: link:../../packages/env
       '@f3/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
       '@f3/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tailwind-config':
-        specifier: workspace:^0.1.0
-        version: link:../../tooling/tailwind
       '@f3/tsconfig':
-        specifier: workspace:^0.1.0
+        specifier: workspace:*
         version: link:../../tooling/typescript
       '@testing-library/jest-dom':
         specifier: ^6.4.2
@@ -242,6 +242,9 @@ importers:
       '@f3/db':
         specifier: workspace:^0.1.0
         version: link:../db
+      '@f3/env':
+        specifier: workspace:^0.1.0
+        version: link:../env
       '@f3/shared':
         specifier: workspace:^0.1.0
         version: link:../shared
@@ -254,6 +257,9 @@ importers:
       google-spreadsheet:
         specifier: ^3.3.0
         version: 3.3.0
+      handlebars:
+        specifier: ^4.7.8
+        version: 4.7.8
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -270,9 +276,6 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
-      '@f3/env':
-        specifier: workspace:^0.1.0
-        version: link:../env
       '@f3/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
@@ -303,6 +306,12 @@ importers:
       '@auth/drizzle-adapter':
         specifier: ^0.6.3
         version: 0.6.3(nodemailer@6.9.9)
+      '@f3/db':
+        specifier: workspace:^0.1.0
+        version: link:../db
+      '@f3/env':
+        specifier: workspace:^0.1.0
+        version: link:../env
       '@f3/shared':
         specifier: workspace:^0.1.0
         version: link:../shared
@@ -325,12 +334,6 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
-      '@f3/db':
-        specifier: workspace:^0.1.0
-        version: link:../db
-      '@f3/env':
-        specifier: workspace:^0.1.0
-        version: link:../env
       '@f3/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
@@ -361,6 +364,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@f3/env':
+        specifier: workspace:*
+        version: link:../env
       '@f3/shared':
         specifier: workspace:*
         version: link:../shared
@@ -380,9 +386,6 @@ importers:
         specifier: ^3.4.3
         version: 3.4.4
     devDependencies:
-      '@f3/env':
-        specifier: workspace:*
-        version: link:../env
       '@f3/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
