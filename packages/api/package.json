@@ -22,6 +22,7 @@
     "@trpc/server": "11.0.0-next-beta.264",
     "google-spreadsheet": "^3.3.0",
     "lodash": "^4.17.21",
+    "nodemailer": "^6.9.13",
     "superjson": "2.2.1",
     "trpc-openapi": "^1.2.0",
     "zod": "^3.22.4"
@@ -32,6 +33,7 @@
     "@f3/prettier-config": "workspace:^0.1.0",
     "@f3/tsconfig": "workspace:^0.1.0",
     "@types/google-spreadsheet": "^3.3.2",
+    "@types/nodemailer": "^6.4.15",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"

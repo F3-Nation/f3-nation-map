@@ -8,8 +8,8 @@ import {
   useEffect,
   useState,
 } from "react";
-import { DEFAULT_CENTER } from "node_modules/@f3/shared/src/app/constants";
 
+import { DEFAULT_CENTER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { getRandomLocation } from "~/utils/random-location";

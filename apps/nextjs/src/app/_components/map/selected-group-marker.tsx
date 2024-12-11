@@ -13,30 +13,35 @@ import type { SparseF3Marker } from "~/utils/types";
 export const MemoSelectedGroupMarker = memo(
   ({
     group,
+    isFar,
     selectedEventIdInGroup,
     alwaysShowFillInsteadOfOutline,
     panel,
   }: {
     group: SparseF3Marker;
+    isFar?: boolean;
     selectedEventIdInGroup: number | null;
     alwaysShowFillInsteadOfOutline?: boolean;
     panel?: boolean;
   }) => {
     const { lat, lon, events, id } = group;
     if (lat === null || lon === null) return null;
+    const filteredEvents = events.filter(
+      (event) => !isFar || selectedEventIdInGroup === event.id,
+    );
     return (
       <Marker
         // Allow move movements to go to the zoomed marker pane below
         interactive={false}
         position={[lat, lon]}
         icon={L.divIcon({
-          iconSize: [events.length * 30 + 4, 34],
-          iconAnchor: [(events.length * 30 + 4) / 2, 34 + 15],
+          iconSize: [filteredEvents.length * 30 + 4, 34],
+          iconAnchor: [(filteredEvents.length * 30 + 4) / 2, 34 + 15],
           className: "pointer-events-none",
           html: ReactDOMServer.renderToString(
             <div className="relative flex flex-col">
               <div className="flex flex-row" style={{ zIndex: 1 }}>
-                {...events
+                {filteredEvents
                   .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
                   .map((marker, markerIdx, markerArray) => {
                     const dotw = marker.dayOfWeek;
@@ -79,7 +84,7 @@ export const MemoSelectedGroupMarker = memo(
                   })}
                   // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
                   d={
-                    events.length === 1
+                    filteredEvents.length === 1
                       ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
                       : "M34 14.5 L26 24.249 Q20 34.641 14 24.249 L6 14.5"
                   }
@@ -89,7 +94,7 @@ export const MemoSelectedGroupMarker = memo(
                   // className="stroke-background"
                   // d="M6 10.392 Q0 0 12 0 L28 0 Q40 0 34 10.392 L26 24.249 Q20 34.641 14 24.249 Z"
                   d={
-                    events.length === 1
+                    filteredEvents.length === 1
                       ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
                       : "M34 15 L26 24.249 Q20 34.641 14 24.249 L6 15"
                   }
@@ -106,6 +111,7 @@ export const MemoSelectedGroupMarker = memo(
   },
   (prev, next) =>
     prev.panel === next.panel &&
+    prev.isFar === next.isFar &&
     prev.group.id === next.group.id &&
     prev.group.events.length === next.group.events.length &&
     prev.selectedEventIdInGroup === next.selectedEventIdInGroup,

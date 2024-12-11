@@ -1,8 +1,9 @@
 "use client";
 
+import { cn } from "@f3/ui";
 import { mapStore } from "~/utils/store/map";
 
-export const TileButton = () => {
+export const TileButton = ({ className }: { className?: string }) => {
   const tiles = mapStore.use.tiles();
 
   return (
@@ -14,7 +15,10 @@ export const TileButton = () => {
         e.stopPropagation();
         e.preventDefault();
       }}
-      className="flex size-16 items-center justify-center overflow-hidden rounded-md border-2 border-white bg-background text-black shadow"
+      className={cn(
+        "flex size-16 items-center justify-center overflow-hidden rounded-md border-2 border-white bg-background text-black shadow",
+        className,
+      )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

@@ -3,6 +3,7 @@
 import type { LatLngLiteral } from "leaflet";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
+import { DEFAULT_CENTER } from "node_modules/@f3/shared/src/app/constants";
 
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
@@ -18,13 +19,16 @@ export type LocationMarkerWithDistance = SparseF3Marker & {
 
 const FilteredMapResultsContext = createContext<{
   isLoading: boolean;
-  nearbyLocationCenter: (LatLngLiteral & { name?: string }) | null;
+  nearbyLocationCenter: LatLngLiteral & { name?: string };
   filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
   allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
   isLoading: true,
-  nearbyLocationCenter: null,
+  nearbyLocationCenter: {
+    lat: DEFAULT_CENTER[0],
+    lng: DEFAULT_CENTER[1],
+  },
   filteredLocationMarkers: undefined,
   locationOrderedLocationMarkers: undefined,
   allLocationMarkersWithLatLngAndFilterData: undefined,

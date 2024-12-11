@@ -9,6 +9,7 @@ import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
 import { DesktopLocationPanelContent } from "./map/desktop-location-panel-content";
 import DesktopSelectedItem from "./map/desktop-selected-item";
+import { HelpButton } from "./map/help-button";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
 import { MobileFilterButtons } from "./map/mobile-filter-buttons";
@@ -31,6 +32,7 @@ export const MapLayoutItems = () => {
     <>
       {loaded && (
         <DesktopTopLeftButtons>
+          <HelpButton />
           <DesktopFilterButtons />
         </DesktopTopLeftButtons>
       )}
@@ -51,11 +53,19 @@ export const MapLayoutItems = () => {
 
       {/* Mobile */}
       <MobileAboveSearchBox>
+        <div className="mb-1 flex w-full flex-row items-end justify-between px-1">
+          <TileButton className="size-9" />
+          <UserLocationIcon />
+        </div>
         <div className="mb-[2px] flex flex-row gap-2 overflow-auto px-2 pb-[6px]">
+          <HelpButton />
           <MobileFilterButtons />
         </div>
         <MobileSelectedItem />
       </MobileAboveSearchBox>
+      <MobileTopRightButtons>
+        <ZoomButtons />
+      </MobileTopRightButtons>
       <MobileAllFilters />
       <MobileSearchResultsAndNearbyLocations />
       <MapSearchBoxMobile />
@@ -109,6 +119,14 @@ const MobileAboveSearchBox = (props: ComponentProps<"div">) => (
     style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
     // 46px and 6px to keep the slider in the middle between them
     className="absolute bottom-[44px] left-0 right-0 block lg:hidden"
+    {...props}
+  />
+);
+
+const MobileTopRightButtons = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute right-2 top-2 flex flex-col gap-1 lg:hidden"
     {...props}
   />
 );

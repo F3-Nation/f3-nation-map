@@ -2,12 +2,13 @@
 
 import { Pane } from "react-leaflet/Pane";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { filterData } from "~/utils/filtered-data";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import { filterStore } from "~/utils/store/filter";
+import { mapStore } from "~/utils/store/map";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { MemoSelectedGroupMarker } from "./selected-group-marker";
@@ -15,6 +16,7 @@ import { MemoSelectedGroupMarker } from "./selected-group-marker";
 // NOT USED
 export const SelectedIconMarkerPane = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
+  const zoom = mapStore.use.zoom();
   const isMobile = isTouchDevice();
   const eventId = selectedItemStore.use.eventId();
   const locationId = selectedItemStore.use.locationId();
@@ -50,6 +52,7 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             alwaysShowFillInsteadOfOutline={isMobile}
             group={filteredSelectedItem}
+            isFar={zoom < CLOSE_ZOOM}
             selectedEventIdInGroup={
               filteredSelectedItem?.events.find((event) => event.id === eventId)
                 ?.id ??

@@ -24,7 +24,9 @@ export const DesktopNearbyLocations = ({
   return (
     <>
       {!nearbyLocationCenter ? (
-        <div className="mt-2 text-center">Loading nearby locations...</div>
+        <div className="mt-2 text-center text-sm">
+          Loading nearby locations...
+        </div>
       ) : nearbyLocationCenter ? (
         <div className="mt-2 text-center text-sm">
           {!nearbyLocationCenter.name ? (
@@ -42,7 +44,8 @@ export const DesktopNearbyLocations = ({
       >
         <div className="flex flex-col justify-center divide-y divide-solid">
           {userLocationStatus === "loading" ||
-          userLocationPermissions === "prompt"
+          userLocationPermissions === "prompt" ||
+          !locationOrderedLocationMarkers?.length
             ? Array.from({ length: 6 }).map((_, index) => (
                 <DesktopNearbyLocationItemSkeleton key={index} />
               ))
