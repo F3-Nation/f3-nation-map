@@ -8,7 +8,7 @@ export default async function HelpPage() {
 
   return (
     <main className="pointer-events-auto relative max-h-screen gap-4 overflow-y-auto">
-      <div className="mx-auto flex max-w-2xl flex-col gap-4 p-12">
+      <div className="mx-auto flex max-w-2xl flex-col gap-4 px-[3%] py-8">
         <Header />
         <div>
           Welcome to Nation Map's support portal. We're committed to
