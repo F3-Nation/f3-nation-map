@@ -112,4 +112,4 @@ export const feedbackSchema = z.object({
 export type FeedbackSchema = z.infer<typeof feedbackSchema>;
 
 export const filterButtonClassName =
-  "text-sm font-semibold pointer-events-auto flex items-center justify-center gap-2 rounded-md bg-background px-2 py-1 shadow text-foreground";
+  "text-sm w-full whitespace-nowrap font-semibold pointer-events-auto flex items-center justify-center gap-2 rounded-md bg-background px-2 py-1 shadow text-foreground";
