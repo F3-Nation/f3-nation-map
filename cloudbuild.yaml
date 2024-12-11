@@ -1,0 +1,15 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "--build-arg"
+      - "DOPPLER_TOKEN=${_DOPPLER_TOKEN}"
+      - "-t"
+      - "gcr.io/pin-mastery/f3-nextjs"
+      - "."
+    secretEnv: ["_DOPPLER_TOKEN"]
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/233824588998/secrets/DOPPLER_TOKEN/versions/latest
+      env: "_DOPPLER_TOKEN"
