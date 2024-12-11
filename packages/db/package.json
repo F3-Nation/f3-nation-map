@@ -19,6 +19,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@f3/env": "workspace:*",
     "@f3/shared": "workspace:*",
     "dotenv-cli": "^7.3.0",
     "drizzle-orm": "^0.32.0",
@@ -27,7 +28,6 @@
     "postgres": "^3.4.3"
   },
   "devDependencies": {
-    "@f3/env": "workspace:*",
     "@f3/eslint-config": "workspace:*",
     "@f3/prettier-config": "workspace:*",
     "@f3/tsconfig": "workspace:*",

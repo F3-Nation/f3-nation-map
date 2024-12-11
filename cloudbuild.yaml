@@ -1,13 +1,29 @@
 steps:
+  # Debug step
   - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
     args:
-      - "build"
-      - "--build-arg"
-      - "DOPPLER_TOKEN=${_DOPPLER_TOKEN}"
-      - "-t"
-      - "gcr.io/pin-mastery/f3-nextjs"
-      - "."
+      - "-c"
+      - |
+        echo "Debug: DOPPLER_TOKEN available: ${_DOPPLER_TOKEN:0:5}..."
     secretEnv: ["_DOPPLER_TOKEN"]
+
+  # Build step with correct secret handling
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        docker build \
+          --build-arg "DOPPLER_TOKEN=$$_DOPPLER_TOKEN" \
+          --build-arg "ENVIRONMENT=$$_ENVIRONMENT" \
+          -t gcr.io/pin-mastery/f3-nextjs \
+          -f apps/nextjs/Dockerfile \
+          .
+    secretEnv: ["_DOPPLER_TOKEN"]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 availableSecrets:
   secretManager:
