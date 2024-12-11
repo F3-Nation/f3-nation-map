@@ -22,6 +22,10 @@ steps:
           .
     secretEnv: ["_DOPPLER_TOKEN"]
 
+  # Push step
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/pin-mastery/f3-nextjs"]
+
   - name: "gcr.io/cloud-builders/gcloud"
     args:
       - "run"
