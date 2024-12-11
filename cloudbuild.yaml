@@ -26,11 +26,11 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "YOUR-SERVICE-NAME" # Name for your Cloud Run service
+      - "f3-nextjs" # Name for your Cloud Run service
       - "--image"
-      - "gcr.io/$PROJECT_ID/your-image-name" # The image you built
+      - "gcr.io/pin-mastery/f3-nextjs" # The image you built
       - "--region"
-      - "your-region" # e.g., us-central1
+      - "us-central1" # e.g., us-central1
       - "--platform"
       - "managed"
 
