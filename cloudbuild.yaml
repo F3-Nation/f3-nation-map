@@ -22,6 +22,18 @@ steps:
           .
     secretEnv: ["_DOPPLER_TOKEN"]
 
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "YOUR-SERVICE-NAME" # Name for your Cloud Run service
+      - "--image"
+      - "gcr.io/$PROJECT_ID/your-image-name" # The image you built
+      - "--region"
+      - "your-region" # e.g., us-central1
+      - "--platform"
+      - "managed"
+
 options:
   logging: CLOUD_LOGGING_ONLY
 
