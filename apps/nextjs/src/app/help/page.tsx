@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { Header } from "./header";
@@ -9,7 +11,9 @@ export default async function HelpPage() {
   return (
     <main className="pointer-events-auto relative max-h-screen gap-4 overflow-y-auto">
       <div className="mx-auto flex max-w-2xl flex-col gap-4 px-[3%] py-8">
-        <Header />
+        <Suspense fallback={<div>Loading...</div>}>
+          <Header />
+        </Suspense>
         <div>
           Welcome to Nation Map's support portal. We're committed to
           continuously improving the map and appreciate your feedback about any
