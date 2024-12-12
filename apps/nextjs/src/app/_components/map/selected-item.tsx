@@ -13,6 +13,7 @@ import {
   openPanel,
   setSelectedItem,
 } from "~/utils/store/selected-item";
+import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
@@ -101,7 +102,7 @@ export const SelectedItem = (props: {
             {selectedEvent.description ? (
               <p className="leading-4">
                 <span className="font-semibold">Notes: </span>
-                {selectedEvent.description}
+                {textLink(selectedEvent.description)}
               </p>
             ) : null}
           </div>
