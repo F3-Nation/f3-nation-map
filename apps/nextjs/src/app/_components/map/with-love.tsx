@@ -11,7 +11,7 @@ export default function WithLove() {
   return (
     <div className="my-[1px] flex flex-row items-center justify-center gap-4">
       <div className="whitespace-nowrap text-xs text-foreground opacity-60">
-        Made with <span>🥔</span> by{" "}
+        Made with <span className="text-[10px]">🥔</span> by{" "}
         <Link
           target="_blank"
           className="text-blue-600 underline underline-offset-2"
@@ -21,6 +21,7 @@ export default function WithLove() {
         </Link>{" "}
         (
         <button
+          className="text-foreground underline underline-offset-2"
           onClick={() => {
             setView({ lat: BOONE_CENTER[0], lng: BOONE_CENTER[1] });
           }}
@@ -29,7 +30,7 @@ export default function WithLove() {
         </button>
         )
       </div>
-      <VersionInfo className="absolute bottom-0 right-1 text-center text-xs" />
+      <VersionInfo className="text-center text-xs text-foreground/60" />
     </div>
   );
 }
