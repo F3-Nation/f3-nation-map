@@ -14,7 +14,6 @@ export const useOnKeyPress = <T extends HTMLElement>({
 
     const handlePress = function (event: HTMLElementEventMap["keypress"]) {
       // If the user presses the "Enter" key on the keyboard
-      console.log("event.key", event.key);
       if (keys?.includes(event.key)) {
         // Cancel the default action, if needed
         event.preventDefault();

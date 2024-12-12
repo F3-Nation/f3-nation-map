@@ -36,7 +36,6 @@ export const setSelectedItem = (item: {
   locationId?: number | null;
   eventId?: number | null;
 }) => {
-  console.log("setSelectedItem", item);
   const isMobile = isTouchDevice();
   selectedItemStore.setState({
     ...(item.locationId !== undefined ? { locationId: item.locationId } : {}),
