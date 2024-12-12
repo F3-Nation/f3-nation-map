@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 
-import { DEFAULT_CENTER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { getRandomLocation } from "~/utils/random-location";
@@ -132,17 +131,13 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!permissions || permissions === "denied") return;
-    const _center = mapStore.get("center");
 
     // Don't automatically redirect if we've moved the map more than 10 meters
-    if (
-      _center &&
-      (Math.abs(_center.lat - DEFAULT_CENTER[0]) > 0.0001 ||
-        Math.abs(_center.lng - DEFAULT_CENTER[1]) > 0.0001)
-    ) {
+    if (mapStore.get("hasMovedMap")) {
       console.log("Not redirecting because we've moved the map");
       return;
     }
+    console.log("Automatically updating user location");
 
     updateUserLocation();
   }, [permissions, updateUserLocation]);

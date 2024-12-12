@@ -52,7 +52,7 @@ export const MapListener = () => {
       );
     },
     dragstart: () => {
-      mapStore.setState({ dragging: true });
+      mapStore.setState({ dragging: true, hasMovedMap: true });
     },
     dragend: () => {
       // console.log("mapEvents dragend", JSON.stringify(mapEvents.getBounds()));
@@ -66,7 +66,11 @@ export const MapListener = () => {
       // console.log("mapEvents moveend");
       const center = mapEvents.getCenter();
       const isMobile = isTouchDevice();
-      mapStore.setState({ bounds: mapEvents.getBounds(), center });
+      mapStore.setState({
+        bounds: mapEvents.getBounds(),
+        center,
+        hasMovedMap: true,
+      });
       if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
     },
     // zoomlevelschange fires when the map first loads
