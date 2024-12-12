@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import { MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { isTruthy } from "@f3/shared/common/functions";
 
 import type { F3MapSearchResult, GeoMapSearchResult } from "~/utils/types";
 import { placesAutocomplete } from "~/utils/place-autocomplete";
@@ -41,9 +42,18 @@ export const TextSearchResultsProvider = ({
           ?.flatMap((location) =>
             location.events.map((event) => ({ event, location })),
           )
-          .filter(({ event }) => {
+          .filter(({ event, location: itemLocation }, index, arr) => {
+            if (
+              arr.findIndex(
+                ({ location: checkLocation }) =>
+                  itemLocation.id === checkLocation.id,
+              ) !== index
+            ) {
+              return null;
+            }
             return event.name.toLowerCase().includes(text.toLowerCase());
           })
+          .filter(isTruthy)
           .map(({ event, location }) => {
             const searchResult: F3MapSearchResult = {
               header: event.name,

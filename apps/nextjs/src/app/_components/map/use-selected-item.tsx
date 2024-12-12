@@ -39,7 +39,6 @@ export const useSelectedItem = () => {
         selectedLocation.events.find((event) => event.id == eventId);
 
   useEffect(() => {
-    console.log("useSelectedItem useEffect", eventId, selectedLocation);
     if (selectedLocation && eventId === null) {
       setSelectedItem({
         eventId: selectedLocation.events[0]?.id,

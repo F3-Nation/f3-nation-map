@@ -63,7 +63,6 @@ export const NearbyLocationItem = (props: {
           }
           searchStore.setState({ shouldShowResults: false });
         } else {
-          console.log("onMouseEnter NearbyLocationItem", item);
           // Log to know if this was due to a mouse movement or element adjustment
           if (ignoreNextNearbyItemMouseEnter) {
             appStore.setState({ ignoreNextNearbyItemMouseEnter: false });

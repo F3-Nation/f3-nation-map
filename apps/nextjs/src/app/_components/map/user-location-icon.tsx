@@ -12,7 +12,6 @@ import { useUserLocation } from "./user-location-provider";
 
 export const UserLocationIcon = () => {
   const { updateUserLocation, status, permissions } = useUserLocation();
-  console.log("UserLocationIcon permissions", permissions);
 
   return (
     <Tooltip>

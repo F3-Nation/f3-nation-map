@@ -175,13 +175,13 @@ export function MapSearchBox({
                 .map((result, index) =>
                   isF3MapSearchResult(result) ? (
                     <PlaceRowF3
-                      key={result.destination.id}
+                      key={result.destination.item.locationId}
                       result={result}
                       focused={focusedIndex === index}
                     />
                   ) : (
                     <PlaceRowMap
-                      key={result.destination.id}
+                      key={result.destination.placeId}
                       result={result}
                       focused={focusedIndex === index}
                     />
