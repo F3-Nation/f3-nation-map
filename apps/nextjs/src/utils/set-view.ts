@@ -21,6 +21,7 @@ export const setView = ({
   const workoutModalOpen = open && type === ModalType.WORKOUT_DETAILS;
   let center = { lat, lng };
   const newZoom = zoom ?? Math.max(mapStore.get("zoom"), CLOSE_ZOOM);
+  mapStore.setState({ hasMovedMap: true });
   if (!isMobile && workoutModalOpen && mapRef.current) {
     const targetPoint = mapRef.current.project(center, newZoom);
     const adjustedTargetPoint = targetPoint.subtract(new L.Point(200, 0));
@@ -50,6 +51,7 @@ export const moveView = (point = new L.Point(200, 0)) => {
   const targetPoint = mapRef.current.project(center, zoom);
   const adjustedTargetPoint = targetPoint.subtract(point);
   const newCenterPoint = mapRef.current.unproject(adjustedTargetPoint, zoom);
+  mapStore.setState({ hasMovedMap: true });
   mapRef.current?.setView(newCenterPoint, zoom, {
     animate: true,
   });
