@@ -82,7 +82,7 @@ export const DesktopLocationPanelContent = () => {
   };
 
   return !open ? null : (
-    <div className="flex flex-col rounded-lg bg-background p-4 shadow">
+    <div className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow">
       {!results?.location || !results.events.length || isLoading ? (
         <WorkoutDetailsSkeleton />
       ) : (

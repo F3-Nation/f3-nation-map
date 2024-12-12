@@ -8,6 +8,7 @@ import {
   Sunset,
 } from "lucide-react";
 
+import { filterButtonClassName } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 
 import {
@@ -15,9 +16,6 @@ import {
   isAnyFilterActive,
   useTodayAndTomorrowFilters,
 } from "~/utils/store/filter";
-
-const filterButtonClassName =
-  "text-sm font-semibold pointer-events-auto flex items-center justify-center gap-2 rounded-md bg-background px-2 py-1 shadow text-foreground";
 
 export const DesktopFilterButtons = () => {
   const { today, tomorrow, todayVar, tomorrowVar } =

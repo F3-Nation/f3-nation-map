@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.6.3",
+    "@f3/db": "workspace:^0.1.0",
+    "@f3/env": "workspace:^0.1.0",    
     "@f3/shared": "workspace:^0.1.0",
     "next": "^14.2.12",
     "next-auth": "5.0.0-beta.9",
@@ -25,8 +27,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@f3/db": "workspace:^0.1.0",
-    "@f3/env": "workspace:^0.1.0",
     "@f3/eslint-config": "workspace:^0.2.0",
     "@f3/prettier-config": "workspace:^0.1.0",
     "@f3/tsconfig": "workspace:^0.1.0",

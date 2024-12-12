@@ -30,29 +30,27 @@ export const ZoomButtons = () => {
         const y = containerPoint.y;
 
         if (isTouchDevice) {
-          if (mapRef.current) {
-            const map = mapRef.current;
-            const overlayPane = map.getPane("overlayPane");
-            const currentZoom = map.getZoom();
-            const zoomChange = direction === "in" ? 1 : -1;
-            const newZoom = currentZoom + zoomChange;
+          const map = mapRef.current;
+          const overlayPane = map.getPane("overlayPane");
+          const currentZoom = map.getZoom();
+          const zoomChange = direction === "in" ? 1 : -1;
+          const newZoom = currentZoom + zoomChange;
 
-            overlayPane && (overlayPane.style.display = "none");
-            map.setZoom(newZoom, {
-              animate: true,
-              duration: 0.25, // Adjust this value to control the animation speed
-            });
-            setTimeout(() => {
-              overlayPane && (overlayPane.style.display = "block");
-            }, 300); // Slightly longer than the animation duration to ensure it completes
-          }
+          overlayPane && (overlayPane.style.display = "none");
+          map.setZoom(newZoom, {
+            animate: true,
+            duration: 0.25, // Adjust this value to control the animation speed
+          });
+          setTimeout(() => {
+            overlayPane && (overlayPane.style.display = "block");
+          }, 300); // Slightly longer than the animation duration to ensure it completes
         } else {
           const wheelEvent = new WheelEvent("wheel", {
             deltaY: direction === "in" ? -333 : 333,
             clientX: x,
             clientY: y,
           });
-          map.getContainer().dispatchEvent(wheelEvent);
+          mapRef.current?.getContainer().dispatchEvent(wheelEvent);
         }
       }
     },

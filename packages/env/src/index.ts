@@ -13,6 +13,7 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
+    EMAIL_ADMIN_DESTINATIONS: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),

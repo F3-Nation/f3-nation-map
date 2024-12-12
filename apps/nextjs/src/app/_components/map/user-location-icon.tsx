@@ -1,52 +1,26 @@
-/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 "use client";
 
-import { useWindowSize } from "@react-hook/window-size";
 import { LocateFixed } from "lucide-react";
 
-import { BreakPoints } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
 
+import { isTouchDevice } from "~/utils/is-touch-device";
 import { ModalType, openModal } from "~/utils/store/modal";
+import { UserLocationContent } from "../modal/user-location-content";
 import { useUserLocation } from "./user-location-provider";
 
 export const UserLocationIcon = () => {
   const { updateUserLocation, status, permissions } = useUserLocation();
-  const [width] = useWindowSize();
   console.log("UserLocationIcon permissions", permissions);
-
-  const content = (
-    <div className="flex flex-col items-start gap-4 text-sm">
-      {permissions === "denied"
-        ? "Permissions have been denied. Please grant location permissions for your browser and try again"
-        : // : permissions === "prompt"
-          //   ? "Your location is being requested. Please grant location permissions for your browser and try again"
-          status === "error"
-          ? "There was an error loading your position"
-          : status === "loading"
-            ? "Your position is loading"
-            : "Your permissions are ok. Requesting location"}
-
-      {permissions !== "granted" ? (
-        <button
-          className={cn(
-            "self-center rounded-md bg-foreground px-4 py-2 text-background shadow hover:bg-foreground/90",
-          )}
-          onClick={() => updateUserLocation()}
-        >
-          Request location permissions
-        </button>
-      ) : null}
-    </div>
-  );
 
   return (
     <Tooltip>
       <TooltipTrigger
         onClick={() => {
-          if (width < BreakPoints.LG && status !== "success") {
-            openModal(ModalType.USER_LOCATION_INFO, { content });
+          const isMobile = isTouchDevice();
+          if (isMobile && status !== "success") {
+            openModal(ModalType.USER_LOCATION_INFO);
           } else {
             updateUserLocation();
           }
@@ -81,7 +55,7 @@ export const UserLocationIcon = () => {
         side="bottom"
         className="mr-4 flex max-w-40 flex-col gap-2"
       >
-        {content}
+        <UserLocationContent />
       </TooltipContent>
     </Tooltip>
   );

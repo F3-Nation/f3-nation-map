@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export enum SnapPoint {
   "pt-0.95" = 0.95,
   // "pt-0.5" = 0.5,
@@ -99,3 +101,15 @@ export const Z_INDEX = {
 export const MOBILE_SEARCH_RESULT_ITEM_HEIGHT = 128;
 
 export const MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS = 2;
+
+export const feedbackSchema = z.object({
+  type: z.string(),
+  subject: z.string(),
+  email: z.string(),
+  description: z.string(),
+});
+
+export type FeedbackSchema = z.infer<typeof feedbackSchema>;
+
+export const filterButtonClassName =
+  "text-sm w-full whitespace-nowrap font-semibold pointer-events-auto flex items-center justify-center gap-2 rounded-md bg-background px-2 py-1 shadow text-foreground";

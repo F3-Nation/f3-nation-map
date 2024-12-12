@@ -1,36 +1,58 @@
 FROM --platform=linux/amd64 node:20-alpine AS builder
+
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV TURBO_TELEMETRY_DISABLED 1
+
 RUN apk add --no-cache libc6-compat openssl && apk update
 WORKDIR /app
 RUN yarn global add turbo@^1.12.3
-COPY . . 
-RUN turbo prune --scope=@f3/nextjs --docker
+COPY . .
+
+# Prune the workspace to only include nextjs and its dependencies
+RUN turbo prune @f3/nextjs --docker
 
 FROM --platform=linux/amd64 node:20-alpine AS installer
 RUN apk add --no-cache libc6-compat openssl && apk update
 WORKDIR /app
 
 ENV NODE_ENV production
-ENV CI         true
+ENV CI true
 ENV SKIP_ENV_VALIDATION true
 
-RUN yarn global add turbo@^1.12.3
+RUN yarn global add turbo@^1.12.3 pnpm@8.15.1
 
-COPY .gitignore .gitignore 
-COPY --from=builder /app/tooling/typescript/base.json ./tsconfig.json
-COPY --from=builder /app/out/json .
-COPY --from=builder /app/out/pnpm-lock.yaml\* ./
+# Copy the pruned workspace
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
-RUN npm install -g pnpm@8.15.1 && pnpm fetch --prod && pnpm install -r --offline --prod
+# Install dependencies
+RUN pnpm install --frozen-lockfile
 
-COPY --from=builder /app/out/full .
+COPY --from=builder /app/out/full/ .
 
 RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub && \
     echo 'https://packages.doppler.com/public/cli/alpine/any-version/main' | tee -a /etc/apk/repositories && \
     apk add doppler
 
 ARG DOPPLER_TOKEN
+ARG ENVIRONMENT
+RUN echo "Received DOPPLER_TOKEN (first 5 chars): ${DOPPLER_TOKEN:0:5}"
 
-RUN doppler setup -p f3-2 -c prd
+ENV DOPPLER_TOKEN=${DOPPLER_TOKEN}
+RUN echo "Set ENV DOPPLER_TOKEN (first 5 chars): ${DOPPLER_TOKEN:0:5}"
+
+# Debug steps to verify the token
+RUN echo "Received DOPPLER_TOKEN (first 5 chars): ${DOPPLER_TOKEN:0:5}" && \
+    if [ -z "$DOPPLER_TOKEN" ]; then \
+        echo "Error: DOPPLER_TOKEN is not set"; \
+        exit 1; \
+    fi && \
+    echo "Using token starting with: ${DOPPLER_TOKEN:0:5}"
+
+# Use the token explicitly
+RUN doppler setup -p f3-2 --token "$DOPPLER_TOKEN"
+    
 RUN doppler secrets download --no-file --format env > /app/apps/nextjs/.env
 RUN doppler run -- sh -c "pnpm turbo build --filter=nextjs && pnpm -F db migrate"
 
