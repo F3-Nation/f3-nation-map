@@ -27,6 +27,7 @@ const initialState = {
   showDebug: false,
   loaded: false,
   dragging: false,
+  hasMovedMap: false,
 };
 
 export const mapStore = new ZustandStore({
