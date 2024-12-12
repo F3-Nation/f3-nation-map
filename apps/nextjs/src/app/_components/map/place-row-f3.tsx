@@ -61,14 +61,14 @@ export const PlaceRowF3 = ({
           onClickPlaceRowF3(result);
         } else {
           setSelectedItem({
-            locationId: result.destination.id,
+            locationId: result.destination.item.locationId,
             eventId: null,
           });
         }
       }}
       onFocus={() => {
         setSelectedItem({
-          locationId: result.destination.id,
+          locationId: result.destination.item.locationId,
           eventId: null,
         });
       }}
