@@ -22,6 +22,23 @@ steps:
           .
     secretEnv: ["_DOPPLER_TOKEN"]
 
+  # Push step
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/pin-mastery/f3-nextjs"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "f3-2" # Name for your Cloud Run service
+      - "--image"
+      - "gcr.io/pin-mastery/f3-nextjs" # The image you built
+      - "--region"
+      - "us-central1" # e.g., us-central1
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+
 options:
   logging: CLOUD_LOGGING_ONLY
 

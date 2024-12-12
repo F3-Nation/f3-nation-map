@@ -15,7 +15,7 @@ export const UserLocationContent = () => {
           ? "There was an error loading your position"
           : status === "loading"
             ? "Your position is loading"
-            : "Your permissions are ok. Requesting location"}
+            : "Permissions have been granted. Press this to show your location"}
       {permissions !== "granted" ? (
         <button
           className={cn(

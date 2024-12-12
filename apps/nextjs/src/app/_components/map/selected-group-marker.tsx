@@ -40,7 +40,10 @@ export const MemoSelectedGroupMarker = memo(
           className: "pointer-events-none",
           html: ReactDOMServer.renderToString(
             <div className="relative flex flex-col">
-              <div className="flex flex-row" style={{ zIndex: 1 }}>
+              <div
+                className="flex flex-row rounded-full ring-[1px] ring-gray-700"
+                style={{ zIndex: 1 }}
+              >
                 {filteredEvents
                   .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
                   .map((marker, markerIdx, markerArray) => {
