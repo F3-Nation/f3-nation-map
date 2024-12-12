@@ -87,37 +87,43 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
     console.log("Error getting user location");
   }, []);
 
-  const updateUserLocation = useCallback(() => {
-    if (userGpsLocation) {
-      setView({
-        lat: userGpsLocation.latitude,
-        lng: userGpsLocation.longitude,
-      });
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setPermissions("granted");
-        setStatus("success");
-        setUserGpsLocation(position);
-        if (position) {
-          setView({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
+  const updateUserLocation = useCallback(
+    (params?: { onlyUpdateIfNotHasMovedMap?: boolean }) => {
+      // one function to set the view and check if the map has moved
+      const setViewIfNotMovedMap = (loc: { lat: number; lng: number }) => {
+        if (params?.onlyUpdateIfNotHasMovedMap && mapStore.get("hasMovedMap")) {
+          console.log("Not redirecting because we've moved the map");
+          return;
         }
-      },
-      () => {
-        setStatus("error");
-        console.log("Error getting user location");
-      },
-    );
+        setView(loc);
+      };
 
-    // void navigator.permissions
-    //   .query({ name: "geolocation" })
-    //   .then(handlePermissions);
-  }, [setUserGpsLocation, userGpsLocation]);
+      if (userGpsLocation) {
+        setViewIfNotMovedMap({
+          lat: userGpsLocation.latitude,
+          lng: userGpsLocation.longitude,
+        });
+        return;
+      } else {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setPermissions("granted");
+            setStatus("success");
+            setUserGpsLocation(position);
+            setViewIfNotMovedMap({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          () => {
+            setStatus("error");
+            console.log("Error getting user location");
+          },
+        );
+      }
+    },
+    [setUserGpsLocation, userGpsLocation],
+  );
 
   // Initial load
   useEffect(() => {
@@ -133,13 +139,9 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
     if (!permissions || permissions === "denied") return;
 
     // Don't automatically redirect if we've moved the map more than 10 meters
-    if (mapStore.get("hasMovedMap")) {
-      console.log("Not redirecting because we've moved the map");
-      return;
-    }
     console.log("Automatically updating user location");
 
-    updateUserLocation();
+    updateUserLocation({ onlyUpdateIfNotHasMovedMap: true });
   }, [permissions, updateUserLocation]);
 
   return (
