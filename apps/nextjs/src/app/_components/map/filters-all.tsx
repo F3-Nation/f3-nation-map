@@ -193,8 +193,8 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
                   });
                 }}
               >
-                <option value="before">Before</option>
-                <option value="after">After</option>
+                <option value="before">On or before</option>
+                <option value="after">On or after</option>
               </select>
               <select
                 data-vaul-no-drag
