@@ -11,7 +11,7 @@ export default function WithLove() {
   return (
     <div className="my-[1px] flex flex-row items-center justify-center gap-4">
       <div className="whitespace-nowrap text-xs text-foreground opacity-60">
-        Made with <span className="text-[7px] opacity-70">🖤️</span> by{" "}
+        Made with <span>🥔</span> by{" "}
         <Link
           target="_blank"
           className="text-blue-600 underline underline-offset-2"

@@ -71,6 +71,7 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             panel
             group={filteredPanelItem}
+            isFar={zoom < CLOSE_ZOOM}
             selectedEventIdInGroup={
               filteredPanelItem?.events.find(
                 (event) => event.id === panelEventId,

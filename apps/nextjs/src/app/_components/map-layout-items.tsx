@@ -109,7 +109,7 @@ const DesktopLocationPanel = (props: ComponentProps<"div">) => (
   <div
     style={{ zIndex: Z_INDEX.LOCATION_PANEL }}
     // max-w-md must match to MAX_DESKTOP_WORKOUT_PANEL_WIDTH
-    className="absolute left-2 top-12 hidden w-1/2 max-w-md lg:block"
+    className="scrollbar-hide pointer-events-none absolute bottom-0 left-2 top-0 hidden w-1/2 max-w-md overflow-y-auto pb-2 pt-12 lg:block"
     {...props}
   />
 );
