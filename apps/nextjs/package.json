@@ -33,7 +33,7 @@
     "@trpc/client": "11.0.0-next-beta.264",
     "@trpc/react-query": "11.0.0-next-beta.264",
     "@trpc/server": "11.0.0-next-beta.264",
-    "axios": "^1.6.8",
+    "axios": "^1.7.4",
     "dayjs": "^1.11.10",
     "dompurify": "^3.1.7",
     "dotenv-cli": "^7.3.0",
