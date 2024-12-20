@@ -53,6 +53,10 @@ export const MapListener = () => {
     },
     dragstart: () => {
       mapStore.setState({ dragging: true, hasMovedMap: true });
+      selectedItemStore.setState({
+        locationId: null,
+        eventId: null,
+      });
     },
     dragend: () => {
       // console.log("mapEvents dragend", JSON.stringify(mapEvents.getBounds()));
