@@ -7,7 +7,7 @@ export const DesktopSidebarContainer = (props: {
   return (
     <div
       className={cn(
-        `absolute bottom-0 left-0 top-0 hidden flex-col items-stretch bg-background pt-4 lg:flex`,
+        `absolute bottom-0 left-0 top-0 hidden flex-col items-stretch bg-background pt-4 dark:border-r lg:flex`,
       )}
       style={{ width: SIDEBAR_WIDTH }}
     >

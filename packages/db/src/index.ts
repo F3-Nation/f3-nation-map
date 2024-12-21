@@ -21,6 +21,7 @@ import { locations } from "./schema/locations";
 import { orgs } from "./schema/orgs";
 import { orgTypes } from "./schema/orgTypes";
 import { slackUsers } from "./schema/slackUsers";
+import { updateRequests } from "./schema/updateRequest";
 import { users } from "./schema/users";
 
 export const schema = {
@@ -41,6 +42,7 @@ export const schema = {
   locations,
   orgTypes,
   slackUsers,
+  updateRequests,
 };
 
 export { pgSqlTable as tableCreator } from "./schema/_table";

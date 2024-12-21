@@ -4,7 +4,8 @@ import "~/utils/leaflet-canvas-markers"; // with modifications
 import "~/utils/smooth-zoom-wheel"; // with modifications
 
 import type { TileLayerProps } from "react-leaflet";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useWindowSize } from "@react-hook/window-size";
 import { MapContainer, TileLayer } from "react-leaflet";
 
@@ -15,9 +16,11 @@ import {
 } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 import { useTheme } from "@f3/ui/theme";
+import { toast } from "@f3/ui/toast";
 
 import type { F3MarkerLocation } from "~/utils/types";
 import { clientUtils } from "~/trpc/server-side-react-helpers";
+import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
 import { GeoJsonPane } from "./geo-json-pane";
@@ -25,6 +28,7 @@ import { MapListener } from "./map-listener";
 import { useMapRef } from "./map-ref-provider";
 import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { SelectedIconMarkerPane } from "./selected-item-marker-pane";
+import { UpdatePane } from "./update-pane";
 import { UserLocationMarker } from "./user-location-marker";
 import { useUserLocation } from "./user-location-provider";
 import { ZoomedMarkerPane } from "./zoomed-marker-pane";
@@ -36,6 +40,10 @@ export const LeafletMap = ({
 }: {
   sparseLocations: F3MarkerLocation[];
 }) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParamsRef = useRef(searchParams?.get("error"));
   const { userLocation } = useUserLocation();
   RERENDER_LOGS && console.log("LeafletMap rerender");
   const [width, height] = useWindowSize();
@@ -48,6 +56,17 @@ export const LeafletMap = ({
       sparseLocations,
     );
   }, [sparseLocations]);
+
+  useEffect(() => {
+    const error = searchParamsRef.current;
+    if (error === "invalid-submission") {
+      toast.error("Invalid submission");
+      searchParamsRef.current = null;
+      if (pathname) {
+        router.replace(pathname, { scroll: false });
+      }
+    }
+  }, [pathname, router]);
 
   return (
     <div
@@ -91,6 +110,7 @@ const MapContent = ({
   markerLocations: F3MarkerLocation[];
 }) => {
   const tile = mapStore.use.tiles();
+  const mode = appStore.use.mode();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   RERENDER_LOGS && console.log("MapContent rerender");
@@ -133,6 +153,7 @@ const MapContent = ({
       <CanvasIconLayer markerLocations={markerLocations} />
       <UserLocationMarker />
       <PlaceResultIconPane />
+      {mode === "edit" && <UpdatePane />}
     </>
   );
 };

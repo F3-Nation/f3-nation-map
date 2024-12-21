@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import dynamicImport from "next/dynamic";
 import { createServerSideHelpers } from "@trpc/react-query/server";
 import superjson from "superjson";
@@ -33,7 +34,9 @@ export default async function MapPage() {
     <MapPageWrapper>
       {/* Must have relative so that absolute things show up on the map */}
       <main className="pointer-events-auto relative">
-        <DynamicImportLeafletMap sparseLocations={locationMarkersSparse} />
+        <Suspense fallback={<div>Loading...</div>}>
+          <DynamicImportLeafletMap sparseLocations={locationMarkersSparse} />
+        </Suspense>
         <MapLayoutItems />
       </main>
     </MapPageWrapper>

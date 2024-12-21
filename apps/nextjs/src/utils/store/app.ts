@@ -7,6 +7,8 @@ const initialState = {
   shadCnContainterRef: createRef<HTMLDivElement>(),
   ignoreNextNearbyItemMouseEnter: false,
   isMobileDeviceWidth: false,
+  mode: "view" as "view" | "edit",
+  myEmail: "",
 };
 
 export const appStore = new ZustandStore({
@@ -14,7 +16,7 @@ export const appStore = new ZustandStore({
   persistOptions: {
     name: "app-store",
     version: 1,
-    persistedKeys: [],
+    persistedKeys: ["myEmail"],
     getStorage: () => localStorage,
   },
 });
