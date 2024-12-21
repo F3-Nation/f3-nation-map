@@ -17,7 +17,7 @@
     "drop": "pnpm with-env drizzle-kit drop",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --",
-    "update-db": "pnpm with-env tsx src/update-db.ts"
+    "update-db": "pnpm with-env node -r esbuild-register src/update-db.ts"
   },
   "dependencies": {
     "@f3/env": "workspace:*",
