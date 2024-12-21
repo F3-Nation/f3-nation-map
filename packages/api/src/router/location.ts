@@ -1,7 +1,10 @@
+import omit from "lodash/omit";
 import { z } from "zod";
 
 import { aliasedTable, eq, inArray, schema } from "@f3/db";
+import { env } from "@f3/env";
 
+import { mail, Templates } from "../mail";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const locationRouter = createTRPCRouter({
@@ -322,5 +325,177 @@ export const locationRouter = createTRPCRouter({
         return null;
       }
       return { location, events };
+    }),
+  getRegions: publicProcedure.query(async ({ ctx }) => {
+    const regions = await ctx.db
+      .select()
+      .from(schema.orgs)
+      .innerJoin(schema.orgTypes, eq(schema.orgs.orgTypeId, schema.orgTypes.id))
+      .where(eq(schema.orgTypes.name, "Region"));
+    return regions.map((region) => ({
+      id: region.orgs.id,
+      name: region.orgs.name,
+      logo: region.orgs.logo,
+      website: region.orgs.website,
+    }));
+  }),
+  getRegionAos: publicProcedure
+    .input(z.object({ regionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const locationsAndEvents = await ctx.db
+        .select({
+          // TODO: Reduce the properties as much as possible
+          locations: {
+            id: schema.locations.id,
+            lat: schema.locations.lat,
+            lon: schema.locations.lon,
+            name: schema.locations.name,
+            isActive: schema.locations.isActive,
+            created: schema.locations.created,
+            updated: schema.locations.updated,
+            meta: schema.locations.meta,
+            locationDescription: schema.locations.description,
+            orgId: schema.locations.orgId,
+            logo: schema.orgs.logo,
+            website: schema.orgs.website,
+          },
+          events: {
+            id: schema.events.id,
+            locationId: schema.events.locationId,
+            dayOfWeek: schema.events.dayOfWeek,
+            startTime: schema.events.startTime,
+            endTime: schema.events.endTime,
+            description: schema.events.description,
+            eventTypeId: schema.events.eventTypeId,
+            type: schema.eventTypes.name,
+            name: schema.events.name,
+          },
+          // locations: { id: schema.locations.id },
+          // events: { id: schema.events.id },
+        })
+        .from(schema.locations)
+        .where(eq(schema.orgs.parentId, input.regionId))
+        .innerJoin(
+          schema.events,
+          eq(schema.events.locationId, schema.locations.id),
+        )
+        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.events.eventTypeId),
+        );
+      // const locationEvents = locationsAndEvents.reduce(
+      //   (acc, item) => {
+      //     return [
+      //       ...acc,
+      //       item.events.map((event) => {
+      //         return {
+      //           ...item.locations,
+      //           events: [...(acc[item.locations.id]?.events ?? []), event],
+      //         };
+      //       }),
+      //     ];
+      //   },
+      //   [] as ((typeof locationsAndEvents)[0]["locations"] &
+      //     (typeof locationsAndEvents)[0]["events"])[],
+      // );
+      return locationsAndEvents;
+    }),
+  updateLocation: publicProcedure
+    .input(
+      z.object({
+        locationName: z.string().nullish(),
+        locationDescription: z.string().nullish(),
+        locationLat: z.number().nullish(),
+        locationLng: z.number().nullish(),
+        locationId: z.number().nullish(),
+
+        eventName: z.string(),
+        eventDescription: z.string().nullish(),
+        eventStartTime: z.string().nullish(),
+        eventEndTime: z.string().nullish(),
+        eventDayOfWeek: z.string(),
+        eventId: z.number().nullable(),
+        eventType: z.string().nullable(),
+        eventTag: z.string().nullable(),
+        eventIsSeries: z.boolean().nullish(),
+        eventIsActive: z.boolean().nullish(),
+        eventHighlight: z.boolean().nullish(),
+        eventStartDate: z.string().nullish(),
+        eventEndDate: z.string().nullish(),
+        eventRecurrencePattern: z.string().nullish(),
+        eventRecurrenceInterval: z.number().nullish(),
+        eventIndexWithinInterval: z.number().nullish(),
+        eventMeta: z.record(z.string(), z.unknown()).nullish(),
+
+        orgId: z.number(),
+        submittedBy: z.string().email(),
+        meta: z.record(z.string(), z.unknown()).nullish(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const updateRequest: typeof schema.updateRequests.$inferInsert = {
+        ...input,
+        submitterValidated: false,
+        validatedBy: null,
+        validatedAt: null,
+      };
+
+      const [inserted] = await ctx.db
+        .insert(schema.updateRequests)
+        .values(updateRequest)
+        .returning();
+
+      if (!inserted) {
+        throw new Error("Failed to insert update request");
+      }
+      const [region] = await ctx.db
+        .select()
+        .from(schema.orgs)
+        .where(eq(schema.orgs.id, input.orgId));
+
+      if (!region) {
+        throw new Error("Failed to find region");
+      }
+
+      await mail.sendTemplateMessages(Templates.validateSubmission, {
+        to: input.submittedBy,
+        submissionId: inserted.id,
+        token: inserted.token,
+        regionName: region?.name,
+        eventName: inserted.eventName,
+        address: inserted.locationDescription ?? "",
+        startTime: inserted.eventStartTime ?? "",
+        endTime: inserted.eventEndTime ?? "",
+        dayOfWeek: inserted.eventDayOfWeek ?? "",
+        type: inserted.eventType ?? "",
+        url: env.NEXT_PUBLIC_URL,
+      });
+
+      return { success: true, inserted: omit(inserted, ["token"]) };
+    }),
+  validateSubmission: publicProcedure
+    .input(z.object({ token: z.string(), submissionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [updateRequest] = await ctx.db
+        .select()
+        .from(schema.updateRequests)
+        .where(eq(schema.updateRequests.id, input.submissionId));
+
+      if (!updateRequest) {
+        throw new Error("Failed to find update request");
+      }
+
+      if (updateRequest.token !== input.token) {
+        throw new Error("Invalid token");
+      }
+
+      const [updated] = await ctx.db
+        .update(schema.updateRequests)
+        .set({ submitterValidated: true })
+        .where(eq(schema.updateRequests.id, input.submissionId))
+        .returning();
+
+      return { success: true, updateRequest: omit(updated, ["token"]) };
     }),
 });

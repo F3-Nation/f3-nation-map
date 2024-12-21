@@ -2,19 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 import { DAY_ORDER } from "@f3/shared/app/constants";
+import { cn } from "@f3/ui";
 import { Skeleton } from "@f3/ui/skeleton";
+import { toast } from "@f3/ui/toast";
 
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
+import { appStore } from "~/utils/store/app";
+import { ModalType, openModal } from "~/utils/store/modal";
 import { closePanel, selectedItemStore } from "~/utils/store/selected-item";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
 export const DesktopLocationPanelContent = () => {
+  const mode = appStore.use.mode();
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
   const open = panelLocationId !== null;
@@ -82,7 +87,7 @@ export const DesktopLocationPanelContent = () => {
   };
 
   return !open ? null : (
-    <div className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow">
+    <div className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow dark:border">
       {!results?.location || !results.events.length || isLoading ? (
         <WorkoutDetailsSkeleton />
       ) : (
@@ -136,6 +141,44 @@ export const DesktopLocationPanelContent = () => {
                   hideName={results.events.length === 1}
                 />
               ))}
+              {mode === "edit" ? (
+                <button
+                  className={cn(
+                    "flex cursor-pointer flex-row items-center",
+                    "rounded-sm",
+                    "text-base text-white",
+                    "pl-1 pr-2 shadow",
+                    { "pointer-events-auto bg-blue-600": true },
+                    { "gap-2 py-[3px]": true },
+                  )}
+                  onClick={() => {
+                    const lat = results?.location.lat ?? 0;
+                    const lng = results?.location.lon ?? 0;
+                    if (typeof lat !== "number" || typeof lng !== "number") {
+                      toast.error("Invalid lat or lng");
+                    }
+                    openModal(ModalType.UPDATE_LOCATION, {
+                      mode: "new-event",
+                      locationId: locationId,
+                      regionId: results?.location.regionId,
+                      eventId: -1,
+                      locationAddress: results?.location.locationAddress,
+                      lat: lat,
+                      lng: lng,
+                      workoutWebsite: results?.location.aoWebsite,
+                      aoLogo: results?.location.aoLogo,
+                      startTime: "00:00:00",
+                      endTime: "00:00:00",
+                      dayOfWeek: 0,
+                      type: "Bootcamp",
+                      eventDescription: "",
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Event</span>
+                </button>
+              ) : null}
             </div>
           </div>
           <div className="w-full">
@@ -194,16 +237,55 @@ export const DesktopLocationPanelContent = () => {
           >
             FAQs
           </Link>
+
+          {mode === "edit" ? (
+            <button
+              className="mt-4 rounded-md bg-blue-600 p-2 text-white"
+              onClick={(e) => {
+                const event = results?.events.find(
+                  (event) => event.eventId === selectedEventId,
+                );
+                const lat = results?.location.lat;
+                const lng = results?.location.lon;
+                if (typeof lat !== "number" || typeof lng !== "number") {
+                  toast.error("Invalid lat or lng");
+                  return;
+                }
+                openModal(ModalType.UPDATE_LOCATION, {
+                  mode: "edit-event",
+                  locationId: locationId,
+                  eventId: selectedEventId,
+                  regionId: results?.location.regionId,
+                  workoutName: event?.eventName,
+                  workoutWebsite: results?.location.aoWebsite,
+                  aoLogo: results?.location.aoLogo,
+                  locationAddress: results?.location.locationAddress,
+                  lat: lat,
+                  lng: lng,
+                  startTime: event?.startTime,
+                  endTime: event?.endTime,
+                  dayOfWeek: event?.dayOfWeek,
+                  type: event?.type,
+                  eventDescription: event?.description,
+                });
+                e.stopPropagation();
+              }}
+            >
+              Edit Event
+            </button>
+          ) : null}
           <div className="h-8" />
-          <button
-            className="absolute right-2 top-2"
-            onClick={(e) => {
-              closePanel();
-              e.stopPropagation();
-            }}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="absolute right-2 top-2 flex flex-row gap-2">
+            <button
+              className="rounded-full bg-muted-foreground px-1 py-1 text-sm text-background"
+              onClick={(e) => {
+                closePanel();
+                e.stopPropagation();
+              }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </>
       )}
     </div>

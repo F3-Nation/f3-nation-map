@@ -9,6 +9,7 @@ import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
 import { DesktopLocationPanelContent } from "./map/desktop-location-panel-content";
 import DesktopSelectedItem from "./map/desktop-selected-item";
+import { EditButton } from "./map/edit-button";
 import { HelpButton } from "./map/help-button";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
@@ -43,6 +44,7 @@ export const MapLayoutItems = () => {
         </DesktopBottomLeftButtons>
       )}
       <DesktopBottomRightButtons>
+        <EditButton />
         <UserLocationIcon />
         <ZoomButtons />
       </DesktopBottomRightButtons>

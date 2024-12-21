@@ -29,7 +29,7 @@ export const MapListener = () => {
 
   const mapEvents = useMapEvents({
     // This is a hack to get the map ref to update
-    click: () => {
+    click: (e) => {
       console.log("mapEvents click");
       // setSelectedItem({ locationId: null, eventId: null });
       selectedItemStore.setState({
@@ -50,6 +50,9 @@ export const MapListener = () => {
       filterStore.setState((s) =>
         s.allFilters === true ? { allFilters: false } : s,
       );
+      if (appStore.get("mode") === "edit") {
+        mapStore.setState({ updateLocation: e.latlng });
+      }
     },
     dragstart: () => {
       mapStore.setState({ dragging: true, hasMovedMap: true });

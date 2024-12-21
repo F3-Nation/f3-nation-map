@@ -12,6 +12,7 @@ import {
 } from "@f3/ui/dialog";
 import { Skeleton } from "@f3/ui/skeleton";
 
+import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
 import { closeModal, useModalStore } from "~/utils/store/modal";
@@ -20,7 +21,8 @@ import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
 export const WorkoutDetailsModal = () => {
-  const { open, data } = useModalStore();
+  const { open, data: rawData } = useModalStore();
+  const data = rawData as DataType[ModalType.WORKOUT_DETAILS];
   const locationId = typeof data.locationId === "number" ? data.locationId : -1;
   const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
     { locationId },

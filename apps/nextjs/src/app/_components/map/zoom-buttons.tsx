@@ -59,10 +59,10 @@ export const ZoomButtons = () => {
 
   return (
     <>
-      <div>
+      <div className="overflow-hidden rounded-md shadow dark:border">
         <button
           className={cn(
-            "pointer-events-auto flex size-[36px] items-center justify-center rounded-t-md bg-background text-black shadow",
+            "pointer-events-auto flex size-[36px] items-center justify-center bg-background text-black",
             "hover:bg-accent",
           )}
           onClick={(e) => {
@@ -81,7 +81,7 @@ export const ZoomButtons = () => {
             e.preventDefault();
           }}
           className={cn(
-            "pointer-events-auto flex size-[36px] items-center justify-center rounded-b-md bg-background text-black shadow",
+            "pointer-events-auto flex size-[36px] items-center justify-center bg-background text-black",
             "hover:bg-accent",
           )}
         >
