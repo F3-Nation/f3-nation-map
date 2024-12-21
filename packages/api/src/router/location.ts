@@ -1,7 +1,7 @@
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import { aliasedTable, eq, inArray, schema } from "@f3/db";
+import { aliasedTable, count, eq, inArray, schema } from "@f3/db";
 import { env } from "@f3/env";
 
 import { mail, Templates } from "../mail";
@@ -401,6 +401,13 @@ export const locationRouter = createTRPCRouter({
       // );
       return locationsAndEvents;
     }),
+  getWorkoutCount: publicProcedure.query(async ({ ctx }) => {
+    const [result] = await ctx.db
+      .select({ count: count() })
+      .from(schema.events);
+
+    return { count: result?.count };
+  }),
   updateLocation: publicProcedure
     .input(
       z.object({

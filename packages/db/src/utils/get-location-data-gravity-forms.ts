@@ -18,11 +18,12 @@ const getSheetData = async <T>(params: {
 
   await regionSheet.loadHeaderRow();
   const header = regionSheet.headerValues;
-  console.log("header", header);
+  console.log("header", header.join(","));
 
   const rows = await regionSheet?.getRows(); // can this use the row we just added?
   const data: T[] = [];
   for (const row of rows) {
+    // for (const row of rows.slice(0, Math.floor(rows.length / 2))) {
     const obj = header.reduce((acc, key) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       acc[key as keyof T] = row[key];

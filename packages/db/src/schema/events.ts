@@ -51,13 +51,13 @@ export const events = pgSqlTable(
     created: timestamp("created").defaultNow(),
     updated: timestamp("updated").$onUpdate(() => new Date()),
   },
-  (events) => {
-    return {
+  (events) => [
+    {
       parentReference: foreignKey({
         columns: [events.seriesId],
         foreignColumns: [events.id],
         name: "events_series_id_fkey",
       }),
-    };
-  },
+    },
+  ],
 );

@@ -22,7 +22,8 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "with-env": "dotenv -e .env --",
-    "doppler": "pnpm exec ./tooling/scripts/doppler.sh"
+    "doppler": "pnpm exec ./tooling/scripts/doppler.sh",
+    "db:update-db": "pnpm -F db update-db"
   },
   "devDependencies": {
     "@f3/prettier-config": "workspace:^0.1.0",

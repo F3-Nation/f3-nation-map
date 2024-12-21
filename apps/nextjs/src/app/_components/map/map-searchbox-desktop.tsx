@@ -15,6 +15,7 @@ import { Input } from "@f3/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
 import { Spinner } from "@f3/ui/spinner";
 
+import { api } from "~/trpc/react";
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
 import { useKeyPress } from "~/utils/key-press/hook";
 import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";
@@ -36,6 +37,7 @@ export function MapSearchBox({
   !!hideLogo; // TODO: Remove this
   const text = searchStore.use.text();
   const [isFocused, setIsFocused] = useState(false);
+  const { data: workoutCount } = api.location.getWorkoutCount.useQuery();
   const { combinedResults } = useTextSearchResults();
   const [focusedIndex, setFocusedIndex] = useState(0);
   const shouldRedirectOnResult = useRef(false);
@@ -104,7 +106,7 @@ export function MapSearchBox({
               aria-expanded={isFocused}
               type="text"
               // placeholder="Search by location, zip, etc."
-              placeholder={`Search 4,368 free, peer-led workouts`}
+              placeholder={`Search ${workoutCount?.count === undefined ? "5000+" : workoutCount.count} free, peer-led workouts`}
               onFocus={() => {
                 setIsFocused(true);
                 setFocusedIndex(0);

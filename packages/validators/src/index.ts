@@ -8,6 +8,6 @@ export const EventSelectSchema = createSelectSchema(schema.events);
 
 export const CreateEventSchema = EventInsertSchema.omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created: true,
+  updated: true,
 });
