@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
-import { Plus, X } from "lucide-react";
+import { Edit, PlusCircle, X } from "lucide-react";
 
 import { DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
@@ -147,9 +147,9 @@ export const DesktopLocationPanelContent = () => {
                     "flex cursor-pointer flex-row items-center",
                     "rounded-sm",
                     "text-base text-white",
-                    "pl-1 pr-2 shadow",
+                    "px-2 shadow",
                     { "pointer-events-auto bg-blue-600": true },
-                    { "gap-2 py-[3px]": true },
+                    { "gap-2 py-0": true },
                   )}
                   onClick={() => {
                     const lat = results?.location.lat ?? 0;
@@ -175,7 +175,7 @@ export const DesktopLocationPanelContent = () => {
                     });
                   }}
                 >
-                  <Plus className="h-4 w-4" />
+                  <PlusCircle className="h-4 w-4" />
                   <span>Add Event</span>
                 </button>
               ) : null}
@@ -240,7 +240,7 @@ export const DesktopLocationPanelContent = () => {
 
           {mode === "edit" ? (
             <button
-              className="mt-4 rounded-md bg-blue-600 p-2 text-white"
+              className="mt-4 flex flex-row items-center justify-center gap-2 rounded-md bg-blue-600 px-2 py-1 text-white"
               onClick={(e) => {
                 const event = results?.events.find(
                   (event) => event.eventId === selectedEventId,
@@ -271,7 +271,8 @@ export const DesktopLocationPanelContent = () => {
                 e.stopPropagation();
               }}
             >
-              Edit Event
+              <Edit className="h-4 w-4" />
+              <span>Edit Event</span>
             </button>
           ) : null}
           <div className="h-8" />

@@ -9,14 +9,13 @@ import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
 import { DesktopLocationPanelContent } from "./map/desktop-location-panel-content";
 import DesktopSelectedItem from "./map/desktop-selected-item";
-import { EditButton } from "./map/edit-button";
 import { HelpButton } from "./map/help-button";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
 import { MobileFilterButtons } from "./map/mobile-filter-buttons";
 import { MobileSearchResultsAndNearbyLocations } from "./map/mobile-search-results-and-nearby-locations";
 import { MobileSelectedItem } from "./map/mobile-selected-item";
-import { TileButton } from "./map/tile-button";
+import { SettingsButton } from "./map/settings-button";
 import { UserLocationIcon } from "./map/user-location-icon";
 import { ZoomButtons } from "./map/zoom-buttons";
 
@@ -40,11 +39,11 @@ export const MapLayoutItems = () => {
       <DesktopTopRightButtons></DesktopTopRightButtons>
       {loaded && (
         <DesktopBottomLeftButtons>
-          <TileButton />
+          {/* <TileButton /> */}
         </DesktopBottomLeftButtons>
       )}
       <DesktopBottomRightButtons>
-        <EditButton />
+        <SettingsButton />
         <UserLocationIcon />
         <ZoomButtons />
       </DesktopBottomRightButtons>
@@ -55,8 +54,8 @@ export const MapLayoutItems = () => {
 
       {/* Mobile */}
       <MobileAboveSearchBox>
-        <div className="mb-1 flex w-full flex-row items-end justify-between px-1">
-          <TileButton className="size-9" />
+        <div className="mb-1 flex w-full flex-row items-end justify-end px-1">
+          {/* <TileButton className="size-9" /> */}
           <UserLocationIcon />
         </div>
         <div className="mb-[2px] flex flex-row gap-2 overflow-auto px-2 pb-[6px]">
@@ -66,6 +65,7 @@ export const MapLayoutItems = () => {
         <MobileSelectedItem />
       </MobileAboveSearchBox>
       <MobileTopRightButtons>
+        <SettingsButton />
         <ZoomButtons />
       </MobileTopRightButtons>
       <MobileAllFilters />
