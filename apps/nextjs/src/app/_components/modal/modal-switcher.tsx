@@ -7,6 +7,7 @@ import { BreakPoints } from "@f3/shared/app/constants";
 import { ModalType, useModalStore } from "~/utils/store/modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
+import SettingsModal from "./settings-modal";
 import { UpdateLocationModal } from "./update-location-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
 import { WorkoutDetailsModal } from "./workout-details-modal";
@@ -27,6 +28,8 @@ export default function ModalSwitcher() {
       return width >= Number(BreakPoints.LG) ? null : <WorkoutDetailsModal />;
     case ModalType.INFO:
       return <MapInfoModal />;
+    case ModalType.SETTINGS:
+      return <SettingsModal />;
     default:
       return null;
   }

@@ -180,7 +180,11 @@ export const UpdateLocationModal = () => {
           <form onSubmit={onSubmit} className="space-y-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
-                {mode === "edit-event" ? "Edit Event" : "Edit Location"}
+                {mode === "edit-event"
+                  ? "Edit Event"
+                  : mode === "new-location"
+                    ? "New Location"
+                    : "New Event"}
                 <p className="text-sm text-muted-foreground">
                   {lat?.toFixed(5)}, {lng?.toFixed(5)}
                 </p>
@@ -368,7 +372,7 @@ export const UpdateLocationModal = () => {
                 </p>
               </div>
 
-              <div className="col-span-2 space-y-2">
+              <div className="space-y-2 sm:col-span-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Workout Description
                 </div>

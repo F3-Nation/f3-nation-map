@@ -6,7 +6,6 @@ import { Minus, Plus } from "lucide-react";
 
 import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
-import { ThemeToggle } from "@f3/ui/theme";
 
 import { useMapRef } from "./map-ref-provider";
 
@@ -88,7 +87,6 @@ export const ZoomButtons = () => {
           <Minus size={16} className="text-foreground" />
         </button>
       </div>
-      <ThemeToggle />
     </>
   );
 };

@@ -78,7 +78,7 @@ export const EventChip = (props: {
         "flex flex-row items-center ",
         "rounded-sm",
         "text-xs text-white",
-        "px-1 shadow",
+        "px-2 shadow",
         { "pointer-events-none bg-muted": !isInteractive },
         { "bg-red-600": selected && isInteractive },
         { "bg-muted": !selected && isInteractive },

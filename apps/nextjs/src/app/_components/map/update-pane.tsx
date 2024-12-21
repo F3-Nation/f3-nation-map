@@ -20,7 +20,7 @@ export const UpdatePane = () => {
             eventHandlers={{
               click: () => {
                 openModal(ModalType.UPDATE_LOCATION, {
-                  mode: "new-event",
+                  mode: "new-location",
                   lat: updateLocation.lat,
                   lng: updateLocation.lng,
                 });

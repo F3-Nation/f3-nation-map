@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
+import { Edit, PlusCircle } from "lucide-react";
 
 import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
+import { cn } from "@f3/ui";
 import {
   Dialog,
   DialogContent,
@@ -11,16 +13,24 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 import { Skeleton } from "@f3/ui/skeleton";
+import { toast } from "@f3/ui/toast";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import { appStore } from "~/utils/store/app";
+import {
+  closeModal,
+  ModalType,
+  openModal,
+  useModalStore,
+} from "~/utils/store/modal";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
 export const WorkoutDetailsModal = () => {
+  const mode = appStore.use.mode();
   const { open, data: rawData } = useModalStore();
   const data = rawData as DataType[ModalType.WORKOUT_DETAILS];
   const locationId = typeof data.locationId === "number" ? data.locationId : -1;
@@ -81,12 +91,7 @@ export const WorkoutDetailsModal = () => {
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={() => {
-        closeModal();
-      }}
-    >
+    <Dialog open={open} onOpenChange={closeModal}>
       <DialogContent
         style={{ zIndex: Z_INDEX.WORKOUT_DETAILS_MODAL }}
         className="mb-40 rounded-lg px-4 sm:px-6 lg:rounded-none lg:px-8"
@@ -107,10 +112,46 @@ export const WorkoutDetailsModal = () => {
                   className="rounded-lg bg-black"
                 />
               </div>
-              <DialogTitle className="text-left text-2xl font-bold sm:text-4xl">
+              <DialogTitle className="line-clamp-2 flex-1 text-left text-2xl font-bold leading-6 sm:text-4xl">
                 {workout?.eventName ?? "Workout Information"}
               </DialogTitle>
             </DialogHeader>
+            {mode === "edit" ? (
+              <button
+                className="-mt-2 flex w-fit flex-row items-center gap-2 rounded-sm bg-blue-600 px-2 text-white"
+                onClick={() => {
+                  const event = results?.events.find(
+                    (event) => event.eventId === selectedEventId,
+                  );
+                  const lat = results?.location.lat;
+                  const lng = results?.location.lon;
+                  if (typeof lat !== "number" || typeof lng !== "number") {
+                    toast.error("Invalid lat or lng");
+                    return;
+                  }
+                  openModal(ModalType.UPDATE_LOCATION, {
+                    mode: "edit-event",
+                    locationId: locationId,
+                    eventId: selectedEventId,
+                    regionId: results?.location.regionId,
+                    workoutName: event?.eventName,
+                    workoutWebsite: results?.location.aoWebsite,
+                    aoLogo: results?.location.aoLogo,
+                    locationAddress: results?.location.locationAddress,
+                    lat: lat,
+                    lng: lng,
+                    startTime: event?.startTime,
+                    endTime: event?.endTime,
+                    dayOfWeek: event?.dayOfWeek,
+                    type: event?.type,
+                    eventDescription: event?.description,
+                  });
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit Event</span>
+              </button>
+            ) : null}
 
             <div>
               {(results?.events.length ?? 0) > 1
@@ -141,6 +182,44 @@ export const WorkoutDetailsModal = () => {
                     size={isLarge ? "large" : isMedium ? "medium" : "large"}
                   />
                 ))}
+                {mode === "edit" ? (
+                  <button
+                    className={cn(
+                      "flex cursor-pointer flex-row items-center",
+                      "rounded-sm",
+                      "text-base text-white",
+                      "px-2 shadow",
+                      { "pointer-events-auto bg-blue-600": true },
+                      { "gap-2 py-[0px]": true },
+                    )}
+                    onClick={() => {
+                      const lat = results?.location.lat ?? 0;
+                      const lng = results?.location.lon ?? 0;
+                      if (typeof lat !== "number" || typeof lng !== "number") {
+                        toast.error("Invalid lat or lng");
+                      }
+                      openModal(ModalType.UPDATE_LOCATION, {
+                        mode: "new-event",
+                        locationId: locationId,
+                        regionId: results?.location.regionId,
+                        eventId: -1,
+                        locationAddress: results?.location.locationAddress,
+                        lat: lat,
+                        lng: lng,
+                        workoutWebsite: results?.location.aoWebsite,
+                        aoLogo: results?.location.aoLogo,
+                        startTime: "00:00:00",
+                        endTime: "00:00:00",
+                        dayOfWeek: 0,
+                        type: "Bootcamp",
+                        eventDescription: "",
+                      });
+                    }}
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    <span>Add Event</span>
+                  </button>
+                ) : null}
               </div>
             </div>
             <div className="w-full">
@@ -203,12 +282,50 @@ export const WorkoutDetailsModal = () => {
             <div className="h-2" />
           </>
         )}
-        <button
-          className="text-foreground-500 flex w-full cursor-pointer justify-center text-center underline"
-          onClick={() => closeModal()}
-        >
-          close
-        </button>
+        <div className="flex w-full flex-row justify-center gap-4">
+          <button
+            className="text-foreground-500 cursor-pointer justify-center text-center underline"
+            onClick={() => closeModal()}
+          >
+            close
+          </button>
+          {mode === "edit" ? (
+            <button
+              className="rounded-md text-blue-600 underline"
+              onClick={(e) => {
+                const event = results?.events.find(
+                  (event) => event.eventId === selectedEventId,
+                );
+                const lat = results?.location.lat;
+                const lng = results?.location.lon;
+                if (typeof lat !== "number" || typeof lng !== "number") {
+                  toast.error("Invalid lat or lng");
+                  return;
+                }
+                openModal(ModalType.UPDATE_LOCATION, {
+                  mode: "edit-event",
+                  locationId: locationId,
+                  eventId: selectedEventId,
+                  regionId: results?.location.regionId,
+                  workoutName: event?.eventName,
+                  workoutWebsite: results?.location.aoWebsite,
+                  aoLogo: results?.location.aoLogo,
+                  locationAddress: results?.location.locationAddress,
+                  lat: lat,
+                  lng: lng,
+                  startTime: event?.startTime,
+                  endTime: event?.endTime,
+                  dayOfWeek: event?.dayOfWeek,
+                  type: event?.type,
+                  eventDescription: event?.description,
+                });
+                e.stopPropagation();
+              }}
+            >
+              edit event
+            </button>
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   );

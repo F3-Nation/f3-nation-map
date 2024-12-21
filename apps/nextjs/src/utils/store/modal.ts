@@ -9,12 +9,13 @@ export enum ModalType {
   UPDATE_LOCATION = "UPDATE_LOCATION",
   WORKOUT_DETAILS = "WORKOUT_DETAILS",
   INFO = "INFO",
+  SETTINGS = "SETTINGS",
 }
 
 export interface DataType {
   [ModalType.HOW_TO_JOIN]: null;
   [ModalType.UPDATE_LOCATION]: {
-    mode: "edit-event" | "new-ao" | "new-event";
+    mode: "edit-event" | "new-location" | "new-event";
     locationId?: number | null;
     eventId?: number | null;
     regionId?: number | null;
@@ -36,6 +37,7 @@ export interface DataType {
   };
   [ModalType.INFO]: null;
   [ModalType.USER_LOCATION_INFO]: null;
+  [ModalType.SETTINGS]: null;
 }
 
 export const useModalStore = create(() => ({
