@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm with-env next build",
+    "build": "pnpm -F db update-db && pnpm with-env next build",
     "clean": "rm -rf .turbo node_modules .next",
     "dev": "TZ=UTC pnpm with-env next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",

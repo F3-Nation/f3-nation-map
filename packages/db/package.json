@@ -16,13 +16,14 @@
     "studio": "pnpm with-env drizzle-kit studio",
     "drop": "pnpm with-env drizzle-kit drop",
     "typecheck": "tsc --noEmit",
-    "with-env": "dotenv -e ../../.env --"
+    "with-env": "dotenv -e ../../.env --",
+    "update-db": "pnpm with-env tsx src/update-db.ts"
   },
   "dependencies": {
     "@f3/env": "workspace:*",
     "@f3/shared": "workspace:*",
     "dotenv-cli": "^7.3.0",
-    "drizzle-orm": "^0.32.0",
+    "drizzle-orm": "^0.38.2",
     "esbuild-register": "^3.5.0",
     "pg": "^8.11.3",
     "postgres": "^3.4.3"
@@ -32,7 +33,7 @@
     "@f3/prettier-config": "workspace:*",
     "@f3/tsconfig": "workspace:*",
     "@faker-js/faker": "^8.1.0",
-    "drizzle-kit": "^0.23.0",
+    "drizzle-kit": "^0.30.1",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
