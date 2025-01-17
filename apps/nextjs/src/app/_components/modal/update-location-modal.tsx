@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import gte from "lodash/gte";
+import { Controller } from "react-hook-form";
 import { z } from "zod";
 
 import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
@@ -60,6 +61,7 @@ export const UpdateLocationModal = () => {
       locationAddress: z.string().min(1, {
         message: "Location address is required",
       }),
+      badImage: z.boolean().default(false),
     }),
     defaultValues: {
       workoutName: "",
@@ -75,6 +77,7 @@ export const UpdateLocationModal = () => {
       dayOfWeek: "",
       type: "",
       eventDescription: "",
+      badImage: false,
     },
     mode: "onBlur",
   });
@@ -96,6 +99,12 @@ export const UpdateLocationModal = () => {
 
   const onSubmit = form.handleSubmit(
     async (values) => {
+      if (values.badImage && !!values.aoLogo) {
+        form.setError("aoLogo", {
+          message: "Invalid image URL",
+        });
+        return;
+      }
       setIsSubmitting(true);
       console.log(values);
       appStore.setState({ myEmail: values.email });
@@ -294,9 +303,29 @@ export const UpdateLocationModal = () => {
                 <div className="text-sm font-medium text-muted-foreground">
                   AO Logo URL
                 </div>
-                <Input
-                  {...form.register("aoLogo")}
-                  disabled={formRegionId === null}
+                <Controller
+                  control={form.control}
+                  name="aoLogo"
+                  render={({ field }) => {
+                    return (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          {...field}
+                          disabled={formRegionId === null}
+                          className="flex-1"
+                        />
+                        <DebouncedImage
+                          src={field.value}
+                          onImageFail={() => {
+                            form.setValue("badImage", true);
+                          }}
+                          onImageSuccess={() => {
+                            form.setValue("badImage", false);
+                          }}
+                        />
+                      </div>
+                    );
+                  }}
                 />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.aoLogo?.message}
@@ -424,3 +453,37 @@ export const UpdateLocationModal = () => {
     </Dialog>
   );
 };
+
+function DebouncedImage({
+  src,
+  onImageFail,
+  onImageSuccess,
+}: {
+  src: string;
+  onImageFail: () => void;
+  onImageSuccess: () => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [image, setImage] = useState<string | null>(null);
+  useEffect(() => {
+    setLoading(true);
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setImage(src);
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [src]);
+  return loading ? (
+    <div className="size-8 animate-pulse rounded-md bg-gray-200" />
+  ) : image ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={image}
+      width={32}
+      height={32}
+      alt="AO Logo"
+      onError={onImageFail}
+      onLoad={onImageSuccess}
+    />
+  ) : null;
+}
