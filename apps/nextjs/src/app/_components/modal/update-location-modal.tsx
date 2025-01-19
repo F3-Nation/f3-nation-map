@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import gte from "lodash/gte";
 import { Controller } from "react-hook-form";
+import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
 import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
@@ -20,6 +21,8 @@ import { toast } from "@f3/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
+import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
+import { uploadLogo } from "~/utils/image/upload-logo";
 import { appStore } from "~/utils/store/app";
 import { closeModal, useModalStore } from "~/utils/store/modal";
 import { VirtualizedCombobox } from "../virtualized-combobox";
@@ -34,6 +37,7 @@ export const UpdateLocationModal = () => {
 
   const form = useForm({
     schema: z.object({
+      id: z.string(),
       workoutName: z.string().min(1, { message: "Workout name is required" }),
       workoutWebsite: z.string().nullable(),
       aoLogo: z.string(),
@@ -85,6 +89,7 @@ export const UpdateLocationModal = () => {
   // Get data information
   const formRegionId = form.watch("regionId");
   const formEventId = form.watch("eventId");
+  const formId = form.watch("id");
 
   const lat = data.lat;
   const lng = data.lng;
@@ -109,6 +114,7 @@ export const UpdateLocationModal = () => {
       console.log(values);
       appStore.setState({ myEmail: values.email });
       await updateLocation({
+        id: values.id,
         orgId: values.regionId,
         eventName: values.workoutName,
         submittedBy: appStore.get("myEmail"),
@@ -155,6 +161,7 @@ export const UpdateLocationModal = () => {
 
   useEffect(() => {
     form.reset({
+      id: uuid(),
       regionId: data.regionId ?? -1,
       eventId: data.eventId ?? -1,
       locationId: data.locationId ?? -1,
@@ -196,6 +203,9 @@ export const UpdateLocationModal = () => {
                     : "New Event"}
                 <p className="text-sm text-muted-foreground">
                   {lat?.toFixed(5)}, {lng?.toFixed(5)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Form ID: {formId}
                 </p>
               </DialogTitle>
             </DialogHeader>
@@ -301,28 +311,60 @@ export const UpdateLocationModal = () => {
 
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
-                  AO Logo URL
+                  AO Logo
                 </div>
                 <Controller
                   control={form.control}
                   name="aoLogo"
-                  render={({ field }) => {
+                  render={({ field: { onChange, value } }) => {
                     return (
                       <div className="flex items-center gap-2">
                         <Input
-                          {...field}
-                          disabled={formRegionId === null}
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            console.log("files", e.target.files);
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+
+                            const blob640 = await scaleAndCropImage(
+                              file,
+                              640,
+                              640,
+                            );
+                            if (!blob640) return;
+                            const url640 = await uploadLogo({
+                              file: blob640,
+                              regionId: formRegionId,
+                              requestId: formId,
+                            });
+                            onChange(url640);
+                            const blob64 = await scaleAndCropImage(
+                              file,
+                              64,
+                              64,
+                            );
+                            if (blob64) {
+                              void uploadLogo({
+                                file: blob64,
+                                regionId: formRegionId,
+                                requestId: formId,
+                                size: 64,
+                              });
+                            }
+                          }}
+                          disabled={formRegionId <= -1 || formRegionId === null}
                           className="flex-1"
                         />
-                        <DebouncedImage
-                          src={field.value}
-                          onImageFail={() => {
-                            form.setValue("badImage", true);
-                          }}
-                          onImageSuccess={() => {
-                            form.setValue("badImage", false);
-                          }}
-                        />
+                        {value && (
+                          <DebouncedImage
+                            src={value}
+                            onImageFail={() => form.setValue("badImage", true)}
+                            onImageSuccess={() =>
+                              form.setValue("badImage", false)
+                            }
+                          />
+                        )}
                       </div>
                     );
                   }}

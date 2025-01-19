@@ -411,6 +411,7 @@ export const locationRouter = createTRPCRouter({
   updateLocation: publicProcedure
     .input(
       z.object({
+        id: z.string(),
         locationName: z.string().nullish(),
         locationDescription: z.string().nullish(),
         locationLat: z.number().nullish(),
@@ -482,7 +483,7 @@ export const locationRouter = createTRPCRouter({
       return { success: true, inserted: omit(inserted, ["token"]) };
     }),
   validateSubmission: publicProcedure
-    .input(z.object({ token: z.string(), submissionId: z.number() }))
+    .input(z.object({ token: z.string(), submissionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [updateRequest] = await ctx.db
         .select()

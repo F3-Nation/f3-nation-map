@@ -3,7 +3,6 @@ import {
   date,
   integer,
   json,
-  serial,
   text,
   time,
   timestamp,
@@ -18,7 +17,7 @@ import { locations } from "./locations";
 import { orgs } from "./orgs";
 
 export const updateRequests = pgSqlTable("update_requests", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey(),
   token: uuid("token").defaultRandom().notNull(),
   orgId: integer("org_id").references(() => orgs.id),
 
