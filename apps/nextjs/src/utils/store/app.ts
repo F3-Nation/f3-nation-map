@@ -7,7 +7,7 @@ const initialState = {
   shadCnContainterRef: createRef<HTMLDivElement>(),
   ignoreNextNearbyItemMouseEnter: false,
   isMobileDeviceWidth: false,
-  mode: "edit" as "view" | "edit",
+  mode: "view" as "view" | "edit",
   myEmail: "",
 };
 
