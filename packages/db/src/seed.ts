@@ -96,7 +96,7 @@ enum EventCategories {
 }
 
 export async function insertDatabaseStructure(
-  _workoutData: WorkoutSheetData[],
+  _workoutData?: WorkoutSheetData[],
 ) {
   const orgTypes = await db
     .insert(schema.orgTypes)
@@ -342,7 +342,7 @@ export async function insertData(data: {
           description: aoOrg?.description, // AOs description is the address
           lat: safeParseFloat(ao.latitude),
           lon: safeParseFloat(ao.longitude),
-          orgId: aoOrg?.id,
+          orgId: aoOrg?.id ?? 0,
           meta: {
             latLonKey: ao.key,
             address1: events[0]?.["Address 1"],

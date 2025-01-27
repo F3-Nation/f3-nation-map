@@ -1,33 +1,26 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
       "version": "7",
-      "when": 1725127140148,
-      "tag": "0000_smart_ultragirl",
+      "when": 1737445397372,
+      "tag": "0000_cultured_puppet_master",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1728053560787,
-      "tag": "0001_naive_mongu",
+      "when": 1737453103973,
+      "tag": "0001_married_network",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1734753320665,
-      "tag": "0002_curvy_thunderball",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1737246086987,
-      "tag": "0003_loving_landau",
+      "when": 1737466206863,
+      "tag": "0002_fast_lethal_legion",
       "breakpoints": true
     }
   ]

@@ -140,7 +140,7 @@ export async function insertNewData(data: {
   console.log("about to get existing aos");
   const existingAOsByLatLonKey = existingAOs.reduce<UniqueAOsWithWorkouts>(
     (acc, ao) => {
-      const latLonKey = ao.orgs.meta?.latLonKey;
+      const latLonKey: string | undefined = ao.orgs.meta?.latLonKey;
       if (latLonKey === undefined) return acc;
       acc[latLonKey] = {
         ao: {
@@ -299,7 +299,7 @@ export async function insertNewData(data: {
           description: aoOrg?.description, // AOs description is the address
           lat: safeParseFloat(ao.latitude),
           lon: safeParseFloat(ao.longitude),
-          orgId: aoOrg?.id,
+          orgId: aoOrg?.id ?? 0,
           meta: {
             latLonKey: ao.key,
             address1: events[0]?.["Address 1"],

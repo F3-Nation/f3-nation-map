@@ -3,26 +3,28 @@ import postgres from "postgres";
 
 import { env } from "@f3/env";
 
-import { attendance } from "./schema/attendance";
-import { attendanceTypes } from "./schema/attendanceTypes";
 import {
   nextAuthAccounts,
   nextAuthSessions,
   nextAuthUsers,
   nextAuthVerificationTokens,
 } from "./schema/auth";
-import { eventCategories } from "./schema/eventCategories";
-import { events } from "./schema/events";
-import { eventTags } from "./schema/eventTags";
-import { eventTagsXOrg } from "./schema/eventTagsXOrg";
-import { eventTypes } from "./schema/eventTypes";
-import { eventTypesXOrg } from "./schema/eventTypesXOrg";
-import { locations } from "./schema/locations";
-import { orgs } from "./schema/orgs";
-import { orgTypes } from "./schema/orgTypes";
-import { slackUsers } from "./schema/slackUsers";
+import {
+  attendance,
+  attendanceTypes,
+  eventCategories,
+  events,
+  eventTags,
+  eventTagsXOrg,
+  eventTypes,
+  eventTypesXOrg,
+  locations,
+  orgs,
+  orgTypes,
+  slackUsers,
+  users,
+} from "./schema/schema";
 import { updateRequests } from "./schema/updateRequest";
-import { users } from "./schema/users";
 
 export const schema = {
   nextAuthAccounts,
@@ -44,8 +46,6 @@ export const schema = {
   slackUsers,
   updateRequests,
 };
-
-export { pgSqlTable as tableCreator } from "./schema/_table";
 
 const databaseUrl = env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is not defined");

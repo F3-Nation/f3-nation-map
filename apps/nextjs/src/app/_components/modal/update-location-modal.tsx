@@ -119,7 +119,7 @@ export const UpdateLocationModal = () => {
         eventName: values.workoutName,
         submittedBy: appStore.get("myEmail"),
         locationId: data.locationId,
-        eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
+        eventId: gte(data.eventId, 0) ? (data.eventId ?? null) : null,
         eventType: values.type,
         eventTag: null,
         eventStartTime: values.startTime ? values.startTime + ":00" : null,

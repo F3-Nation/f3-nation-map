@@ -12,9 +12,7 @@ import {
 
 import { customNumeric } from "../utils/custom-fields";
 import { pgSqlTable } from "./_table";
-import { events } from "./events";
-import { locations } from "./locations";
-import { orgs } from "./orgs";
+import { events, locations, orgs } from "./schema";
 
 export const updateRequests = pgSqlTable("update_requests", {
   id: uuid("id").primaryKey(),

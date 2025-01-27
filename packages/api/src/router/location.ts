@@ -205,7 +205,11 @@ export const locationRouter = createTRPCRouter({
 
     const locationEvents = data.reduce(
       (acc, item) => {
-        const location = item.location;
+        const location = {
+          ...item.location,
+          created: new Date(item.location.created),
+          updated: new Date(item.location.updated),
+        };
         const event = item.event;
         if (!acc[location.id]) {
           acc[location.id] = {
