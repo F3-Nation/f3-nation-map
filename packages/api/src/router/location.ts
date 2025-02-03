@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { aliasedTable, count, eq, inArray, schema } from "@f3/db";
 import { env } from "@f3/env";
+import { isTruthy } from "@f3/shared/common/functions";
 
 import { mail, Templates } from "../mail";
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -342,6 +343,40 @@ export const locationRouter = createTRPCRouter({
       logo: region.orgs.logo,
       website: region.orgs.website,
     }));
+  }),
+  getRegionsWithLocation: publicProcedure.query(async ({ ctx }) => {
+    const ao = aliasedTable(schema.orgs, "ao");
+    const region = aliasedTable(schema.orgs, "region");
+    const regionsWithLocation = await ctx.db
+      .select({
+        id: region.id,
+        name: region.name,
+        locationId: schema.locations.id,
+        lat: schema.locations.lat,
+        lon: schema.locations.lon,
+        logo: ao.logo,
+      })
+      .from(region)
+      .innerJoin(ao, eq(ao.parentId, region.id))
+      .innerJoin(schema.locations, eq(schema.locations.orgId, ao.id));
+
+    const uniqueRegionsWithLocation = regionsWithLocation
+      .map((rwl) =>
+        typeof rwl.lat === "number" && typeof rwl.lon === "number"
+          ? {
+              ...rwl,
+              lat: rwl.lat,
+              lon: rwl.lon,
+            }
+          : null,
+      )
+      .filter(isTruthy)
+      .filter(
+        (region, index, self) =>
+          index ===
+          self.findIndex((t) => t.id === region.id && t.name === region.name),
+      );
+    return uniqueRegionsWithLocation;
   }),
   getRegionAos: publicProcedure
     .input(z.object({ regionId: z.number() }))

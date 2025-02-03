@@ -4,12 +4,11 @@ import { useEffect } from "react";
 import { useWindowWidth } from "@react-hook/window-size";
 import { useMapEvents } from "react-leaflet";
 
-import { BreakPoints, SnapPoint } from "@f3/shared/app/constants";
+import { BreakPoints } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { isTouchDevice } from "~/utils/is-touch-device";
 import { appStore } from "~/utils/store/app";
-import { drawerStore } from "~/utils/store/drawer";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
 import { closeModal, ModalType, useModalStore } from "~/utils/store/modal";
@@ -43,9 +42,6 @@ export const MapListener = () => {
       if (modalState.open && modalState.type === ModalType.WORKOUT_DETAILS) {
         closeModal();
       }
-      drawerStore.setState((s) =>
-        s.snap === SnapPoint["pt-150px"] ? s : { snap: SnapPoint["pt-150px"] },
-      );
       // Special fn to prevent filtersState from being changed
       filterStore.setState((s) =>
         s.allFilters === true ? { allFilters: false } : s,
