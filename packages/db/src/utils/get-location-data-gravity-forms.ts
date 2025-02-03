@@ -38,6 +38,8 @@ const getSheetData = async <T>(params: {
 };
 
 export interface RegionSheetData {
+  Sector: string;
+  Area: string;
   "Region Name": string;
   "Closest Major City": string;
   Website: string;

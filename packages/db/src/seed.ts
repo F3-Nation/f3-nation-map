@@ -3,7 +3,11 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { env } from "@f3/env";
 import { DAY_ORDER } from "@f3/shared/app/constants";
-import { isTruthy, safeParseFloat } from "@f3/shared/common/functions";
+import {
+  isTruthy,
+  onlyUnique,
+  safeParseFloat,
+} from "@f3/shared/common/functions";
 
 import type { InferInsertModel } from ".";
 import type {
@@ -215,25 +219,97 @@ export async function insertData(data: {
   const eventTypes = await db.select().from(schema.eventTypes);
 
   const { workoutData, regionData } = data;
+  const sectorsToInsert = regionData
+    .map((d) => d.Sector || null)
+    .filter(isTruthy)
+    .filter(onlyUnique);
+  const sectorOrgType = orgTypes.find(
+    (ot) => ot.name === OrgTypes.Sector.toString(),
+  )?.id;
+  if (!sectorOrgType) throw new Error("Sector org type not found");
+
+  const insertedSectors = await db
+    .insert(schema.orgs)
+    .values(
+      sectorsToInsert.map((d) => ({
+        name: d,
+        isActive: true,
+        orgTypeId: sectorOrgType,
+      })),
+    )
+    .returning();
+  const sectorNameToId = insertedSectors.reduce(
+    (acc, d) => {
+      acc[d.name] = d.id;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  const areasToInsert = regionData
+    .map((d) => {
+      const sectorId = sectorNameToId[d.Sector];
+      if (sectorId === undefined || !d.Area) return null;
+      return { name: d.Area, sectorId };
+    })
+    .filter(isTruthy)
+    .filter(
+      (d, idx, arr) =>
+        d.name !== "" &&
+        d.sectorId !== undefined &&
+        arr.findIndex((d2) => d2.name === d.name) === idx,
+    );
+
+  const areaOrgType = orgTypes.find(
+    (ot) => ot.name === OrgTypes.Area.toString(),
+  )?.id;
+  if (!areaOrgType) throw new Error("Area org type not found");
+  const insertedAreas = await db
+    .insert(schema.orgs)
+    .values(
+      areasToInsert.map((d) => ({
+        name: d.name,
+        isActive: true,
+        orgTypeId: areaOrgType,
+        parentId: d.sectorId,
+      })),
+    )
+    .returning();
+
+  const areaNameToId = insertedAreas.reduce(
+    (acc, d) => {
+      acc[d.name] = d.id;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   const regions = await db
     .insert(schema.orgs)
     .values(
-      regionData.map((region) => {
-        const regionData: InferInsertModel<typeof schema.orgs> = {
-          name: region["Region Name"] ?? "",
-          isActive: true,
-          orgTypeId:
-            orgTypes.find((ot) => ot.name === OrgTypes.Region.toString())?.id ??
-            -1, // shouldn't ever happen
-          website: region.Website,
-          email: region["Region Email"],
-          description: undefined, // NOTE: currently no region descriptions
-          logo: undefined, // NOTE: currently no region logos
-          parentId: undefined, // NOTE: maybe this should be a sector?
-        };
-        return regionData;
-      }),
+      regionData
+        .map((region) => {
+          const areaId = areaNameToId[region.Area];
+          if (areaId === undefined) return null;
+          const regionData: InferInsertModel<typeof schema.orgs> = {
+            name: region["Region Name"] ?? "",
+            isActive: true,
+            orgTypeId:
+              orgTypes.find((ot) => ot.name === OrgTypes.Region.toString())
+                ?.id ?? -1, // shouldn't ever happen
+            website:
+              region.Website.includes("f3nation.com") ||
+              region.Website.includes(".slack.com")
+                ? undefined
+                : region.Website,
+            email: region["Region Email"],
+            description: undefined, // NOTE: currently no region descriptions
+            logo: undefined, // NOTE: currently no region logos
+            parentId: areaId,
+          };
+          return regionData;
+        })
+        .filter(isTruthy),
     )
     .onConflictDoNothing()
     .returning({ id: schema.orgTypes.id, name: schema.orgTypes.name });
