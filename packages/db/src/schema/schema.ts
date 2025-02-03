@@ -7,12 +7,15 @@ import {
   foreignKey,
   integer,
   json,
+  numeric,
   pgTable,
   primaryKey,
   serial,
+  text,
   time,
   timestamp,
   unique,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -54,17 +57,38 @@ export const magiclinkauthsession = pgTable("magiclinkauthsession", {
     .notNull(),
 });
 
-export const roles = pgTable("roles", {
-  id: serial().primaryKey().notNull(),
-  name: varchar().notNull(),
-  description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: serial().primaryKey().notNull(),
+    f3Name: varchar("f3_name"),
+    firstName: varchar("first_name"),
+    lastName: varchar("last_name"),
+    email: varchar().notNull(),
+    emailVerified: timestamp("email_verified", { mode: "string" }),
+    phone: varchar(),
+    homeRegionId: integer("home_region_id"),
+    avatarUrl: varchar("avatar_url"),
+    meta: json(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    emergencyContact: varchar("emergency_contact"),
+    emergencyPhone: varchar("emergency_phone"),
+    emergencyNotes: varchar("emergency_notes"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.homeRegionId],
+      foreignColumns: [orgs.id],
+      name: "users_home_region_id_fkey",
+    }),
+    unique("users_email_key").on(table.email),
+  ],
+);
 
 export const achievements = pgTable("achievements", {
   id: serial().primaryKey().notNull(),
@@ -127,170 +151,6 @@ export const orgs = pgTable(
   ],
 );
 
-export const permissions = pgTable("permissions", {
-  id: serial().primaryKey().notNull(),
-  name: varchar().notNull(),
-  description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-});
-
-export const locations = pgTable(
-  "locations",
-  {
-    id: serial().primaryKey().notNull(),
-    orgId: integer("org_id").notNull(),
-    name: varchar().notNull(),
-    email: varchar(),
-    description: varchar(),
-    isActive: boolean("is_active").notNull(),
-    latitude: doublePrecision(),
-    longitude: doublePrecision(),
-    addressStreet: varchar("address_street"),
-    addressCity: varchar("address_city"),
-    addressState: varchar("address_state"),
-    addressZip: varchar("address_zip"),
-    addressCountry: varchar("address_country"),
-    meta: json(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "locations_org_id_fkey",
-    }),
-  ],
-);
-
-export const positions = pgTable(
-  "positions",
-  {
-    id: serial().primaryKey().notNull(),
-    name: varchar().notNull(),
-    description: varchar(),
-    orgTypeId: integer("org_type_id"),
-    orgId: integer("org_id"),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "positions_org_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.orgTypeId],
-      foreignColumns: [orgTypes.id],
-      name: "positions_org_type_id_fkey",
-    }),
-  ],
-);
-
-export const slackSpaces = pgTable(
-  "slack_spaces",
-  {
-    id: serial().primaryKey().notNull(),
-    teamId: varchar("team_id").notNull(),
-    workspaceName: varchar("workspace_name"),
-    botToken: varchar("bot_token"),
-    settings: json(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [unique("slack_spaces_team_id_key").on(table.teamId)],
-);
-
-export const events = pgTable(
-  "events",
-  {
-    id: serial().primaryKey().notNull(),
-    orgId: integer("org_id").notNull(),
-    locationId: integer("location_id"),
-    seriesId: integer("series_id"),
-    isSeries: boolean("is_series").notNull(),
-    isActive: boolean("is_active").notNull(),
-    highlight: boolean().notNull(),
-    startDate: date("start_date").notNull(),
-    endDate: date("end_date"),
-    startTime: time("start_time"),
-    endTime: time("end_time"),
-    dayOfWeek: integer("day_of_week"),
-    name: varchar().notNull(),
-    description: varchar(),
-    recurrencePattern: varchar("recurrence_pattern"),
-    recurrenceInterval: integer("recurrence_interval"),
-    indexWithinInterval: integer("index_within_interval"),
-    paxCount: integer("pax_count"),
-    fngCount: integer("fng_count"),
-    preblast: varchar(),
-    backblast: varchar(),
-    preblastRich: json("preblast_rich"),
-    backblastRich: json("backblast_rich"),
-    preblastTs: doublePrecision("preblast_ts"),
-    backblastTs: doublePrecision("backblast_ts"),
-    meta: json(),
-    email: varchar(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.locationId],
-      foreignColumns: [locations.id],
-      name: "events_location_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "events_org_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.seriesId],
-      foreignColumns: [table.id],
-      name: "events_series_id_fkey",
-    }),
-  ],
-);
-
-export const expansions = pgTable("expansions", {
-  id: serial().primaryKey().notNull(),
-  area: varchar().notNull(),
-  pinnedLat: doublePrecision("pinned_lat").notNull(),
-  pinnedLon: doublePrecision("pinned_lon").notNull(),
-  userLat: doublePrecision("user_lat").notNull(),
-  userLon: doublePrecision("user_lon").notNull(),
-  interestedInOrganizing: boolean("interested_in_organizing").notNull(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-});
-
 export const attendance = pgTable(
   "attendance",
   {
@@ -337,43 +197,11 @@ export const attendanceTypes = pgTable("attendance_types", {
     .notNull(),
 });
 
-export const users = pgTable(
-  "users",
-  {
-    id: serial().primaryKey().notNull(),
-    f3Name: varchar("f3_name"),
-    firstName: varchar("first_name"),
-    lastName: varchar("last_name"),
-    email: varchar().notNull(),
-    emailVerified: timestamp("email_verified", { mode: "date" }),
-    phone: varchar(),
-    homeRegionId: integer("home_region_id"),
-    avatarUrl: varchar("avatar_url"),
-    meta: json(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    emergencyContact: varchar("emergency_contact"),
-    emergencyPhone: varchar("emergency_phone"),
-    emergencyNotes: varchar("emergency_notes"),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.homeRegionId],
-      foreignColumns: [orgs.id],
-      name: "users_home_region_id_fkey",
-    }),
-    unique("users_email_key").on(table.email),
-  ],
-);
-
-export const eventCategories = pgTable("event_categories", {
+export const eventTags = pgTable("event_tags", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
   description: varchar(),
+  color: varchar(),
   created: timestamp({ mode: "string" })
     .default(sql`timezone('utc'::text, now())`)
     .notNull(),
@@ -382,11 +210,10 @@ export const eventCategories = pgTable("event_categories", {
     .notNull(),
 });
 
-export const eventTags = pgTable("event_tags", {
+export const eventCategories = pgTable("event_categories", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
   description: varchar(),
-  color: varchar(),
   created: timestamp({ mode: "string" })
     .default(sql`timezone('utc'::text, now())`)
     .notNull(),
@@ -419,7 +246,94 @@ export const eventTypes = pgTable(
   ],
 );
 
+export const expansions = pgTable("expansions", {
+  id: serial().primaryKey().notNull(),
+  area: varchar().notNull(),
+  pinnedLat: doublePrecision("pinned_lat").notNull(),
+  pinnedLon: doublePrecision("pinned_lon").notNull(),
+  userLat: doublePrecision("user_lat").notNull(),
+  userLon: doublePrecision("user_lon").notNull(),
+  interestedInOrganizing: boolean("interested_in_organizing").notNull(),
+  created: timestamp({ mode: "string" })
+    .default(sql`timezone('utc'::text, now())`)
+    .notNull(),
+  updated: timestamp({ mode: "string" })
+    .default(sql`timezone('utc'::text, now())`)
+    .notNull(),
+});
+
 export const orgTypes = pgTable("org_types", {
+  id: serial().primaryKey().notNull(),
+  name: varchar().notNull(),
+  description: varchar(),
+  created: timestamp({ mode: "string" })
+    .default(sql`timezone('utc'::text, now())`)
+    .notNull(),
+  updated: timestamp({ mode: "string" })
+    .default(sql`timezone('utc'::text, now())`)
+    .notNull(),
+});
+
+export const slackSpaces = pgTable(
+  "slack_spaces",
+  {
+    id: serial().primaryKey().notNull(),
+    teamId: varchar("team_id").notNull(),
+    workspaceName: varchar("workspace_name"),
+    botToken: varchar("bot_token"),
+    settings: json(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table) => [unique("slack_spaces_team_id_key").on(table.teamId)],
+);
+
+export const positions = pgTable(
+  "positions",
+  {
+    id: serial().primaryKey().notNull(),
+    name: varchar().notNull(),
+    description: varchar(),
+    orgTypeId: integer("org_type_id"),
+    orgId: integer("org_id"),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "positions_org_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.orgTypeId],
+      foreignColumns: [orgTypes.id],
+      name: "positions_org_type_id_fkey",
+    }),
+  ],
+);
+
+export const permissions = pgTable("permissions", {
+  id: serial().primaryKey().notNull(),
+  name: varchar().notNull(),
+  description: varchar(),
+  created: timestamp({ mode: "string" })
+    .default(sql`timezone('utc'::text, now())`)
+    .notNull(),
+  updated: timestamp({ mode: "string" })
+    .default(sql`timezone('utc'::text, now())`)
+    .notNull(),
+});
+
+export const roles = pgTable("roles", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
   description: varchar(),
@@ -459,17 +373,214 @@ export const slackUsers = pgTable(
   },
   (table) => [
     foreignKey({
-      columns: [table.slackTeamId],
-      foreignColumns: [slackSpaces.teamId],
-      name: "slack_users_slack_team_id_fkey",
-    }),
-    foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
       name: "slack_users_user_id_fkey",
     }),
+    foreignKey({
+      columns: [table.slackTeamId],
+      foreignColumns: [slackSpaces.teamId],
+      name: "slack_users_slack_team_id_fkey",
+    }),
   ],
 );
+
+export const updateRequests = pgTable(
+  "update_requests",
+  {
+    id: uuid().primaryKey().notNull(),
+    token: uuid().defaultRandom().notNull(),
+    orgId: integer("org_id"),
+    eventId: integer("event_id"),
+    eventType: varchar("event_type", { length: 30 }),
+    eventTag: varchar("event_tag", { length: 30 }),
+    eventSeriesId: integer("event_series_id"),
+    eventIsSeries: boolean("event_is_series"),
+    eventIsActive: boolean("event_is_active"),
+    eventHighlight: boolean("event_highlight"),
+    eventStartDate: date("event_start_date"),
+    eventEndDate: date("event_end_date"),
+    eventStartTime: time("event_start_time"),
+    eventEndTime: time("event_end_time"),
+    eventDayOfWeek: varchar("event_day_of_week", { length: 30 }),
+    eventName: varchar("event_name", { length: 100 }).notNull(),
+    eventDescription: text("event_description"),
+    eventRecurrencePattern: varchar("event_recurrence_pattern", { length: 30 }),
+    eventRecurrenceInterval: integer("event_recurrence_interval"),
+    eventIndexWithinInterval: integer("event_index_within_interval"),
+    eventMeta: json("event_meta"),
+    locationName: text("location_name"),
+    locationDescription: text("location_description"),
+    locationLat: numeric("location_lat", { precision: 8, scale: 5 }),
+    locationLon: numeric("location_lon", { precision: 8, scale: 5 }),
+    locationId: integer("location_id"),
+    submittedBy: text("submitted_by"),
+    submitterValidated: boolean("submitter_validated").default(false),
+    validatedBy: text("validated_by"),
+    validatedAt: timestamp("validated_at", { mode: "string" }),
+    meta: json(),
+    created: timestamp({ mode: "string" }).defaultNow(),
+    updated: timestamp({ mode: "string" }),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "update_requests_org_id_orgs_id_fk",
+    }),
+    foreignKey({
+      columns: [table.eventId],
+      foreignColumns: [events.id],
+      name: "update_requests_event_id_events_id_fk",
+    }),
+    foreignKey({
+      columns: [table.locationId],
+      foreignColumns: [locations.id],
+      name: "update_requests_location_id_locations_id_fk",
+    }),
+  ],
+);
+
+export const events = pgTable(
+  "events",
+  {
+    id: serial().primaryKey().notNull(),
+    orgId: integer("org_id").notNull(),
+    locationId: integer("location_id"),
+    seriesId: integer("series_id"),
+    isSeries: boolean("is_series").notNull(),
+    isActive: boolean("is_active").notNull(),
+    highlight: boolean().notNull(),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
+    startTime: time("start_time"),
+    endTime: time("end_time"),
+    dayOfWeek: integer("day_of_week"),
+    name: varchar().notNull(),
+    description: varchar(),
+    recurrencePattern: varchar("recurrence_pattern"),
+    recurrenceInterval: integer("recurrence_interval"),
+    indexWithinInterval: integer("index_within_interval"),
+    paxCount: integer("pax_count"),
+    fngCount: integer("fng_count"),
+    preblast: varchar(),
+    backblast: varchar(),
+    preblastRich: json("preblast_rich"),
+    backblastRich: json("backblast_rich"),
+    preblastTs: doublePrecision("preblast_ts"),
+    backblastTs: doublePrecision("backblast_ts"),
+    meta: json(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    email: varchar(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.locationId],
+      foreignColumns: [locations.id],
+      name: "events_location_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "events_org_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.seriesId],
+      foreignColumns: [table.id],
+      name: "events_series_id_fkey",
+    }),
+  ],
+);
+
+export const locations = pgTable(
+  "locations",
+  {
+    id: serial().primaryKey().notNull(),
+    orgId: integer("org_id").notNull(),
+    name: varchar().notNull(),
+    description: varchar(),
+    isActive: boolean("is_active").notNull(),
+    latitude: doublePrecision(),
+    longitude: doublePrecision(),
+    addressStreet: varchar("address_street"),
+    addressCity: varchar("address_city"),
+    addressState: varchar("address_state"),
+    addressZip: varchar("address_zip"),
+    addressCountry: varchar("address_country"),
+    meta: json(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    email: varchar(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "locations_org_id_fkey",
+    }),
+  ],
+);
+
+export const authAccounts = pgTable(
+  "auth_accounts",
+  {
+    userId: integer().notNull(),
+    type: text().notNull(),
+    provider: text().notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refreshToken: text("refresh_token"),
+    accessToken: text("access_token"),
+    expiresAt: integer("expires_at"),
+    tokenType: text("token_type"),
+    scope: text(),
+    idToken: text("id_token"),
+    sessionState: text("session_state"),
+    created: timestamp({ mode: "string" }).defaultNow(),
+    updated: timestamp({ mode: "string" }),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [users.id],
+      name: "auth_accounts_userId_users_id_fk",
+    }).onDelete("cascade"),
+  ],
+);
+
+export const authSessions = pgTable(
+  "auth_sessions",
+  {
+    sessionToken: text("session_token").primaryKey().notNull(),
+    userId: integer().notNull(),
+    expires: timestamp({ mode: "string" }).notNull(),
+    created: timestamp({ mode: "string" }).defaultNow(),
+    updated: timestamp({ mode: "string" }),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [users.id],
+      name: "auth_sessions_userId_users_id_fk",
+    }).onDelete("cascade"),
+  ],
+);
+
+export const authVerificationToken = pgTable("auth_verification_token", {
+  identifier: text().notNull(),
+  token: text().notNull(),
+  expires: timestamp({ mode: "string" }).notNull(),
+  created: timestamp({ mode: "string" }).defaultNow(),
+  updated: timestamp({ mode: "string" }),
+});
 
 export const achievementsXOrg = pgTable(
   "achievements_x_org",
@@ -491,30 +602,6 @@ export const achievementsXOrg = pgTable(
     primaryKey({
       columns: [table.achievementId, table.orgId],
       name: "achievements_x_org_pkey",
-    }),
-  ],
-);
-
-export const rolesXPermissions = pgTable(
-  "roles_x_permissions",
-  {
-    roleId: integer("role_id").notNull(),
-    permissionId: integer("permission_id").notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.permissionId],
-      foreignColumns: [permissions.id],
-      name: "roles_x_permissions_permission_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.roleId],
-      foreignColumns: [roles.id],
-      name: "roles_x_permissions_role_id_fkey",
-    }),
-    primaryKey({
-      columns: [table.roleId, table.permissionId],
-      name: "roles_x_permissions_pkey",
     }),
   ],
 );
@@ -615,27 +702,53 @@ export const orgsXSlackSpaces = pgTable(
   ],
 );
 
-export const eventTagsXOrg = pgTable(
-  "event_tags_x_org",
+export const rolesXPermissions = pgTable(
+  "roles_x_permissions",
   {
-    eventTagId: integer("event_tag_id").notNull(),
-    orgId: integer("org_id").notNull(),
-    colorOverride: varchar("color_override"),
+    roleId: integer("role_id").notNull(),
+    permissionId: integer("permission_id").notNull(),
   },
   (table) => [
     foreignKey({
-      columns: [table.eventTagId],
-      foreignColumns: [eventTags.id],
-      name: "event_tags_x_org_event_tag_id_fkey",
+      columns: [table.permissionId],
+      foreignColumns: [permissions.id],
+      name: "roles_x_permissions_permission_id_fkey",
     }),
     foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "event_tags_x_org_org_id_fkey",
+      columns: [table.roleId],
+      foreignColumns: [roles.id],
+      name: "roles_x_permissions_role_id_fkey",
     }),
     primaryKey({
-      columns: [table.eventTagId, table.orgId],
-      name: "event_tags_x_org_pkey",
+      columns: [table.roleId, table.permissionId],
+      name: "roles_x_permissions_pkey",
+    }),
+  ],
+);
+
+export const achievementsXUsers = pgTable(
+  "achievements_x_users",
+  {
+    achievementId: integer("achievement_id").notNull(),
+    userId: integer("user_id").notNull(),
+    dateAwarded: timestamp("date_awarded", { mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.achievementId],
+      foreignColumns: [achievements.id],
+      name: "achievements_x_users_achievement_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [users.id],
+      name: "achievements_x_users_user_id_fkey",
+    }),
+    primaryKey({
+      columns: [table.achievementId, table.userId],
+      name: "achievements_x_users_pkey",
     }),
   ],
 );
@@ -661,6 +774,31 @@ export const eventTypesXOrg = pgTable(
     primaryKey({
       columns: [table.eventTypeId, table.orgId],
       name: "event_types_x_org_pkey",
+    }),
+  ],
+);
+
+export const eventTagsXOrg = pgTable(
+  "event_tags_x_org",
+  {
+    eventTagId: integer("event_tag_id").notNull(),
+    orgId: integer("org_id").notNull(),
+    colorOverride: varchar("color_override"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.eventTagId],
+      foreignColumns: [eventTags.id],
+      name: "event_tags_x_org_event_tag_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "event_tags_x_org_org_id_fkey",
+    }),
+    primaryKey({
+      columns: [table.eventTagId, table.orgId],
+      name: "event_tags_x_org_pkey",
     }),
   ],
 );
@@ -721,33 +859,6 @@ export const rolesXUsersXOrg = pgTable(
     primaryKey({
       columns: [table.roleId, table.userId, table.orgId],
       name: "roles_x_users_x_org_pkey",
-    }),
-  ],
-);
-
-export const achievementsXUsers = pgTable(
-  "achievements_x_users",
-  {
-    achievementId: integer("achievement_id").notNull(),
-    userId: integer("user_id").notNull(),
-    dateAwarded: timestamp("date_awarded", { mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.achievementId],
-      foreignColumns: [achievements.id],
-      name: "achievements_x_users_achievement_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.userId],
-      foreignColumns: [users.id],
-      name: "achievements_x_users_user_id_fkey",
-    }),
-    primaryKey({
-      columns: [table.achievementId, table.userId],
-      name: "achievements_x_users_pkey",
     }),
   ],
 );
