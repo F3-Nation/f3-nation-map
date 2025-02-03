@@ -5,7 +5,7 @@ import { pgSqlTable } from "./_table";
 import { users } from "./schema";
 
 export const nextAuthAccounts = pgSqlTable(
-  "accounts",
+  "auth_accounts",
   {
     userId: integer("userId")
       .notNull()
@@ -35,7 +35,7 @@ export const nextAuthAccounts = pgSqlTable(
   ],
 );
 
-export const nextAuthSessions = pgSqlTable("sessions", {
+export const nextAuthSessions = pgSqlTable("auth_sessions", {
   sessionToken: text("session_token").notNull().primaryKey(),
   userId: integer("userId")
     .notNull()
@@ -46,7 +46,7 @@ export const nextAuthSessions = pgSqlTable("sessions", {
 });
 
 export const nextAuthVerificationTokens = pgSqlTable(
-  "verification_token",
+  "auth_verification_token",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
