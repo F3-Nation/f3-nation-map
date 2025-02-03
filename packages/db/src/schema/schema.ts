@@ -147,6 +147,7 @@ export const locations = pgTable(
     id: serial().primaryKey().notNull(),
     orgId: integer("org_id").notNull(),
     name: varchar().notNull(),
+    email: varchar(),
     description: varchar(),
     isActive: boolean("is_active").notNull(),
     lat: doublePrecision(),
@@ -250,6 +251,7 @@ export const events = pgTable(
     preblastTs: doublePrecision("preblast_ts"),
     backblastTs: doublePrecision("backblast_ts"),
     meta: json(),
+    email: varchar(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
