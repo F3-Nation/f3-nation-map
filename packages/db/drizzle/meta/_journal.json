@@ -15,6 +15,13 @@
       "when": 1738546006910,
       "tag": "0001_ambiguous_lionheart",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1738557226944,
+      "tag": "0002_magical_hiroim",
+      "breakpoints": true
     }
   ]
 }
