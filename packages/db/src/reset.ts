@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm/sql";
 import { env } from "@f3/env";
 
 import { db } from ".";
+import { alembicVersion } from "./schema/schema";
 
 const databaseUrl = env.DATABASE_URL;
 
@@ -29,12 +30,9 @@ export const reset = async () => {
 
   // We need to manually handle the alembic version table for moneyball's work
   let version_num: string | undefined;
-  try{
-
-    const [result] = await db.execute(sql`
-    SELECT version_num FROM alembic_version
-  `);
-    const version_num = result?.version_num;
+  try {
+    const [result] = await db.select().from(alembicVersion);
+    version_num = result?.versionNum;
     console.log("Alembic version", version_num);
   } catch (e) {
     console.log("Alembic version not found");
@@ -61,12 +59,6 @@ export const reset = async () => {
   }
 
   // We need to manually handle the alembic version table for moneyball's work
-  await db.execute(sql`
-    CREATE TABLE alembic_version (
-    version_num VARCHAR(32) NOT NULL,
-    CONSTRAINT alembic_version_pkey PRIMARY KEY (version_num)
-    );
-  `);
   if (version_num) {
     await db.execute(sql`
       INSERT INTO alembic_version (version_num) VALUES (${version_num});

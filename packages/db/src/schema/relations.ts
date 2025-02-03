@@ -146,6 +146,10 @@ export const eventCategoriesRelations = relations(
 );
 
 export const slackUsersRelations = relations(slackUsers, ({ one }) => ({
+  slackSpace: one(slackSpaces, {
+    fields: [slackUsers.slackTeamId],
+    references: [slackSpaces.teamId],
+  }),
   user: one(users, {
     fields: [slackUsers.userId],
     references: [users.id],
@@ -263,6 +267,7 @@ export const orgsXSlackSpacesRelations = relations(
 );
 
 export const slackSpacesRelations = relations(slackSpaces, ({ many }) => ({
+  slackUsers: many(slackUsers),
   orgsXSlackSpaces: many(orgsXSlackSpaces),
 }));
 

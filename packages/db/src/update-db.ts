@@ -107,7 +107,7 @@ export async function insertNewData(data: {
       website: region.Website,
       email: region["Region Email"],
       description: undefined, // NOTE: currently no region descriptions
-      logo: undefined, // NOTE: currently no region logos
+      logoUrl: undefined, // NOTE: currently no region logos
       parentId: undefined, // NOTE: maybe this should be a sector?
     };
     return regionData;
@@ -147,8 +147,8 @@ export async function insertNewData(data: {
           orgId: ao.orgs.id,
           locationId: ao.locations.id,
           regionId: ao.orgs.parentId ?? -1,
-          latitude: ao.locations.lat?.toString() ?? null,
-          longitude: ao.locations.lon?.toString() ?? null,
+          latitude: ao.locations.latitude?.toString() ?? null,
+          longitude: ao.locations.longitude?.toString() ?? null,
           key: latLonKey,
         },
         events: [],
@@ -241,7 +241,7 @@ export async function insertNewData(data: {
           isActive: true,
           orgTypeId:
             orgTypes.find((ot) => ot.name === OrgTypes.AO.toString())?.id ?? -1,
-          logo: events[0]?.Logo,
+          logoUrl: events[0]?.Logo,
           parentId: ao.regionId,
           description: address,
           website: events[0]?.Website,
@@ -264,7 +264,7 @@ export async function insertNewData(data: {
         name: sql`excluded.name`,
         isActive: sql`excluded.is_active`,
         orgTypeId: sql`excluded.org_type_id`,
-        logo: sql`excluded.logo`,
+        logoUrl: sql`excluded.logo_url`,
         parentId: sql`excluded.parent_id`,
         description: sql`excluded.description`,
         website: sql`excluded.website`,
@@ -297,8 +297,8 @@ export async function insertNewData(data: {
           name: "", // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
           description: aoOrg?.description, // AOs description is the address
-          lat: safeParseFloat(ao.latitude),
-          lon: safeParseFloat(ao.longitude),
+          latitude: safeParseFloat(ao.latitude),
+          longitude: safeParseFloat(ao.longitude),
           orgId: aoOrg?.id ?? 0,
           meta: {
             latLonKey: ao.key,
@@ -318,8 +318,8 @@ export async function insertNewData(data: {
       set: {
         name: sql`excluded.name`,
         description: sql`excluded.description`,
-        lat: sql`excluded.lat`,
-        lon: sql`excluded.lon`,
+        latitude: sql`excluded.latitude`,
+        longitude: sql`excluded.longitude`,
         orgId: sql`excluded.org_id`,
         meta: sql`excluded.meta`,
       },
@@ -339,7 +339,10 @@ export async function insertNewData(data: {
         const workoutAoLoc = aoLocs.find(
           (aoItem) =>
             ao.key ===
-            getLatLonKey({ latitude: aoItem.lat, longitude: aoItem.lon }),
+            getLatLonKey({
+              latitude: aoItem.latitude,
+              longitude: aoItem.longitude,
+            }),
         );
 
         const [startTimeRaw, endTimeRaw] = workout.Time.split("-").map((time) =>
@@ -362,7 +365,10 @@ export async function insertNewData(data: {
           startTime: startTime?.isValid() ? startTime.format("h:mm a") : null,
           endTime: endTime?.isValid() ? endTime.format("h:mm a") : null,
           name: workout["Workout Name"].slice(0, 100),
-          eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
+          meta: {
+            eventType: workout.Type,
+            eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
+          },
           description: workout.Note,
           recurrencePattern: "weekly",
           orgId: ao.regionId,
@@ -382,6 +388,25 @@ export async function insertNewData(data: {
     await db.insert(schema.events).values(eventsChunk).returning();
     console.log("inserted events", i + eventsChunk.length);
   }
+
+  const insertedEvents = await db.select().from(schema.events);
+  console.log("inserted events", insertedEvents.length, insertedEvents[0]);
+
+  await db.insert(schema.eventsXEventTypes).values(
+    insertedEvents
+      .map((event) =>
+        // @ts-expect-error -- meta type
+        typeof event.meta?.eventTypeId !== "number"
+          ? null
+          : {
+              eventId: event.id,
+              // @ts-expect-error -- meta type
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              eventTypeId: event.meta?.eventTypeId,
+            },
+      )
+      .filter(isTruthy),
+  );
 }
 
 const getLatLonKey = ({

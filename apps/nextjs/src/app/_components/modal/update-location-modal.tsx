@@ -120,7 +120,16 @@ export const UpdateLocationModal = () => {
         submittedBy: appStore.get("myEmail"),
         locationId: data.locationId,
         eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
-        eventType: values.type,
+        eventTypes:
+          values.type === "Bootcamp"
+            ? [{ id: 1, name: "Bootcamp" }]
+            : values.type === "Ruck"
+              ? [{ id: 2, name: "Ruck" }]
+              : values.type === "Run"
+                ? [{ id: 3, name: "Run" }]
+                : values.type === "Swim"
+                  ? [{ id: 4, name: "Swim" }]
+                  : [],
         eventTag: null,
         eventStartTime: values.startTime ? values.startTime + ":00" : null,
         eventEndTime: values.endTime ? values.endTime + ":00" : null,
@@ -175,7 +184,7 @@ export const UpdateLocationModal = () => {
       endTime: data.endTime?.slice(0, 5) ?? "06:15",
       dayOfWeek:
         typeof data.dayOfWeek === "number" ? DAY_ORDER[data.dayOfWeek] : "",
-      type: data.type ?? "Bootcamp",
+      type: data.types?.[0]?.name ?? "Bootcamp",
       eventDescription: data.eventDescription ?? "",
       email: appStore.get("myEmail"),
     });

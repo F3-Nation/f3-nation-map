@@ -39,6 +39,7 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.eventTagsXOrg);
   await db.delete(schema.eventTypes);
   await db.delete(schema.eventTypesXOrg);
+  await db.delete(schema.eventsXEventTypes);
   await db.delete(schema.locations);
   await db.delete(schema.orgTypes);
   await db.delete(schema.slackUsers);
@@ -142,6 +143,7 @@ export async function insertDatabaseStructure(
     .insert(schema.eventTypes)
     .values([
       {
+        id: 1,
         name: EventTypes.Bootcamp,
         acronym: "BC",
         categoryId:
@@ -151,6 +153,7 @@ export async function insertDatabaseStructure(
           )?.id ?? -1,
       },
       {
+        id: 2,
         name: EventTypes.Run,
         acronym: "RU",
         categoryId:
@@ -160,6 +163,7 @@ export async function insertDatabaseStructure(
           )?.id ?? -1,
       },
       {
+        id: 3,
         name: EventTypes.Ruck,
         acronym: "RK",
         categoryId:
@@ -169,6 +173,7 @@ export async function insertDatabaseStructure(
           )?.id ?? -1,
       },
       {
+        id: 4,
         name: EventTypes.QSource,
         acronym: "QS",
         categoryId:
@@ -178,6 +183,7 @@ export async function insertDatabaseStructure(
           )?.id ?? -1,
       },
       {
+        id: 5,
         name: EventTypes.Swim,
         acronym: "SW",
         categoryId:
@@ -187,6 +193,7 @@ export async function insertDatabaseStructure(
           )?.id ?? -1,
       },
       {
+        id: 6,
         name: EventTypes.Other,
         acronym: "OT",
         categoryId:
@@ -304,7 +311,6 @@ export async function insertData(data: {
                 : region.Website,
             email: region["Region Email"],
             description: undefined, // NOTE: currently no region descriptions
-            logo: undefined, // NOTE: currently no region logos
             parentId: areaId,
           };
           return regionData;
@@ -374,7 +380,7 @@ export async function insertData(data: {
           isActive: true,
           orgTypeId:
             orgTypes.find((ot) => ot.name === OrgTypes.AO.toString())?.id ?? -1,
-          logo: events[0]?.Logo,
+          logoUrl: events[0]?.Logo,
           parentId: ao.regionId,
           description: address,
           website: events[0]?.Website,
@@ -415,8 +421,8 @@ export async function insertData(data: {
           name: "", // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
           description: aoOrg?.description, // AOs description is the address
-          lat: safeParseFloat(ao.latitude),
-          lon: safeParseFloat(ao.longitude),
+          latitude: safeParseFloat(ao.latitude),
+          longitude: safeParseFloat(ao.longitude),
           orgId: aoOrg?.id ?? 0,
           meta: {
             latLonKey: ao.key,
@@ -442,7 +448,10 @@ export async function insertData(data: {
         const workoutAoLoc = aoLocs.find(
           (aoItem) =>
             ao.key ===
-            getLatLonKey({ latitude: aoItem.lat, longitude: aoItem.lon }),
+            getLatLonKey({
+              latitude: aoItem.latitude,
+              longitude: aoItem.longitude,
+            }),
         );
 
         const [startTimeRaw, endTimeRaw] = workout.Time.split("-").map((time) =>
@@ -465,10 +474,14 @@ export async function insertData(data: {
           startTime: startTime?.isValid() ? startTime.format("h:mm a") : null,
           endTime: endTime?.isValid() ? endTime.format("h:mm a") : null,
           name: workout["Workout Name"].slice(0, 100),
-          eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
+          // eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
           description: workout.Note,
           recurrencePattern: "weekly",
           orgId: ao.regionId,
+          meta: {
+            eventType: workout.Type,
+            eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id,
+          },
         };
         return workoutItem;
       });
@@ -480,6 +493,34 @@ export async function insertData(data: {
     const eventsChunk = eventsToInsert.slice(i, i + chunkSize);
     await db.insert(schema.events).values(eventsChunk).returning();
     console.log("inserted events", i + eventsChunk.length);
+  }
+
+  const insertedEvents = await db.select().from(schema.events);
+
+  const eventXEventTypesToInsert: InferInsertModel<
+    typeof schema.eventsXEventTypes
+  >[] = Object.values(insertedEvents)
+    .map((event) => {
+      // @ts-expect-error -- meta type
+      const eventTypeId = event.meta?.eventTypeId as number;
+      if (!eventTypeId) return null;
+      return {
+        eventId: event.id,
+        eventTypeId,
+      };
+    })
+    .filter(isTruthy);
+
+  for (let i = 0; i < eventXEventTypesToInsert.length; i += chunkSize) {
+    const eventXEventTypesChunk = eventXEventTypesToInsert.slice(
+      i,
+      i + chunkSize,
+    );
+    await db
+      .insert(schema.eventsXEventTypes)
+      .values(eventXEventTypesChunk)
+      .returning();
+    console.log("inserted eventXEventTypes", i + eventXEventTypesChunk.length);
   }
 }
 

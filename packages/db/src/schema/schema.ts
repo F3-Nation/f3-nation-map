@@ -10,7 +10,6 @@ import {
   pgTable,
   primaryKey,
   serial,
-  text,
   time,
   timestamp,
   unique,
@@ -92,14 +91,13 @@ export const orgs = pgTable(
     description: varchar(),
     isActive: boolean("is_active").notNull(),
     logoUrl: varchar("logo_url"),
-    logo: text("logo"),
     website: varchar(),
     email: varchar(),
     twitter: varchar(),
     facebook: varchar(),
     instagram: varchar(),
     lastAnnualReview: date("last_annual_review"),
-    meta: json("meta").$type<{
+    meta: json().$type<{
       latLonKey?: string;
       address1?: string;
       address2?: string;
@@ -150,8 +148,8 @@ export const locations = pgTable(
     email: varchar(),
     description: varchar(),
     isActive: boolean("is_active").notNull(),
-    lat: doublePrecision(),
-    lon: doublePrecision(),
+    latitude: doublePrecision(),
+    longitude: doublePrecision(),
     addressStreet: varchar("address_street"),
     addressCity: varchar("address_city"),
     addressState: varchar("address_state"),
@@ -227,7 +225,6 @@ export const events = pgTable(
     id: serial().primaryKey().notNull(),
     orgId: integer("org_id").notNull(),
     locationId: integer("location_id"),
-    eventTypeId: integer("event_type_id"),
     seriesId: integer("series_id"),
     isSeries: boolean("is_series").notNull(),
     isActive: boolean("is_active").notNull(),
@@ -274,11 +271,6 @@ export const events = pgTable(
       columns: [table.seriesId],
       foreignColumns: [table.id],
       name: "events_series_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.eventTypeId],
-      foreignColumns: [eventTypes.id],
-      name: "events_event_type_id_fkey",
     }),
   ],
 );
@@ -352,7 +344,7 @@ export const users = pgTable(
     f3Name: varchar("f3_name"),
     firstName: varchar("first_name"),
     lastName: varchar("last_name"),
-    email: varchar("email").notNull(),
+    email: varchar().notNull(),
     emailVerified: timestamp("email_verified", { mode: "date" }),
     phone: varchar(),
     homeRegionId: integer("home_region_id"),
@@ -466,6 +458,11 @@ export const slackUsers = pgTable(
       .notNull(),
   },
   (table) => [
+    foreignKey({
+      columns: [table.slackTeamId],
+      foreignColumns: [slackSpaces.teamId],
+      name: "slack_users_slack_team_id_fkey",
+    }),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
