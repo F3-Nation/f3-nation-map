@@ -34,8 +34,23 @@ export type LocationMarkerEventWithLatLon = F3Marker["events"][number] & {
 //     locationDescription: string | null;
 //   };
 
-export interface F3MapSearchResult {
+export interface F3RegionMapSearchResult {
   header: string;
+  type: "region";
+  destination: {
+    id: number;
+    lat: number;
+    lng: number;
+    logo: string | null;
+    locationId: number;
+    placeId: null;
+    item: null;
+  };
+}
+
+export interface F3LocationMapSearchResult {
+  header: string;
+  type: "location";
   // description: string;
   destination: {
     id: number;
@@ -56,6 +71,7 @@ export interface F3MapSearchResult {
 
 export interface GeoMapSearchResult {
   header: string;
+  type: "geo";
   description: string;
   destination: {
     id: string;
@@ -66,14 +82,29 @@ export interface GeoMapSearchResult {
   };
 }
 
-export const isF3MapSearchResult = (
-  result: F3MapSearchResult | GeoMapSearchResult,
-): result is F3MapSearchResult => {
-  return result.destination.item !== null;
+export const isF3LocationMapSearchResult = (
+  result:
+    | F3LocationMapSearchResult
+    | GeoMapSearchResult
+    | F3RegionMapSearchResult,
+): result is F3LocationMapSearchResult => {
+  return result.type === "location";
 };
 
 export const isGeoMapSearchResult = (
-  result: F3MapSearchResult | GeoMapSearchResult,
+  result:
+    | F3LocationMapSearchResult
+    | GeoMapSearchResult
+    | F3RegionMapSearchResult,
 ): result is GeoMapSearchResult => {
-  return result.destination.item === null;
+  return result.type === "geo";
+};
+
+export const isF3RegionMapSearchResult = (
+  result:
+    | F3LocationMapSearchResult
+    | GeoMapSearchResult
+    | F3RegionMapSearchResult,
+): result is F3RegionMapSearchResult => {
+  return result.type === "region";
 };

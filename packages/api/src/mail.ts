@@ -10,7 +10,7 @@ import { env } from "@f3/env";
 
 import type { feedbackSchema } from "./router/feedback";
 
-const isLocalDevelopment = false && process.env.NODE_ENV !== "production";
+const isLocalDevelopment = process.env.NODE_ENV !== "production";
 export enum Templates {
   feedbackForm = "feedback-form",
   validateSubmission = "validate-submission",
@@ -31,7 +31,7 @@ export interface TemplateType {
   [Templates.feedbackForm]: z.infer<typeof feedbackSchema>;
   [Templates.validateSubmission]: {
     token: string;
-    submissionId: number;
+    submissionId: string;
     regionName: string;
     eventName: string;
     address: string;

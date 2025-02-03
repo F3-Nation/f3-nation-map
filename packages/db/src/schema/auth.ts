@@ -2,23 +2,14 @@ import type { AdapterAccount } from "@auth/core/adapters";
 import { integer, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 import { pgSqlTable } from "./_table";
-
-export const nextAuthUsers = pgSqlTable("next_auth_users", {
-  id: text("id").notNull().primaryKey(),
-  name: text("name"),
-  email: text("email").notNull(),
-  emailVerified: timestamp("email_verified", { mode: "date" }),
-  image: text("image"),
-  created: timestamp("created").defaultNow(),
-  updated: timestamp("updated").$onUpdate(() => new Date()),
-});
+import { users } from "./schema";
 
 export const nextAuthAccounts = pgSqlTable(
-  "next_auth_accounts",
+  "accounts",
   {
-    userId: text("userId")
+    userId: integer("userId")
       .notNull()
-      .references(() => nextAuthUsers.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     type: text("type").$type<AdapterAccount["type"]>().notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("provider_account_id").notNull(),
@@ -32,25 +23,30 @@ export const nextAuthAccounts = pgSqlTable(
     created: timestamp("created").defaultNow(),
     updated: timestamp("updated").$onUpdate(() => new Date()),
   },
-  (nextAuthAccounts) => ({
-    compoundKey: primaryKey({
-      columns: [nextAuthAccounts.provider, nextAuthAccounts.providerAccountId],
-    }),
-  }),
+  (nextAuthAccounts) => [
+    {
+      compoundKey: primaryKey({
+        columns: [
+          nextAuthAccounts.provider,
+          nextAuthAccounts.providerAccountId,
+        ],
+      }),
+    },
+  ],
 );
 
-export const nextAuthSessions = pgSqlTable("next_auth_sessions", {
+export const nextAuthSessions = pgSqlTable("sessions", {
   sessionToken: text("session_token").notNull().primaryKey(),
-  userId: text("userId")
+  userId: integer("userId")
     .notNull()
-    .references(() => nextAuthUsers.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
   created: timestamp("created").defaultNow(),
   updated: timestamp("updated").$onUpdate(() => new Date()),
 });
 
 export const nextAuthVerificationTokens = pgSqlTable(
-  "next_auth_verification_token",
+  "verification_token",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
@@ -58,7 +54,9 @@ export const nextAuthVerificationTokens = pgSqlTable(
     created: timestamp("created").defaultNow(),
     updated: timestamp("updated").$onUpdate(() => new Date()),
   },
-  (vt) => ({
-    compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  }),
+  (vt) => [
+    {
+      compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
+    },
+  ],
 );

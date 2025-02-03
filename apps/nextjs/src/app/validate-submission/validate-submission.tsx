@@ -14,7 +14,7 @@ export async function ValidateSubmission({
   try {
     result = await api.location.validateSubmission({
       token,
-      submissionId: Number(submissionId),
+      submissionId,
     });
   } catch (error) {
     console.error(error);

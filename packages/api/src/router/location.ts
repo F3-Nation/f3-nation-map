@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { aliasedTable, count, eq, inArray, schema } from "@f3/db";
 import { env } from "@f3/env";
+import { isTruthy } from "@f3/shared/common/functions";
 
 import { mail, Templates } from "../mail";
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -205,7 +206,11 @@ export const locationRouter = createTRPCRouter({
 
     const locationEvents = data.reduce(
       (acc, item) => {
-        const location = item.location;
+        const location = {
+          ...item.location,
+          created: new Date(item.location.created),
+          updated: new Date(item.location.updated),
+        };
         const event = item.event;
         if (!acc[location.id]) {
           acc[location.id] = {
@@ -339,6 +344,40 @@ export const locationRouter = createTRPCRouter({
       website: region.orgs.website,
     }));
   }),
+  getRegionsWithLocation: publicProcedure.query(async ({ ctx }) => {
+    const ao = aliasedTable(schema.orgs, "ao");
+    const region = aliasedTable(schema.orgs, "region");
+    const regionsWithLocation = await ctx.db
+      .select({
+        id: region.id,
+        name: region.name,
+        locationId: schema.locations.id,
+        lat: schema.locations.lat,
+        lon: schema.locations.lon,
+        logo: ao.logo,
+      })
+      .from(region)
+      .innerJoin(ao, eq(ao.parentId, region.id))
+      .innerJoin(schema.locations, eq(schema.locations.orgId, ao.id));
+
+    const uniqueRegionsWithLocation = regionsWithLocation
+      .map((rwl) =>
+        typeof rwl.lat === "number" && typeof rwl.lon === "number"
+          ? {
+              ...rwl,
+              lat: rwl.lat,
+              lon: rwl.lon,
+            }
+          : null,
+      )
+      .filter(isTruthy)
+      .filter(
+        (region, index, self) =>
+          index ===
+          self.findIndex((t) => t.id === region.id && t.name === region.name),
+      );
+    return uniqueRegionsWithLocation;
+  }),
   getRegionAos: publicProcedure
     .input(z.object({ regionId: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -411,6 +450,7 @@ export const locationRouter = createTRPCRouter({
   updateLocation: publicProcedure
     .input(
       z.object({
+        id: z.string(),
         locationName: z.string().nullish(),
         locationDescription: z.string().nullish(),
         locationLat: z.number().nullish(),
@@ -482,7 +522,7 @@ export const locationRouter = createTRPCRouter({
       return { success: true, inserted: omit(inserted, ["token"]) };
     }),
   validateSubmission: publicProcedure
-    .input(z.object({ token: z.string(), submissionId: z.number() }))
+    .input(z.object({ token: z.string(), submissionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [updateRequest] = await ctx.db
         .select()

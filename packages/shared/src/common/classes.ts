@@ -101,6 +101,10 @@ export class ZustandStore<T extends Record<string, unknown>> {
     return getValue(this.useBoundStore.getState(), key);
   }
 
+  getState() {
+    return this.useBoundStore.getState();
+  }
+
   /**
    * @deprecated Use native setState instead. set used to have an issue where
    * it would cause excessive rerenders due to whole-state cloneDeep

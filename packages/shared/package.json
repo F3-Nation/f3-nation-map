@@ -20,8 +20,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@f3/eslint-config": "^0.2.0",
-    "@f3/prettier-config": "^0.1.0",
+    "@f3/eslint-config": "workspace:^0.2.0",
+    "@f3/prettier-config": "workspace:^0.1.0",
     "@f3/tsconfig": "workspace:^0.1.0",
     "@types/node": "^20.11.13",
     "eslint": "^8.56.0",

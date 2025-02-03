@@ -25,7 +25,9 @@ export const PlaceRowMap = ({
           "bg-foreground/5": focused,
         })}
       >
+        <div className="flex-shrink-0">
         <MapPin />
+        </div>
         <div className="flex-4 text-left">
           <CardTitle>{result.header}</CardTitle>
           <CardDescription className="line-clamp-1">
