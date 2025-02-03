@@ -24,7 +24,6 @@ const _reseedFromScratch = async () => {
 
   await db.delete(schema.nextAuthAccounts);
   await db.delete(schema.nextAuthSessions);
-  await db.delete(schema.nextAuthUsers);
   await db.delete(schema.nextAuthVerificationTokens);
   await db.delete(schema.users);
   await db.delete(schema.orgs);

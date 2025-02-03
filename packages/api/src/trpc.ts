@@ -32,7 +32,7 @@ export const createTRPCContext = async (opts: {
   session: Session | null | "none";
 }) => {
   const session =
-    opts.session === "none" ? null : (opts.session ?? (await auth()));
+    opts.session === "none" ? null : opts.session ?? (await auth());
   const source = opts.headers?.get("x-trpc-source") ?? "unknown";
   const xRealIp = opts.headers?.get("x-real-ip") ?? "unknown";
   const xForwardedFor = opts.headers?.get("x-forwarded-for") ?? "unknown";

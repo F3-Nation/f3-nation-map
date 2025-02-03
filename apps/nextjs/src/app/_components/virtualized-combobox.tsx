@@ -169,8 +169,8 @@ export function VirtualizedCombobox({
             })}
           >
             {selectedOption
-              ? (options.find((option) => option.value === selectedOption)
-                  ?.label ?? selectedOption)
+              ? options.find((option) => option.value === selectedOption)
+                  ?.label ?? selectedOption
               : searchPlaceholder}
           </div>
           {selectedOption && !disabled ? (

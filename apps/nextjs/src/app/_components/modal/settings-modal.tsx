@@ -142,7 +142,7 @@ export default function HowToJoinModal() {
                 onClick={() => appStore.setState({ mode: "edit" })}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
-                  "disabled:opacity-20 disabled:pointer-events-none",
+                  "disabled:pointer-events-none disabled:opacity-20",
                   {
                     "bg-blue-500 text-white hover:bg-blue-500/90":
                       mode === "edit",

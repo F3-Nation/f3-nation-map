@@ -1,4 +1,4 @@
-import type { DefaultSession } from "next-auth";
+import type { DefaultSession, DefaultUser } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 
 /**
@@ -10,19 +10,29 @@ import type { DefaultJWT } from "next-auth/jwt";
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
-    user:
-      | (DefaultSession["user"] & {
-          id: string;
-          // ...other properties
-          // role: Role
-          // role: UserRole;
-        })
-      | undefined;
+    user: User;
   }
+
+  interface User extends Omit<DefaultUser, "id"> {
+    id: number;
+    f3Name?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    emailVerified?: string;
+    phone?: string;
+    homeRegionId?: number;
+    avatarUrl?: string;
+    meta?: Record<string, unknown>;
+    created?: string;
+    updated?: string;
+    emergencyContact?: string;
+    emergencyPhone?: string;
+    emergencyNotes?: string;
+  }
+
   interface JWT extends DefaultJWT {
-    // ...other properties
-    // role: Role
-    // role: UserRole;
+    id?: string | number;
     signinunixsecondsepoch: number;
   }
 

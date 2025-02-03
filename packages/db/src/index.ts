@@ -6,7 +6,6 @@ import { env } from "@f3/env";
 import {
   nextAuthAccounts,
   nextAuthSessions,
-  nextAuthUsers,
   nextAuthVerificationTokens,
 } from "./schema/auth";
 import {
@@ -29,7 +28,6 @@ import { updateRequests } from "./schema/updateRequest";
 export const schema = {
   nextAuthAccounts,
   nextAuthSessions,
-  nextAuthUsers,
   nextAuthVerificationTokens,
   users,
   orgs,
