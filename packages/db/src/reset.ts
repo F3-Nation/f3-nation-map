@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm/sql";
 import { env } from "@f3/env";
 
 import { db } from ".";
+import { alembicVersion } from "./schema/schema";
 
 const databaseUrl = env.DATABASE_URL;
 
@@ -27,6 +28,16 @@ export const reset = async () => {
     throw new Error("Reset cancelled");
   }
 
+  // We need to manually handle the alembic version table for moneyball's work
+  let version_num: string | undefined;
+  try {
+    const [result] = await db.select().from(alembicVersion);
+    version_num = result?.versionNum;
+    console.log("Alembic version", version_num);
+  } catch (e) {
+    console.log("Alembic version not found");
+  }
+
   // Get all non-system users before dropping the schema
   const users = await db.execute<DbUser>(sql`
     SELECT rolname FROM pg_roles 
@@ -44,6 +55,13 @@ export const reset = async () => {
       GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${sql.raw(user.rolname)};
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO ${sql.raw(user.rolname)};
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO ${sql.raw(user.rolname)};
+    `);
+  }
+
+  // We need to manually handle the alembic version table for moneyball's work
+  if (version_num) {
+    await db.execute(sql`
+      INSERT INTO alembic_version (version_num) VALUES (${version_num});
     `);
   }
 

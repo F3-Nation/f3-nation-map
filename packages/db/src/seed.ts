@@ -3,7 +3,11 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { env } from "@f3/env";
 import { DAY_ORDER } from "@f3/shared/app/constants";
-import { isTruthy, safeParseFloat } from "@f3/shared/common/functions";
+import {
+  isTruthy,
+  onlyUnique,
+  safeParseFloat,
+} from "@f3/shared/common/functions";
 
 import type { InferInsertModel } from ".";
 import type {
@@ -35,6 +39,7 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.eventTagsXOrg);
   await db.delete(schema.eventTypes);
   await db.delete(schema.eventTypesXOrg);
+  await db.delete(schema.eventsXEventTypes);
   await db.delete(schema.locations);
   await db.delete(schema.orgTypes);
   await db.delete(schema.slackUsers);
@@ -74,9 +79,19 @@ enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",
   Ruck = "Ruck",
-  QSource = "QSource",
-  Swim = "Swim",
-  Other = "Other",
+  Mobility = "Mobility",
+  Bike = "Bike",
+  Swimming = "Swimming",
+  Gear = "Gear",
+  "Wild Card" = "Wild Card",
+
+  // Cycling // Bike
+  // CORE // Bootcamp
+  // Run with Pain Stations // Run
+  // Speed/Strength Running // Run
+  // Obstacle Training // Gear
+  // Strength/Conditioning/Tabata/WIB // Bootcamp
+  // Mobility/Stretch // Mobility
 }
 
 enum EventTags {
@@ -134,62 +149,68 @@ export async function insertDatabaseStructure(
     ])
     .returning();
 
+  const coreWorkoutEventCategoryId = eventCategories.find(
+    (ec) => ec.name === EventCategories["1st F - Core Workout"].toString(),
+  )?.id;
+  if (!coreWorkoutEventCategoryId)
+    throw new Error("Core workout event category not found");
+
+  const offTheBooksEventCategoryId = eventCategories.find(
+    (ec) => ec.name === EventCategories["1st F - Off the books"].toString(),
+  )?.id;
+  if (!offTheBooksEventCategoryId)
+    throw new Error("Off the books event category not found");
+
   const eventTypes = await db
     .insert(schema.eventTypes)
     .values([
       {
+        id: 1,
         name: EventTypes.Bootcamp,
         acronym: "BC",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
+        id: 2,
         name: EventTypes.Run,
         acronym: "RU",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
+        id: 3,
         name: EventTypes.Ruck,
         acronym: "RK",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
-        name: EventTypes.QSource,
-        acronym: "QS",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Off the books"].toString(),
-          )?.id ?? -1,
+        id: 4,
+        name: EventTypes.Mobility,
+        acronym: "MO",
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
-        name: EventTypes.Swim,
+        id: 5,
+        name: EventTypes.Bike,
+        acronym: "BK",
+        categoryId: coreWorkoutEventCategoryId,
+      },
+      {
+        id: 6,
+        name: EventTypes.Swimming,
         acronym: "SW",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
-        name: EventTypes.Other,
-        acronym: "OT",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        id: 7,
+        name: EventTypes.Gear,
+        acronym: "GE",
+        categoryId: coreWorkoutEventCategoryId,
+      },
+      {
+        id: 8,
+        name: EventTypes["Wild Card"],
+        acronym: "WC",
+        categoryId: coreWorkoutEventCategoryId,
       },
     ])
     .returning();
@@ -215,25 +236,96 @@ export async function insertData(data: {
   const eventTypes = await db.select().from(schema.eventTypes);
 
   const { workoutData, regionData } = data;
+  const sectorsToInsert = regionData
+    .map((d) => d.Sector || null)
+    .filter(isTruthy)
+    .filter(onlyUnique);
+  const sectorOrgType = orgTypes.find(
+    (ot) => ot.name === OrgTypes.Sector.toString(),
+  )?.id;
+  if (!sectorOrgType) throw new Error("Sector org type not found");
+
+  const insertedSectors = await db
+    .insert(schema.orgs)
+    .values(
+      sectorsToInsert.map((d) => ({
+        name: d,
+        isActive: true,
+        orgTypeId: sectorOrgType,
+      })),
+    )
+    .returning();
+  const sectorNameToId = insertedSectors.reduce(
+    (acc, d) => {
+      acc[d.name] = d.id;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  const areasToInsert = regionData
+    .map((d) => {
+      const sectorId = sectorNameToId[d.Sector];
+      if (sectorId === undefined || !d.Area) return null;
+      return { name: d.Area, sectorId };
+    })
+    .filter(isTruthy)
+    .filter(
+      (d, idx, arr) =>
+        d.name !== "" &&
+        d.sectorId !== undefined &&
+        arr.findIndex((d2) => d2.name === d.name) === idx,
+    );
+
+  const areaOrgType = orgTypes.find(
+    (ot) => ot.name === OrgTypes.Area.toString(),
+  )?.id;
+  if (!areaOrgType) throw new Error("Area org type not found");
+  const insertedAreas = await db
+    .insert(schema.orgs)
+    .values(
+      areasToInsert.map((d) => ({
+        name: d.name,
+        isActive: true,
+        orgTypeId: areaOrgType,
+        parentId: d.sectorId,
+      })),
+    )
+    .returning();
+
+  const areaNameToId = insertedAreas.reduce(
+    (acc, d) => {
+      acc[d.name] = d.id;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   const regions = await db
     .insert(schema.orgs)
     .values(
-      regionData.map((region) => {
-        const regionData: InferInsertModel<typeof schema.orgs> = {
-          name: region["Region Name"] ?? "",
-          isActive: true,
-          orgTypeId:
-            orgTypes.find((ot) => ot.name === OrgTypes.Region.toString())?.id ??
-            -1, // shouldn't ever happen
-          website: region.Website,
-          email: region["Region Email"],
-          description: undefined, // NOTE: currently no region descriptions
-          logo: undefined, // NOTE: currently no region logos
-          parentId: undefined, // NOTE: maybe this should be a sector?
-        };
-        return regionData;
-      }),
+      regionData
+        .map((region) => {
+          const areaId = areaNameToId[region.Area];
+          if (areaId === undefined) return null;
+          const regionData: InferInsertModel<typeof schema.orgs> = {
+            name: region["Region Name"] ?? "",
+            isActive: true,
+            orgTypeId:
+              orgTypes.find((ot) => ot.name === OrgTypes.Region.toString())
+                ?.id ?? -1, // shouldn't ever happen
+            website:
+              region.Website.includes("f3nation.com") ||
+              region.Website.includes(".slack.com")
+                ? undefined
+                : region.Website,
+            email: region["Region Email"],
+            description: undefined, // NOTE: currently no region descriptions
+            parentId: areaId,
+          };
+          return regionData;
+        })
+        .filter(isTruthy),
     )
     .onConflictDoNothing()
     .returning({ id: schema.orgTypes.id, name: schema.orgTypes.name });
@@ -298,7 +390,7 @@ export async function insertData(data: {
           isActive: true,
           orgTypeId:
             orgTypes.find((ot) => ot.name === OrgTypes.AO.toString())?.id ?? -1,
-          logo: events[0]?.Logo,
+          logoUrl: events[0]?.Logo,
           parentId: ao.regionId,
           description: address,
           website: events[0]?.Website,
@@ -339,8 +431,8 @@ export async function insertData(data: {
           name: "", // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
           description: aoOrg?.description, // AOs description is the address
-          lat: safeParseFloat(ao.latitude),
-          lon: safeParseFloat(ao.longitude),
+          latitude: safeParseFloat(ao.latitude),
+          longitude: safeParseFloat(ao.longitude),
           orgId: aoOrg?.id ?? 0,
           meta: {
             latLonKey: ao.key,
@@ -366,7 +458,10 @@ export async function insertData(data: {
         const workoutAoLoc = aoLocs.find(
           (aoItem) =>
             ao.key ===
-            getLatLonKey({ latitude: aoItem.lat, longitude: aoItem.lon }),
+            getLatLonKey({
+              latitude: aoItem.latitude,
+              longitude: aoItem.longitude,
+            }),
         );
 
         const [startTimeRaw, endTimeRaw] = workout.Time.split("-").map((time) =>
@@ -389,10 +484,14 @@ export async function insertData(data: {
           startTime: startTime?.isValid() ? startTime.format("h:mm a") : null,
           endTime: endTime?.isValid() ? endTime.format("h:mm a") : null,
           name: workout["Workout Name"].slice(0, 100),
-          eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
+          // eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
           description: workout.Note,
           recurrencePattern: "weekly",
           orgId: ao.regionId,
+          meta: {
+            eventType: workout.Type,
+            eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id,
+          },
         };
         return workoutItem;
       });
@@ -404,6 +503,34 @@ export async function insertData(data: {
     const eventsChunk = eventsToInsert.slice(i, i + chunkSize);
     await db.insert(schema.events).values(eventsChunk).returning();
     console.log("inserted events", i + eventsChunk.length);
+  }
+
+  const insertedEvents = await db.select().from(schema.events);
+
+  const eventXEventTypesToInsert: InferInsertModel<
+    typeof schema.eventsXEventTypes
+  >[] = Object.values(insertedEvents)
+    .map((event) => {
+      // @ts-expect-error -- meta type
+      const eventTypeId = event.meta?.eventTypeId as number;
+      if (!eventTypeId) return null;
+      return {
+        eventId: event.id,
+        eventTypeId,
+      };
+    })
+    .filter(isTruthy);
+
+  for (let i = 0; i < eventXEventTypesToInsert.length; i += chunkSize) {
+    const eventXEventTypesChunk = eventXEventTypesToInsert.slice(
+      i,
+      i + chunkSize,
+    );
+    await db
+      .insert(schema.eventsXEventTypes)
+      .values(eventXEventTypesChunk)
+      .returning();
+    console.log("inserted eventXEventTypes", i + eventXEventTypesChunk.length);
   }
 }
 

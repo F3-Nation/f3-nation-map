@@ -14,7 +14,7 @@ export const filterData = <
     events: {
       dayOfWeek: number | null;
       startTime: string | null;
-      type: string | null;
+      types: { id: number; name: string }[];
     }[];
   },
 >(
@@ -59,12 +59,17 @@ export const filterData = <
 
       // Check if at least one of the selected type filters matches the station's type
       const includeThisLocationMarkerOnType =
-        (!filters.Bootcamp || event.type === "Bootcamp") &&
-        (!filters.Ruck || event.type === "Ruck") &&
-        (!filters.Swim || event.type === "Swimming") &&
-        (!filters.CSAUPs || event.type === "CSAUPs") &&
-        (!filters.Convergence || event.type === "Convergence") &&
-        (!filters.GTE || event.type === "GTE");
+        (!filters.Bootcamp ||
+          event.types.some((type) => type.name === "Bootcamp")) &&
+        (!filters.Run || event.types.some((type) => type.name === "Run")) &&
+        (!filters.Ruck || event.types.some((type) => type.name === "Ruck")) &&
+        (!filters.Swim ||
+          event.types.some((type) => type.name === "Swimming")) &&
+        (!filters.CSAUPs ||
+          event.types.some((type) => type.name === "CSAUPs")) &&
+        (!filters.Convergence ||
+          event.types.some((type) => type.name === "Convergence")) &&
+        (!filters.GTE || event.types.some((type) => type.name === "GTE"));
 
       // // Check if the after time filter matches the station's end time
       let includeThisLocationMarkerOnTime = true;

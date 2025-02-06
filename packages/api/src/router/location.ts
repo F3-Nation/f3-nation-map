@@ -1,7 +1,7 @@
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import { aliasedTable, count, eq, inArray, schema } from "@f3/db";
+import { aliasedTable, count, eq, inArray, schema, sql } from "@f3/db";
 import { env } from "@f3/env";
 import { isTruthy } from "@f3/shared/common/functions";
 
@@ -16,8 +16,8 @@ export const locationRouter = createTRPCRouter({
     return ctx.db
       .select({
         id: schema.locations.id,
-        lat: schema.locations.lat,
-        lon: schema.locations.lon,
+        lat: schema.locations.latitude,
+        lon: schema.locations.longitude,
         locationDescription: schema.locations.description,
       })
       .from(schema.locations);
@@ -28,7 +28,7 @@ export const locationRouter = createTRPCRouter({
         .select({
           id: schema.locations.id,
           name: schema.locations.name,
-          logo: schema.orgs.logo,
+          logo: schema.orgs.logoUrl,
         })
         .from(schema.locations)
         .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id)),
@@ -39,15 +39,21 @@ export const locationRouter = createTRPCRouter({
           dayOfWeek: schema.events.dayOfWeek,
           startTime: schema.events.startTime,
           endTime: schema.events.endTime,
-          eventTypeId: schema.events.eventTypeId,
-          type: schema.eventTypes.name,
+          types: sql<
+            { id: number; name: string }[]
+          >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
           name: schema.events.name,
         })
         .from(schema.events)
         .leftJoin(
+          schema.eventsXEventTypes,
+          eq(schema.eventsXEventTypes.eventId, schema.events.id),
+        )
+        .leftJoin(
           schema.eventTypes,
-          eq(schema.eventTypes.id, schema.events.eventTypeId),
-        ),
+          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+        )
+        .groupBy(schema.events.id),
     ]);
     // console.log("locations", locations.length, locations[0]);
     // console.log("events", events.length, events[0]);
@@ -73,8 +79,8 @@ export const locationRouter = createTRPCRouter({
           // TODO: Reduce the properties as much as possible
           locations: {
             id: schema.locations.id,
-            lat: schema.locations.lat,
-            lon: schema.locations.lon,
+            lat: schema.locations.latitude,
+            lon: schema.locations.longitude,
             name: schema.locations.name,
             isActive: schema.locations.isActive,
             created: schema.locations.created,
@@ -82,7 +88,7 @@ export const locationRouter = createTRPCRouter({
             meta: schema.locations.meta,
             locationDescription: schema.locations.description,
             orgId: schema.locations.orgId,
-            logo: schema.orgs.logo,
+            logo: schema.orgs.logoUrl,
             website: schema.orgs.website,
           },
           events: {
@@ -92,8 +98,9 @@ export const locationRouter = createTRPCRouter({
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
             description: schema.events.description,
-            eventTypeId: schema.events.eventTypeId,
-            type: schema.eventTypes.name,
+            types: sql<
+              { id: number; name: string }[]
+            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
             name: schema.events.name,
           },
           // locations: { id: schema.locations.id },
@@ -107,9 +114,14 @@ export const locationRouter = createTRPCRouter({
         )
         .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
         .leftJoin(
+          schema.eventsXEventTypes,
+          eq(schema.eventsXEventTypes.eventId, schema.events.id),
+        )
+        .leftJoin(
           schema.eventTypes,
-          eq(schema.eventTypes.id, schema.events.eventTypeId),
-        );
+          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+        )
+        .groupBy(schema.events.id);
       const locationEvents = locationsAndEvents.reduce(
         (acc, item) => {
           const location = item.locations;
@@ -187,9 +199,11 @@ export const locationRouter = createTRPCRouter({
       .select({
         location: schema.locations,
         event: schema.events,
-        type: schema.eventTypes.name,
+        types: sql<
+          { id: number; name: string }[]
+        >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
         website: schema.orgs.website,
-        logo: schema.orgs.logo,
+        logo: schema.orgs.logoUrl,
         locationDescription: schema.locations.description,
       })
       .from(schema.locations)
@@ -200,8 +214,9 @@ export const locationRouter = createTRPCRouter({
       )
       .leftJoin(
         schema.eventTypes,
-        eq(schema.eventTypes.id, schema.events.eventTypeId),
+        eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
       )
+      .groupBy(schema.events.id)
       .where(inArray(schema.locations.id, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
 
     const locationEvents = data.reduce(
@@ -216,6 +231,8 @@ export const locationRouter = createTRPCRouter({
           acc[location.id] = {
             location: {
               ...location,
+              lat: item.location.latitude,
+              lon: item.location.longitude,
               website: item.website,
               logo: item.logo,
               locationDescription: item.locationDescription,
@@ -226,7 +243,7 @@ export const locationRouter = createTRPCRouter({
         if (event) {
           acc[location.id]?.events.push({
             ...event,
-            type: item.type,
+            types: item.types,
             logo: item.logo,
           });
         }
@@ -256,8 +273,7 @@ export const locationRouter = createTRPCRouter({
             startTime: string | null;
             endTime: string | null;
             description: string | null;
-            eventTypeId: number | null;
-            type: string | null;
+            types: { id: number; name: string }[];
             name: string;
             logo: string | null;
           }[];
@@ -280,8 +296,8 @@ export const locationRouter = createTRPCRouter({
         ctx.db
           .select({
             locationId: schema.locations.id,
-            lat: schema.locations.lat,
-            lon: schema.locations.lon,
+            lat: schema.locations.latitude,
+            lon: schema.locations.longitude,
             locationName: schema.locations.name,
             locationMeta: schema.locations.meta,
             locationAddress: schema.locations.description,
@@ -292,12 +308,12 @@ export const locationRouter = createTRPCRouter({
             orgId: schema.locations.orgId,
 
             aoId: ao.id,
-            aoLogo: ao.logo,
+            aoLogo: ao.logoUrl,
             aoWebsite: ao.website,
             aoName: ao.name,
 
             regionId: region.id,
-            regionLogo: region.logo,
+            regionLogo: region.logoUrl,
             regionWebsite: region.website,
             regionName: region.name,
           })
@@ -315,15 +331,21 @@ export const locationRouter = createTRPCRouter({
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
             description: schema.events.description,
-            eventTypeId: schema.events.eventTypeId,
-            type: schema.eventTypes.name,
+            types: sql<
+              { id: number; name: string }[]
+            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
           })
           .from(schema.events)
           .where(eq(schema.events.locationId, input.locationId))
           .leftJoin(
+            schema.eventsXEventTypes,
+            eq(schema.eventsXEventTypes.eventId, schema.events.id),
+          )
+          .leftJoin(
             schema.eventTypes,
-            eq(schema.eventTypes.id, schema.events.eventTypeId),
-          ),
+            eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+          )
+          .groupBy(schema.events.id),
       ]);
 
       if (!location) {
@@ -340,7 +362,7 @@ export const locationRouter = createTRPCRouter({
     return regions.map((region) => ({
       id: region.orgs.id,
       name: region.orgs.name,
-      logo: region.orgs.logo,
+      logo: region.orgs.logoUrl,
       website: region.orgs.website,
     }));
   }),
@@ -352,9 +374,9 @@ export const locationRouter = createTRPCRouter({
         id: region.id,
         name: region.name,
         locationId: schema.locations.id,
-        lat: schema.locations.lat,
-        lon: schema.locations.lon,
-        logo: ao.logo,
+        lat: schema.locations.latitude,
+        lon: schema.locations.longitude,
+        logo: ao.logoUrl,
       })
       .from(region)
       .innerJoin(ao, eq(ao.parentId, region.id))
@@ -386,8 +408,8 @@ export const locationRouter = createTRPCRouter({
           // TODO: Reduce the properties as much as possible
           locations: {
             id: schema.locations.id,
-            lat: schema.locations.lat,
-            lon: schema.locations.lon,
+            lat: schema.locations.latitude,
+            lon: schema.locations.longitude,
             name: schema.locations.name,
             isActive: schema.locations.isActive,
             created: schema.locations.created,
@@ -395,7 +417,7 @@ export const locationRouter = createTRPCRouter({
             meta: schema.locations.meta,
             locationDescription: schema.locations.description,
             orgId: schema.locations.orgId,
-            logo: schema.orgs.logo,
+            logo: schema.orgs.logoUrl,
             website: schema.orgs.website,
           },
           events: {
@@ -405,9 +427,10 @@ export const locationRouter = createTRPCRouter({
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
             description: schema.events.description,
-            eventTypeId: schema.events.eventTypeId,
-            type: schema.eventTypes.name,
             name: schema.events.name,
+            types: sql<
+              { id: number; name: string }[]
+            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
           },
           // locations: { id: schema.locations.id },
           // events: { id: schema.events.id },
@@ -420,9 +443,14 @@ export const locationRouter = createTRPCRouter({
         )
         .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
         .leftJoin(
+          schema.eventsXEventTypes,
+          eq(schema.eventsXEventTypes.eventId, schema.events.id),
+        )
+        .leftJoin(
           schema.eventTypes,
-          eq(schema.eventTypes.id, schema.events.eventTypeId),
-        );
+          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+        )
+        .groupBy(schema.events.id);
       // const locationEvents = locationsAndEvents.reduce(
       //   (acc, item) => {
       //     return [
@@ -463,7 +491,7 @@ export const locationRouter = createTRPCRouter({
         eventEndTime: z.string().nullish(),
         eventDayOfWeek: z.string(),
         eventId: z.number().nullable(),
-        eventType: z.string().nullable(),
+        eventTypes: z.object({ id: z.number(), name: z.string() }).array(),
         eventTag: z.string().nullable(),
         eventIsSeries: z.boolean().nullish(),
         eventIsActive: z.boolean().nullish(),

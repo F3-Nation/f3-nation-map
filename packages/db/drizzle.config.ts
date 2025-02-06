@@ -12,4 +12,5 @@ export default {
     url,
   },
   out: "../db/drizzle",
+  // out: "../db/src/schema", // - needed for introspection
 } satisfies Config;

@@ -97,7 +97,7 @@ export const SelectedItem = (props: {
             ) : null}
             <div>
               <span className="font-semibold">Type: </span>
-              {selectedEvent.type}
+              {selectedEvent.types.map((type) => type.name).join(", ")}
             </div>
             {selectedEvent.description ? (
               <p className="leading-4">

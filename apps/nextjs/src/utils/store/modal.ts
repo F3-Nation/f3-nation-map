@@ -27,7 +27,7 @@ export interface DataType {
     startTime?: string | null;
     endTime?: string | null;
     dayOfWeek?: number | null;
-    type?: string | null;
+    types?: { id: number; name: string }[];
     eventDescription?: string | null;
     locationAddress?: string | null;
   };
