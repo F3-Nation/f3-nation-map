@@ -79,9 +79,19 @@ enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",
   Ruck = "Ruck",
-  QSource = "QSource",
-  Swim = "Swim",
-  Other = "Other",
+  Mobility = "Mobility",
+  Bike = "Bike",
+  Swimming = "Swimming",
+  Gear = "Gear",
+  "Wild Card" = "Wild Card",
+
+  // Cycling // Bike
+  // CORE // Bootcamp
+  // Run with Pain Stations // Run
+  // Speed/Strength Running // Run
+  // Obstacle Training // Gear
+  // Strength/Conditioning/Tabata/WIB // Bootcamp
+  // Mobility/Stretch // Mobility
 }
 
 enum EventTags {
@@ -139,6 +149,18 @@ export async function insertDatabaseStructure(
     ])
     .returning();
 
+  const coreWorkoutEventCategoryId = eventCategories.find(
+    (ec) => ec.name === EventCategories["1st F - Core Workout"].toString(),
+  )?.id;
+  if (!coreWorkoutEventCategoryId)
+    throw new Error("Core workout event category not found");
+
+  const offTheBooksEventCategoryId = eventCategories.find(
+    (ec) => ec.name === EventCategories["1st F - Off the books"].toString(),
+  )?.id;
+  if (!offTheBooksEventCategoryId)
+    throw new Error("Off the books event category not found");
+
   const eventTypes = await db
     .insert(schema.eventTypes)
     .values([
@@ -146,61 +168,49 @@ export async function insertDatabaseStructure(
         id: 1,
         name: EventTypes.Bootcamp,
         acronym: "BC",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
         id: 2,
         name: EventTypes.Run,
         acronym: "RU",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
         id: 3,
         name: EventTypes.Ruck,
         acronym: "RK",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
         id: 4,
-        name: EventTypes.QSource,
-        acronym: "QS",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Off the books"].toString(),
-          )?.id ?? -1,
+        name: EventTypes.Mobility,
+        acronym: "MO",
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
         id: 5,
-        name: EventTypes.Swim,
-        acronym: "SW",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        name: EventTypes.Bike,
+        acronym: "BK",
+        categoryId: coreWorkoutEventCategoryId,
       },
       {
         id: 6,
-        name: EventTypes.Other,
-        acronym: "OT",
-        categoryId:
-          eventCategories.find(
-            (ec) =>
-              ec.name === EventCategories["1st F - Core Workout"].toString(),
-          )?.id ?? -1,
+        name: EventTypes.Swimming,
+        acronym: "SW",
+        categoryId: coreWorkoutEventCategoryId,
+      },
+      {
+        id: 7,
+        name: EventTypes.Gear,
+        acronym: "GE",
+        categoryId: coreWorkoutEventCategoryId,
+      },
+      {
+        id: 8,
+        name: EventTypes["Wild Card"],
+        acronym: "WC",
+        categoryId: coreWorkoutEventCategoryId,
       },
     ])
     .returning();
