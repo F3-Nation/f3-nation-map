@@ -1,12 +1,10 @@
-import { SnapPoint } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
-import { CardHeader, CardTitle } from "@f3/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@f3/ui/card";
 
-import type { F3MapSearchResult } from "~/utils/types";
+import type { F3LocationMapSearchResult } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import { setView } from "~/utils/set-view";
 import { appStore } from "~/utils/store/app";
-import { drawerStore } from "~/utils/store/drawer";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
 import {
@@ -15,10 +13,11 @@ import {
 } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 
-export const onClickPlaceRowF3 = (result: F3MapSearchResult) => {
+export const onClickPlaceRowF3Location = (
+  result: F3LocationMapSearchResult,
+) => {
   console.log("onClickPlaceRowF3", result);
   searchStore.setState({ shouldShowResults: false });
-  drawerStore.setState({ snap: SnapPoint["pt-150px"] });
   appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
   selectedItemStore.setState({
     panelLocationId: null,
@@ -45,11 +44,11 @@ export const onClickPlaceRowF3 = (result: F3MapSearchResult) => {
   }
 };
 
-export const PlaceRowF3 = ({
+export const PlaceRowF3Location = ({
   result,
   focused,
 }: {
-  result: F3MapSearchResult;
+  result: F3LocationMapSearchResult;
   focused?: boolean;
 }) => {
   return (
@@ -58,22 +57,22 @@ export const PlaceRowF3 = ({
       onMouseOver={() => {
         const isMobile = isTouchDevice();
         if (isMobile) {
-          onClickPlaceRowF3(result);
+          onClickPlaceRowF3Location(result);
         } else {
           setSelectedItem({
             locationId: result.destination.item.locationId,
-            eventId: null,
+            eventId: result.destination.item.id,
           });
         }
       }}
       onFocus={() => {
         setSelectedItem({
           locationId: result.destination.item.locationId,
-          eventId: null,
+          eventId: result.destination.item.id,
         });
       }}
       onClick={() => {
-        onClickPlaceRowF3(result);
+        onClickPlaceRowF3Location(result);
       }}
     >
       <CardHeader
@@ -92,9 +91,7 @@ export const PlaceRowF3 = ({
         />
         <div className="flex-4 text-start">
           <CardTitle>{result.header}</CardTitle>
-          {/* <CardDescription className="line-clamp-1">
-            {result.description}
-          </CardDescription> */}
+          <CardDescription className="line-clamp-1">Workout</CardDescription>
         </div>
       </CardHeader>
     </button>

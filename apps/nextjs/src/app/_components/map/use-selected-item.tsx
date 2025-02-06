@@ -1,8 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import debounce from "lodash/debounce";
 
+import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import { api } from "~/trpc/react";
+import { mapStore } from "~/utils/store/map";
 import {
   selectedItemStore,
   setSelectedItem,
@@ -11,12 +14,19 @@ import { useMapRef } from "./map-ref-provider";
 
 export const useSelectedItem = () => {
   RERENDER_LOGS && console.log("useSelectedItem rerender");
+  const zoom = mapStore.use.zoom();
+  const isClose = zoom >= CLOSE_ZOOM;
+  const debounceAmount = isClose ? 0 : 300;
   const locationId = selectedItemStore.use.locationId();
   const eventId = selectedItemStore.use.eventId();
-  const { data: selectedLocation } = api.location.getLocationMarker.useQuery(
-    { id: locationId ?? -1 },
-    { enabled: !!locationId },
+  const [debouncedLocationId, setDebouncedLocationId] = useState(locationId);
+  const { data } = api.location.getLocationMarker.useQuery(
+    { id: debouncedLocationId ?? -1 },
+    { enabled: typeof debouncedLocationId === "number" },
   );
+
+  const selectedLocation =
+    debouncedLocationId === locationId ? data : undefined;
   const { mapRef } = useMapRef();
   const position = useMemo(() => {
     if (
@@ -28,7 +38,8 @@ export const useSelectedItem = () => {
       lat: selectedLocation.lat,
       lng: selectedLocation.lon,
     });
-  }, [selectedLocation?.lat, selectedLocation?.lon, mapRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoom is not a dependency but we need to monitor its changes
+  }, [selectedLocation?.lat, selectedLocation?.lon, mapRef, zoom]);
 
   const selectedEvent = !selectedLocation
     ? undefined
@@ -37,6 +48,19 @@ export const useSelectedItem = () => {
       ? selectedLocation.events[0]
       : // use == incase it is a string
         selectedLocation.events.find((event) => event.id == eventId);
+
+  // Create memoized debounced function
+  const debouncedSetSelectedItem = useMemo(
+    () =>
+      debounce((locationId: number | null) => {
+        setDebouncedLocationId(locationId);
+      }, debounceAmount),
+    [debounceAmount],
+  );
+
+  useEffect(() => {
+    debouncedSetSelectedItem(locationId);
+  }, [debouncedLocationId, locationId, debouncedSetSelectedItem]);
 
   useEffect(() => {
     if (selectedLocation && eventId === null) {

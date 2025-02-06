@@ -14,6 +14,9 @@ export const env = createEnv({
       .enum(["development", "production", "test"])
       .default("development"),
     EMAIL_ADMIN_DESTINATIONS: z.string().min(1),
+    GOOGLE_LOGO_BUCKET_PRIVATE_KEY: z.string().min(1),
+    GOOGLE_LOGO_BUCKET_CLIENT_EMAIL: z.string().min(1),
+    GOOGLE_LOGO_BUCKET_BUCKET_NAME: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),

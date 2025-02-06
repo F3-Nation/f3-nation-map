@@ -1,3 +1,4 @@
+import type { Adapter } from "next-auth/adapters";
 import NextAuth from "next-auth";
 import Email from "next-auth/providers/nodemailer";
 
@@ -15,7 +16,10 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  adapter: MDPGDrizzleAdapter(db),
+  // Must cast since we use number for user ids
+  // And next-auth expects string for user ids
+  // And it is a nightmare (impossible?) to overwrite the type
+  adapter: MDPGDrizzleAdapter(db) as Adapter,
   providers: [
     Email({
       id: "email", // needed to allow signIn("email")

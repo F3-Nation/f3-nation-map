@@ -57,7 +57,7 @@ export const WorkoutDetailsModal = () => {
 
   const workoutFields = {
     Name: workout?.eventName,
-    What: workout?.type,
+    What: workout?.types.map((type) => type.name).join(", "),
     Where: location?.locationAddress ? (
       <Link
         href={`https://maps.google.com/?q=${encodeURIComponent(location?.locationAddress)}`}
@@ -143,7 +143,7 @@ export const WorkoutDetailsModal = () => {
                     startTime: event?.startTime,
                     endTime: event?.endTime,
                     dayOfWeek: event?.dayOfWeek,
-                    type: event?.type,
+                    types: event?.types,
                     eventDescription: event?.description,
                   });
                 }}
@@ -172,7 +172,7 @@ export const WorkoutDetailsModal = () => {
                       dayOfWeek: event.dayOfWeek,
                       startTime: event.startTime,
                       endTime: event.endTime,
-                      type: event.type,
+                      types: event.types,
                     }}
                     location={{
                       lat: results.location.lat,
@@ -211,7 +211,7 @@ export const WorkoutDetailsModal = () => {
                         startTime: "00:00:00",
                         endTime: "00:00:00",
                         dayOfWeek: 0,
-                        type: "Bootcamp",
+                        types: [{ id: 1, name: "Bootcamp" }],
                         eventDescription: "",
                       });
                     }}
@@ -316,7 +316,7 @@ export const WorkoutDetailsModal = () => {
                   startTime: event?.startTime,
                   endTime: event?.endTime,
                   dayOfWeek: event?.dayOfWeek,
-                  type: event?.type,
+                  types: event?.types,
                   eventDescription: event?.description,
                 });
                 e.stopPropagation();

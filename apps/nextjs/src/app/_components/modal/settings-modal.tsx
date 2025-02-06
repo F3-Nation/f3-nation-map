@@ -16,6 +16,7 @@ import { mapStore } from "~/utils/store/map";
 import { closeModal, useModalStore } from "~/utils/store/modal";
 
 export default function HowToJoinModal() {
+  const isAdmin = false;
   const { open } = useModalStore();
   const mode = appStore.use.mode();
   const tiles = mapStore.use.tiles();
@@ -137,9 +138,11 @@ export default function HowToJoinModal() {
                 <span className="text-xs">View</span>
               </button>
               <button
+                disabled={!isAdmin}
                 onClick={() => appStore.setState({ mode: "edit" })}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
+                  "disabled:pointer-events-none disabled:opacity-20",
                   {
                     "bg-blue-500 text-white hover:bg-blue-500/90":
                       mode === "edit",

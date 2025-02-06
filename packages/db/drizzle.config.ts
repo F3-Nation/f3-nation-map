@@ -8,7 +8,9 @@ if (!url) throw new Error("DATABASE_URL is not defined");
 export default {
   schema: "./src/schema",
   dialect: "postgresql",
-  dbCredentials: { url },
-  tablesFilter: ["template_*"],
+  dbCredentials: {
+    url,
+  },
   out: "../db/drizzle",
+  // out: "../db/src/schema", // - needed for introspection
 } satisfies Config;

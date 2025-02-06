@@ -24,7 +24,7 @@ export const EventChip = (props: {
     endTime?: string | null;
     id: number;
     locationId?: number | null;
-    type: string | null;
+    types: { id: number; name: string }[];
   };
   location: {
     id: number | null;
@@ -140,13 +140,13 @@ export const EventChip = (props: {
         {size === "small" || !duration ? null : ` (${duration}m)`}
       </div>
       <div>
-        {event.type === "Bootcamp" ? (
+        {event.types.some((type) => type.name === "Bootcamp") ? (
           <BootSvgComponent height={iconSize} width={iconSize} />
-        ) : event.type === "Swimming" ? (
+        ) : event.types.some((type) => type.name === "Swimming") ? (
           <SwimSvgComponent height={iconSize} width={iconSize} />
-        ) : event.type === "Ruck" ? (
+        ) : event.types.some((type) => type.name === "Ruck") ? (
           <RuckSvgComponent height={iconSize} width={iconSize} />
-        ) : event.type === "Run" ? (
+        ) : event.types.some((type) => type.name === "Run") ? (
           <RunSvgComponent height={iconSize} width={iconSize} />
         ) : null}
       </div>

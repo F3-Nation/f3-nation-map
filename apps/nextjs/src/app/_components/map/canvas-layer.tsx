@@ -156,8 +156,8 @@ export const CanvasIconLayer = ({
       console.log("canvas-layer add things");
       canvasIconLayer.current = L.canvasIconLayer({}).addTo(map);
       canvasIconLayer.current.addOnClickListener(onClick);
-      // Turning off hover for now as it is overwhelming
-      // canvasIconLayer.current.addOnHoverListener(onHover);
+      // Might turn off hover in future as it is overwhelming
+      canvasIconLayer.current.addOnHoverListener(onHover);
       canvasIconLayer.current?.addMarkers(farMarkers.flat());
     } else if (isClose && canvasIconLayer.current) {
       canvasIconLayer.current.remove();
