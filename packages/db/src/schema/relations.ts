@@ -14,9 +14,7 @@ import {
   eventsXEventTypes,
   eventTags,
   eventTagsXEvents,
-  eventTagsXOrg,
   eventTypes,
-  eventTypesXOrg,
   expansions,
   expansionsXUsers,
   locations,
@@ -70,8 +68,6 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
   locations: many(locations),
   achievementsXOrgs: many(achievementsXOrg),
   orgsXSlackSpaces: many(orgsXSlackSpaces),
-  eventTypesXOrgs: many(eventTypesXOrg),
-  eventTagsXOrgs: many(eventTagsXOrg),
   positionsXOrgsXUsers: many(positionsXOrgsXUsers),
   rolesXUsersXOrgs: many(rolesXUsersXOrg),
 }));
@@ -122,7 +118,6 @@ export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
     references: [eventCategories.id],
   }),
   eventsXEventTypes: many(eventsXEventTypes),
-  eventTypesXOrgs: many(eventTypesXOrg),
 }));
 
 export const eventCategoriesRelations = relations(
@@ -254,7 +249,6 @@ export const eventTagsXEventsRelations = relations(
 
 export const eventTagsRelations = relations(eventTags, ({ many }) => ({
   eventTagsXEvents: many(eventTagsXEvents),
-  eventTagsXOrgs: many(eventTagsXOrg),
 }));
 
 export const eventsXEventTypesRelations = relations(
@@ -321,28 +315,6 @@ export const achievementsXUsersRelations = relations(
     }),
   }),
 );
-
-export const eventTypesXOrgRelations = relations(eventTypesXOrg, ({ one }) => ({
-  eventType: one(eventTypes, {
-    fields: [eventTypesXOrg.eventTypeId],
-    references: [eventTypes.id],
-  }),
-  org: one(orgs, {
-    fields: [eventTypesXOrg.orgId],
-    references: [orgs.id],
-  }),
-}));
-
-export const eventTagsXOrgRelations = relations(eventTagsXOrg, ({ one }) => ({
-  eventTag: one(eventTags, {
-    fields: [eventTagsXOrg.eventTagId],
-    references: [eventTags.id],
-  }),
-  org: one(orgs, {
-    fields: [eventTagsXOrg.orgId],
-    references: [orgs.id],
-  }),
-}));
 
 export const positionsXOrgsXUsersRelations = relations(
   positionsXOrgsXUsers,

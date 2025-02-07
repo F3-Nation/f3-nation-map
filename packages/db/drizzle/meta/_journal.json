@@ -29,6 +29,13 @@
       "when": 1738590132950,
       "tag": "0003_purple_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1738949121665,
+      "tag": "0004_massive_gladiator",
+      "breakpoints": true
     }
   ]
 }

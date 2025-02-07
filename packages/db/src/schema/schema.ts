@@ -162,18 +162,29 @@ export const attendanceTypes = pgTable("attendance_types", {
     .notNull(),
 });
 
-export const eventTags = pgTable("event_tags", {
-  id: serial().primaryKey().notNull(),
-  name: varchar().notNull(),
-  description: varchar(),
-  color: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-});
+export const eventTags = pgTable(
+  "event_tags",
+  {
+    id: serial().primaryKey().notNull(),
+    specificOrgId: integer("specific_org_id"),
+    name: varchar().notNull(),
+    description: varchar(),
+    color: varchar(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.specificOrgId],
+      foreignColumns: [orgs.id],
+      name: "event_tags_specific_org_id_fkey",
+    }),
+  ],
+);
 
 export const eventCategories = pgTable("event_categories", {
   id: serial().primaryKey().notNull(),
@@ -191,6 +202,7 @@ export const eventTypes = pgTable(
   "event_types",
   {
     id: serial().primaryKey().notNull(),
+    specificOrgId: integer("specific_org_id"),
     name: varchar().notNull(),
     description: varchar(),
     acronym: varchar(),
@@ -207,6 +219,11 @@ export const eventTypes = pgTable(
       columns: [table.categoryId],
       foreignColumns: [eventCategories.id],
       name: "event_types_category_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.specificOrgId],
+      foreignColumns: [orgs.id],
+      name: "event_types_specific_org_id_fkey",
     }),
   ],
 );
@@ -714,56 +731,6 @@ export const achievementsXUsers = pgTable(
     primaryKey({
       columns: [table.achievementId, table.userId],
       name: "achievements_x_users_pkey",
-    }),
-  ],
-);
-
-export const eventTypesXOrg = pgTable(
-  "event_types_x_org",
-  {
-    eventTypeId: integer("event_type_id").notNull(),
-    orgId: integer("org_id").notNull(),
-    isDefault: boolean("is_default").notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.eventTypeId],
-      foreignColumns: [eventTypes.id],
-      name: "event_types_x_org_event_type_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "event_types_x_org_org_id_fkey",
-    }),
-    primaryKey({
-      columns: [table.eventTypeId, table.orgId],
-      name: "event_types_x_org_pkey",
-    }),
-  ],
-);
-
-export const eventTagsXOrg = pgTable(
-  "event_tags_x_org",
-  {
-    eventTagId: integer("event_tag_id").notNull(),
-    orgId: integer("org_id").notNull(),
-    colorOverride: varchar("color_override"),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.eventTagId],
-      foreignColumns: [eventTags.id],
-      name: "event_tags_x_org_event_tag_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "event_tags_x_org_org_id_fkey",
-    }),
-    primaryKey({
-      columns: [table.eventTagId, table.orgId],
-      name: "event_tags_x_org_pkey",
     }),
   ],
 );
