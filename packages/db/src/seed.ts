@@ -36,9 +36,7 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.attendance);
   await db.delete(schema.eventCategories);
   await db.delete(schema.eventTags);
-  await db.delete(schema.eventTagsXOrg);
   await db.delete(schema.eventTypes);
-  await db.delete(schema.eventTypesXOrg);
   await db.delete(schema.eventsXEventTypes);
   await db.delete(schema.locations);
   await db.delete(schema.orgTypes);
@@ -79,12 +77,13 @@ enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",
   Ruck = "Ruck",
+  QSource = "QSource",
+  Swimming = "Swimming",
   Mobility = "Mobility",
   Bike = "Bike",
-  Swimming = "Swimming",
   Gear = "Gear",
   "Wild Card" = "Wild Card",
-
+  "2ndF" = "2ndF",
   // Cycling // Bike
   // CORE // Bootcamp
   // Run with Pain Stations // Run
@@ -161,6 +160,17 @@ export async function insertDatabaseStructure(
   if (!offTheBooksEventCategoryId)
     throw new Error("Off the books event category not found");
 
+  const faithEventCategoryId = eventCategories.find(
+    (ec) => ec.name === EventCategories["3rd F - Faith"].toString(),
+  )?.id;
+  if (!faithEventCategoryId) throw new Error("Faith event category not found");
+
+  const fellowshipEventCategoryId = eventCategories.find(
+    (ec) => ec.name === EventCategories["2nd F - Fellowship"].toString(),
+  )?.id;
+  if (!fellowshipEventCategoryId)
+    throw new Error("Fellowship event category not found");
+
   const eventTypes = await db
     .insert(schema.eventTypes)
     .values([
@@ -184,33 +194,47 @@ export async function insertDatabaseStructure(
       },
       {
         id: 4,
-        name: EventTypes.Mobility,
-        acronym: "MO",
-        categoryId: coreWorkoutEventCategoryId,
+        name: EventTypes.QSource,
+        acronym: "QS",
+        categoryId: faithEventCategoryId,
       },
       {
         id: 5,
-        name: EventTypes.Bike,
-        acronym: "BK",
-        categoryId: coreWorkoutEventCategoryId,
-      },
-      {
-        id: 6,
         name: EventTypes.Swimming,
         acronym: "SW",
         categoryId: coreWorkoutEventCategoryId,
       },
+
       {
-        id: 7,
-        name: EventTypes.Gear,
-        acronym: "GE",
+        id: 6,
+        name: EventTypes.Mobility,
+        acronym: "MB",
         categoryId: coreWorkoutEventCategoryId,
       },
       {
+        id: 7,
+        name: EventTypes.Bike,
+        acronym: "BK",
+        categoryId: coreWorkoutEventCategoryId,
+      },
+
+      {
         id: 8,
+        name: EventTypes.Gear,
+        acronym: "GR",
+        categoryId: coreWorkoutEventCategoryId,
+      },
+      {
+        id: 9,
         name: EventTypes["Wild Card"],
         acronym: "WC",
-        categoryId: coreWorkoutEventCategoryId,
+        categoryId: offTheBooksEventCategoryId,
+      },
+      {
+        id: 10,
+        name: EventTypes["2ndF"],
+        acronym: "2F",
+        categoryId: fellowshipEventCategoryId,
       },
     ])
     .returning();
