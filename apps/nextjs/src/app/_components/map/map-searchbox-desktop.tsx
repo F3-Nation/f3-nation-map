@@ -188,7 +188,7 @@ export function MapSearchBox({
               ref={checkboxContainerRef}
               className="border-b border-gray-200 p-2"
             >
-              <div className="flex flex-row gap-4 justify-center">
+              <div className="flex flex-row justify-center gap-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="show-locations"

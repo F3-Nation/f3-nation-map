@@ -26,7 +26,7 @@ export const PlaceRowMap = ({
         })}
       >
         <div className="flex-shrink-0">
-        <MapPin />
+          <MapPin />
         </div>
         <div className="flex-4 text-left">
           <CardTitle>{result.header}</CardTitle>

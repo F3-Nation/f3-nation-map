@@ -1,7 +1,7 @@
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import { aliasedTable, count, eq, inArray, schema, sql } from "@f3/db";
+import { aliasedTable, count, desc, eq, schema, sql } from "@f3/db";
 import { env } from "@f3/env";
 import { isTruthy } from "@f3/shared/common/functions";
 
@@ -121,7 +121,12 @@ export const locationRouter = createTRPCRouter({
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
-        .groupBy(schema.events.id);
+        .groupBy(
+          schema.events.id,
+          schema.locations.id,
+          schema.orgs.logoUrl,
+          schema.orgs.website,
+        );
       const locationEvents = locationsAndEvents.reduce(
         (acc, item) => {
           const location = item.locations;
@@ -195,97 +200,95 @@ export const locationRouter = createTRPCRouter({
   //   return locationEvents;
   // }),
   getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
-    const data = await ctx.db
+    const events = await ctx.db
       .select({
-        location: schema.locations,
-        event: schema.events,
+        id: schema.events.id,
+        location: {
+          id: schema.locations.id,
+          lat: schema.locations.latitude,
+          lon: schema.locations.longitude,
+          name: schema.locations.name,
+          isActive: schema.locations.isActive,
+          created: schema.locations.created,
+          updated: schema.locations.updated,
+          meta: schema.locations.meta,
+          locationDescription: schema.locations.description,
+          orgId: schema.locations.orgId,
+          logo: schema.orgs.logoUrl,
+          website: schema.orgs.website,
+        },
+        dayOfWeek: schema.events.dayOfWeek,
+        startTime: schema.events.startTime,
+        endTime: schema.events.endTime,
+        description: schema.events.description,
+        name: schema.events.name,
         types: sql<
           { id: number; name: string }[]
         >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
-        website: schema.orgs.website,
         logo: schema.orgs.logoUrl,
-        locationDescription: schema.locations.description,
       })
-      .from(schema.locations)
+      .from(schema.events)
+      .innerJoin(
+        schema.locations,
+        eq(schema.events.locationId, schema.locations.id),
+      )
       .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
       .leftJoin(
-        schema.events,
-        eq(schema.events.locationId, schema.locations.id),
+        schema.eventsXEventTypes,
+        eq(schema.eventsXEventTypes.eventId, schema.events.id),
       )
       .leftJoin(
         schema.eventTypes,
         eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
       )
-      .groupBy(schema.events.id)
-      .where(inArray(schema.locations.id, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+      .groupBy(
+        schema.events.id,
+        schema.locations.id,
+        schema.orgs.logoUrl,
+        schema.orgs.website,
+      )
+      .orderBy(desc(schema.events.id))
+      .limit(30);
 
-    const locationEvents = data.reduce(
+    const previewLocations = events.reduce(
       (acc, item) => {
-        const location = {
+        acc[item.location.id] = {
           ...item.location,
-          created: new Date(item.location.created),
-          updated: new Date(item.location.updated),
-        };
-        const event = item.event;
-        if (!acc[location.id]) {
-          acc[location.id] = {
-            location: {
-              ...location,
-              lat: item.location.latitude,
-              lon: item.location.longitude,
-              website: item.website,
-              logo: item.logo,
-              locationDescription: item.locationDescription,
+          distance: 0,
+          events: [
+            ...(acc[item.location.id]?.events ?? []),
+            {
+              id: item.id,
+              name: item.name,
+              dayOfWeek: item.dayOfWeek,
+              startTime: item.startTime,
+              types: item.types,
             },
-            events: [],
-          };
-        }
-        if (event) {
-          acc[location.id]?.events.push({
-            ...event,
-            types: item.types,
-            logo: item.logo,
-          });
-        }
+          ],
+        };
         return acc;
       },
       {} as Record<
-        string,
+        number,
         {
-          location: {
-            id: number;
-            lat: number | null;
-            lon: number | null;
-            name: string;
-            isActive: boolean;
-            created: Date | null;
-            updated: Date | null;
-            meta: unknown;
-            locationDescription: string | null;
-            orgId: number | null;
-            logo: string | null;
-            website: string | null;
-          };
+          id: number;
+          lat: number | null;
+          lon: number | null;
+          logo: string | null;
+          locationDescription: string | null;
+          distance: number;
           events: {
             id: number;
-            locationId: number | null;
+            name: string;
             dayOfWeek: number | null;
             startTime: string | null;
-            endTime: string | null;
-            description: string | null;
             types: { id: number; name: string }[];
-            name: string;
-            logo: string | null;
           }[];
         }
       >,
     );
 
-    return Object.values(locationEvents).map((item) => ({
-      ...item.location,
-      distance: 0,
-      events: item.events,
-    }));
+    return Object.values(previewLocations);
   }),
   getAoWorkoutData: publicProcedure
     .input(z.object({ locationId: z.number() }))
@@ -432,8 +435,6 @@ export const locationRouter = createTRPCRouter({
               { id: number; name: string }[]
             >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
           },
-          // locations: { id: schema.locations.id },
-          // events: { id: schema.events.id },
         })
         .from(schema.locations)
         .where(eq(schema.orgs.parentId, input.regionId))
@@ -450,22 +451,12 @@ export const locationRouter = createTRPCRouter({
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
-        .groupBy(schema.events.id);
-      // const locationEvents = locationsAndEvents.reduce(
-      //   (acc, item) => {
-      //     return [
-      //       ...acc,
-      //       item.events.map((event) => {
-      //         return {
-      //           ...item.locations,
-      //           events: [...(acc[item.locations.id]?.events ?? []), event],
-      //         };
-      //       }),
-      //     ];
-      //   },
-      //   [] as ((typeof locationsAndEvents)[0]["locations"] &
-      //     (typeof locationsAndEvents)[0]["events"])[],
-      // );
+        .groupBy(
+          schema.events.id,
+          schema.locations.id,
+          schema.orgs.logoUrl,
+          schema.orgs.website,
+        );
       return locationsAndEvents;
     }),
   getWorkoutCount: publicProcedure.query(async ({ ctx }) => {
