@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
-  customType,
   date,
   doublePrecision,
   foreignKey,
@@ -19,42 +18,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-const bytea = customType<{ data: Buffer; notNull: false; default: false }>({
-  dataType() {
-    return "bytea";
-  },
-});
-
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
-});
-
-export const magiclinkauthrecord = pgTable("magiclinkauthrecord", {
-  id: serial().primaryKey().notNull(),
-  email: varchar().notNull(),
-  // TODO: failed to parse database type 'bytea'
-  otpHash: bytea("otp_hash").notNull(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  expiration: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  clientIp: varchar("client_ip").notNull(),
-  recentAttempts: integer("recent_attempts").notNull(),
-});
-
-export const magiclinkauthsession = pgTable("magiclinkauthsession", {
-  id: serial().primaryKey().notNull(),
-  email: varchar().notNull(),
-  persistentId: varchar("persistent_id").notNull(),
-  sessionToken: varchar("session_token").notNull(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  expiration: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
 });
 
 export const users = pgTable(
