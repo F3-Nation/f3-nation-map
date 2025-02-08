@@ -490,6 +490,7 @@ export const locations = pgTable(
     latitude: doublePrecision(),
     longitude: doublePrecision(),
     addressStreet: varchar("address_street"),
+    addressStreet2: varchar("address_street2"),
     addressCity: varchar("address_city"),
     addressState: varchar("address_state"),
     addressZip: varchar("address_zip"),

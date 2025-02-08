@@ -330,6 +330,7 @@ export async function insertData(data: {
     .values(
       regionData
         .map((region) => {
+          if (!region["Region Name"].replace("-", "").trim()) return null;
           const areaId = areaNameToId[region.Area];
           if (areaId === undefined) return null;
           const regionData: InferInsertModel<typeof schema.orgs> = {
@@ -398,25 +399,18 @@ export async function insertData(data: {
     .insert(schema.orgs)
     .values(
       Object.values(uniqueAOsWithWorkouts).map(({ ao, events }) => {
-        const address = [
-          events[0]?.["Address 1"],
-          events[0]?.["Address 2"],
-          events[0]?.City,
-          events[0]?.State,
-          events[0]?.["Postal Code"],
-          events[0]?.Country,
-        ]
-          .filter(isTruthy)
-          .join(", ");
         const aoData: InferInsertModel<typeof schema.orgs> = {
           // name: "", // AOs do not have names yet
-          name: "", // AOs don't have names yes
+          name: events
+            .map((e) => e["Workout Name"])
+            .filter(onlyUnique)
+            .join(", "), // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
           orgTypeId:
             orgTypes.find((ot) => ot.name === OrgTypes.AO.toString())?.id ?? -1,
           logoUrl: events[0]?.Logo,
           parentId: ao.regionId,
-          description: address,
+          description: undefined,
           website: events[0]?.Website,
           meta: {
             latLonKey: ao.key,
@@ -454,6 +448,12 @@ export async function insertData(data: {
         const aoData: InferInsertModel<typeof schema.locations> = {
           name: "", // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
+          addressStreet: events[0]?.["Address 1"],
+          addressStreet2: events[0]?.["Address 2"],
+          addressCity: events[0]?.City,
+          addressState: events[0]?.State,
+          addressZip: events[0]?.["Postal Code"],
+          addressCountry: events[0]?.Country,
           description: aoOrg?.description, // AOs description is the address
           latitude: safeParseFloat(ao.latitude),
           longitude: safeParseFloat(ao.longitude),
