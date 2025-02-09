@@ -441,7 +441,7 @@ export const locationRouter = createTRPCRouter({
             locationDescription: schema.locations.description,
             orgId: schema.locations.orgId,
             logo: ao.logoUrl,
-            website: schema.orgs.website,
+            website: ao.website,
           },
           events: {
             id: schema.events.id,
@@ -472,6 +472,11 @@ export const locationRouter = createTRPCRouter({
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
         .groupBy(schema.events.id, schema.locations.id, ao.logoUrl, ao.website);
+      console.log(
+        "locationsAndEvents",
+        locationsAndEvents.length,
+        locationsAndEvents[0],
+      );
       return locationsAndEvents;
     }),
   getWorkoutCount: publicProcedure.query(async ({ ctx }) => {
