@@ -54,13 +54,13 @@ export const DesktopLocationPanelContent = () => {
   const workoutFields = {
     Name: workout?.eventName,
     What: workout?.types.map((type) => type.name).join(", "),
-    Where: location?.locationAddress ? (
+    Where: location?.fullAddress ? (
       <Link
-        href={`https://maps.google.com/?q=${encodeURIComponent(location?.locationAddress)}`}
+        href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
         target="_blank"
         className="underline"
       >
-        {location.locationAddress}
+        {location.fullAddress}
       </Link>
     ) : null,
     When: workout ? getWhenFromWorkout(workout) : "",
@@ -163,6 +163,11 @@ export const DesktopLocationPanelContent = () => {
                       regionId: results?.location.regionId,
                       eventId: -1,
                       locationAddress: results?.location.locationAddress,
+                      locationAddress2: results?.location.locationAddress2,
+                      locationCity: results?.location.locationCity,
+                      locationState: results?.location.locationState,
+                      locationZip: results?.location.locationZip,
+                      locationCountry: results?.location.locationCountry,
                       lat: lat,
                       lng: lng,
                       workoutWebsite: results?.location.aoWebsite,
@@ -231,7 +236,7 @@ export const DesktopLocationPanelContent = () => {
             </dl>
           </div>
           <Link
-            className="flex cursor-pointer text-blue-500 underline"
+            className="flex w-min cursor-pointer text-blue-500 underline"
             target="_blank"
             href={"https://f3nation.com/about-f3"}
           >
@@ -260,6 +265,11 @@ export const DesktopLocationPanelContent = () => {
                   workoutWebsite: results?.location.aoWebsite,
                   aoLogo: results?.location.aoLogo,
                   locationAddress: results?.location.locationAddress,
+                  locationAddress2: results?.location.locationAddress2,
+                  locationCity: results?.location.locationCity,
+                  locationState: results?.location.locationState,
+                  locationZip: results?.location.locationZip,
+                  locationCountry: results?.location.locationCountry,
                   lat: lat,
                   lng: lng,
                   startTime: event?.startTime,

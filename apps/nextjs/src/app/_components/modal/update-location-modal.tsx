@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import gte from "lodash/gte";
+import { useSession } from "next-auth/react";
 import { Controller } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
@@ -14,75 +15,44 @@ import {
 } from "@f3/ui/dialog";
 import { Form, useForm } from "@f3/ui/form";
 import { Input } from "@f3/ui/input";
-import { ControlledSelect } from "@f3/ui/select";
+import {
+  ControlledSelect,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@f3/ui/select";
 import { Spinner } from "@f3/ui/spinner";
 import { Textarea } from "@f3/ui/textarea";
 import { toast } from "@f3/ui/toast";
+import { RequestInsertSchema } from "@f3/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
 import { uploadLogo } from "~/utils/image/upload-logo";
 import { appStore } from "~/utils/store/app";
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
+import { DebouncedImage } from "../debounced-image";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
-export const UpdateLocationModal = () => {
+export const UpdateLocationModal = ({
+  data,
+}: {
+  data: DataType[ModalType.UPDATE_LOCATION];
+}) => {
+  const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { open, data: rawData } = useModalStore();
-  const { mutateAsync: updateLocation } =
-    api.location.updateLocation.useMutation();
-
-  const data = rawData as DataType[ModalType.UPDATE_LOCATION];
+  const { mutateAsync: submitUpdateRequest } =
+    api.request.submitUpdateRequest.useMutation();
+  const { mutateAsync: submitUpdateRequestAdmin } =
+    api.request.validateSubmissionByAdmin.useMutation();
 
   const form = useForm({
-    schema: z.object({
-      id: z.string(),
-      workoutName: z.string().min(1, { message: "Workout name is required" }),
-      workoutWebsite: z.string().nullable(),
-      aoLogo: z.string(),
-      eventId: z.number(),
-      locationId: z.number(),
-      regionId: z.number().refine((value) => value !== -1, {
-        message: "Please select a region",
-      }),
-      email: z.string().email({
-        message: "Invalid email address",
-      }),
-      lat: z.number(),
-      lng: z.number(),
-      startTime: z.string().regex(/^\d{2}:\d{2}$/, {
-        message: "Start time must be in 24hr format (HH:MM)",
-      }),
-      endTime: z.string().regex(/^\d{2}:\d{2}$/, {
-        message: "End time must be in 24hr format (HH:MM)",
-      }),
-      dayOfWeek: z.string(),
-      type: z.string(),
-      eventDescription: z
-        .string()
-        .min(1, { message: "Description is required" }),
-      locationAddress: z.string().min(1, {
-        message: "Location address is required",
-      }),
+    schema: RequestInsertSchema.extend({
       badImage: z.boolean().default(false),
     }),
-    defaultValues: {
-      workoutName: "",
-      workoutWebsite: "",
-      aoLogo: "",
-      eventId: -1,
-      locationId: -1,
-      locationAddress: "",
-      regionId: -1,
-      email: appStore.get("myEmail"),
-      startTime: "",
-      endTime: "",
-      dayOfWeek: "",
-      type: "",
-      eventDescription: "",
-      badImage: false,
-    },
     mode: "onBlur",
   });
 
@@ -90,6 +60,10 @@ export const UpdateLocationModal = () => {
   const formRegionId = form.watch("regionId");
   const formEventId = form.watch("eventId");
   const formId = form.watch("id");
+
+  const { data: session } = useSession();
+  const isAdmin = session?.role === "admin";
+  const canEditRegion = session?.editingRegionIds.includes(formRegionId);
 
   const lat = data.lat;
   const lng = data.lng;
@@ -99,55 +73,47 @@ export const UpdateLocationModal = () => {
   const { data: regions } = api.location.getRegions.useQuery();
   const { data: locationEvents } = api.location.getRegionAos.useQuery(
     { regionId: formRegionId ?? -1 },
-    { enabled: formRegionId !== null },
+    { enabled: formRegionId !== null && formRegionId !== -1 },
   );
+  const { data: eventTypes } = api.event.types.useQuery();
 
   const onSubmit = form.handleSubmit(
     async (values) => {
-      if (values.badImage && !!values.aoLogo) {
-        form.setError("aoLogo", {
-          message: "Invalid image URL",
-        });
-        return;
+      try {
+        console.log("onSubmit values", values);
+        if (values.badImage && !!values.aoLogo) {
+          form.setError("aoLogo", { message: "Invalid image URL" });
+          return;
+        }
+        setIsSubmitting(true);
+        appStore.setState({ myEmail: values.submittedBy });
+        const updateRequestData = {
+          ...values,
+          eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
+        };
+
+        if (isAdmin) {
+          await submitUpdateRequestAdmin(updateRequestData);
+          toast.success("Map updated");
+          void utils.location.invalidate();
+          void utils.event.invalidate();
+        } else {
+          await submitUpdateRequest(updateRequestData);
+          toast.success(
+            "Request submitted. Please check your email to validate your submission.",
+          );
+        }
+
+        setIsSubmitting(false);
+        closeModal();
+      } catch (error) {
+        console.error("Error submitting update request", error);
+        toast.error("Failed to submit update request");
       }
-      setIsSubmitting(true);
-      console.log(values);
-      appStore.setState({ myEmail: values.email });
-      await updateLocation({
-        id: values.id,
-        orgId: values.regionId,
-        eventName: values.workoutName,
-        submittedBy: appStore.get("myEmail"),
-        locationId: data.locationId,
-        eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
-        eventTypes:
-          values.type === "Bootcamp"
-            ? [{ id: 1, name: "Bootcamp" }]
-            : values.type === "Ruck"
-              ? [{ id: 2, name: "Ruck" }]
-              : values.type === "Run"
-                ? [{ id: 3, name: "Run" }]
-                : values.type === "Swim"
-                  ? [{ id: 4, name: "Swim" }]
-                  : [],
-        eventTag: null,
-        eventStartTime: values.startTime ? values.startTime + ":00" : null,
-        eventEndTime: values.endTime ? values.endTime + ":00" : null,
-        eventDayOfWeek: values.dayOfWeek,
-        eventDescription: values.eventDescription,
-        locationDescription: values.locationAddress,
-        locationLat: values.lat,
-        locationLng: values.lng,
-      });
-      toast.success(
-        "Request submitted. Please check your email to validate your submission.",
-      );
-      setIsSubmitting(false);
-      closeModal();
     },
     (errors) => {
       // Get all error messages
-      const errorMessages = Object.entries(errors)
+      const errorMessages = Object.entries(errors as { message: string }[])
         .map(([field, error]) => {
           if (error?.message) {
             return `${field}: ${error.message}`;
@@ -174,25 +140,30 @@ export const UpdateLocationModal = () => {
       regionId: data.regionId ?? -1,
       eventId: data.eventId ?? -1,
       locationId: data.locationId ?? -1,
-      workoutName: data.workoutName ?? "",
-      workoutWebsite: data.workoutWebsite ?? "",
+      eventName: data.workoutName ?? "",
       aoLogo: data.aoLogo ?? "",
       locationAddress: data.locationAddress ?? "",
-      lat: data.lat ?? 0,
-      lng: data.lng ?? 0,
-      startTime: data.startTime?.slice(0, 5) ?? "05:30",
-      endTime: data.endTime?.slice(0, 5) ?? "06:15",
-      dayOfWeek:
+      locationAddress2: data.locationAddress2 ?? "",
+      locationCity: data.locationCity ?? "",
+      locationState: data.locationState ?? "",
+      locationZip: data.locationZip ?? "",
+      locationCountry: data.locationCountry ?? "",
+      locationLat: data.lat ?? 0,
+      locationLng: data.lng ?? 0,
+      eventStartTime: data.startTime?.slice(0, 5) ?? "05:30",
+      eventEndTime: data.endTime?.slice(0, 5) ?? "06:15",
+      eventDayOfWeek:
         typeof data.dayOfWeek === "number" ? DAY_ORDER[data.dayOfWeek] : "",
-      type: data.types?.[0]?.name ?? "Bootcamp",
+      eventTypeIds: data.types?.map((type) => type.id) ?? [],
       eventDescription: data.eventDescription ?? "",
-      email: appStore.get("myEmail"),
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+      submittedBy: session?.email || appStore.get("myEmail"),
     });
-  }, [data, form]);
+  }, [data, form, session?.email]);
 
   return (
     <Dialog
-      open={open}
+      open={true}
       onOpenChange={() => {
         closeModal();
       }}
@@ -219,17 +190,19 @@ export const UpdateLocationModal = () => {
               </DialogTitle>
             </DialogHeader>
 
+            <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+              Update Existing Event:
+            </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Region
                 </div>
                 <VirtualizedCombobox
-                  buttonClassName="w-full rounded-md py-3 font-normal"
-                  hideSearchIcon
+                  // buttonClassName="w-full rounded-md py-3 font-normal"
+                  // hideSearchIcon
                   key={formRegionId?.toString()}
                   // disabled if we got this from the data param
-                  disabled={typeof data.regionId === "number"}
                   options={
                     regions
                       ?.map((region) => ({
@@ -257,10 +230,10 @@ export const UpdateLocationModal = () => {
                     Event
                   </div>
                   <VirtualizedCombobox
-                    buttonClassName="w-full rounded-md py-3 font-normal"
+                    // buttonClassName="w-full rounded-md py-3 font-normal"
                     // disabled if we got this from the data param
                     disabled={typeof data.eventId === "number"}
-                    hideSearchIcon
+                    // hideSearchIcon
                     key={formEventId?.toString()}
                     options={[
                       {
@@ -291,33 +264,194 @@ export const UpdateLocationModal = () => {
                   />
                 </div>
               )}
-
+            </div>
+            <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+              Event Details:
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Workout Name
                 </div>
                 <Input
-                  {...form.register("workoutName")}
+                  {...form.register("eventName")}
                   disabled={formRegionId === null}
                 />
                 <p className="text-xs text-destructive">
-                  {form.formState.errors.workoutName?.message}
+                  {form.formState.errors.eventName?.message}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
-                  Workout Website
+                  Day of Week
                 </div>
-                <Input
-                  {...form.register("workoutWebsite")}
-                  disabled={formRegionId === null}
+                <ControlledSelect
+                  control={form.control}
+                  name="eventDayOfWeek"
+                  options={DAY_ORDER.map((day) => ({
+                    label: day,
+                    value: day,
+                  }))}
+                  placeholder="Select a day of the week"
                 />
                 <p className="text-xs text-destructive">
-                  {form.formState.errors.workoutWebsite?.message}
+                  {form.formState.errors.eventDayOfWeek?.message}
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Start Time (24hr format)
+                </div>
+                <Input {...form.register("eventStartTime")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.eventStartTime?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  End Time (24hr format)
+                </div>
+                <Input {...form.register("eventEndTime")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.eventEndTime?.message}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Event Type
+                </div>
+                <Controller
+                  control={form.control}
+                  name="eventTypeIds"
+                  render={({ field, fieldState }) => {
+                    return (
+                      <>
+                        <Select
+                          value={field.value?.[0]?.toString()}
+                          onValueChange={(value) => {
+                            console.log("value", value);
+                            if (value) {
+                              field.onChange([Number(value)]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger
+                            id={`eventTypes`}
+                            aria-label="Event Type"
+                          >
+                            <SelectValue placeholder="Select an event type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {eventTypes?.map((type) => (
+                              <SelectItem
+                                key={type.id}
+                                value={type.id.toString()}
+                              >
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-destructive">
+                          {fieldState.error?.message}
+                        </p>
+                      </>
+                    );
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Event Description
+                </div>
+                <Textarea {...form.register("eventDescription")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.eventDescription?.message}
+                </p>
+              </div>
+            </div>
+            <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+              Location Details:
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Address
+                </div>
+                <Input
+                  {...form.register("locationAddress")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationAddress?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Address 2
+                </div>
+                <Input
+                  {...form.register("locationAddress2")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationAddress2?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location City
+                </div>
+                <Input
+                  {...form.register("locationCity")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationCity?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location State
+                </div>
+                <Input
+                  {...form.register("locationState")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationState?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Zip
+                </div>
+                <Input
+                  {...form.register("locationZip")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationZip?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Country
+                </div>
+                <Input {...form.register("locationCountry")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationCountry?.message}
+                </p>
+              </div>
+            </div>
+            <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+              Other Details:
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   AO Logo
@@ -368,6 +502,7 @@ export const UpdateLocationModal = () => {
                         {value && (
                           <DebouncedImage
                             src={value}
+                            alt="AO Logo"
                             onImageFail={() => form.setValue("badImage", true)}
                             onImageSuccess={() =>
                               form.setValue("badImage", false)
@@ -382,108 +517,20 @@ export const UpdateLocationModal = () => {
                   {form.formState.errors.aoLogo?.message}
                 </p>
               </div>
-
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
-                  Location Address
+                  Submitter Email
                 </div>
                 <Input
-                  {...form.register("locationAddress")}
+                  {...form.register("submittedBy")}
                   disabled={formRegionId === null}
                 />
                 <p className="text-xs text-destructive">
-                  {form.formState.errors.locationAddress?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Start Time (24hr format)
-                </div>
-                <Input {...form.register("startTime")} />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.startTime?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  End Time (24hr format)
-                </div>
-                <Input {...form.register("endTime")} />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.endTime?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Day of Week
-                </div>
-                <ControlledSelect
-                  control={form.control}
-                  name="dayOfWeek"
-                  options={DAY_ORDER.map((day) => ({
-                    label: day,
-                    value: day,
-                  }))}
-                  placeholder="Select a day of the week"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.dayOfWeek?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Type
-                </div>
-                <ControlledSelect
-                  control={form.control}
-                  name="type"
-                  options={["Bootcamp", "Ruck", "Run", "Swim"].map((type) => ({
-                    label: type,
-                    value: type,
-                  }))}
-                  placeholder="Select a day of the week"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.type?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2 sm:col-span-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Workout Description
-                </div>
-                <Textarea {...form.register("eventDescription")} />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.eventDescription?.message}
+                  {form.formState.errors.submittedBy?.message}
                 </p>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">
-                Your Email
-              </div>
-              <Input
-                {...form.register("email")}
-                disabled={formRegionId === null}
-              />
-              <p className="text-xs text-destructive">
-                {form.formState.errors.email?.message}
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => closeModal()}
-              >
-                Cancel
-              </Button>
+            <div className="flex flex-col items-stretch justify-end gap-2">
               <Button
                 type="button"
                 className="bg-blue-600 text-white hover:bg-blue-600/80"
@@ -497,6 +544,25 @@ export const UpdateLocationModal = () => {
                   "Save Changes"
                 )}
               </Button>
+              {canEditRegion ? (
+                <div className="mb-2 text-center text-xs text-muted-foreground">
+                  Since you can edit this region, these changes will be
+                  reflected immediately
+                </div>
+              ) : isAdmin ? (
+                <div className="mb-2 text-center text-xs text-muted-foreground">
+                  Since you're an admin, these changes will be reflected
+                  immediately
+                </div>
+              ) : null}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => closeModal()}
+              >
+                Cancel
+              </Button>
             </div>
           </form>
         </Form>
@@ -504,37 +570,3 @@ export const UpdateLocationModal = () => {
     </Dialog>
   );
 };
-
-function DebouncedImage({
-  src,
-  onImageFail,
-  onImageSuccess,
-}: {
-  src: string;
-  onImageFail: () => void;
-  onImageSuccess: () => void;
-}) {
-  const [loading, setLoading] = useState(true);
-  const [image, setImage] = useState<string | null>(null);
-  useEffect(() => {
-    setLoading(true);
-    const timeout = setTimeout(() => {
-      setLoading(false);
-      setImage(src);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [src]);
-  return loading ? (
-    <div className="size-8 animate-pulse rounded-md bg-gray-200" />
-  ) : image ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={image}
-      width={32}
-      height={32}
-      alt="AO Logo"
-      onError={onImageFail}
-      onLoad={onImageSuccess}
-    />
-  ) : null;
-}

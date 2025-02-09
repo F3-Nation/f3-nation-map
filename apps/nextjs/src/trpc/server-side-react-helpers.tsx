@@ -5,13 +5,9 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@f3/api";
 
-export const api = createTRPCReact<AppRouter>();
+import { getBaseUrl } from "./util";
 
-function getBaseUrl() {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-}
+export const api = createTRPCReact<AppRouter>();
 
 export const globalQueryClient = new QueryClient({
   defaultOptions: {

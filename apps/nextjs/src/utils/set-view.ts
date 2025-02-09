@@ -2,7 +2,7 @@ import { CLOSE_ZOOM } from "@f3/shared/app/constants";
 
 import { isTouchDevice } from "./is-touch-device";
 import { mapStore } from "./store/map";
-import { ModalType, useModalStore } from "./store/modal";
+import { modalStore, ModalType } from "./store/modal";
 
 export const setView = ({
   lat,
@@ -16,9 +16,10 @@ export const setView = ({
   options?: { animate?: boolean };
 }) => {
   const isMobile = isTouchDevice();
-  const { open, type } = useModalStore.getState();
+  const [openModal] = modalStore.get("modals").slice(-1);
+  const type = openModal?.type;
   const mapRef = mapStore.get("ref");
-  const workoutModalOpen = open && type === ModalType.WORKOUT_DETAILS;
+  const workoutModalOpen = openModal && type === ModalType.WORKOUT_DETAILS;
   let center = { lat, lng };
   const newZoom = zoom ?? Math.max(mapStore.get("zoom"), CLOSE_ZOOM);
   mapStore.setState({ hasMovedMap: true });

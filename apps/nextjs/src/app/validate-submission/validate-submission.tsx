@@ -12,7 +12,7 @@ export async function ValidateSubmission({
   let result: { success: boolean } | null = null;
 
   try {
-    result = await api.location.validateSubmission({
+    result = await api.request.validateSubmission({
       token,
       submissionId,
     });

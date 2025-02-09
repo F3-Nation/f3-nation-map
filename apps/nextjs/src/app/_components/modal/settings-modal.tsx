@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CircleHelp, Eye, Moon, Pencil, Sun, SunMoon } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
 import { Z_INDEX } from "@f3/shared/app/constants";
@@ -11,19 +12,20 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
+import { api } from "~/trpc/react";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
 
-export default function HowToJoinModal() {
-  const isAdmin = false;
-  const { open } = useModalStore();
+export default function SettingsModal() {
   const mode = appStore.use.mode();
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
-
+  const { data: session } = useSession();
+  const isAdmin = session?.role === "admin";
+  const { data: regions } = api.location.getRegions.useQuery();
   return (
-    <Dialog open={open} onOpenChange={() => closeModal()}>
+    <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
         className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[400px]`)}
@@ -159,6 +161,50 @@ export default function HowToJoinModal() {
                 : "Edit mode - Submit requests to add or edit workouts"}
             </p>
           </div>
+          {!session ? (
+            <Link href={"/api/auth/signin"}>
+              <button
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
+                  "text-center text-sm",
+                  "w-full",
+                )}
+              >
+                Sign in
+              </button>
+            </Link>
+          ) : (
+            <div className="space-y-4">
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-900">
+                  Signed in as
+                  <span className="ml-1 font-semibold text-primary">
+                    {session.email}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Role: <span className="font-medium">{session.role}, </span>
+                  Editing regions:{" "}
+                  <span className="font-medium">
+                    {session.editingRegionIds.map(
+                      (id) => regions?.find((r) => r.id === id)?.name,
+                    )}
+                  </span>
+                </p>
+              </div>
+              <Link href={"/api/auth/signout"}>
+                <button
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
+                    "text-center text-sm",
+                    "w-full",
+                  )}
+                >
+                  Sign out
+                </button>
+              </Link>
+            </div>
+          )}
           <div className="flex flex-col items-center justify-center gap-4">
             <Link
               className="flex w-full flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent"

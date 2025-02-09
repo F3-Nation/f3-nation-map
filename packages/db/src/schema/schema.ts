@@ -7,6 +7,7 @@ import {
   integer,
   json,
   numeric,
+  pgEnum,
   pgTable,
   primaryKey,
   serial,
@@ -17,6 +18,14 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+import type { EventMeta, LocationMeta } from "@f3/shared/app/types";
+import { RegionRole, UserRole, UserStatus } from "@f3/shared/app/enums";
+
+export const RegionRoleEnum = pgEnum("region_role", RegionRole);
+
+export const UserRoleEnum = pgEnum("user_role", UserRole);
+export const UserStatusEnum = pgEnum("user_status", UserStatus);
 
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
@@ -29,8 +38,10 @@ export const users = pgTable(
     f3Name: varchar("f3_name"),
     firstName: varchar("first_name"),
     lastName: varchar("last_name"),
+    role: UserRoleEnum("role").notNull().default("user"),
+    status: UserStatusEnum("status").notNull().default("active"),
     email: varchar().notNull(),
-    emailVerified: timestamp("email_verified", { mode: "string" }),
+    emailVerified: timestamp("email_verified"),
     phone: varchar(),
     homeRegionId: integer("home_region_id"),
     avatarUrl: varchar("avatar_url"),
@@ -317,7 +328,7 @@ export const permissions = pgTable("permissions", {
 
 export const roles = pgTable("roles", {
   id: serial().primaryKey().notNull(),
-  name: varchar().notNull(),
+  name: RegionRoleEnum("name").notNull(),
   description: varchar(),
   created: timestamp({ mode: "string" })
     .default(sql`timezone('utc'::text, now())`)
@@ -396,7 +407,7 @@ export const updateRequests = pgTable(
     locationLat: numeric("location_lat", { precision: 8, scale: 5 }),
     locationLon: numeric("location_lon", { precision: 8, scale: 5 }),
     locationId: integer("location_id"),
-    submittedBy: text("submitted_by"),
+    submittedBy: integer("submitted_by"),
     submitterValidated: boolean("submitter_validated").default(false),
     validatedBy: text("validated_by"),
     validatedAt: timestamp("validated_at", { mode: "string" }),
@@ -433,7 +444,7 @@ export const events = pgTable(
     isSeries: boolean("is_series").notNull(),
     isActive: boolean("is_active").notNull(),
     highlight: boolean().notNull(),
-    startDate: date("start_date").notNull(),
+    startDate: date("start_date"),
     endDate: date("end_date"),
     startTime: time("start_time"),
     endTime: time("end_time"),
@@ -451,7 +462,7 @@ export const events = pgTable(
     backblastRich: json("backblast_rich"),
     preblastTs: doublePrecision("preblast_ts"),
     backblastTs: doublePrecision("backblast_ts"),
-    meta: json(),
+    meta: json().$type<EventMeta>(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
@@ -495,7 +506,7 @@ export const locations = pgTable(
     addressState: varchar("address_state"),
     addressZip: varchar("address_zip"),
     addressCountry: varchar("address_country"),
-    meta: json(),
+    meta: json().$type<LocationMeta>(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),

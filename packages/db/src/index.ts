@@ -19,28 +19,32 @@ import {
   locations,
   orgs,
   orgTypes,
+  roles,
+  rolesXUsersXOrg,
   slackUsers,
   users,
 } from "./schema/schema";
-import { updateRequests } from "./schema/updateRequest";
+import { updateRequests } from "./schema/update-requests";
 
 export const schema = {
-  nextAuthAccounts,
-  nextAuthSessions,
-  nextAuthVerificationTokens,
-  users,
-  orgs,
-  events,
   attendanceTypes,
   attendance,
+  events,
   eventCategories,
   eventTags,
   eventTypes,
   eventsXEventTypes,
   locations,
+  nextAuthAccounts,
+  nextAuthSessions,
+  nextAuthVerificationTokens,
+  orgs,
   orgTypes,
+  roles,
+  rolesXUsersXOrg,
   slackUsers,
   updateRequests,
+  users,
 };
 
 const databaseUrl = env.DATABASE_URL;

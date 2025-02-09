@@ -3,6 +3,7 @@ import {
   date,
   integer,
   json,
+  pgEnum,
   text,
   time,
   timestamp,
@@ -10,17 +11,28 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
+import { UpdateRequestStatus } from "@f3/shared/app/enums";
+
 import { customNumeric } from "../utils/custom-fields";
 import { pgSqlTable } from "./_table";
 import { events, locations, orgs } from "./schema";
 
+export const UpdateRequestStatusEnum = pgEnum(
+  "update_request_status",
+  UpdateRequestStatus,
+);
+
 export const updateRequests = pgSqlTable("update_requests", {
+  // Need uuid since we create these on the frontend sometimes
   id: uuid("id").primaryKey(),
   token: uuid("token").defaultRandom().notNull(),
-  orgId: integer("org_id").references(() => orgs.id),
+  regionId: integer("region_id")
+    .notNull()
+    .references(() => orgs.id),
 
   eventId: integer("event_id").references(() => events.id),
-  eventType: varchar("event_type", { length: 30 }),
+  eventTypeIds: integer("event_type_ids").array(),
   eventTag: varchar("event_tag", { length: 30 }),
   eventSeriesId: integer("event_series_id"),
   eventIsSeries: boolean("event_is_series"),
@@ -36,19 +48,36 @@ export const updateRequests = pgSqlTable("update_requests", {
   eventRecurrencePattern: varchar("event_recurrence_pattern", { length: 30 }),
   eventRecurrenceInterval: integer("event_recurrence_interval"),
   eventIndexWithinInterval: integer("event_index_within_interval"),
-  eventMeta: json("event_meta"),
+  eventMeta: json("event_meta").$type<EventMeta>(),
+  eventContactEmail: text("event_contact_email"),
 
   locationName: text("location_name"),
   locationDescription: text("location_description"),
-  locationLat: customNumeric("location_lat", { precision: 8, scale: 5 }),
-  locationLon: customNumeric("location_lon", { precision: 8, scale: 5 }),
+  locationAddress: text("location_address"),
+  locationAddress2: text("location_address2"),
+  locationCity: text("location_city"),
+  locationState: varchar("location_state"),
+  locationZip: varchar("location_zip"),
+  locationCountry: varchar("location_country"),
+  locationLat: customNumeric("location_lat", {
+    precision: 8,
+    scale: 5,
+  }).$type<number>(),
+  locationLng: customNumeric("location_lng", {
+    precision: 8,
+    scale: 5,
+  }).$type<number>(),
   locationId: integer("location_id").references(() => locations.id),
+  locationContactEmail: text("location_contact_email"),
 
-  submittedBy: text("submitted_by"),
+  aoLogo: text("ao_logo"),
+
+  submittedBy: text("submitted_by").notNull(),
   submitterValidated: boolean("submitter_validated").default(false),
-  validatedBy: text("validated_by"),
-  validatedAt: timestamp("validated_at"),
-  meta: json("meta"),
+  reviewedBy: text("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  status: UpdateRequestStatusEnum("status").default("pending"),
+  meta: json("meta").$type<UpdateRequestMeta>(),
 
   created: timestamp("created").defaultNow(),
   updated: timestamp("updated").$onUpdate(() => new Date()),

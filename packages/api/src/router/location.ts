@@ -2,16 +2,12 @@ import omit from "lodash/omit";
 import { z } from "zod";
 
 import { aliasedTable, count, desc, eq, schema, sql } from "@f3/db";
-import { env } from "@f3/env";
 import { isTruthy } from "@f3/shared/common/functions";
+import { LocationInsertSchema } from "@f3/validators";
 
-import { mail, Templates } from "../mail";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const locationRouter = createTRPCRouter({
-  getLocations: publicProcedure.query(({ ctx }) => {
-    return ctx.session;
-  }),
   getLocationMarkersSparse: publicProcedure.query(({ ctx }) => {
     return ctx.db
       .select({
@@ -295,7 +291,7 @@ export const locationRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const ao = aliasedTable(schema.orgs, "ao");
       const region = aliasedTable(schema.orgs, "region");
-      const [[location], events] = await Promise.all([
+      const [[locationResult], events] = await Promise.all([
         ctx.db
           .select({
             locationId: schema.locations.id,
@@ -303,7 +299,12 @@ export const locationRouter = createTRPCRouter({
             lon: schema.locations.longitude,
             locationName: schema.locations.name,
             locationMeta: schema.locations.meta,
-            locationAddress: schema.locations.description,
+            locationAddress: schema.locations.addressStreet,
+            locationAddress2: schema.locations.addressStreet2,
+            locationCity: schema.locations.addressCity,
+            locationState: schema.locations.addressState,
+            locationZip: schema.locations.addressZip,
+            locationCountry: schema.locations.addressCountry,
             isActive: schema.locations.isActive,
             created: schema.locations.created,
             updated: schema.locations.updated,
@@ -351,9 +352,31 @@ export const locationRouter = createTRPCRouter({
           .groupBy(schema.events.id),
       ]);
 
-      if (!location) {
+      if (!locationResult) {
         return null;
       }
+      const location = {
+        ...locationResult,
+        fullAddress: [
+          locationResult.locationAddress,
+          locationResult.locationAddress2,
+          locationResult.locationCity,
+          locationResult.locationState,
+          locationResult.locationZip,
+          ["us", "usa", "united states", "united states of america"].includes(
+            locationResult.locationCountry
+              ?.toLowerCase()
+              .replace(/(.| )/g, "") ?? "",
+          )
+            ? ""
+            : locationResult.locationCountry,
+        ]
+          .filter(Boolean) // Remove empty/null/undefined values
+          .join(", ")
+          .replace(/, ,/g, ",") // Clean up any double commas
+          .replace(/,\s*$/, ""), // Remove trailing comma
+      };
+
       return { location, events };
     }),
   getRegions: publicProcedure.query(async ({ ctx }) => {
@@ -466,102 +489,136 @@ export const locationRouter = createTRPCRouter({
 
     return { count: result?.count };
   }),
-  updateLocation: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        locationName: z.string().nullish(),
-        locationDescription: z.string().nullish(),
-        locationLat: z.number().nullish(),
-        locationLng: z.number().nullish(),
-        locationId: z.number().nullish(),
 
-        eventName: z.string(),
-        eventDescription: z.string().nullish(),
-        eventStartTime: z.string().nullish(),
-        eventEndTime: z.string().nullish(),
-        eventDayOfWeek: z.string(),
-        eventId: z.number().nullable(),
-        eventTypes: z.object({ id: z.number(), name: z.string() }).array(),
-        eventTag: z.string().nullable(),
-        eventIsSeries: z.boolean().nullish(),
-        eventIsActive: z.boolean().nullish(),
-        eventHighlight: z.boolean().nullish(),
-        eventStartDate: z.string().nullish(),
-        eventEndDate: z.string().nullish(),
-        eventRecurrencePattern: z.string().nullish(),
-        eventRecurrenceInterval: z.number().nullish(),
-        eventIndexWithinInterval: z.number().nullish(),
-        eventMeta: z.record(z.string(), z.unknown()).nullish(),
+  all: publicProcedure.query(async ({ ctx }) => {
+    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const locationOrg = aliasedTable(schema.orgs, "location_org");
 
-        orgId: z.number(),
-        submittedBy: z.string().email(),
-        meta: z.record(z.string(), z.unknown()).nullish(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const updateRequest: typeof schema.updateRequests.$inferInsert = {
-        ...input,
-        submitterValidated: false,
-        validatedBy: null,
-        validatedAt: null,
+    const [locations, events] = await Promise.all([
+      ctx.db
+        .select({
+          id: schema.locations.id,
+          name: schema.locations.name,
+          regionName: regionOrg.name,
+          description: schema.locations.description,
+          isActive: schema.locations.isActive,
+          latitude: schema.locations.latitude,
+          longitude: schema.locations.longitude,
+          email: schema.locations.email,
+          addressStreet: schema.locations.addressStreet,
+          addressStreet2: schema.locations.addressStreet2,
+          addressCity: schema.locations.addressCity,
+          addressState: schema.locations.addressState,
+          addressZip: schema.locations.addressZip,
+          addressCountry: schema.locations.addressCountry,
+          meta: schema.locations.meta,
+          created: schema.locations.created,
+        })
+        .from(schema.locations)
+        .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
+        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id)),
+      ctx.db
+        .select({
+          id: schema.events.id,
+          locationId: schema.events.locationId,
+          dayOfWeek: schema.events.dayOfWeek,
+          startTime: schema.events.startTime,
+          type: schema.eventTypes.name,
+          name: schema.events.name,
+        })
+        .from(schema.events)
+        .leftJoin(
+          schema.eventsXEventTypes,
+          eq(schema.eventsXEventTypes.eventId, schema.events.id),
+        )
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+        ),
+    ]);
+    // console.log("locations", locations.length, locations[0]);
+    // console.log("events", events.length, events[0]);
+
+    // combine locations and events
+    const locationEvents = locations.map((location) => {
+      const eventsForThisLocation = events.filter(
+        (event) => event.locationId === location.id,
+      );
+      return {
+        ...location,
+        events: eventsForThisLocation,
       };
+    });
 
-      const [inserted] = await ctx.db
-        .insert(schema.updateRequests)
-        .values(updateRequest)
-        .returning();
+    return locationEvents;
 
-      if (!inserted) {
-        throw new Error("Failed to insert update request");
-      }
-      const [region] = await ctx.db
-        .select()
-        .from(schema.orgs)
-        .where(eq(schema.orgs.id, input.orgId));
+    // const events = await ctx.db
+    //   .select()
+    //   .from(schema.events)
+    // return { locations, events };
+  }),
+  allActive: publicProcedure.query(async ({ ctx }) => {
+    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const locationOrg = aliasedTable(schema.orgs, "location_org");
 
-      if (!region) {
-        throw new Error("Failed to find region");
-      }
+    const [locations] = await Promise.all([
+      ctx.db
+        .select({
+          id: schema.locations.id,
+          name: schema.locations.name,
+          regionId: regionOrg.id,
+        })
+        .from(schema.locations)
+        .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
+        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
+        .where(eq(schema.locations.isActive, true))
+        .orderBy(schema.locations.name),
+    ]);
+    return locations;
+  }),
+  byId: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const locationOrg = aliasedTable(schema.orgs, "location_org");
+      const regionOrg = aliasedTable(schema.orgs, "region_org");
+      const [location] = await ctx.db
+        .select({
+          id: schema.locations.id,
+          name: schema.locations.name,
+          description: schema.locations.description,
+          isActive: schema.locations.isActive,
+          created: schema.locations.created,
+          regionId: regionOrg.id,
+          regionName: regionOrg.name,
+          email: schema.locations.email,
+          latitude: schema.locations.latitude,
+          longitude: schema.locations.longitude,
+          addressStreet: schema.locations.addressStreet,
+          addressCity: schema.locations.addressCity,
+          addressState: schema.locations.addressState,
+          addressZip: schema.locations.addressZip,
+          addressCountry: schema.locations.addressCountry,
+          meta: schema.locations.meta,
+        })
+        .from(schema.locations)
+        .where(eq(schema.locations.id, input.id))
+        .leftJoin(locationOrg, eq(locationOrg.id, schema.locations.orgId))
+        .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId));
 
-      await mail.sendTemplateMessages(Templates.validateSubmission, {
-        to: input.submittedBy,
-        submissionId: inserted.id,
-        token: inserted.token,
-        regionName: region?.name,
-        eventName: inserted.eventName,
-        address: inserted.locationDescription ?? "",
-        startTime: inserted.eventStartTime ?? "",
-        endTime: inserted.eventEndTime ?? "",
-        dayOfWeek: inserted.eventDayOfWeek ?? "",
-        type: inserted.eventType ?? "",
-        url: env.NEXT_PUBLIC_URL,
-      });
-
-      return { success: true, inserted: omit(inserted, ["token"]) };
+      return location;
     }),
-  validateSubmission: publicProcedure
-    .input(z.object({ token: z.string(), submissionId: z.string() }))
+  crupdate: publicProcedure
+    .input(LocationInsertSchema)
     .mutation(async ({ ctx, input }) => {
-      const [updateRequest] = await ctx.db
-        .select()
-        .from(schema.updateRequests)
-        .where(eq(schema.updateRequests.id, input.submissionId));
-
-      if (!updateRequest) {
-        throw new Error("Failed to find update request");
-      }
-
-      if (updateRequest.token !== input.token) {
-        throw new Error("Invalid token");
-      }
-
       const [updated] = await ctx.db
-        .update(schema.updateRequests)
-        .set({ submitterValidated: true })
-        .where(eq(schema.updateRequests.id, input.submissionId))
+        .insert(schema.locations)
+        .values(input)
+        .onConflictDoUpdate({
+          target: [schema.locations.id],
+          set: input,
+        })
         .returning();
 
-      return { success: true, updateRequest: omit(updated, ["token"]) };
+      return { success: true, inserted: omit(updated, ["token"]) };
     }),
 });

@@ -9,13 +9,16 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import type { DataType, ModalType } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
 
-export default function HowToJoinModal() {
-  const { open, content } = useModalStore();
-
+export default function HowToJoinModal({
+  data,
+}: {
+  data: DataType[ModalType.HOW_TO_JOIN];
+}) {
   return (
-    <Dialog open={open} onOpenChange={() => closeModal()}>
+    <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
         className={cn(`max-w-[90%] lg:max-w-[400px]`)}
@@ -43,7 +46,7 @@ export default function HowToJoinModal() {
             >
               Contact site leader
             </Link>
-            {content}
+            {data.content}
             <Link
               className="flex cursor-pointer text-blue-500 underline"
               target="_blank"

@@ -43,6 +43,20 @@
       "when": 1739032588017,
       "tag": "0005_amazing_phantom_reporter",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1739066205497,
+      "tag": "0006_complex_skreet",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1739129739968,
+      "tag": "0007_fair_barracuda",
+      "breakpoints": true
     }
   ]
 }
