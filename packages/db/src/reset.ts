@@ -61,6 +61,9 @@ export const reset = async () => {
 
   // We need to manually handle the alembic version table for moneyball's work
   if (version_num) {
+    await db.execute(
+      sql`CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) PRIMARY KEY NOT NULL)`,
+    );
     await db.execute(sql`
       INSERT INTO alembic_version (version_num) VALUES (${version_num});
     `);

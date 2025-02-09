@@ -22,6 +22,7 @@ export const {
   // And it is a nightmare (impossible?) to overwrite the type
   adapter: MDPGDrizzleAdapter(db) as Adapter,
   session: { strategy: "jwt" },
+  trustHost: true,
   providers: [
     Email({
       id: "email", // needed to allow signIn("email")

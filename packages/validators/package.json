@@ -14,11 +14,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@f3/db": "workspace:*",
     "drizzle-zod": "^0.6.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@f3/db": "workspace:*",
     "@f3/eslint-config": "workspace:*",
     "@f3/prettier-config": "workspace:*",
     "@f3/tsconfig": "workspace:*",

@@ -196,6 +196,7 @@ export const locationRouter = createTRPCRouter({
   //   return locationEvents;
   // }),
   getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
+    const ao = aliasedTable(schema.orgs, "ao");
     const events = await ctx.db
       .select({
         id: schema.events.id,
@@ -210,8 +211,8 @@ export const locationRouter = createTRPCRouter({
           meta: schema.locations.meta,
           locationDescription: schema.locations.description,
           orgId: schema.locations.orgId,
-          logo: schema.orgs.logoUrl,
-          website: schema.orgs.website,
+          logo: ao.logoUrl,
+          website: ao.website,
         },
         dayOfWeek: schema.events.dayOfWeek,
         startTime: schema.events.startTime,
@@ -221,14 +222,14 @@ export const locationRouter = createTRPCRouter({
         types: sql<
           { id: number; name: string }[]
         >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
-        logo: schema.orgs.logoUrl,
+        logo: ao.logoUrl,
       })
       .from(schema.events)
       .innerJoin(
         schema.locations,
         eq(schema.events.locationId, schema.locations.id),
       )
-      .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+      .leftJoin(ao, eq(schema.locations.orgId, ao.id))
       .leftJoin(
         schema.eventsXEventTypes,
         eq(schema.eventsXEventTypes.eventId, schema.events.id),
@@ -237,12 +238,7 @@ export const locationRouter = createTRPCRouter({
         schema.eventTypes,
         eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
       )
-      .groupBy(
-        schema.events.id,
-        schema.locations.id,
-        schema.orgs.logoUrl,
-        schema.orgs.website,
-      )
+      .groupBy(schema.events.id, schema.locations.id, ao.logoUrl, ao.website)
       .orderBy(desc(schema.events.id))
       .limit(30);
 
@@ -429,6 +425,7 @@ export const locationRouter = createTRPCRouter({
   getRegionAos: publicProcedure
     .input(z.object({ regionId: z.number() }))
     .query(async ({ ctx, input }) => {
+      const ao = aliasedTable(schema.orgs, "ao");
       const locationsAndEvents = await ctx.db
         .select({
           // TODO: Reduce the properties as much as possible
@@ -443,7 +440,7 @@ export const locationRouter = createTRPCRouter({
             meta: schema.locations.meta,
             locationDescription: schema.locations.description,
             orgId: schema.locations.orgId,
-            logo: schema.orgs.logoUrl,
+            logo: ao.logoUrl,
             website: schema.orgs.website,
           },
           events: {
@@ -460,12 +457,12 @@ export const locationRouter = createTRPCRouter({
           },
         })
         .from(schema.locations)
-        .where(eq(schema.orgs.parentId, input.regionId))
+        .where(eq(ao.parentId, input.regionId))
         .innerJoin(
           schema.events,
           eq(schema.events.locationId, schema.locations.id),
         )
-        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+        .leftJoin(ao, eq(schema.locations.orgId, ao.id))
         .leftJoin(
           schema.eventsXEventTypes,
           eq(schema.eventsXEventTypes.eventId, schema.events.id),
@@ -474,12 +471,7 @@ export const locationRouter = createTRPCRouter({
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
-        .groupBy(
-          schema.events.id,
-          schema.locations.id,
-          schema.orgs.logoUrl,
-          schema.orgs.website,
-        );
+        .groupBy(schema.events.id, schema.locations.id, ao.logoUrl, ao.website);
       return locationsAndEvents;
     }),
   getWorkoutCount: publicProcedure.query(async ({ ctx }) => {
