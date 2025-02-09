@@ -20,7 +20,7 @@ export const updateRequests = pgSqlTable("update_requests", {
   orgId: integer("org_id").references(() => orgs.id),
 
   eventId: integer("event_id").references(() => events.id),
-  eventType: varchar("event_type", { length: 30 }),
+  eventTypeIds: integer("event_type_ids").array(),
   eventTag: varchar("event_tag", { length: 30 }),
   eventSeriesId: integer("event_series_id"),
   eventIsSeries: boolean("event_is_series"),
@@ -44,7 +44,7 @@ export const updateRequests = pgSqlTable("update_requests", {
   locationLon: customNumeric("location_lon", { precision: 8, scale: 5 }),
   locationId: integer("location_id").references(() => locations.id),
 
-  submittedBy: text("submitted_by"),
+  submittedBy: text("submitted_by").notNull(),
   submitterValidated: boolean("submitter_validated").default(false),
   validatedBy: text("validated_by"),
   validatedAt: timestamp("validated_at"),

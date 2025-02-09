@@ -165,13 +165,13 @@ export async function insertNewData(data: {
   );
 
   const uniqueAOsWithWorkouts = workoutData.reduce<UniqueAOsWithWorkouts>(
-    (acc, workout) => {
+    (acc, event) => {
       const workoutRegionId = regions.find(
-        (region) => region.name === workout.Region,
+        (region) => region.name === event.Region,
       )?.id;
       const latLonKey = getLatLonKey({
-        latitude: workout.Latitude,
-        longitude: workout.Longitude,
+        latitude: event.Latitude,
+        longitude: event.Longitude,
       });
       if (workoutRegionId === undefined || latLonKey === undefined) return acc;
       // console.log("workoutRegionId", workoutRegionId, latLonKey);
@@ -181,14 +181,14 @@ export async function insertNewData(data: {
             orgId: null,
             locationId: null,
             regionId: workoutRegionId,
-            latitude: workout.Latitude,
-            longitude: workout.Longitude,
+            latitude: event.Latitude,
+            longitude: event.Longitude,
             key: latLonKey,
           },
           events: [],
         };
       }
-      acc[latLonKey]?.events.push(workout);
+      acc[latLonKey]?.events.push(event);
       return acc;
     },
     // start with existing aos
@@ -334,8 +334,8 @@ export async function insertNewData(data: {
   console.log("about to insert events");
   const eventsToInsert: InferInsertModel<typeof schema.events>[] =
     Object.values(uniqueAOsWithWorkouts).flatMap(({ ao, events }) => {
-      return events.map((workout) => {
-        const dayOfWeek = DAY_ORDER.indexOf(workout.Weekday);
+      return events.map((event) => {
+        const dayOfWeek = DAY_ORDER.indexOf(event.Weekday);
         const workoutAoLoc = aoLocs.find(
           (aoItem) =>
             ao.key ===
@@ -345,7 +345,7 @@ export async function insertNewData(data: {
             }),
         );
 
-        const [startTimeRaw, endTimeRaw] = workout.Time.split("-").map((time) =>
+        const [startTimeRaw, endTimeRaw] = event.Time.split("-").map((time) =>
           time.trim(),
         );
         // .format("HH:mm:ss")
@@ -364,12 +364,12 @@ export async function insertNewData(data: {
           dayOfWeek,
           startTime: startTime?.isValid() ? startTime.format("h:mm a") : null,
           endTime: endTime?.isValid() ? endTime.format("h:mm a") : null,
-          name: workout["Workout Name"].slice(0, 100),
+          name: event["Workout Name"].slice(0, 100),
           meta: {
-            eventType: workout.Type,
-            eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
+            eventType: event.Type,
+            eventTypeId: eventTypes.find((et) => et.name === event.Type)?.id, // Bootcamp
           },
-          description: workout.Note,
+          description: event.Note,
           recurrencePattern: "weekly",
           orgId: ao.regionId,
         };

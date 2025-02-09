@@ -32,6 +32,10 @@ export enum BreakPoints {
 
 export const HEADER_HEIGHT = 96;
 export const SIDEBAR_WIDTH = 360;
+
+export const ADMIN_SIDEBAR_WIDTH = 240;
+export const ADMIN_HEADER_HEIGHT = 64;
+
 export const MAX_DESKTOP_WORKOUT_PANEL_WIDTH = 448; // must match to MD
 
 export const MAX_PLACES_AUTOCOMPLETE_RADIUS = 50000;
@@ -114,3 +118,103 @@ export type FeedbackSchema = z.infer<typeof feedbackSchema>;
 
 export const filterButtonClassName =
   "text-sm w-full whitespace-nowrap font-semibold pointer-events-auto flex items-center justify-center gap-2 rounded-md bg-background px-2 py-1 shadow text-foreground";
+
+// Basic is just signed in
+// Editor can change data for their region
+// Admin can change anything
+type AuthType = "none" | "admin" | "basic" | "editor";
+
+interface RouteBase {
+  __path: string;
+  __auth: AuthType;
+}
+
+type Route = RouteBase & {
+  [K: string]: Route | string;
+};
+
+type Routes = Record<string, Route>;
+
+export const routes = {
+  index: {
+    __path: "/",
+    __auth: "none",
+  },
+  admin: {
+    __path: "/admin",
+    __auth: "editor",
+    regions: {
+      __path: "/admin/regions",
+      __auth: "editor",
+    },
+    users: {
+      __path: "/admin/users",
+      __auth: "editor",
+    },
+    requests: {
+      __path: "/admin/requests",
+      __auth: "editor",
+    },
+    locations: {
+      __path: "/admin/locations",
+      __auth: "editor",
+    },
+    workouts: {
+      __path: "/admin/workouts",
+      __auth: "editor",
+    },
+    noAccess: {
+      __path: "/no-access",
+      __auth: "none",
+    },
+  },
+  auth: {
+    __path: "/api/auth",
+    __auth: "none",
+    signIn: {
+      __path: "/api/auth/signin",
+      __auth: "none",
+    },
+    signOut: {
+      __path: "/api/auth/signout",
+      __auth: "none",
+    },
+    callback: {
+      __path: "/api/auth/callback",
+      __auth: "none",
+    },
+  },
+} as const;
+
+export const getAuthRoutes = (routes: Routes, auth: AuthType): string[] => {
+  const authPaths: string[] = [];
+
+  const traverse = (obj: RouteBase | Routes, _parentKey = "") => {
+    if (
+      "__path" in obj &&
+      typeof obj.__path === "string" &&
+      obj.__auth === auth
+    ) {
+      authPaths.push(obj.__path);
+    }
+
+    for (const [key, value] of Object.entries(obj as Record<string, Route>)) {
+      if (!["__path", "__auth"].includes(key)) {
+        traverse(value, key);
+      }
+    }
+  };
+
+  traverse(routes);
+  return authPaths;
+};
+
+export const ADMIN_PATHS = getAuthRoutes(routes, "admin");
+export const EDITOR_PATHS = getAuthRoutes(routes, "editor");
+
+export enum AppType {
+  MOBILE = "expo-react",
+  WEB = "nextjs-react",
+  RSC = "rsc",
+  UNKNOWN = "unknown",
+}

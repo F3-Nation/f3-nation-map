@@ -1,5 +1,7 @@
-import type { DefaultSession, DefaultUser } from "next-auth";
+import type { DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
+
+import type { UserRole } from "@f3/shared/app/enums";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -10,29 +12,14 @@ import type { DefaultJWT } from "next-auth/jwt";
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
-    user: User;
-  }
-
-  interface User extends Omit<DefaultUser, "id"> {
-    id: number;
-    f3Name?: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    emailVerified?: string;
-    phone?: string;
-    homeRegionId?: number;
-    avatarUrl?: string;
-    meta?: Record<string, unknown>;
-    created?: string;
-    updated?: string;
-    emergencyContact?: string;
-    emergencyPhone?: string;
-    emergencyNotes?: string;
+    email: string | undefined;
+    role: UserRole | undefined;
   }
 
   interface JWT extends DefaultJWT {
     id?: string | number;
+    email: string | undefined;
+    role: UserRole | undefined;
     signinunixsecondsepoch: number;
   }
 
@@ -40,6 +27,14 @@ declare module "next-auth" {
   //   // ...other properties
   //   // role: UserRole;
   // }
+}
+
+declare module "@tanstack/table-core" {
+  interface ColumnMeta {
+    // Used in the Header component and in csv
+    name?: string;
+    excludeFromCsv?: boolean;
+  }
 }
 
 // https://stackoverflow.com/questions/71099924/cannot-find-module-file-name-png-or-its-corresponding-type-declarations-type

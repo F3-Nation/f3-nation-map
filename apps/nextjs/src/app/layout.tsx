@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { SessionProvider } from "next-auth/react";
 
 import { cn } from "@f3/ui";
 import { ThemeProvider } from "@f3/ui/theme";
@@ -63,16 +64,18 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 }
 const DataProvider = ({ children }: { children: React.ReactNode }) => {
   return (
-    <TRPCReactProvider>
-      <UserLocationProvider>
-        <FilteredMapResultsProvider>
-          {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
-          <TextSearchResultsProvider>
-            <KeyPressProvider>{children}</KeyPressProvider>
-          </TextSearchResultsProvider>
-        </FilteredMapResultsProvider>
-      </UserLocationProvider>
-    </TRPCReactProvider>
+    <SessionProvider>
+      <TRPCReactProvider>
+        <UserLocationProvider>
+          <FilteredMapResultsProvider>
+            {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
+            <TextSearchResultsProvider>
+              <KeyPressProvider>{children}</KeyPressProvider>
+            </TextSearchResultsProvider>
+          </FilteredMapResultsProvider>
+        </UserLocationProvider>
+      </TRPCReactProvider>
+    </SessionProvider>
   );
 };
 

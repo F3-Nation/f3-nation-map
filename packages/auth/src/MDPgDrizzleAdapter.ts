@@ -83,7 +83,10 @@ export function MDPGDrizzleAdapter(
 
       return await client
         .update(users)
-        .set(data)
+        .set({
+          id: data.id,
+          email: data.email,
+        })
         .where(eq(users.id, data.id))
         .returning()
         .then((res) => res[0]!);
@@ -188,6 +191,7 @@ export function MDPGDrizzleAdapter(
 interface AdapterUser {
   id: number;
   email: string;
+  emailVerified: Date | null;
 }
 
 interface AdapterSession {

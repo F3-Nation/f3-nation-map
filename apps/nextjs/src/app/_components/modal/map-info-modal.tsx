@@ -7,13 +7,11 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
 
 export function MapInfoModal() {
-  const { open } = useModalStore();
-
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
+    <Dialog open={true} onOpenChange={closeModal}>
       <DialogContent>
         <DialogHeader className="text-left">
           <DialogTitle className="flex items-center space-x-2">

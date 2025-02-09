@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import gte from "lodash/gte";
+import { useSession } from "next-auth/react";
 import { Controller } from "react-hook-form";
 import { v4 as uuid } from "uuid";
-import { z } from "zod";
 
 import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
 import { Button } from "@f3/ui/button";
@@ -14,59 +14,40 @@ import {
 } from "@f3/ui/dialog";
 import { Form, useForm } from "@f3/ui/form";
 import { Input } from "@f3/ui/input";
-import { ControlledSelect } from "@f3/ui/select";
+import {
+  ControlledSelect,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@f3/ui/select";
 import { Spinner } from "@f3/ui/spinner";
 import { Textarea } from "@f3/ui/textarea";
 import { toast } from "@f3/ui/toast";
+import { UpdateRequestFormSchema } from "@f3/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
 import { uploadLogo } from "~/utils/image/upload-logo";
 import { appStore } from "~/utils/store/app";
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
+import { DebouncedImage } from "../debounced-image";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
-export const UpdateLocationModal = () => {
+export const UpdateLocationModal = ({
+  data,
+}: {
+  data: DataType[ModalType.UPDATE_LOCATION];
+}) => {
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { open, data: rawData } = useModalStore();
   const { mutateAsync: updateLocation } =
-    api.location.updateLocation.useMutation();
-
-  const data = rawData as DataType[ModalType.UPDATE_LOCATION];
+    api.request.updateLocation.useMutation();
 
   const form = useForm({
-    schema: z.object({
-      id: z.string(),
-      workoutName: z.string().min(1, { message: "Workout name is required" }),
-      workoutWebsite: z.string().nullable(),
-      aoLogo: z.string(),
-      eventId: z.number(),
-      locationId: z.number(),
-      regionId: z.number().refine((value) => value !== -1, {
-        message: "Please select a region",
-      }),
-      email: z.string().email({
-        message: "Invalid email address",
-      }),
-      lat: z.number(),
-      lng: z.number(),
-      startTime: z.string().regex(/^\d{2}:\d{2}$/, {
-        message: "Start time must be in 24hr format (HH:MM)",
-      }),
-      endTime: z.string().regex(/^\d{2}:\d{2}$/, {
-        message: "End time must be in 24hr format (HH:MM)",
-      }),
-      dayOfWeek: z.string(),
-      type: z.string(),
-      eventDescription: z
-        .string()
-        .min(1, { message: "Description is required" }),
-      locationAddress: z.string().min(1, {
-        message: "Location address is required",
-      }),
-      badImage: z.boolean().default(false),
-    }),
+    schema: UpdateRequestFormSchema,
     defaultValues: {
       workoutName: "",
       workoutWebsite: "",
@@ -79,7 +60,7 @@ export const UpdateLocationModal = () => {
       startTime: "",
       endTime: "",
       dayOfWeek: "",
-      type: "",
+      eventTypes: [],
       eventDescription: "",
       badImage: false,
     },
@@ -101,6 +82,7 @@ export const UpdateLocationModal = () => {
     { regionId: formRegionId ?? -1 },
     { enabled: formRegionId !== null },
   );
+  const { data: eventTypes } = api.event.types.useQuery();
 
   const onSubmit = form.handleSubmit(
     async (values) => {
@@ -120,16 +102,7 @@ export const UpdateLocationModal = () => {
         submittedBy: appStore.get("myEmail"),
         locationId: data.locationId,
         eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
-        eventTypes:
-          values.type === "Bootcamp"
-            ? [{ id: 1, name: "Bootcamp" }]
-            : values.type === "Ruck"
-              ? [{ id: 2, name: "Ruck" }]
-              : values.type === "Run"
-                ? [{ id: 3, name: "Run" }]
-                : values.type === "Swim"
-                  ? [{ id: 4, name: "Swim" }]
-                  : [],
+        eventTypes: values.eventTypes,
         eventTag: null,
         eventStartTime: values.startTime ? values.startTime + ":00" : null,
         eventEndTime: values.endTime ? values.endTime + ":00" : null,
@@ -184,15 +157,15 @@ export const UpdateLocationModal = () => {
       endTime: data.endTime?.slice(0, 5) ?? "06:15",
       dayOfWeek:
         typeof data.dayOfWeek === "number" ? DAY_ORDER[data.dayOfWeek] : "",
-      type: data.types?.[0]?.name ?? "Bootcamp",
+      eventTypes: data.types ?? [],
       eventDescription: data.eventDescription ?? "",
-      email: appStore.get("myEmail"),
+      email: session?.email ?? appStore.get("myEmail"),
     });
-  }, [data, form]);
+  }, [data, form, session?.email]);
 
   return (
     <Dialog
-      open={open}
+      open={true}
       onOpenChange={() => {
         closeModal();
       }}
@@ -225,8 +198,8 @@ export const UpdateLocationModal = () => {
                   Region
                 </div>
                 <VirtualizedCombobox
-                  buttonClassName="w-full rounded-md py-3 font-normal"
-                  hideSearchIcon
+                  // buttonClassName="w-full rounded-md py-3 font-normal"
+                  // hideSearchIcon
                   key={formRegionId?.toString()}
                   // disabled if we got this from the data param
                   disabled={typeof data.regionId === "number"}
@@ -257,10 +230,10 @@ export const UpdateLocationModal = () => {
                     Event
                   </div>
                   <VirtualizedCombobox
-                    buttonClassName="w-full rounded-md py-3 font-normal"
+                    // buttonClassName="w-full rounded-md py-3 font-normal"
                     // disabled if we got this from the data param
                     disabled={typeof data.eventId === "number"}
-                    hideSearchIcon
+                    // hideSearchIcon
                     key={formEventId?.toString()}
                     options={[
                       {
@@ -368,6 +341,7 @@ export const UpdateLocationModal = () => {
                         {value && (
                           <DebouncedImage
                             src={value}
+                            alt="AO Logo"
                             onImageFail={() => form.setValue("badImage", true)}
                             onImageSuccess={() =>
                               form.setValue("badImage", false)
@@ -436,20 +410,50 @@ export const UpdateLocationModal = () => {
 
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
-                  Type
+                  Event Type
                 </div>
-                <ControlledSelect
+                <Controller
                   control={form.control}
-                  name="type"
-                  options={["Bootcamp", "Ruck", "Run", "Swim"].map((type) => ({
-                    label: type,
-                    value: type,
-                  }))}
-                  placeholder="Select a day of the week"
+                  name="eventTypes"
+                  render={({ field, fieldState }) => {
+                    return (
+                      <>
+                        <Select
+                          value={field.value[0]?.id.toString()}
+                          onValueChange={(value) => {
+                            if (value) {
+                              field.onChange(
+                                eventTypes?.filter(
+                                  (type) => type.id.toString() === value,
+                                ),
+                              );
+                            }
+                          }}
+                        >
+                          <SelectTrigger
+                            id={`eventTypes`}
+                            aria-label="Event Type"
+                          >
+                            <SelectValue placeholder="Select an event type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {eventTypes?.map((type) => (
+                              <SelectItem
+                                key={type.id}
+                                value={type.id.toString()}
+                              >
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-destructive">
+                          {fieldState.error?.message}
+                        </p>
+                      </>
+                    );
+                  }}
                 />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.type?.message}
-                </p>
               </div>
 
               <div className="space-y-2 sm:col-span-2">
@@ -504,37 +508,3 @@ export const UpdateLocationModal = () => {
     </Dialog>
   );
 };
-
-function DebouncedImage({
-  src,
-  onImageFail,
-  onImageSuccess,
-}: {
-  src: string;
-  onImageFail: () => void;
-  onImageSuccess: () => void;
-}) {
-  const [loading, setLoading] = useState(true);
-  const [image, setImage] = useState<string | null>(null);
-  useEffect(() => {
-    setLoading(true);
-    const timeout = setTimeout(() => {
-      setLoading(false);
-      setImage(src);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [src]);
-  return loading ? (
-    <div className="size-8 animate-pulse rounded-md bg-gray-200" />
-  ) : image ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={image}
-      width={32}
-      height={32}
-      alt="AO Logo"
-      onError={onImageFail}
-      onLoad={onImageSuccess}
-    />
-  ) : null;
-}

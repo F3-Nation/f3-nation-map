@@ -7,14 +7,12 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
-import { closeModal, useModalStore } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
 import { UserLocationContent } from "./user-location-content";
 
 export default function UserLocationInfoModal() {
-  const { open } = useModalStore();
-
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
+    <Dialog open={true} onOpenChange={closeModal}>
       <DialogContent
         style={{ zIndex: Z_INDEX.USER_LOCATION_INFO_MODAL }}
         className={cn(`w-[400px] max-w-[90%] rounded-md`)}

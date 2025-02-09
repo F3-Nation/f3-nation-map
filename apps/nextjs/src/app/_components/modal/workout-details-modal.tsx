@@ -19,24 +19,21 @@ import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
 import { appStore } from "~/utils/store/app";
-import {
-  closeModal,
-  ModalType,
-  openModal,
-  useModalStore,
-} from "~/utils/store/modal";
+import { closeModal, ModalType, openModal } from "~/utils/store/modal";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
-export const WorkoutDetailsModal = () => {
+export const WorkoutDetailsModal = ({
+  data,
+}: {
+  data: DataType[ModalType.WORKOUT_DETAILS];
+}) => {
   const mode = appStore.use.mode();
-  const { open, data: rawData } = useModalStore();
-  const data = rawData as DataType[ModalType.WORKOUT_DETAILS];
   const locationId = typeof data.locationId === "number" ? data.locationId : -1;
   const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
     { locationId },
-    { enabled: locationId >= 0 && open },
+    { enabled: locationId >= 0 },
   );
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const workout = useMemo(
@@ -91,7 +88,7 @@ export const WorkoutDetailsModal = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
+    <Dialog open={true} onOpenChange={closeModal}>
       <DialogContent
         style={{ zIndex: Z_INDEX.WORKOUT_DETAILS_MODAL }}
         className="mb-40 rounded-lg px-4 sm:px-6 lg:rounded-none lg:px-8"

@@ -38,7 +38,7 @@ export interface TemplateType {
     startTime: string;
     endTime: string;
     dayOfWeek: string;
-    type: string;
+    types: string;
     url: string;
   };
 }

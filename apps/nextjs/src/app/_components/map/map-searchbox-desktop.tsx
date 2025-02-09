@@ -39,6 +39,8 @@ import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBox({
   className,
+  // Need to remove this prop from the component props
+  hideLogo: _hideLogo,
   ...rest
 }: ComponentProps<"div"> & { hideLogo?: true }) {
   const [showResults, setShowResults] = useState({
