@@ -54,8 +54,7 @@ RUN echo "Received DOPPLER_TOKEN (first 5 chars): ${DOPPLER_TOKEN:0:5}" && \
 RUN doppler setup -p f3-2 --token "$DOPPLER_TOKEN"
     
 RUN doppler secrets download --no-file --format env > /app/apps/nextjs/.env
-RUN doppler run -- sh -c "pnpm db:update-db"
-RUN doppler run -- sh -c "pnpm turbo build --filter=nextjs"
+RUN doppler run -- sh -c "pnpm turbo build --filter=nextjs && pnpm -F db migrate"
 
 FROM --platform=linux/amd64 node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl && apk update
