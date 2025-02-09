@@ -3,7 +3,7 @@ import type { MdAdapter } from "next-auth";
 import { and, eq } from "drizzle-orm";
 import omit from "lodash/omit";
 
-import { or, schema, sql } from "@f3/db";
+import { schema, sql } from "@f3/db";
 
 const {
   users,
@@ -40,16 +40,11 @@ const getUser = async (
     .from(users)
     .leftJoin(rolesXUsersXOrg, eq(users.id, rolesXUsersXOrg.userId))
     .leftJoin(roles, eq(rolesXUsersXOrg.roleId, roles.id))
-    .where(
-      and(
-        "id" in data ? eq(users.id, data.id) : eq(users.email, data.email),
-        or(eq(roles.name, "editor"), eq(roles.name, "admin")),
-      ),
-    )
+    .where("id" in data ? eq(users.id, data.id) : eq(users.email, data.email))
     .groupBy(users.id)
     .then((res) => res[0] ?? null);
 
-  if (!user) throw new Error("User not found.");
+  if (!user) return null;
 
   return {
     ...user,
@@ -68,9 +63,14 @@ export function MDPGDrizzleAdapter(
         .insert(users)
         .values({ ...omit(data, "id") })
         .returning()
+        // .onConflictDoNothing()
         .then((res) => res[0]!);
 
-      return await getUser({ id: userId }, client);
+      const user = await getUser({ id: userId }, client);
+
+      if (!user) throw new Error("User not found.");
+
+      return user;
     },
     async getUser(data) {
       if (LOG) console.log("getUser", data);
@@ -134,7 +134,11 @@ export function MDPGDrizzleAdapter(
         })
         .where(eq(users.id, data.id));
 
-      return await getUser({ id: data.id }, client);
+      const user = await getUser({ id: data.id }, client);
+
+      if (!user) throw new Error("User not found.");
+
+      return user;
     },
     async updateSession(data) {
       if (LOG) console.log("updateSession", data);
@@ -151,6 +155,7 @@ export function MDPGDrizzleAdapter(
         await client
           .insert(accounts)
           .values(rawAccount)
+          // .onConflictDoNothing()
           .returning()
           .then((res) => res[0]!),
       );
@@ -168,7 +173,7 @@ export function MDPGDrizzleAdapter(
         )
         .then((res) => res[0]?.userId ?? null);
 
-      if (!userId) throw new Error("User not found.");
+      if (!userId) return null;
 
       return await getUser({ id: userId }, client);
     },
