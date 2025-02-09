@@ -291,7 +291,7 @@ export const locationRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const ao = aliasedTable(schema.orgs, "ao");
       const region = aliasedTable(schema.orgs, "region");
-      const [[location], events] = await Promise.all([
+      const [[locationResult], events] = await Promise.all([
         ctx.db
           .select({
             locationId: schema.locations.id,
@@ -299,7 +299,12 @@ export const locationRouter = createTRPCRouter({
             lon: schema.locations.longitude,
             locationName: schema.locations.name,
             locationMeta: schema.locations.meta,
-            locationAddress: schema.locations.description,
+            locationAddress: schema.locations.addressStreet,
+            locationAddress2: schema.locations.addressStreet2,
+            locationCity: schema.locations.addressCity,
+            locationState: schema.locations.addressState,
+            locationZip: schema.locations.addressZip,
+            locationCountry: schema.locations.addressCountry,
             isActive: schema.locations.isActive,
             created: schema.locations.created,
             updated: schema.locations.updated,
@@ -347,9 +352,31 @@ export const locationRouter = createTRPCRouter({
           .groupBy(schema.events.id),
       ]);
 
-      if (!location) {
+      if (!locationResult) {
         return null;
       }
+      const location = {
+        ...locationResult,
+        fullAddress: [
+          locationResult.locationAddress,
+          locationResult.locationAddress2,
+          locationResult.locationCity,
+          locationResult.locationState,
+          locationResult.locationZip,
+          ["us", "usa", "united states", "united states of america"].includes(
+            locationResult.locationCountry
+              ?.toLowerCase()
+              .replace(/(.| )/g, "") ?? "",
+          )
+            ? ""
+            : locationResult.locationCountry,
+        ]
+          .filter(Boolean) // Remove empty/null/undefined values
+          .join(", ")
+          .replace(/, ,/g, ",") // Clean up any double commas
+          .replace(/,\s*$/, ""), // Remove trailing comma
+      };
+
       return { location, events };
     }),
   getRegions: publicProcedure.query(async ({ ctx }) => {

@@ -74,16 +74,7 @@ export const eventRouter = createTRPCRouter({
   crupdate: publicProcedure
     .input(EventInsertSchema)
     .mutation(async ({ ctx, input }) => {
-      const startDate = new Date(input.startDate);
-      const dayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
-      const eventToUpdate: typeof schema.events.$inferInsert = {
-        ...input,
-        dayOfWeek,
-        meta: {
-          ...(input.meta as Record<string, string>),
-        },
-      };
+      const eventToUpdate: typeof schema.events.$inferInsert = input;
       await ctx.db
         .insert(schema.events)
         .values(eventToUpdate)

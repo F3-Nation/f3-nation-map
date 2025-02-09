@@ -31,13 +31,9 @@ export const userRouter = createTRPCRouter({
         updated: schema.users.updated,
         regions: sql<
           { id: number; name: string; role: UserRole }[]
-        >`json_agg(json_build_object('id', ${schema.rolesXUsersXOrg.orgId}, 'name', ${schema.orgs.name}, 'role', ${schema.roles.name}))`,
+        >`COALESCE(json_agg(DISTINCT jsonb_build_object('id', ${schema.rolesXUsersXOrg.orgId}, 'name', ${schema.orgs.name}, 'role', ${schema.roles.name})) FILTER (WHERE ${schema.rolesXUsersXOrg.orgId} IS NOT NULL), '[]')`,
       })
       .from(schema.users)
-      .leftJoin(
-        schema.updateRequests,
-        eq(schema.users.email, schema.updateRequests.submittedBy),
-      )
       .leftJoin(
         schema.rolesXUsersXOrg,
         eq(schema.users.id, schema.rolesXUsersXOrg.userId),
@@ -50,7 +46,6 @@ export const userRouter = createTRPCRouter({
       .groupBy(schema.users.id);
     return users.map((user) => ({
       ...user,
-      regions: user.regions,
       name: `${user.firstName} ${user.lastName}`,
     }));
   }),

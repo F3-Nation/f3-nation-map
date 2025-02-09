@@ -7,6 +7,9 @@ export type UserStatus = (typeof UserStatus)[number];
 export const RegionRole = ["user", "editor", "admin"] as const;
 export type RegionRole = (typeof RegionRole)[number];
 
+export const UpdateRequestStatus = ["pending", "approved", "rejected"] as const;
+export type UpdateRequestStatus = (typeof UpdateRequestStatus)[number];
+
 export enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",

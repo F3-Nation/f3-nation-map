@@ -626,7 +626,6 @@ export async function insertData(data: {
     typeof schema.eventsXEventTypes
   >[] = Object.values(insertedEvents)
     .map((event) => {
-      // @ts-expect-error -- meta type
       const eventTypeId = event.meta?.eventTypeId as number;
       if (!eventTypeId) return null;
       return {

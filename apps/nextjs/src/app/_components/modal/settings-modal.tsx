@@ -12,16 +12,18 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
+import { api } from "~/trpc/react";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { closeModal } from "~/utils/store/modal";
 
-export default function HowToJoinModal() {
+export default function SettingsModal() {
   const mode = appStore.use.mode();
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const isAdmin = session?.role === "admin";
+  const { data: regions } = api.location.getRegions.useQuery();
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
@@ -181,7 +183,13 @@ export default function HowToJoinModal() {
                   </span>
                 </p>
                 <p className="text-xs text-gray-500">
-                  Role: <span className="font-medium">{session.role}</span>
+                  Role: <span className="font-medium">{session.role}, </span>
+                  Editing regions:{" "}
+                  <span className="font-medium">
+                    {session.editingRegionIds.map(
+                      (id) => regions?.find((r) => r.id === id)?.name,
+                    )}
+                  </span>
                 </p>
               </div>
               <Link href={"/api/auth/signout"}>

@@ -395,13 +395,11 @@ export async function insertNewData(data: {
   await db.insert(schema.eventsXEventTypes).values(
     insertedEvents
       .map((event) =>
-        // @ts-expect-error -- meta type
         typeof event.meta?.eventTypeId !== "number"
           ? null
           : {
               eventId: event.id,
-              // @ts-expect-error -- meta type
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
               eventTypeId: event.meta?.eventTypeId,
             },
       )

@@ -38,6 +38,7 @@ export const {
         token.email = user.email;
         token.role = "role" in user ? user.role : "user";
         token.name = user.name;
+        token.editingRegionIds = user.editingRegionIds;
       }
       return Promise.resolve(token);
     },
@@ -48,6 +49,7 @@ export const {
         role: token.role as UserRole | undefined,
         email: token.email as string | undefined,
         name: token.name as string | undefined,
+        editingRegionIds: token.editingRegionIds as number[] | undefined,
       };
       return Promise.resolve(result);
     },

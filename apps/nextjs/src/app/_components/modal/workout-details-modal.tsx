@@ -55,13 +55,13 @@ export const WorkoutDetailsModal = ({
   const workoutFields = {
     Name: workout?.eventName,
     What: workout?.types.map((type) => type.name).join(", "),
-    Where: location?.locationAddress ? (
+    Where: location?.fullAddress ? (
       <Link
-        href={`https://maps.google.com/?q=${encodeURIComponent(location?.locationAddress)}`}
+        href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
         target="_blank"
         className="underline"
       >
-        {location.locationAddress}
+        {location.fullAddress}
       </Link>
     ) : null,
     When: workout ? getWhenFromWorkout(workout) : "",
@@ -135,6 +135,11 @@ export const WorkoutDetailsModal = ({
                     workoutWebsite: results?.location.aoWebsite,
                     aoLogo: results?.location.aoLogo,
                     locationAddress: results?.location.locationAddress,
+                    locationAddress2: results?.location.locationAddress2,
+                    locationCity: results?.location.locationCity,
+                    locationState: results?.location.locationState,
+                    locationZip: results?.location.locationZip,
+                    locationCountry: results?.location.locationCountry,
                     lat: lat,
                     lng: lng,
                     startTime: event?.startTime,
@@ -201,6 +206,11 @@ export const WorkoutDetailsModal = ({
                         regionId: results?.location.regionId,
                         eventId: -1,
                         locationAddress: results?.location.locationAddress,
+                        locationAddress2: results?.location.locationAddress2,
+                        locationCity: results?.location.locationCity,
+                        locationState: results?.location.locationState,
+                        locationZip: results?.location.locationZip,
+                        locationCountry: results?.location.locationCountry,
                         lat: lat,
                         lng: lng,
                         workoutWebsite: results?.location.aoWebsite,
@@ -308,6 +318,11 @@ export const WorkoutDetailsModal = ({
                   workoutWebsite: results?.location.aoWebsite,
                   aoLogo: results?.location.aoLogo,
                   locationAddress: results?.location.locationAddress,
+                  locationAddress2: results?.location.locationAddress2,
+                  locationCity: results?.location.locationCity,
+                  locationState: results?.location.locationState,
+                  locationZip: results?.location.locationZip,
+                  locationCountry: results?.location.locationCountry,
                   lat: lat,
                   lng: lng,
                   startTime: event?.startTime,

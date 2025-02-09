@@ -19,6 +19,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+import type { EventMeta, LocationMeta } from "@f3/shared/app/types";
 import { RegionRole, UserRole, UserStatus } from "@f3/shared/app/enums";
 
 export const RegionRoleEnum = pgEnum("region_role", RegionRole);
@@ -443,7 +444,7 @@ export const events = pgTable(
     isSeries: boolean("is_series").notNull(),
     isActive: boolean("is_active").notNull(),
     highlight: boolean().notNull(),
-    startDate: date("start_date").notNull(),
+    startDate: date("start_date"),
     endDate: date("end_date"),
     startTime: time("start_time"),
     endTime: time("end_time"),
@@ -461,7 +462,7 @@ export const events = pgTable(
     backblastRich: json("backblast_rich"),
     preblastTs: doublePrecision("preblast_ts"),
     backblastTs: doublePrecision("backblast_ts"),
-    meta: json(),
+    meta: json().$type<EventMeta>(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
@@ -505,7 +506,7 @@ export const locations = pgTable(
     addressState: varchar("address_state"),
     addressZip: varchar("address_zip"),
     addressCountry: varchar("address_country"),
-    meta: json(),
+    meta: json().$type<LocationMeta>(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),

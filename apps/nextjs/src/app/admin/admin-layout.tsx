@@ -96,7 +96,7 @@ const Layout = ({
               href={routes.admin.locations.__path}
             >
               <MapPin />
-              Locations
+              Locations (BETA)
             </Link>
             <Link
               className={cn(
@@ -106,7 +106,7 @@ const Layout = ({
               href={routes.admin.workouts.__path}
             >
               <PersonStanding />
-              Events
+              Events (BETA)
             </Link>
             <Link
               className={cn(
@@ -116,7 +116,7 @@ const Layout = ({
               href={routes.admin.regions.__path}
             >
               <Globe />
-              Regions
+              Regions (BETA)
             </Link>
           </div>
         </div>

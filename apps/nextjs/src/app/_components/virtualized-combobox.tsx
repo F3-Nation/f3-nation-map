@@ -15,7 +15,11 @@ import {
   CommandSeparator,
 } from "@f3/ui/command";
 import { Label } from "@f3/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
+import {
+  Popover,
+  PopoverContentWithoutPortal,
+  PopoverTrigger,
+} from "@f3/ui/popover";
 
 const MIN_WIDTH = 300;
 
@@ -242,8 +246,7 @@ export function VirtualizedCombobox<T>({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        renderAsChild
+      <PopoverContentWithoutPortal
         // To prevent the change to the top of the search
         // https://www.radix-ui.com/primitives/docs/components/popover#content
         avoidCollisions={false}
@@ -264,7 +267,7 @@ export function VirtualizedCombobox<T>({
             onSelect?.([]);
           }}
         />
-      </PopoverContent>
+      </PopoverContentWithoutPortal>
     </Popover>
   );
 }

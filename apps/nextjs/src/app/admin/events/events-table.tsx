@@ -80,13 +80,6 @@ const columns: TableOptions<RouterOutputs["event"]["all"][number]>["columns"] =
       cell: (cell) => <Cell {...cell} />,
     },
     {
-      accessorKey: "startDate",
-      accessorFn: (row) => new Date(row.startDate).toLocaleDateString(),
-      meta: { name: "Start Date" },
-      header: Header,
-      cell: Cell,
-    },
-    {
       accessorKey: "dayOfWeek",
       accessorFn: (row) =>
         row.dayOfWeek == null ? DAY_ORDER[0] : DAY_ORDER[row.dayOfWeek],

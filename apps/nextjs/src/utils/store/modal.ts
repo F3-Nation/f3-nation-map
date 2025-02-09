@@ -38,6 +38,11 @@ export interface DataType {
     types?: { id: number; name: string }[];
     eventDescription?: string | null;
     locationAddress?: string | null;
+    locationAddress2?: string | null;
+    locationCity?: string | null;
+    locationState?: string | null;
+    locationZip?: string | null;
+    locationCountry?: string | null;
   };
   [ModalType.WORKOUT_DETAILS]: {
     locationId?: number | null;
