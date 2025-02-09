@@ -1,17 +1,16 @@
+import { TRPCError } from "@trpc/server";
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import { desc, eq, inArray, schema } from "@f3/db";
-import { env } from "@f3/env";
+import { desc, eq, schema } from "@f3/db";
 import { DAY_ORDER } from "@f3/shared/app/constants";
 import { RequestInsertSchema } from "@f3/validators";
 
 import type { Context } from "../trpc";
-import { mail, Templates } from "../mail";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 
 export const requestRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
+  all: editorProcedure.query(async ({ ctx }) => {
     const requests = await ctx.db
       .select({
         id: schema.updateRequests.id,
@@ -35,7 +34,7 @@ export const requestRouter = createTRPCRouter({
       ...request,
     }));
   }),
-  byId: publicProcedure
+  byId: editorProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const [request] = await ctx.db
@@ -78,27 +77,29 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Failed to find region");
       }
 
-      const eventNames = await ctx.db
-        .select({ name: schema.eventTypes.name })
-        .from(schema.eventTypes)
-        .where(inArray(schema.eventTypes.id, input.eventTypeIds ?? []));
+      // Not sending emails for now
+      // const eventNames = await ctx.db
+      //   .select({ name: schema.eventTypes.name })
+      //   .from(schema.eventTypes)
+      //   .where(inArray(schema.eventTypes.id, input.eventTypeIds ?? []));
 
-      await mail.sendTemplateMessages(Templates.validateSubmission, {
-        to: input.submittedBy,
-        submissionId: inserted.id,
-        token: inserted.token,
-        regionName: region?.name,
-        eventName: inserted.eventName,
-        address: inserted.locationDescription ?? "",
-        startTime: inserted.eventStartTime ?? "",
-        endTime: inserted.eventEndTime ?? "",
-        dayOfWeek: inserted.eventDayOfWeek ?? "",
-        types: eventNames?.map((type) => type.name).join(", ") ?? "",
-        url: env.NEXT_PUBLIC_URL,
-      });
+      // await mail.sendTemplateMessages(Templates.validateSubmission, {
+      //   to: input.submittedBy,
+      //   submissionId: inserted.id,
+      //   token: inserted.token,
+      //   regionName: region?.name,
+      //   eventName: inserted.eventName,
+      //   address: inserted.locationDescription ?? "",
+      //   startTime: inserted.eventStartTime ?? "",
+      //   endTime: inserted.eventEndTime ?? "",
+      //   dayOfWeek: inserted.eventDayOfWeek ?? "",
+      //   types: eventNames?.map((type) => type.name).join(", ") ?? "",
+      //   url: env.NEXT_PUBLIC_URL,
+      // });
 
       return { success: true, inserted: omit(inserted, ["token"]) };
     }),
+  // This can be public because it uses a db token for auth
   validateSubmission: publicProcedure
     .input(z.object({ token: z.string(), submissionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -127,7 +128,20 @@ export const requestRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const reviewedBy = ctx.session.user.email;
       if (!reviewedBy) {
-        throw new Error("Validated by is required");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Validated by is required",
+        });
+      }
+
+      if (
+        ctx.session.role !== "admin" &&
+        !ctx.session.editingRegionIds.includes(input.regionId)
+      ) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to edit this region",
+        });
       }
 
       const result = await applyUpdateRequest(ctx, {
@@ -140,6 +154,24 @@ export const requestRouter = createTRPCRouter({
   rejectSubmission: editorProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const [updateRequest] = await ctx.db
+        .select()
+        .from(schema.updateRequests)
+        .where(eq(schema.updateRequests.id, input.id));
+
+      if (!updateRequest) {
+        throw new Error("Failed to find update request");
+      }
+
+      if (
+        ctx.session.role !== "admin" &&
+        !ctx.session.editingRegionIds.includes(updateRequest.regionId)
+      ) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to edit this region",
+        });
+      }
       await ctx.db
         .update(schema.updateRequests)
         .set({ status: "rejected" })
