@@ -140,7 +140,7 @@ export default function SettingsModal() {
                 <span className="text-xs">View</span>
               </button>
               <button
-                disabled={!isAdmin}
+                disabled={!session}
                 onClick={() => appStore.setState({ mode: "edit" })}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
