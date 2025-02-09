@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Check, Search, X } from "lucide-react";
+import { Check, ChevronDownIcon } from "lucide-react";
 
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
@@ -12,34 +12,57 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandSeparator,
 } from "@f3/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
+import { Label } from "@f3/ui/label";
+import {
+  Popover,
+  PopoverContentWithoutPortal,
+  PopoverTrigger,
+} from "@f3/ui/popover";
 
 const MIN_WIDTH = 300;
 
-interface Option {
+interface Option<T> {
   value: string;
   label: string;
+  data?: T;
 }
 
-interface VirtualizedCommandProps {
-  options: Option[];
+interface VirtualizedCommandProps<T> {
+  options: Option<T>[];
+  label?: string;
   placeholder: string;
-  selectedOption: string;
+  selectedOptions: string[];
   onSelectOption?: (option: string) => void;
+  onClear?: () => void;
 }
 
-const VirtualizedCommand = ({
+const VirtualizedCommand = <T,>({
   options,
+  label,
   placeholder,
-  selectedOption,
+  selectedOptions,
   onSelectOption,
-}: VirtualizedCommandProps) => {
-  const [filteredOptions, setFilteredOptions] = useState<Option[]>(options);
+  onClear,
+}: VirtualizedCommandProps<T>) => {
+  const [filteredOptions, setFilteredOptions] = useState<Option<T>[]>(options);
   const parentRef = useRef(null);
 
+  const sortedFilteredOptions = useMemo(() => {
+    return filteredOptions.sort((a, b) => {
+      if (selectedOptions.includes(a.value)) {
+        return -1;
+      }
+      if (selectedOptions.includes(b.value)) {
+        return 1;
+      }
+      return 0;
+    });
+  }, [filteredOptions, selectedOptions]);
+
   const virtualizer = useVirtualizer({
-    count: filteredOptions.length,
+    count: sortedFilteredOptions.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
     overscan: 5,
@@ -63,6 +86,7 @@ const VirtualizedCommand = ({
 
   return (
     <Command shouldFilter={false} onKeyDown={handleKeyDown}>
+      {label ? <Label>{label}</Label> : null}
       <CommandInput onValueChange={handleSearch} placeholder={placeholder} />
       <CommandEmpty>No item found.</CommandEmpty>
       <CommandGroup
@@ -90,129 +114,160 @@ const VirtualizedCommand = ({
                 height: `${virtualOption.size}px`,
                 transform: `translateY(${virtualOption.start}px)`,
               }}
-              key={filteredOptions[virtualOption.index]?.value}
-              value={filteredOptions[virtualOption.index]?.value}
+              key={sortedFilteredOptions[virtualOption.index]?.label}
+              value={sortedFilteredOptions[virtualOption.index]?.value}
               onSelect={(selectedItem) => {
-                const item = filteredOptions[virtualOption.index]?.value;
+                const item = sortedFilteredOptions[virtualOption.index]?.value;
                 onSelectOption?.(item ?? selectedItem);
               }}
+              className="flex items-center justify-between"
             >
               <Check
-                className={cn(
-                  "mr-2 h-4 w-4",
-                  selectedOption === filteredOptions[virtualOption.index]?.value
-                    ? "opacity-100"
-                    : "opacity-0",
-                )}
+                className={cn("mr-2 h-4 w-4 opacity-0", {
+                  "opacity-100": selectedOptions.includes(
+                    sortedFilteredOptions[virtualOption.index]?.value ?? "",
+                  ),
+                })}
               />
-              <div className="line-clamp-1 flex items-center justify-between">
-                <div>{filteredOptions[virtualOption.index]?.label}</div>
+              <div className="line-clamp-1 flex flex-1 items-center justify-between leading-4">
+                <div>{sortedFilteredOptions[virtualOption.index]?.label}</div>
               </div>
             </CommandItem>
           ))}
         </div>
       </CommandGroup>
+      <CommandSeparator />
+      <div className="flex justify-end px-4 py-2">
+        <Button onClick={onClear} variant="ghost">
+          Clear
+        </Button>
+      </div>
     </Command>
   );
 };
 
-interface VirtualizedComboboxProps {
-  value?: string;
-  options: { label: string; value: string }[];
-  searchPlaceholder?: string;
-  onSelect?: (value: string) => void;
-  buttonClassName?: string;
-  hideSearchIcon?: boolean;
+interface VirtualizedComboboxProps<T> {
   disabled?: boolean;
+  value?: string | string[];
+  options: Option<T>[];
+  label?: string;
+  searchPlaceholder?: string;
+  onSelect?: (items: string | string[]) => void;
+  required?: boolean;
+  isMulti?: boolean;
 }
 
-export function VirtualizedCombobox({
+export function VirtualizedCombobox<T>({
   value,
   options,
-  searchPlaceholder: searchPlaceholderRaw,
+  label,
+  searchPlaceholder,
   onSelect,
-  buttonClassName,
-  hideSearchIcon,
+  required,
+  isMulti,
   disabled,
-}: VirtualizedComboboxProps) {
-  const label = options.find((o) => o.value === value)?.label;
-  const searchPlaceholder = searchPlaceholderRaw ?? "Placeholder";
+}: VirtualizedComboboxProps<T>) {
   const [open, setOpen] = useState<boolean>(false);
-  const [selectedOption, setSelectedOption] = useState<string>(label ?? "");
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(
+    typeof value === "string" ? [value] : value ?? [],
+  );
+  const valueToLabel = useMemo(() => {
+    return options.reduce(
+      (acc, option) => {
+        acc[option.value] = option.label;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [options]);
+
   const [buttonWidth, setButtonWidth] = useState(0);
 
   useEffect(() => {
-    setSelectedOption(label ?? "");
-  }, [label]);
+    setSelectedOptions(typeof value === "string" ? [value] : value ?? []);
+  }, [value]);
+
+  const handleSelect = (currentValue: string) => {
+    let newOptions: string[] = [];
+    if (isMulti) {
+      newOptions = selectedOptions.includes(currentValue)
+        ? selectedOptions.filter((option) => option !== currentValue)
+        : [...selectedOptions, currentValue];
+      onSelect?.(newOptions);
+    } else {
+      newOptions = [currentValue];
+      onSelect?.(currentValue);
+    }
+
+    setSelectedOptions(newOptions);
+    if (!isMulti) {
+      setOpen(false);
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger disabled={disabled} asChild>
+      <PopoverTrigger asChild className="group relative w-full">
         <Button
           variant="outline"
+          disabled={disabled}
           role="combobox"
-          aria-expanded={open}
+          // aria-expanded={open}
           className={cn(
-            "text-md flex w-full flex-grow-0 flex-row justify-between rounded-full py-6 pl-2 pr-2 font-semibold",
-            buttonClassName,
+            "relative flex w-full rounded-md border px-3 pb-1 pr-8 text-left ring-offset-white placeholder:text-slate-500",
+            "dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 disabled:cursor-not-allowed disabled:opacity-50",
+            "file:border-0 file:bg-transparent file:text-sm file:font-medium",
           )}
           ref={(element) => setButtonWidth(element?.offsetWidth ?? 0)}
         >
-          {selectedOption || hideSearchIcon ? null : (
-            <div className="flex size-8 items-center justify-center rounded-full bg-[#1B3765] p-1">
-              <Search className="size-4 shrink-0 text-white" />
-            </div>
-          )}
-          <div
-            className={cn("ml-2 line-clamp-1 flex-1 text-left", {
-              "text-muted-foreground": !selectedOption,
-            })}
+          <label
+            className={cn(
+              "absolute left-0 top-0 px-3 font-semibold tracking-wide text-primary",
+            )}
           >
-            {selectedOption
-              ? options.find((option) => option.value === selectedOption)
-                  ?.label ?? selectedOption
-              : searchPlaceholder}
+            {label}
+            {required ? <span className="text-red-500">*</span> : null}
+          </label>
+          <div className={cn("w-full text-left text-sm font-normal leading-3")}>
+            {selectedOptions.length === 0 ? (
+              searchPlaceholder
+            ) : selectedOptions.length === 1 ? (
+              valueToLabel[selectedOptions[0]!]
+            ) : selectedOptions.length > 1 ? (
+              <div>
+                {valueToLabel[selectedOptions[0]!]}{" "}
+                <span className="">+{selectedOptions.length - 1} </span>
+              </div>
+            ) : null}
           </div>
-          {selectedOption && !disabled ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-min rounded-full bg-black/10 p-2 hover:bg-black/10"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setSelectedOption("");
-                onSelect?.("");
-                setOpen(false);
-              }}
-            >
-              <X className="size-4" />
-            </Button>
-          ) : null}
+          <div className="absolute right-3 top-0 flex h-full items-center">
+            <ChevronDownIcon className="h-4 w-4 transition duration-200 group-data-[state=open]:rotate-180" />
+          </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent
+      <PopoverContentWithoutPortal
         // To prevent the change to the top of the search
         // https://www.radix-ui.com/primitives/docs/components/popover#content
         avoidCollisions={false}
         side="bottom"
         className={cn("p-0")}
-        style={{ width: buttonWidth, minWidth: MIN_WIDTH, zIndex: 5000 }}
+        style={{ width: buttonWidth, minWidth: MIN_WIDTH }}
         align={buttonWidth < MIN_WIDTH ? "start" : "center"}
       >
         <VirtualizedCommand
           options={options}
-          placeholder={searchPlaceholder}
-          selectedOption={selectedOption}
-          onSelectOption={(currentValue) => {
-            setSelectedOption(
-              currentValue === selectedOption ? "" : currentValue,
-            );
-            onSelect?.(currentValue);
+          placeholder={searchPlaceholder ?? "Search"}
+          selectedOptions={selectedOptions}
+          onSelectOption={handleSelect}
+          onClear={() => {
+            console.log("onClear");
+            setSelectedOptions([]);
             setOpen(false);
+            onSelect?.([]);
           }}
         />
-      </PopoverContent>
+      </PopoverContentWithoutPortal>
     </Popover>
   );
 }

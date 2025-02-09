@@ -1,0 +1,1 @@
+ALTER TABLE "locations" ADD COLUMN "address_street2" varchar;

@@ -370,3 +370,11 @@ export const isDDD = (
     "Saturday",
   ].includes(day);
 };
+
+export type EventMeta = Record<string, unknown>;
+
+export type LocationMeta = Record<string, unknown>;
+
+export type OrgMeta = Record<string, unknown>;
+
+export type UpdateRequestMeta = Record<string, unknown>;

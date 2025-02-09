@@ -15,6 +15,8 @@ import type { Session } from "@f3/auth";
 import { auth } from "@f3/auth";
 import { db } from "@f3/db";
 
+export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
+
 /**
  * 1. CONTEXT
  *
@@ -63,7 +65,7 @@ export const createTRPCContext = async (opts: {
  */
 const t = initTRPC
   .meta<OpenApiMeta>()
-  .context<typeof createTRPCContext>()
+  .context<Context>()
   .create({
     transformer: superjson,
     errorFormatter: ({ shape, error }) => ({
@@ -122,4 +124,11 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       session: { ...ctx.session, user: ctx.session.user },
     },
   });
+});
+
+export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.session?.role !== "editor" && ctx.session?.role !== "admin") {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
 });

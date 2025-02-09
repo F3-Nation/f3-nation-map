@@ -11,7 +11,7 @@ import { isTouchDevice } from "~/utils/is-touch-device";
 import { appStore } from "~/utils/store/app";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
-import { closeModal, ModalType, useModalStore } from "~/utils/store/modal";
+import { closeModal, modalStore, ModalType } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 
 /**
@@ -38,8 +38,8 @@ export const MapListener = () => {
         panelLocationId: null,
         panelEventId: null,
       });
-      const modalState = useModalStore.getState();
-      if (modalState.open && modalState.type === ModalType.WORKOUT_DETAILS) {
+      const [modal] = modalStore.get("modals").slice(-1);
+      if (modal?.open && modal?.type === ModalType.WORKOUT_DETAILS) {
         closeModal();
       }
       // Special fn to prevent filtersState from being changed

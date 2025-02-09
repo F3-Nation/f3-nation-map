@@ -5,6 +5,7 @@ export enum Header {
   Accept = "Accept",
   MobileVersion = "mobile_version",
   MobileBuild = "mobile_build",
+  Source = "x-trpc-source",
 }
 
 export enum Case {

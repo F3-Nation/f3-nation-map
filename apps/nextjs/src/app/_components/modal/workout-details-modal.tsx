@@ -19,24 +19,21 @@ import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";
 import { appStore } from "~/utils/store/app";
-import {
-  closeModal,
-  ModalType,
-  openModal,
-  useModalStore,
-} from "~/utils/store/modal";
+import { closeModal, ModalType, openModal } from "~/utils/store/modal";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
-export const WorkoutDetailsModal = () => {
+export const WorkoutDetailsModal = ({
+  data,
+}: {
+  data: DataType[ModalType.WORKOUT_DETAILS];
+}) => {
   const mode = appStore.use.mode();
-  const { open, data: rawData } = useModalStore();
-  const data = rawData as DataType[ModalType.WORKOUT_DETAILS];
   const locationId = typeof data.locationId === "number" ? data.locationId : -1;
   const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
     { locationId },
-    { enabled: locationId >= 0 && open },
+    { enabled: locationId >= 0 },
   );
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const workout = useMemo(
@@ -58,13 +55,13 @@ export const WorkoutDetailsModal = () => {
   const workoutFields = {
     Name: workout?.eventName,
     What: workout?.types.map((type) => type.name).join(", "),
-    Where: location?.locationAddress ? (
+    Where: location?.fullAddress ? (
       <Link
-        href={`https://maps.google.com/?q=${encodeURIComponent(location?.locationAddress)}`}
+        href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
         target="_blank"
         className="underline"
       >
-        {location.locationAddress}
+        {location.fullAddress}
       </Link>
     ) : null,
     When: workout ? getWhenFromWorkout(workout) : "",
@@ -91,7 +88,7 @@ export const WorkoutDetailsModal = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
+    <Dialog open={true} onOpenChange={closeModal}>
       <DialogContent
         style={{ zIndex: Z_INDEX.WORKOUT_DETAILS_MODAL }}
         className="mb-40 rounded-lg px-4 sm:px-6 lg:rounded-none lg:px-8"
@@ -138,6 +135,11 @@ export const WorkoutDetailsModal = () => {
                     workoutWebsite: results?.location.aoWebsite,
                     aoLogo: results?.location.aoLogo,
                     locationAddress: results?.location.locationAddress,
+                    locationAddress2: results?.location.locationAddress2,
+                    locationCity: results?.location.locationCity,
+                    locationState: results?.location.locationState,
+                    locationZip: results?.location.locationZip,
+                    locationCountry: results?.location.locationCountry,
                     lat: lat,
                     lng: lng,
                     startTime: event?.startTime,
@@ -204,6 +206,11 @@ export const WorkoutDetailsModal = () => {
                         regionId: results?.location.regionId,
                         eventId: -1,
                         locationAddress: results?.location.locationAddress,
+                        locationAddress2: results?.location.locationAddress2,
+                        locationCity: results?.location.locationCity,
+                        locationState: results?.location.locationState,
+                        locationZip: results?.location.locationZip,
+                        locationCountry: results?.location.locationCountry,
                         lat: lat,
                         lng: lng,
                         workoutWebsite: results?.location.aoWebsite,
@@ -311,6 +318,11 @@ export const WorkoutDetailsModal = () => {
                   workoutWebsite: results?.location.aoWebsite,
                   aoLogo: results?.location.aoLogo,
                   locationAddress: results?.location.locationAddress,
+                  locationAddress2: results?.location.locationAddress2,
+                  locationCity: results?.location.locationCity,
+                  locationState: results?.location.locationState,
+                  locationZip: results?.location.locationZip,
+                  locationCountry: results?.location.locationCountry,
                   lat: lat,
                   lng: lng,
                   startTime: event?.startTime,

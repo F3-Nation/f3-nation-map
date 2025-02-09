@@ -49,17 +49,21 @@ export const reset = async () => {
   await db.execute(sql`CREATE SCHEMA public`);
 
   for (const user of users) {
+    const quotedRolname = `"${user.rolname}"`;
     await db.execute(sql`
-      GRANT USAGE ON SCHEMA public TO ${sql.raw(user.rolname)};
-      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${sql.raw(user.rolname)};
-      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${sql.raw(user.rolname)};
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO ${sql.raw(user.rolname)};
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO ${sql.raw(user.rolname)};
+      GRANT USAGE ON SCHEMA public TO ${sql.raw(quotedRolname)};
+      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${sql.raw(quotedRolname)};
+      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${sql.raw(quotedRolname)};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO ${sql.raw(quotedRolname)};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO ${sql.raw(quotedRolname)};
     `);
   }
 
   // We need to manually handle the alembic version table for moneyball's work
   if (version_num) {
+    await db.execute(
+      sql`CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) PRIMARY KEY NOT NULL)`,
+    );
     await db.execute(sql`
       INSERT INTO alembic_version (version_num) VALUES (${version_num});
     `);

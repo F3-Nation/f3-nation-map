@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { create } from "zustand";
+
+import { ZustandStore } from "@f3/shared/common/classes";
 
 import { hideSelectedItem } from "./selected-item";
 
@@ -10,10 +11,17 @@ export enum ModalType {
   WORKOUT_DETAILS = "WORKOUT_DETAILS",
   INFO = "INFO",
   SETTINGS = "SETTINGS",
+  ADMIN_USERS = "ADMIN_USERS",
+  ADMIN_REQUESTS = "ADMIN_REQUESTS",
+  ADMIN_EVENTS = "ADMIN_EVENTS",
+  ADMIN_LOCATIONS = "ADMIN_LOCATIONS",
+  ADMIN_REGIONS = "ADMIN_REGIONS",
 }
 
 export interface DataType {
-  [ModalType.HOW_TO_JOIN]: null;
+  [ModalType.HOW_TO_JOIN]: {
+    content?: ReactNode;
+  };
   [ModalType.UPDATE_LOCATION]: {
     mode: "edit-event" | "new-location" | "new-event";
     locationId?: number | null;
@@ -30,6 +38,11 @@ export interface DataType {
     types?: { id: number; name: string }[];
     eventDescription?: string | null;
     locationAddress?: string | null;
+    locationAddress2?: string | null;
+    locationCity?: string | null;
+    locationState?: string | null;
+    locationZip?: string | null;
+    locationCountry?: string | null;
   };
   [ModalType.WORKOUT_DETAILS]: {
     locationId?: number | null;
@@ -38,22 +51,62 @@ export interface DataType {
   [ModalType.INFO]: null;
   [ModalType.USER_LOCATION_INFO]: null;
   [ModalType.SETTINGS]: null;
+  [ModalType.ADMIN_USERS]: {
+    id: number;
+  };
+  [ModalType.ADMIN_REQUESTS]: {
+    id: string;
+  };
+  [ModalType.ADMIN_EVENTS]: {
+    id: number;
+  };
+  [ModalType.ADMIN_LOCATIONS]: {
+    id: number;
+  };
+  [ModalType.ADMIN_REGIONS]: {
+    id: number;
+  };
 }
 
-export const useModalStore = create(() => ({
-  open: false as boolean,
-  type: undefined as ModalType | undefined,
-  content: "" as ReactNode,
-  data: null as DataType[ModalType] | null,
-}));
+export interface Modal<T extends ModalType> {
+  open: boolean;
+  type: T | undefined;
+  content?: ReactNode;
+  data?: DataType[T];
+}
+
+export const modalStore = new ZustandStore<{
+  modals: Modal<ModalType>[];
+}>({
+  initialState: {
+    modals: [] as Modal<ModalType>[],
+  },
+  persistOptions: {
+    name: "modal",
+    version: 1,
+    persistedKeys: [],
+    getStorage: () => localStorage,
+  },
+});
 
 export const openModal = <T extends ModalType>(type: T, data?: DataType[T]) => {
   if (type === ModalType.WORKOUT_DETAILS) {
     hideSelectedItem();
   }
-  useModalStore.setState({ open: true, type, data });
+  modalStore.setState({
+    modals: [...modalStore.get("modals"), { open: true, type, data }],
+  });
+};
+
+export const useOpenModal = () => {
+  const modals = modalStore.use.modals();
+  return modals[modals.length - 1];
 };
 
 export const closeModal = () => {
-  useModalStore.setState({ open: false, type: undefined });
+  const modals = modalStore.get("modals");
+  const lessOneModals = modals.slice(0, -1);
+  modalStore.setState({
+    modals: lessOneModals,
+  });
 };
