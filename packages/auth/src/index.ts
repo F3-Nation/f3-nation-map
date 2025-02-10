@@ -22,6 +22,9 @@ export const {
   // And it is a nightmare (impossible?) to overwrite the type
   adapter: MDPGDrizzleAdapter(db) as Adapter,
   session: { strategy: "jwt" },
+  // Needed to run on cloud build docker deployment (basePath and trustHost)
+  // https://github.com/nextauthjs/next-auth/issues/9819#issuecomment-1912903196
+  basePath: "/api/auth",
   trustHost: true,
   providers: [
     Email({
