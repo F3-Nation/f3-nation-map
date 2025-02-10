@@ -205,10 +205,10 @@ export async function insertDatabaseStructure(
   const orgTypes = await db
     .insert(schema.orgTypes)
     .values([
-      { name: OrgTypes.AO },
-      { name: OrgTypes.Region },
-      { name: OrgTypes.Area },
-      { name: OrgTypes.Sector },
+      { name: OrgTypes.AO, id: 1 },
+      { name: OrgTypes.Region, id: 2 },
+      { name: OrgTypes.Area, id: 3 },
+      { name: OrgTypes.Sector, id: 4 },
     ])
     .returning();
 
@@ -438,6 +438,8 @@ export async function insertData(data: {
             email: region["Region Email"],
             description: undefined, // NOTE: currently no region descriptions
             parentId: areaId,
+            created: dayjs(region.Created).format(),
+            updated: dayjs(region.Updated).format(),
           };
           return regionData;
         })
@@ -490,6 +492,21 @@ export async function insertData(data: {
     .insert(schema.orgs)
     .values(
       Object.values(uniqueAOsWithWorkouts).map(({ ao, events }) => {
+        const created = events
+          .reduce(
+            (acc, e) =>
+              dayjs(e.Created).isBefore(acc) ? dayjs(e.Created) : acc,
+            dayjs(),
+          )
+          .format();
+        const updated = events
+          .reduce(
+            (acc, e) =>
+              dayjs(e.Updated).isAfter(acc) ? dayjs(e.Updated) : acc,
+            dayjs(0),
+          )
+          .format();
+
         const aoData: InferInsertModel<typeof schema.orgs> = {
           // name: "", // AOs do not have names yet
           name: events
@@ -512,6 +529,8 @@ export async function insertData(data: {
             postalCode: events[0]?.["Postal Code"],
             country: events[0]?.Country,
           },
+          created,
+          updated,
         };
         return aoData;
       }),
@@ -536,6 +555,8 @@ export async function insertData(data: {
     .values(
       Object.values(uniqueAOsWithWorkouts).map(({ ao, events }) => {
         const aoOrg = aoOrgKeyDict[ao.key];
+        const orgId = aoOrg?.id;
+        if (orgId == undefined) throw new Error("AO org id not found");
         const aoData: InferInsertModel<typeof schema.locations> = {
           name: "", // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
@@ -548,7 +569,7 @@ export async function insertData(data: {
           description: aoOrg?.description, // AOs description is the address
           latitude: safeParseFloat(ao.latitude),
           longitude: safeParseFloat(ao.longitude),
-          orgId: aoOrg?.id ?? 0,
+          orgId,
           meta: {
             latLonKey: ao.key,
             address1: events[0]?.["Address 1"],
@@ -568,6 +589,9 @@ export async function insertData(data: {
 
   const eventsToInsert: InferInsertModel<typeof schema.events>[] =
     Object.values(uniqueAOsWithWorkouts).flatMap(({ ao, events }) => {
+      const aoOrg = aoOrgKeyDict[ao.key];
+      const orgId = aoOrg?.id;
+      if (orgId == undefined) throw new Error("AO org id not found");
       return events.map((workout) => {
         const dayOfWeek = DAY_ORDER.indexOf(workout.Weekday);
         const workoutAoLoc = aoLocs.find(
@@ -602,7 +626,7 @@ export async function insertData(data: {
           // eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
           description: workout.Note,
           recurrencePattern: "weekly",
-          orgId: ao.regionId,
+          orgId,
           meta: {
             eventType: workout.Type,
             eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id,
