@@ -1,8 +1,5 @@
 {
-  "extends": "@f3/tsconfig/base.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
-  },
-  "include": ["src"],
+  "extends": "@f3/tsconfig/internal-package.json",
+  "include": ["src", "__tests__"],
   "exclude": ["node_modules"]
 }

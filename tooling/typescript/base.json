@@ -16,7 +16,9 @@
     "jsx": "preserve",
     "incremental": true,
     "noUncheckedIndexedAccess": true,
-    "types": ["@f3/tsconfig/type-extensions"]
+    "types": ["@f3/tsconfig/type-extensions"],
+    "disableSourceOfProjectReferenceRedirect": true,
+    "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.json"
   },
   "exclude": ["node_modules", "build", "dist", ".next", ".expo"]
 }
