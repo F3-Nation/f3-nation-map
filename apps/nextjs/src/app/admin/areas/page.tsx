@@ -2,24 +2,24 @@ import { Suspense } from "react";
 
 import { api } from "~/trpc/server";
 import Layout from "../admin-layout";
-import { AddWorkoutButton } from "./[id]/add-workout-button";
-import { WorkoutsTable } from "./workouts-table";
+import { AddAreaButton } from "./[id]/add-area-button";
+import { AreasTable } from "./areas-table";
 
-const WorkoutsPage = async () => {
-  const workouts = await api.event.all();
+const AreasPage = async () => {
+  const areas = await api.area.all();
 
   return (
     <Layout>
       <div className="flex w-full  flex-col">
         <div className="flex flex-row items-center justify-between">
-          <h1 className="text-2xl font-bold">Events</h1>
+          <h1 className="text-2xl font-bold">Areas</h1>
           <div className="flex flex-row items-center justify-start gap-2">
-            <AddWorkoutButton />
+            <AddAreaButton />
           </div>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
           <div className="flex  w-full  flex-col overflow-auto">
-            <WorkoutsTable workouts={workouts} />
+            <AreasTable areas={areas} />
           </div>
         </Suspense>
       </div>
@@ -27,4 +27,4 @@ const WorkoutsPage = async () => {
   );
 };
 
-export default WorkoutsPage;
+export default AreasPage;

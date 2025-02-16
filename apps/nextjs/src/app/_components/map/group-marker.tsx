@@ -11,6 +11,7 @@ import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
+import { api } from "~/trpc/server-side-react-helpers";
 import { groupMarkerClick } from "~/utils/actions/group-marker-click";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import {
@@ -21,10 +22,12 @@ import {
 
 export const MemoGroupMarker = memo(
   ({ group, show }: { group: SparseF3Marker; show: boolean }) => {
+    const utils = api.useUtils();
     const { lat, lon, events, id } = group;
     if (!show || lat === null || lon === null) return null;
     return (
       <Marker
+        draggable
         position={[lat, lon]}
         eventHandlers={{
           mouseout: () => {
@@ -69,6 +72,33 @@ export const MemoGroupMarker = memo(
             setSelectedItem({
               ...(isNumber(eventId) ? { eventId } : {}),
             });
+          },
+          drag: (e) => {
+            setSelectedItem({
+              locationId: null,
+              eventId: null,
+            });
+            console.log("dragstart", e);
+          },
+          dragend: (e: { target: L.Marker }) => {
+            console.log("dragend", e);
+            const lat = e.target.getLatLng().lat;
+            const lon = e.target.getLatLng().lng;
+            utils.location.getLocationMarker.setData({ id }, (prev) =>
+              !prev ? undefined : { ...prev, lat, lon },
+            );
+            utils.location.getLocationMarkersSparse.setData(
+              undefined,
+              (prev) => {
+                if (!prev) return undefined;
+                return prev.map((location) => {
+                  if (location.id === id) {
+                    return { ...location, lat, lon };
+                  }
+                  return location;
+                });
+              },
+            );
           },
           click: (e) => {
             const eventIdString = Array.from(

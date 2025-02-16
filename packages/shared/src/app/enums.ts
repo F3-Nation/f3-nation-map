@@ -10,6 +10,9 @@ export type RegionRole = (typeof RegionRole)[number];
 export const UpdateRequestStatus = ["pending", "approved", "rejected"] as const;
 export type UpdateRequestStatus = (typeof UpdateRequestStatus)[number];
 
+export const Permissions = ["admin", "edit"] as const;
+export type Permissions = (typeof Permissions)[number];
+
 export enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",
@@ -35,6 +38,7 @@ export enum OrgTypes {
   Region = "Region",
   Area = "Area",
   Sector = "Sector",
+  Nation = "Nation",
 }
 
 export enum EventTags {

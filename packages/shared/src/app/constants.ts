@@ -147,6 +147,22 @@ export const routes = {
       __path: "/admin/regions",
       __auth: "editor",
     },
+    theNation: {
+      __path: "/admin/the-nation",
+      __auth: "editor",
+    },
+    sectors: {
+      __path: "/admin/sectors",
+      __auth: "editor",
+    },
+    areas: {
+      __path: "/admin/areas",
+      __auth: "editor",
+    },
+    aos: {
+      __path: "/admin/aos",
+      __auth: "editor",
+    },
     users: {
       __path: "/admin/users",
       __auth: "editor",
@@ -218,3 +234,21 @@ export enum AppType {
   RSC = "rsc",
   UNKNOWN = "unknown",
 }
+
+export enum Permissions {
+  ADMIN = "admin",
+  EDIT = "edit",
+}
+
+export const PERMISSIONS = {
+  [Permissions.ADMIN]: {
+    id: 1,
+    name: Permissions.ADMIN,
+    description: "Admin permissions",
+  },
+  [Permissions.EDIT]: {
+    id: 2,
+    name: Permissions.EDIT,
+    description: "Edit permissions",
+  },
+};

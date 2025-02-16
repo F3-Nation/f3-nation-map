@@ -3,7 +3,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { eq } from "@f3/db";
 import { env } from "@f3/env";
-import { DAY_ORDER } from "@f3/shared/app/constants";
+import { DAY_ORDER, PERMISSIONS } from "@f3/shared/app/constants";
 import {
   EventCategories,
   EventTags,
@@ -52,6 +52,9 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.locations);
   await db.delete(schema.orgTypes);
   await db.delete(schema.orgs);
+  await db.delete(schema.permissions);
+  await db.delete(schema.roles);
+  await db.delete(schema.rolesXPermissions);
   await db.delete(schema.events);
   await db.delete(schema.slackUsers);
 
@@ -158,6 +161,17 @@ export async function insertUsers() {
 
   const users = await db.insert(schema.users).values(usersToInsert).returning();
 
+  const _permissions = await db
+    .insert(schema.permissions)
+    .values(
+      Object.values(PERMISSIONS).map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+      })),
+    )
+    .returning();
+
   const roles = await db
     .insert(schema.roles)
     .values(RegionRole.map((r) => ({ name: r })))
@@ -209,6 +223,7 @@ export async function insertDatabaseStructure(
       { name: OrgTypes.Region, id: 2 },
       { name: OrgTypes.Area, id: 3 },
       { name: OrgTypes.Sector, id: 4 },
+      { name: OrgTypes.Nation, id: 5 },
     ])
     .returning();
 
@@ -350,15 +365,31 @@ export async function insertData(data: {
   const orgTypes = await db.select().from(schema.orgTypes);
   const eventTypes = await db.select().from(schema.eventTypes);
 
+  const nationOrgTypeId = orgTypes.find(
+    (ot) => ot.name === OrgTypes.Nation.toString(),
+  )?.id;
+  if (nationOrgTypeId === undefined)
+    throw new Error("Nation org type not found");
+
+  const insertedNation = await db
+    .insert(schema.orgs)
+    .values({
+      name: "F3 Nation",
+      isActive: true,
+      orgTypeId: nationOrgTypeId,
+    })
+    .returning({ id: schema.orgs.id });
+
   const { workoutData, regionData } = data;
   const sectorsToInsert = regionData
     .map((d) => d.Sector || null)
     .filter(isTruthy)
     .filter(onlyUnique);
-  const sectorOrgType = orgTypes.find(
+  const sectorOrgTypeId = orgTypes.find(
     (ot) => ot.name === OrgTypes.Sector.toString(),
   )?.id;
-  if (!sectorOrgType) throw new Error("Sector org type not found");
+  if (sectorOrgTypeId === undefined)
+    throw new Error("Sector org type not found");
 
   const insertedSectors = await db
     .insert(schema.orgs)
@@ -366,7 +397,8 @@ export async function insertData(data: {
       sectorsToInsert.map((d) => ({
         name: d,
         isActive: true,
-        orgTypeId: sectorOrgType,
+        orgTypeId: sectorOrgTypeId,
+        parentId: insertedNation[0]?.id,
       })),
     )
     .returning();
@@ -392,17 +424,17 @@ export async function insertData(data: {
         arr.findIndex((d2) => d2.name === d.name) === idx,
     );
 
-  const areaOrgType = orgTypes.find(
+  const areaOrgTypeId = orgTypes.find(
     (ot) => ot.name === OrgTypes.Area.toString(),
   )?.id;
-  if (!areaOrgType) throw new Error("Area org type not found");
+  if (areaOrgTypeId === undefined) throw new Error("Area org type not found");
   const insertedAreas = await db
     .insert(schema.orgs)
     .values(
       areasToInsert.map((d) => ({
         name: d.name,
         isActive: true,
-        orgTypeId: areaOrgType,
+        orgTypeId: areaOrgTypeId,
         parentId: d.sectorId,
       })),
     )

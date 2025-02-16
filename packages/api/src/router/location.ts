@@ -1,4 +1,3 @@
-import omit from "lodash/omit";
 import { z } from "zod";
 
 import { aliasedTable, count, desc, eq, schema, sql } from "@f3/db";
@@ -496,6 +495,7 @@ export const locationRouter = createTRPCRouter({
         .select({
           id: schema.locations.id,
           name: schema.locations.name,
+          orgId: schema.locations.orgId,
           regionName: regionOrg.name,
           description: schema.locations.description,
           isActive: schema.locations.isActive,
@@ -510,6 +510,7 @@ export const locationRouter = createTRPCRouter({
           addressCountry: schema.locations.addressCountry,
           meta: schema.locations.meta,
           created: schema.locations.created,
+          regionId: regionOrg.id,
         })
         .from(schema.locations)
         .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
@@ -554,25 +555,6 @@ export const locationRouter = createTRPCRouter({
     //   .from(schema.events)
     // return { locations, events };
   }),
-  allActive: publicProcedure.query(async ({ ctx }) => {
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const locationOrg = aliasedTable(schema.orgs, "location_org");
-
-    const [locations] = await Promise.all([
-      ctx.db
-        .select({
-          id: schema.locations.id,
-          name: schema.locations.name,
-          regionId: regionOrg.id,
-        })
-        .from(schema.locations)
-        .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
-        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
-        .where(eq(schema.locations.isActive, true))
-        .orderBy(schema.locations.name),
-    ]);
-    return locations;
-  }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -605,17 +587,21 @@ export const locationRouter = createTRPCRouter({
       return location;
     }),
   crupdate: publicProcedure
-    .input(LocationInsertSchema)
+
+    .input(LocationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const [updated] = await ctx.db
+      const locationToCrupdate: typeof schema.locations.$inferInsert = {
+        ...input,
+        meta: {
+          ...(input.meta as Record<string, string>),
+        },
+      };
+      await ctx.db
         .insert(schema.locations)
-        .values(input)
+        .values(locationToCrupdate)
         .onConflictDoUpdate({
           target: [schema.locations.id],
-          set: input,
-        })
-        .returning();
-
-      return { success: true, inserted: omit(updated, ["token"]) };
+          set: locationToCrupdate,
+        });
     }),
 });

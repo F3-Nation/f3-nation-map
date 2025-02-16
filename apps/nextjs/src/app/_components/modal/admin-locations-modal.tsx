@@ -45,14 +45,14 @@ import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
 
-export default function UserModal({
+export default function AdminLocationsModal({
   data,
 }: {
   data: DataType[ModalType.ADMIN_LOCATIONS];
 }) {
   const utils = api.useUtils();
-  const { data: location } = api.location.byId.useQuery({ id: data.id });
-  const { data: regions } = api.region.allActive.useQuery();
+  const { data: location } = api.location.byId.useQuery({ id: data.id ?? -1 });
+  const { data: regions } = api.region.all.useQuery();
   const router = useRouter();
 
   const form = useForm({
@@ -60,7 +60,7 @@ export default function UserModal({
       regionId: z.number(),
     }),
     defaultValues: {
-      id: location?.id ?? -1,
+      id: location?.id ?? undefined,
       name: location?.name ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
@@ -78,7 +78,7 @@ export default function UserModal({
 
   useEffect(() => {
     form.reset({
-      id: location?.id ?? -1,
+      id: location?.id ?? undefined,
       name: location?.name ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
@@ -114,294 +114,304 @@ export default function UserModal({
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
-        className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[600px]`)}
+        className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[1024px]`)}
       >
         <DialogHeader>
           <DialogTitle className="text-center">Edit Location</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(
-              (data) => {
-                crupdateLocation.mutate(data);
-              },
-              (error) => {
-                toast.error("Failed to update user");
-                console.log(error);
-              },
-            )}
-            className="space-y-4"
-          >
-            <div className="flex flex-wrap">
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ID" disabled {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <CircleHelp
-                              size={14}
-                              className="display-inline ml-2"
+        <div className="flex flex-wrap">
+          <div className="w-1/2">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(
+                  (data) => {
+                    crupdateLocation.mutate(data);
+                  },
+                  (error) => {
+                    toast.error("Failed to update user");
+                    console.log(error);
+                  },
+                )}
+                className="space-y-4"
+              >
+                <div className="flex flex-wrap">
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="ID" disabled {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <CircleHelp
+                                  size={14}
+                                  className="display-inline ml-2"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>Lorem Ipsum</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <FormControl>
+                            <Input
+                              placeholder="Name"
+                              {...field}
+                              value={field.value ?? ""}
                             />
-                          </TooltipTrigger>
-                          <TooltipContent>Lorem Ipsum</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <FormControl>
-                        <Input
-                          placeholder="Name"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="regionId"
-                  render={({ field }) => (
-                    <FormItem key={`area-${field.value}`}>
-                      <FormLabel>Region</FormLabel>
-                      <Select
-                        value={field.value?.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value?.toString()}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="regionId"
+                      render={({ field }) => (
+                        <FormItem key={`area-${field.value}`}>
+                          <FormLabel>Region</FormLabel>
+                          <Select
+                            value={field.value?.toString()}
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
+                            }
+                            defaultValue={field.value?.toString()}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a region" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {regions
+                                ?.slice()
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .map((region) => (
+                                  <SelectItem
+                                    key={`region-${region.id}`}
+                                    value={region.id.toString()}
+                                  >
+                                    {region.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Email"
+                              type="email"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="latitude"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Latitude</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Latitude"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="longitude"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Longitude</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Longitude"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="addressStreet"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Street</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Street"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="addressCity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="City"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="addressState"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>State</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="State"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="addressZip"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Zip</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Zip"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="addressCountry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Country"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="mb-4 w-full px-2">
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value ?? ""}
+                              rows={5}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-full px-2">
+                    <div className="flex space-x-4 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => closeModal()}
+                        className="w-full"
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions?.map((region) => (
-                            <SelectItem
-                              key={`region-${region.id}`}
-                              value={region.id.toString()}
-                            >
-                              {region.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Email"
-                          type="email"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="latitude"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Latitude</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Latitude"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="longitude"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Longitude</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Longitude"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="addressStreet"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Street"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="addressCity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="City"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="addressState"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="State"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="addressZip"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Zip"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="addressCountry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Country"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="mb-4 w-full px-2">
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          value={field.value ?? ""}
-                          rows={5}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-full px-2">
-                <div className="flex space-x-4 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => closeModal()}
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="w-full">
-                    Save Changes
-                  </Button>
+                        Cancel
+                      </Button>
+                      <Button type="submit" className="w-full">
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </form>
-        </Form>
+              </form>
+            </Form>
+          </div>
+          <div className="w-1/2">MAP CONTAINER</div>
+        </div>
       </DialogContent>
     </Dialog>
   );

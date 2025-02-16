@@ -24,7 +24,28 @@ export const LocationInsertSchema = createInsertSchema(locations);
 export const LocationSelectSchema = createSelectSchema(locations);
 
 // EVENT SCHEMA
-export const EventInsertSchema = createInsertSchema(events);
+export const EventInsertSchema = createInsertSchema(events, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  orgId: (s) =>
+    s
+      .min(1, { message: "Please select an region" })
+      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  locationId: (s) =>
+    s
+      .min(1, { message: "Please select an location" })
+      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+  startTime: (s) =>
+    s.regex(/^\d{2}:\d{2}$/, {
+      message: "Start time must be in 24hr format (HH:MM)",
+    }),
+  endTime: (s) =>
+    s.regex(/^\d{2}:\d{2}$/, {
+      message: "End time must be in 24hr format (HH:MM)",
+    }),
+}).extend({
+  regionId: z.number(),
+});
 export const EventSelectSchema = createSelectSchema(events);
 
 export const CreateEventSchema = EventInsertSchema.omit({
@@ -33,9 +54,56 @@ export const CreateEventSchema = EventInsertSchema.omit({
   updated: true,
 });
 
+// NATION SCHEMA
+export const NationInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
+export const NationSelectSchema = createSelectSchema(orgs);
+
+// SECTOR SCHEMA
+export const SectorInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  parentId: (s) =>
+    s
+      .min(1, { message: "Please select a nation" })
+      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
+export const SectorSelectSchema = createSelectSchema(orgs);
+
+// AREA SCHEMA
+export const AreaInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  parentId: (s) =>
+    s
+      .min(1, { message: "Please select a sector" })
+      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
+export const AreaSelectSchema = createSelectSchema(orgs);
+
 // REGION SCHEMA
-export const RegionInsertSchema = createInsertSchema(orgs);
+export const RegionInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  parentId: (s) =>
+    s
+      .min(1, { message: "Please select an area" })
+      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
 export const RegionSelectSchema = createSelectSchema(orgs);
+
+// AO SCHEMA
+export const AOInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  parentId: (s) =>
+    s
+      .min(1, { message: "Please select a region" })
+      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
+export const AOSelectSchema = createSelectSchema(orgs);
 
 // REQUEST UPDATE SCHEMA
 export const RequestInsertSchema = createInsertSchema(updateRequests, {

@@ -16,19 +16,19 @@ import { Cell, Header } from "@f3/ui/table";
 
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 
-export const RegionsTable = ({
-  regions,
+export const NationsTable = ({
+  nations,
 }: {
-  regions: RouterOutputs["region"]["all"];
+  nations: RouterOutputs["nation"]["all"];
 }) => {
   return (
     <MDTable
-      data={regions}
+      data={nations}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
       columns={columns}
       onRowClick={(row) => {
-        openModal(ModalType.ADMIN_REGIONS, { id: row.original.id });
+        openModal(ModalType.ADMIN_NATIONS, { id: row.original.id });
       }}
       // rowClassName={(row) => {
       //   if (row.original.submitterValidated === true) {
@@ -39,29 +39,10 @@ export const RegionsTable = ({
   );
 };
 
-const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
+const columns: TableOptions<RouterOutputs["nation"]["all"][number]>["columns"] =
   [
     {
       accessorKey: "name",
-      meta: { name: "Region" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
-    {
-      accessorKey: "area",
-      meta: { name: "Area" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
-    {
-      accessorKey: "sector",
-      meta: { name: "Sector" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
-
-    {
-      accessorKey: "nation",
       meta: { name: "Nation" },
       header: Header,
       cell: (cell) => <Cell {...cell} />,
@@ -87,12 +68,6 @@ const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
       },
     },
     // {
-    //   accessorKey: "description",
-    //   meta: { name: "Description" },
-    //   header: Header,
-    //   cell: (cell) => <Cell {...cell} />,
-    // },
-    // {
     //   accessorKey: "website",
     //   meta: { name: "Website" },
     //   header: Header,
@@ -101,24 +76,6 @@ const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
     // {
     //   accessorKey: "email",
     //   meta: { name: "Email" },
-    //   header: Header,
-    //   cell: (cell) => <Cell {...cell} />,
-    // },
-    // {
-    //   accessorKey: "twitter",
-    //   meta: { name: "Twitter" },
-    //   header: Header,
-    //   cell: (cell) => <Cell {...cell} />,
-    // },
-    // {
-    //   accessorKey: "facebook",
-    //   meta: { name: "Facebook" },
-    //   header: Header,
-    //   cell: (cell) => <Cell {...cell} />,
-    // },
-    // {
-    //   accessorKey: "instagram",
-    //   meta: { name: "Instagram" },
     //   header: Header,
     //   cell: (cell) => <Cell {...cell} />,
     // },
@@ -158,7 +115,7 @@ const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
                   e.stopPropagation();
                   openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
                     id: Number(row.original.id),
-                    type: DeleteType.REGION,
+                    type: DeleteType.NATION,
                   });
                 }}
               >

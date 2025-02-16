@@ -15,7 +15,20 @@ export enum ModalType {
   ADMIN_REQUESTS = "ADMIN_REQUESTS",
   ADMIN_EVENTS = "ADMIN_EVENTS",
   ADMIN_LOCATIONS = "ADMIN_LOCATIONS",
+  ADMIN_NATIONS = "ADMIN_NATIONS",
+  ADMIN_SECTORS = "ADMIN_SECTORS",
+  ADMIN_AREAS = "ADMIN_AREAS",
   ADMIN_REGIONS = "ADMIN_REGIONS",
+  ADMIN_AOS = "ADMIN_AOS",
+  ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
+}
+export enum DeleteType {
+  AREA = "AREA",
+  AO = "AO",
+  EVENT = "EVENT",
+  REGION = "REGION",
+  SECTOR = "SECTOR",
+  NATION = "NATION",
 }
 
 export interface DataType {
@@ -58,13 +71,29 @@ export interface DataType {
     id: string;
   };
   [ModalType.ADMIN_EVENTS]: {
-    id: number;
+    id?: number | null;
   };
   [ModalType.ADMIN_LOCATIONS]: {
-    id: number;
+    id?: number | null;
+  };
+  [ModalType.ADMIN_NATIONS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_SECTORS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_AREAS]: {
+    id?: number | null;
   };
   [ModalType.ADMIN_REGIONS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_AOS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_DELETE_CONFIRMATION]: {
     id: number;
+    type: DeleteType;
   };
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import {
@@ -32,73 +32,74 @@ import {
 import { Spinner } from "@f3/ui/spinner";
 import { Textarea } from "@f3/ui/textarea";
 import { toast } from "@f3/ui/toast";
-import { EventInsertSchema } from "@f3/validators";
+import { AOInsertSchema } from "@f3/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
 
-export default function AdminWorkoutsModal({
+export default function AdminAOsModal({
   data,
 }: {
-  data: DataType[ModalType.ADMIN_EVENTS];
+  data: DataType[ModalType.ADMIN_AOS];
 }) {
   const utils = api.useUtils();
+  const { data: ao } = api.ao.byId.useQuery({ id: data.id ?? -1 });
   const { data: regions } = api.region.all.useQuery();
-  const { data: locations } = api.location.all.useQuery();
-  const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
-    schema: EventInsertSchema,
+    schema: AOInsertSchema.partial({ orgTypeId: true }),
     defaultValues: {
-      id: event?.id ?? undefined,
-      name: event?.name ?? "",
-      isActive: event?.isActive ?? true,
-      description: event?.description ?? "",
-      orgId: event?.orgId ?? -1,
-      highlight: event?.highlight ?? true,
-      isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId ?? -1,
-      dayOfWeek: event?.dayOfWeek ?? -1,
-      startTime: event?.startTime?.slice(0, 5) ?? "05:30",
-      endTime: event?.endTime?.slice(0, 5) ?? "06:15",
-      email: event?.email ?? null,
-      regionId: event?.regionId ?? 0,
+      id: ao?.id ?? undefined,
+      name: ao?.name ?? "",
+      parentId: ao?.parentId ?? -1,
+      defaultLocationId: ao?.defaultLocationId ?? null,
+      isActive: ao?.isActive ?? true,
+      description: ao?.description ?? "",
+      logoUrl: ao?.logoUrl ?? null,
+      website: ao?.website ?? null,
+      email: ao?.email ?? null,
+      twitter: ao?.twitter ?? null,
+      facebook: ao?.facebook ?? null,
+      instagram: ao?.instagram ?? null,
+      lastAnnualReview: ao?.lastAnnualReview ?? null,
+      meta: ao?.meta ?? {},
     },
   });
 
   useEffect(() => {
     form.reset({
-      id: event?.id ?? undefined,
-      name: event?.name ?? "",
-      isActive: event?.isActive ?? true,
-      description: event?.description ?? "",
-      orgId: event?.orgId ?? -1,
-      highlight: event?.highlight ?? true,
-      isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId ?? -1,
-      dayOfWeek: event?.dayOfWeek ?? -1,
-      startTime: event?.startTime?.slice(0, 5) ?? "05:30",
-      endTime: event?.endTime?.slice(0, 5) ?? "06:15",
-      email: event?.email ?? null,
-      regionId: event?.regionId ?? 0,
+      id: ao?.id ?? undefined,
+      name: ao?.name ?? "",
+      parentId: ao?.parentId ?? -1,
+      defaultLocationId: ao?.defaultLocationId ?? null,
+      isActive: ao?.isActive ?? true,
+      description: ao?.description ?? "",
+      logoUrl: ao?.logoUrl ?? null,
+      website: ao?.website ?? null,
+      email: ao?.email ?? null,
+      twitter: ao?.twitter ?? null,
+      facebook: ao?.facebook ?? null,
+      instagram: ao?.instagram ?? null,
+      lastAnnualReview: ao?.lastAnnualReview ?? null,
+      meta: ao?.meta ?? null,
     });
-  }, [form, event]);
+  }, [form, ao]);
 
-  const crupdateEvent = api.event.crupdate.useMutation({
+  const crupdateAO = api.ao.crupdate.useMutation({
     onSuccess: async () => {
-      await utils.event.invalidate();
+      await utils.ao.invalidate();
       closeModal();
-      toast.success("Successfully updated event");
+      toast.success("Successfully updated ao");
       router.refresh();
     },
     onError: (err) => {
       toast.error(
         err?.data?.code === "UNAUTHORIZED"
-          ? "You must be logged in to update events"
-          : "Failed to update event",
+          ? "You must be logged in to update aos"
+          : "Failed to update ao",
       );
     },
   });
@@ -110,7 +111,7 @@ export default function AdminWorkoutsModal({
         className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Event</DialogTitle>
+          <DialogTitle className="text-center">Edit AO</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -119,16 +120,16 @@ export default function AdminWorkoutsModal({
               async (data) => {
                 setIsSubmitting(true);
                 try {
-                  await crupdateEvent.mutateAsync(data);
+                  await crupdateAO.mutateAsync(data);
                 } catch (error) {
-                  toast.error("Failed to update event");
+                  toast.error("Failed to update ao");
                   console.error(error);
                 } finally {
                   setIsSubmitting(false);
                 }
               },
               (error) => {
-                toast.error("Failed to update event");
+                toast.error("Failed to update ao");
                 console.log(error);
                 setIsSubmitting(false);
               },
@@ -173,17 +174,13 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="regionId"
+                  name="parentId"
                   render={({ field }) => (
                     <FormItem key={`region-${field.value}`}>
                       <FormLabel>Region</FormLabel>
                       <Select
                         value={field.value?.toString()}
-                        onValueChange={(value) => {
-                          const selectedValue = Number(value);
-                          field.onChange(selectedValue);
-                          form.setValue("locationId", -1); // Reset location selection
-                        }}
+                        onValueChange={(value) => field.onChange(Number(value))}
                         defaultValue={field.value?.toString()}
                       >
                         <SelectTrigger>
@@ -211,53 +208,20 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="locationId"
-                  render={({ field }) => {
-                    const filteredLocations = locations?.filter(
-                      (location) =>
-                        location.regionId === form.watch("regionId"),
-                    );
-                    return (
-                      <FormItem key={`location-${field.value}`}>
-                        <FormLabel>Location</FormLabel>
-                        <Select
-                          value={field.value?.toString()}
-                          onValueChange={(value) => {
-                            field.onChange(Number(value));
-
-                            const selectedLocation = locations?.find(
-                              (location) => location.id === Number(value),
-                            );
-                            if (selectedLocation) {
-                              form.setValue(
-                                "orgId",
-                                Number(selectedLocation.orgId),
-                              );
-                            }
-                          }}
-                          defaultValue={field.value?.toString()}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a location" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {filteredLocations
-                              ?.slice()
-                              .sort((a, b) => a.name.localeCompare(b.name))
-                              .map((location) => (
-                                <SelectItem
-                                  key={`location-${location.id}`}
-                                  value={location.id.toString()}
-                                >
-                                  {location.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Website"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               <div className="mb-4 w-1/2 px-2">
@@ -270,55 +234,6 @@ export default function AdminWorkoutsModal({
                       <FormControl>
                         <Input
                           placeholder="Email"
-                          type="email"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="dayOfWeek"
-                  render={({ field }) => (
-                    <FormItem key={`dayOfWeek-${field.value}`}>
-                      <FormLabel>Day of Week</FormLabel>
-                      <Select
-                        value={field.value?.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value?.toString()}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select day of week" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DAY_ORDER.map((day, index) => (
-                            <SelectItem key={index} value={index.toString()}>
-                              {day}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="startTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Time (24hr format)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Start Time"
                           {...field}
                           value={field.value ?? ""}
                         />
@@ -331,13 +246,71 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="endTime"
+                  name="twitter"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time (24hr format)</FormLabel>
+                      <FormLabel>Twitter</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="End Time"
+                          placeholder="Twitter"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
+                  name="facebook"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Facebook</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Facebook"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
+                  name="instagram"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Instagram"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
+                  name="lastAnnualReview"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Annual Review</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Last Annual Review"
+                          type="date"
                           {...field}
                           value={field.value ?? ""}
                         />
@@ -382,7 +355,13 @@ export default function AdminWorkoutsModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Description</FormLabel>
-                      <Textarea {...field} value={field.value ?? ""} rows={5} />
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value ?? ""}
+                          rows={5}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

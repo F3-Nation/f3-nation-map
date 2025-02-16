@@ -42,6 +42,13 @@ const columns: TableOptions<
     header: Header,
     cell: (cell) => <Cell {...cell} />,
   },
+
+  {
+    accessorKey: "name",
+    meta: { name: "Location" },
+    header: Header,
+    cell: (cell) => <Cell {...cell} />,
+  },
   {
     accessorKey: "events",
     meta: { name: "Events" },
@@ -58,12 +65,6 @@ const columns: TableOptions<
         </Tooltip>
       </Cell>
     ),
-  },
-  {
-    accessorKey: "name",
-    meta: { name: "Name" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
   },
   {
     accessorKey: "isActive",

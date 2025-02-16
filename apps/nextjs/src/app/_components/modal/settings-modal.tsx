@@ -22,7 +22,6 @@ export default function SettingsModal() {
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-  const isAdmin = session?.role === "admin";
   const { data: regions } = api.location.getRegions.useQuery();
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
