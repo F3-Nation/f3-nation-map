@@ -4,13 +4,11 @@ import postgres from "postgres";
 import { env } from "@f3/env";
 
 import {
-  nextAuthAccounts,
-  nextAuthSessions,
-  nextAuthVerificationTokens,
-} from "./schema/auth";
-import {
   attendance,
   attendanceTypes,
+  authAccounts,
+  authSessions,
+  authVerificationToken,
   eventCategories,
   events,
   eventsXEventTypes,
@@ -24,22 +22,22 @@ import {
   rolesXPermissions,
   rolesXUsersXOrg,
   slackUsers,
+  updateRequests,
   users,
 } from "./schema/schema";
-import { updateRequests } from "./schema/update-requests";
 
 export const schema = {
-  attendanceTypes,
   attendance,
+  attendanceTypes,
+  authAccounts,
+  authSessions,
+  authVerificationToken,
   events,
   eventCategories,
   eventTags,
   eventTypes,
   eventsXEventTypes,
   locations,
-  nextAuthAccounts,
-  nextAuthSessions,
-  nextAuthVerificationTokens,
   orgs,
   orgTypes,
   permissions,

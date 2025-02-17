@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import omit from "lodash/omit";
 import { z } from "zod";
 
+import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
 import { desc, eq, schema } from "@f3/db";
 import { DAY_ORDER } from "@f3/shared/app/constants";
 import { RequestInsertSchema } from "@f3/validators";
@@ -119,6 +120,8 @@ export const requestRouter = createTRPCRouter({
       const result = await applyUpdateRequest(ctx, {
         ...updateRequest,
         reviewedBy: "email",
+        meta: updateRequest.meta,
+        eventMeta: updateRequest.eventMeta,
       });
 
       return result;
@@ -181,21 +184,31 @@ export const requestRouter = createTRPCRouter({
 
 export const applyUpdateRequest = async (
   ctx: Context,
-  updateRequest: z.infer<typeof RequestInsertSchema> & { reviewedBy: string },
+  updateRequest: Omit<
+    z.infer<typeof RequestInsertSchema>,
+    "meta" | "eventMeta"
+  > & {
+    reviewedBy: string;
+    meta?: UpdateRequestMeta | null;
+    eventMeta?: EventMeta | null;
+  },
 ) => {
   // LOCATION
   if (
     updateRequest.locationId == undefined ||
     updateRequest.locationId === -1
   ) {
+    console.log("Getting existing ao");
     const [aoOrg] = await ctx.db
       .select({ id: schema.orgTypes.id })
       .from(schema.orgTypes)
       .where(eq(schema.orgTypes.name, "AO"));
+    console.log("aoOrg", aoOrg);
 
     if (!aoOrg) throw new Error("Failed to find AO org type");
 
     // INSERT AO
+    console.log("inserting ao", updateRequest);
     const [ao] = await ctx.db
       .insert(schema.orgs)
       .values({
@@ -211,6 +224,7 @@ export const applyUpdateRequest = async (
     if (!ao) throw new Error("Failed to insert AO");
 
     // INSERT LOCATION
+    console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
       name: updateRequest.locationName ?? "",
       description: updateRequest.locationDescription ?? "",
@@ -236,6 +250,7 @@ export const applyUpdateRequest = async (
     }
     updateRequest.locationId = location.id;
   } else {
+    console.log("updating location", updateRequest);
     await ctx.db
       .update(schema.locations)
       .set({
@@ -260,6 +275,7 @@ export const applyUpdateRequest = async (
     reviewedAt: new Date(),
   };
 
+  console.log("inserting update request", updateRequestInsertData);
   const [updated] = await ctx.db
     .insert(schema.updateRequests)
     .values(updateRequestInsertData)
@@ -275,6 +291,7 @@ export const applyUpdateRequest = async (
 
   // EVENT
   if (updateRequest.eventId != undefined) {
+    console.log("updating event", updateRequest);
     await ctx.db
       .update(schema.events)
       .set({
@@ -301,6 +318,7 @@ export const applyUpdateRequest = async (
       })
       .where(eq(schema.events.id, updateRequest.eventId));
   } else {
+    console.log("inserting event", updateRequest);
     const newEvent: typeof schema.events.$inferInsert = {
       name: updateRequest.eventName,
       locationId: updateRequest.locationId,

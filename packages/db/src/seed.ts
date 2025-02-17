@@ -31,9 +31,9 @@ if (!("DATABASE_URL" in env))
   throw new Error("DATABASE_URL not found on .env.development");
 
 const _reseedUsers = async () => {
-  await db.delete(schema.nextAuthAccounts);
-  await db.delete(schema.nextAuthSessions);
-  await db.delete(schema.nextAuthVerificationTokens);
+  await db.delete(schema.authAccounts);
+  await db.delete(schema.authSessions);
+  await db.delete(schema.authVerificationToken);
   await db.delete(schema.users);
   await db.delete(schema.updateRequests);
   await insertUsers();
@@ -58,9 +58,9 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.events);
   await db.delete(schema.slackUsers);
 
-  await db.delete(schema.nextAuthAccounts);
-  await db.delete(schema.nextAuthSessions);
-  await db.delete(schema.nextAuthVerificationTokens);
+  await db.delete(schema.authAccounts);
+  await db.delete(schema.authSessions);
+  await db.delete(schema.authVerificationToken);
   await db.delete(schema.users);
   await db.delete(schema.updateRequests);
 
@@ -470,8 +470,8 @@ export async function insertData(data: {
             email: region["Region Email"],
             description: undefined, // NOTE: currently no region descriptions
             parentId: areaId,
-            created: dayjs(region.Created).format(),
-            updated: dayjs(region.Updated).format(),
+            created: dayjs(region.Created).toDate(),
+            updated: dayjs(region.Updated).toDate(),
           };
           return regionData;
         })
@@ -561,8 +561,8 @@ export async function insertData(data: {
             postalCode: events[0]?.["Postal Code"],
             country: events[0]?.Country,
           },
-          created,
-          updated,
+          created: dayjs(created).toDate(),
+          updated: dayjs(updated).toDate(),
         };
         return aoData;
       }),

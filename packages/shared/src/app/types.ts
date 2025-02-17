@@ -371,10 +371,16 @@ export const isDDD = (
   ].includes(day);
 };
 
+export type UserMeta = Record<string, unknown>;
+
 export type EventMeta = Record<string, unknown>;
 
 export type LocationMeta = Record<string, unknown>;
 
-export type OrgMeta = Record<string, unknown>;
+export type OrgMeta = {
+  latLonKey?: string;
+} & Record<string, unknown>;
 
 export type UpdateRequestMeta = Record<string, unknown>;
+
+export type AttendanceMeta = Record<string, unknown>;

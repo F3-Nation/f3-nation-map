@@ -1,8 +1,13 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { events, locations, orgs, users } from "@f3/db/schema/schema";
-import { updateRequests } from "@f3/db/schema/update-requests";
+import {
+  events,
+  locations,
+  orgs,
+  updateRequests,
+  users,
+} from "@f3/db/schema/schema";
 
 // USER SCHEMA
 export const UserSelectSchema = createSelectSchema(users);

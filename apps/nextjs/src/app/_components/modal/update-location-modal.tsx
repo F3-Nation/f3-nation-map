@@ -109,6 +109,7 @@ export const UpdateLocationModal = ({
       } catch (error) {
         console.error("Error submitting update request", error);
         toast.error("Failed to submit update request");
+        setIsSubmitting(false);
       }
     },
     (errors) => {

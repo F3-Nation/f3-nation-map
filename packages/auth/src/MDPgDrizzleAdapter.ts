@@ -9,9 +9,9 @@ const {
   users,
   roles,
   rolesXUsersXOrg,
-  nextAuthAccounts: accounts,
-  nextAuthSessions: sessions,
-  nextAuthVerificationTokens: verificationTokens,
+  authAccounts: accounts,
+  authSessions: sessions,
+  authVerificationToken: verificationTokens,
 } = schema;
 
 type NonNullableProps<T> = {

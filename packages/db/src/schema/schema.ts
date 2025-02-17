@@ -6,7 +6,6 @@ import {
   foreignKey,
   integer,
   json,
-  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -19,52 +18,27 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import type { EventMeta, LocationMeta } from "@f3/shared/app/types";
-import { RegionRole, UserRole, UserStatus } from "@f3/shared/app/enums";
+import type {
+  AttendanceMeta,
+  EventMeta,
+  LocationMeta,
+  OrgMeta,
+  UpdateRequestMeta,
+  UserMeta,
+} from "@f3/shared/app/types";
 
-export const RegionRoleEnum = pgEnum("region_role", RegionRole);
-
-export const UserRoleEnum = pgEnum("user_role", UserRole);
-export const UserStatusEnum = pgEnum("user_status", UserStatus);
+export const regionRole = pgEnum("region_role", ["user", "editor", "admin"]);
+export const updateRequestStatus = pgEnum("update_request_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
+export const userRole = pgEnum("user_role", ["user", "editor", "admin"]);
+export const userStatus = pgEnum("user_status", ["active", "inactive"]);
 
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
 });
-
-export const users = pgTable(
-  "users",
-  {
-    id: serial().primaryKey().notNull(),
-    f3Name: varchar("f3_name"),
-    firstName: varchar("first_name"),
-    lastName: varchar("last_name"),
-    role: UserRoleEnum("role").notNull().default("user"),
-    status: UserStatusEnum("status").notNull().default("active"),
-    email: varchar().notNull(),
-    emailVerified: timestamp("email_verified"),
-    phone: varchar(),
-    homeRegionId: integer("home_region_id"),
-    avatarUrl: varchar("avatar_url"),
-    meta: json(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    emergencyContact: varchar("emergency_contact"),
-    emergencyPhone: varchar("emergency_phone"),
-    emergencyNotes: varchar("emergency_notes"),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.homeRegionId],
-      foreignColumns: [orgs.id],
-      name: "users_home_region_id_fkey",
-    }),
-    unique("users_email_key").on(table.email),
-  ],
-);
 
 export const achievements = pgTable("achievements", {
   id: serial().primaryKey().notNull(),
@@ -72,11 +46,9 @@ export const achievements = pgTable("achievements", {
   description: varchar(),
   verb: varchar().notNull(),
   imageUrl: varchar("image_url"),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -97,20 +69,10 @@ export const orgs = pgTable(
     facebook: varchar(),
     instagram: varchar(),
     lastAnnualReview: date("last_annual_review"),
-    meta: json().$type<{
-      latLonKey?: string;
-      address1?: string;
-      address2?: string;
-      city?: string;
-      state?: string;
-      postalCode?: string;
-      country?: string;
-    }>(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
+    meta: json().$type<OrgMeta>(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
@@ -134,12 +96,10 @@ export const attendance = pgTable(
     eventId: integer("event_id").notNull(),
     userId: integer("user_id").notNull(),
     isPlanned: boolean("is_planned").notNull(),
-    meta: json(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
+    meta: json().$type<AttendanceMeta>(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
@@ -165,79 +125,21 @@ export const attendanceTypes = pgTable("attendance_types", {
   id: serial().primaryKey().notNull(),
   type: varchar().notNull(),
   description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
     .notNull(),
 });
-
-export const eventTags = pgTable(
-  "event_tags",
-  {
-    id: serial().primaryKey().notNull(),
-    specificOrgId: integer("specific_org_id"),
-    name: varchar().notNull(),
-    description: varchar(),
-    color: varchar(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.specificOrgId],
-      foreignColumns: [orgs.id],
-      name: "event_tags_specific_org_id_fkey",
-    }),
-  ],
-);
 
 export const eventCategories = pgTable("event_categories", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
   description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
     .notNull(),
 });
-
-export const eventTypes = pgTable(
-  "event_types",
-  {
-    id: serial().primaryKey().notNull(),
-    specificOrgId: integer("specific_org_id"),
-    name: varchar().notNull(),
-    description: varchar(),
-    acronym: varchar(),
-    categoryId: integer("category_id").notNull(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.categoryId],
-      foreignColumns: [eventCategories.id],
-      name: "event_types_category_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.specificOrgId],
-      foreignColumns: [orgs.id],
-      name: "event_types_specific_org_id_fkey",
-    }),
-  ],
-);
 
 export const expansions = pgTable("expansions", {
   id: serial().primaryKey().notNull(),
@@ -247,11 +149,9 @@ export const expansions = pgTable("expansions", {
   userLat: doublePrecision("user_lat").notNull(),
   userLon: doublePrecision("user_lon").notNull(),
   interestedInOrganizing: boolean("interested_in_organizing").notNull(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -259,11 +159,9 @@ export const orgTypes = pgTable("org_types", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
   description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -275,11 +173,9 @@ export const slackSpaces = pgTable(
     workspaceName: varchar("workspace_name"),
     botToken: varchar("bot_token"),
     settings: json(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [unique("slack_spaces_team_id_key").on(table.teamId)],
@@ -293,11 +189,9 @@ export const positions = pgTable(
     description: varchar(),
     orgTypeId: integer("org_type_id"),
     orgId: integer("org_id"),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
@@ -318,23 +212,9 @@ export const permissions = pgTable("permissions", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
   description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-});
-
-export const roles = pgTable("roles", {
-  id: serial().primaryKey().notNull(),
-  name: RegionRoleEnum("name").notNull(),
-  description: varchar(),
-  created: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
-    .notNull(),
-  updated: timestamp({ mode: "string" })
-    .default(sql`timezone('utc'::text, now())`)
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -357,11 +237,9 @@ export const slackUsers = pgTable(
     stravaAthleteId: integer("strava_athlete_id"),
     meta: json(),
     slackUpdated: timestamp("slack_updated", { mode: "string" }),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
@@ -374,62 +252,6 @@ export const slackUsers = pgTable(
       columns: [table.slackTeamId],
       foreignColumns: [slackSpaces.teamId],
       name: "slack_users_slack_team_id_fkey",
-    }),
-  ],
-);
-
-export const updateRequests = pgTable(
-  "update_requests",
-  {
-    id: uuid().primaryKey().notNull(),
-    token: uuid().defaultRandom().notNull(),
-    orgId: integer("org_id"),
-    eventId: integer("event_id"),
-    eventType: varchar("event_type", { length: 30 }),
-    eventTag: varchar("event_tag", { length: 30 }),
-    eventSeriesId: integer("event_series_id"),
-    eventIsSeries: boolean("event_is_series"),
-    eventIsActive: boolean("event_is_active"),
-    eventHighlight: boolean("event_highlight"),
-    eventStartDate: date("event_start_date"),
-    eventEndDate: date("event_end_date"),
-    eventStartTime: time("event_start_time"),
-    eventEndTime: time("event_end_time"),
-    eventDayOfWeek: varchar("event_day_of_week", { length: 30 }),
-    eventName: varchar("event_name", { length: 100 }).notNull(),
-    eventDescription: text("event_description"),
-    eventRecurrencePattern: varchar("event_recurrence_pattern", { length: 30 }),
-    eventRecurrenceInterval: integer("event_recurrence_interval"),
-    eventIndexWithinInterval: integer("event_index_within_interval"),
-    eventMeta: json("event_meta"),
-    locationName: text("location_name"),
-    locationDescription: text("location_description"),
-    locationLat: numeric("location_lat", { precision: 8, scale: 5 }),
-    locationLon: numeric("location_lon", { precision: 8, scale: 5 }),
-    locationId: integer("location_id"),
-    submittedBy: integer("submitted_by"),
-    submitterValidated: boolean("submitter_validated").default(false),
-    validatedBy: text("validated_by"),
-    validatedAt: timestamp("validated_at", { mode: "string" }),
-    meta: json(),
-    created: timestamp({ mode: "string" }).defaultNow(),
-    updated: timestamp({ mode: "string" }),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "update_requests_org_id_orgs_id_fk",
-    }),
-    foreignKey({
-      columns: [table.eventId],
-      foreignColumns: [events.id],
-      name: "update_requests_event_id_events_id_fk",
-    }),
-    foreignKey({
-      columns: [table.locationId],
-      foreignColumns: [locations.id],
-      name: "update_requests_location_id_locations_id_fk",
     }),
   ],
 );
@@ -463,11 +285,9 @@ export const events = pgTable(
     preblastTs: doublePrecision("preblast_ts"),
     backblastTs: doublePrecision("backblast_ts"),
     meta: json().$type<EventMeta>(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
       .notNull(),
     email: varchar(),
   },
@@ -490,40 +310,6 @@ export const events = pgTable(
   ],
 );
 
-export const locations = pgTable(
-  "locations",
-  {
-    id: serial().primaryKey().notNull(),
-    orgId: integer("org_id").notNull(),
-    name: varchar().notNull(),
-    description: varchar(),
-    isActive: boolean("is_active").notNull(),
-    latitude: doublePrecision(),
-    longitude: doublePrecision(),
-    addressStreet: varchar("address_street"),
-    addressStreet2: varchar("address_street2"),
-    addressCity: varchar("address_city"),
-    addressState: varchar("address_state"),
-    addressZip: varchar("address_zip"),
-    addressCountry: varchar("address_country"),
-    meta: json().$type<LocationMeta>(),
-    created: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updated: timestamp({ mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    email: varchar(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.orgId],
-      foreignColumns: [orgs.id],
-      name: "locations_org_id_fkey",
-    }),
-  ],
-);
-
 export const authAccounts = pgTable(
   "auth_accounts",
   {
@@ -538,8 +324,10 @@ export const authAccounts = pgTable(
     scope: text(),
     idToken: text("id_token"),
     sessionState: text("session_state"),
-    created: timestamp({ mode: "string" }).defaultNow(),
-    updated: timestamp({ mode: "string" }),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => [
     foreignKey({
@@ -555,9 +343,11 @@ export const authSessions = pgTable(
   {
     sessionToken: text("session_token").primaryKey().notNull(),
     userId: integer().notNull(),
-    expires: timestamp({ mode: "string" }).notNull(),
-    created: timestamp({ mode: "string" }).defaultNow(),
-    updated: timestamp({ mode: "string" }),
+    expires: timestamp().notNull(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => [
     foreignKey({
@@ -571,10 +361,207 @@ export const authSessions = pgTable(
 export const authVerificationToken = pgTable("auth_verification_token", {
   identifier: text().notNull(),
   token: text().notNull(),
-  expires: timestamp({ mode: "string" }).notNull(),
-  created: timestamp({ mode: "string" }).defaultNow(),
-  updated: timestamp({ mode: "string" }),
+  expires: timestamp().notNull(),
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
+
+export const eventTags = pgTable(
+  "event_tags",
+  {
+    id: serial().primaryKey().notNull(),
+    name: varchar().notNull(),
+    description: varchar(),
+    color: varchar(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+    specificOrgId: integer("specific_org_id"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.specificOrgId],
+      foreignColumns: [orgs.id],
+      name: "event_tags_specific_org_id_fkey",
+    }),
+  ],
+);
+
+export const eventTypes = pgTable(
+  "event_types",
+  {
+    id: serial().primaryKey().notNull(),
+    name: varchar().notNull(),
+    description: varchar(),
+    acronym: varchar(),
+    categoryId: integer("category_id").notNull(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+    specificOrgId: integer("specific_org_id"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.categoryId],
+      foreignColumns: [eventCategories.id],
+      name: "event_types_category_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.specificOrgId],
+      foreignColumns: [orgs.id],
+      name: "event_types_specific_org_id_fkey",
+    }),
+  ],
+);
+
+export const locations = pgTable(
+  "locations",
+  {
+    id: serial().primaryKey().notNull(),
+    orgId: integer("org_id").notNull(),
+    name: varchar().notNull(),
+    description: varchar(),
+    isActive: boolean("is_active").notNull(),
+    latitude: doublePrecision(),
+    longitude: doublePrecision(),
+    addressStreet: varchar("address_street"),
+    addressCity: varchar("address_city"),
+    addressState: varchar("address_state"),
+    addressZip: varchar("address_zip"),
+    addressCountry: varchar("address_country"),
+    meta: json().$type<LocationMeta>(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+    email: varchar(),
+    addressStreet2: varchar("address_street2"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "locations_org_id_fkey",
+    }),
+  ],
+);
+
+export const roles = pgTable("roles", {
+  id: serial().primaryKey().notNull(),
+  description: varchar(),
+  created: timestamp().defaultNow().notNull(),
+  updated: timestamp({ mode: "date" })
+    .$onUpdate(() => new Date())
+    .notNull(),
+  name: regionRole(),
+});
+
+export const users = pgTable(
+  "users",
+  {
+    id: serial().primaryKey().notNull(),
+    f3Name: varchar("f3_name"),
+    firstName: varchar("first_name"),
+    lastName: varchar("last_name"),
+    email: varchar().notNull(),
+    emailVerified: timestamp("email_verified"),
+    phone: varchar(),
+    homeRegionId: integer("home_region_id"),
+    avatarUrl: varchar("avatar_url"),
+    meta: json().$type<UserMeta>(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+    emergencyContact: varchar("emergency_contact"),
+    emergencyPhone: varchar("emergency_phone"),
+    emergencyNotes: varchar("emergency_notes"),
+    role: userRole().default("user").notNull(),
+    status: userStatus().default("active").notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.homeRegionId],
+      foreignColumns: [orgs.id],
+      name: "users_home_region_id_fkey",
+    }),
+    unique("users_email_key").on(table.email),
+  ],
+);
+
+export const updateRequests = pgTable(
+  "update_requests",
+  {
+    id: uuid().primaryKey().notNull(),
+    token: uuid().defaultRandom().notNull(),
+    regionId: integer("region_id").notNull(),
+    eventId: integer("event_id"),
+    eventTag: varchar("event_tag", { length: 30 }),
+    eventSeriesId: integer("event_series_id"),
+    eventIsSeries: boolean("event_is_series"),
+    eventIsActive: boolean("event_is_active"),
+    eventHighlight: boolean("event_highlight"),
+    eventStartDate: date("event_start_date"),
+    eventEndDate: date("event_end_date"),
+    eventStartTime: time("event_start_time"),
+    eventEndTime: time("event_end_time"),
+    eventDayOfWeek: varchar("event_day_of_week", { length: 30 }),
+    eventName: varchar("event_name", { length: 100 }).notNull(),
+    eventDescription: text("event_description"),
+    eventRecurrencePattern: varchar("event_recurrence_pattern", { length: 30 }),
+    eventRecurrenceInterval: integer("event_recurrence_interval"),
+    eventIndexWithinInterval: integer("event_index_within_interval"),
+    eventMeta: json("event_meta").$type<EventMeta>(),
+    locationName: text("location_name"),
+    locationDescription: text("location_description"),
+    locationLat: doublePrecision("location_lat"),
+    locationLng: doublePrecision("location_lng"),
+    locationId: integer("location_id"),
+    submittedBy: text("submitted_by").notNull(),
+    submitterValidated: boolean("submitter_validated").default(false),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at"),
+    meta: json().$type<UpdateRequestMeta>(),
+    created: timestamp().defaultNow().notNull(),
+    updated: timestamp({ mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+    eventTypeIds: integer("event_type_ids").array(),
+    eventContactEmail: text("event_contact_email"),
+    locationAddress: text("location_address"),
+    locationAddress2: text("location_address2"),
+    locationCity: text("location_city"),
+    locationState: varchar("location_state"),
+    locationZip: varchar("location_zip"),
+    locationCountry: varchar("location_country"),
+    locationContactEmail: text("location_contact_email"),
+    aoLogo: text("ao_logo"),
+    status: updateRequestStatus().default("pending"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.eventId],
+      foreignColumns: [events.id],
+      name: "update_requests_event_id_events_id_fk",
+    }),
+    foreignKey({
+      columns: [table.locationId],
+      foreignColumns: [locations.id],
+      name: "update_requests_location_id_locations_id_fk",
+    }),
+    foreignKey({
+      columns: [table.regionId],
+      foreignColumns: [orgs.id],
+      name: "update_requests_region_id_orgs_id_fk",
+    }),
+  ],
+);
 
 export const achievementsXOrg = pgTable(
   "achievements_x_org",
