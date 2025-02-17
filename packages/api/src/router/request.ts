@@ -239,6 +239,7 @@ export const applyUpdateRequest = async (
     await ctx.db
       .update(schema.locations)
       .set({
+        name: updateRequest.locationName ?? "",
         description: updateRequest.locationDescription,
         addressStreet: updateRequest.locationAddress,
         addressStreet2: updateRequest.locationAddress2,

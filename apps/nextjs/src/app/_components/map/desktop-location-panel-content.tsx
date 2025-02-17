@@ -264,6 +264,7 @@ export const DesktopLocationPanelContent = () => {
                   workoutName: event?.eventName,
                   workoutWebsite: results?.location.aoWebsite,
                   aoLogo: results?.location.aoLogo,
+                  locationName: results?.location.locationName,
                   locationAddress: results?.location.locationAddress,
                   locationAddress2: results?.location.locationAddress2,
                   locationCity: results?.location.locationCity,

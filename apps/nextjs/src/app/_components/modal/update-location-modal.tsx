@@ -142,6 +142,7 @@ export const UpdateLocationModal = ({
       locationId: data.locationId ?? -1,
       eventName: data.workoutName ?? "",
       aoLogo: data.aoLogo ?? "",
+      locationName: data.locationName ?? "",
       locationAddress: data.locationAddress ?? "",
       locationAddress2: data.locationAddress2 ?? "",
       locationCity: data.locationCity ?? "",
@@ -378,6 +379,18 @@ export const UpdateLocationModal = ({
               Location Details:
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Name
+                </div>
+                <Input
+                  {...form.register("locationName")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationName?.message}
+                </p>
+              </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Address

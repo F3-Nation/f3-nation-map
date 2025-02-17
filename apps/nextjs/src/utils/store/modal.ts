@@ -50,6 +50,7 @@ export interface DataType {
     dayOfWeek?: number | null;
     types?: { id: number; name: string }[];
     eventDescription?: string | null;
+    locationName?: string | null;
     locationAddress?: string | null;
     locationAddress2?: string | null;
     locationCity?: string | null;
