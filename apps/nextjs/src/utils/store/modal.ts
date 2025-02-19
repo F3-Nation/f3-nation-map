@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import type { DayOfWeek } from "@f3/shared/app/enums";
 import { ZustandStore } from "@f3/shared/common/classes";
 
 import { hideSelectedItem } from "./selected-item";
@@ -47,7 +48,7 @@ export interface DataType {
     lng: number;
     startTime?: string | null;
     endTime?: string | null;
-    dayOfWeek?: number | null;
+    dayOfWeek?: DayOfWeek | null;
     types?: { id: number; name: string }[];
     eventDescription?: string | null;
     locationName?: string | null;
@@ -139,4 +140,12 @@ export const closeModal = () => {
   modalStore.setState({
     modals: lessOneModals,
   });
+  // Modal becomes unresponsive when closing with select menu open or similar
+  // https://github.com/shadcn-ui/ui/issues/1912#issuecomment-2613189967
+  setTimeout(() => {
+    const body = document.querySelector("body");
+    if (body) {
+      body.style.pointerEvents = "auto";
+    }
+  }, 500);
 };
