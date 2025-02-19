@@ -50,7 +50,7 @@ export default function AdminAOsModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
-    schema: AOInsertSchema.partial({ orgTypeId: true }),
+    schema: AOInsertSchema,
     defaultValues: {
       id: ao?.id ?? undefined,
       name: ao?.name ?? "",

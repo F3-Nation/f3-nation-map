@@ -3,12 +3,11 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { eq } from "@f3/db";
 import { env } from "@f3/env";
-import { DAY_ORDER, PERMISSIONS } from "@f3/shared/app/constants";
+import { PERMISSIONS } from "@f3/shared/app/constants";
 import {
-  EventCategories,
+  DayOfWeek,
   EventTags,
   EventTypes,
-  OrgTypes,
   RegionRole,
 } from "@f3/shared/app/enums";
 import {
@@ -25,6 +24,7 @@ import type {
 import { db, schema } from ".";
 import { getLocationDataFromGravityForms } from "./utils/get-location-data-gravity-forms";
 
+const GRAVITY_FORMS_TIME_FORMAT = "hh:mm a" as const;
 dayjs.extend(customParseFormat);
 
 if (!("DATABASE_URL" in env))
@@ -45,12 +45,10 @@ const _reseedFromScratch = async () => {
 
   await db.delete(schema.attendance);
   await db.delete(schema.attendanceTypes);
-  await db.delete(schema.eventCategories);
   await db.delete(schema.eventTags);
   await db.delete(schema.eventTypes);
   await db.delete(schema.eventsXEventTypes);
   await db.delete(schema.locations);
-  await db.delete(schema.orgTypes);
   await db.delete(schema.orgs);
   await db.delete(schema.permissions);
   await db.delete(schema.roles);
@@ -98,64 +96,56 @@ export async function insertUsers() {
       f3Name: "Spuds",
       firstName: "Declan",
       lastName: "Nishiyama",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "patrick@pstaylor.net",
       f3Name: "Baguette",
       firstName: "Patrick",
       lastName: "Taylor",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "jimsheldon@icloud.com",
       f3Name: "Sumo",
       firstName: "Jim",
       lastName: "Sheldon",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "damon.vinciguerra@gmail.com",
       f3Name: "Tackle",
       firstName: "Damon",
       lastName: "Vinciguerra",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "taylor.matt777@gmail.com",
       f3Name: "Backslash",
       firstName: "Matt",
       lastName: "Taylor",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "pjarchambeault@gmail.com",
       f3Name: "DOS",
       firstName: "PJ",
       lastName: "Archambeault",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "johnanthonyreynolds@gmail.com",
       f3Name: "Snooki",
       firstName: "John",
       lastName: "Reynolds",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
     {
       email: "evan.petzoldt@protonmail.com",
       f3Name: "Moneyball",
       firstName: "Evan",
       lastName: "Petzoldt",
-      role: "admin",
-      emailVerified: dayjs().toDate(),
+      emailVerified: dayjs().format(),
     },
   ];
 
@@ -180,17 +170,10 @@ export async function insertUsers() {
   const editorRegionRole = roles.find((r) => r.name === "editor");
   if (!editorRegionRole) throw new Error("Editor region role not found");
 
-  const orgTypes = await db.select().from(schema.orgTypes);
-
-  const regionOrgType = orgTypes.find(
-    (ot) => ot.name === OrgTypes.Region.toString(),
-  )?.id;
-  if (!regionOrgType) throw new Error("Region org type not found");
-
   const regions = await db
     .select()
     .from(schema.orgs)
-    .where(eq(schema.orgs.orgTypeId, regionOrgType));
+    .where(eq(schema.orgs.orgType, "region"));
 
   const rolesXUsersXOrg: InferInsertModel<typeof schema.rolesXUsersXOrg>[] = [
     {
@@ -216,67 +199,6 @@ export async function insertUsers() {
 export async function insertDatabaseStructure(
   _workoutData?: WorkoutSheetData[],
 ) {
-  const orgTypes = await db
-    .insert(schema.orgTypes)
-    .values([
-      { name: OrgTypes.AO, id: 1 },
-      { name: OrgTypes.Region, id: 2 },
-      { name: OrgTypes.Area, id: 3 },
-      { name: OrgTypes.Sector, id: 4 },
-      { name: OrgTypes.Nation, id: 5 },
-    ])
-    .returning();
-
-  const eventCategories = await db
-    .insert(schema.eventCategories)
-    .values([
-      {
-        name: EventCategories["1st F - Core Workout"],
-        description: "The core F3 activity - must meet all 5 core principles.",
-      },
-      {
-        name: EventCategories["1st F - Pre Workout"],
-        description: "Pre-workout activities (pre-rucks, pre-runs, etc).",
-      },
-      {
-        name: EventCategories["1st F - Off the books"],
-        description:
-          "Fitness activities that didn't meet all 5 core principles (unscheduled, open to all men, etc).",
-      },
-      {
-        name: EventCategories["2nd F - Fellowship"],
-        description: "General category for 2nd F events.",
-      },
-      {
-        name: EventCategories["3rd F - Faith"],
-        description: "General category for 3rd F events.",
-      },
-    ])
-    .returning();
-
-  const coreWorkoutEventCategoryId = eventCategories.find(
-    (ec) => ec.name === EventCategories["1st F - Core Workout"].toString(),
-  )?.id;
-  if (!coreWorkoutEventCategoryId)
-    throw new Error("Core workout event category not found");
-
-  const offTheBooksEventCategoryId = eventCategories.find(
-    (ec) => ec.name === EventCategories["1st F - Off the books"].toString(),
-  )?.id;
-  if (!offTheBooksEventCategoryId)
-    throw new Error("Off the books event category not found");
-
-  const faithEventCategoryId = eventCategories.find(
-    (ec) => ec.name === EventCategories["3rd F - Faith"].toString(),
-  )?.id;
-  if (!faithEventCategoryId) throw new Error("Faith event category not found");
-
-  const fellowshipEventCategoryId = eventCategories.find(
-    (ec) => ec.name === EventCategories["2nd F - Fellowship"].toString(),
-  )?.id;
-  if (!fellowshipEventCategoryId)
-    throw new Error("Fellowship event category not found");
-
   const eventTypes = await db
     .insert(schema.eventTypes)
     .values([
@@ -284,63 +206,57 @@ export async function insertDatabaseStructure(
         id: 1,
         name: EventTypes.Bootcamp,
         acronym: "BC",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
       {
         id: 2,
         name: EventTypes.Run,
         acronym: "RU",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
       {
         id: 3,
         name: EventTypes.Ruck,
         acronym: "RK",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
       {
         id: 4,
         name: EventTypes.QSource,
         acronym: "QS",
-        categoryId: faithEventCategoryId,
+        eventCategory: "third_f",
       },
       {
         id: 5,
         name: EventTypes.Swimming,
         acronym: "SW",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
 
       {
         id: 6,
         name: EventTypes.Mobility,
         acronym: "MB",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
       {
         id: 7,
         name: EventTypes.Bike,
         acronym: "BK",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
 
       {
         id: 8,
         name: EventTypes.Gear,
         acronym: "GR",
-        categoryId: coreWorkoutEventCategoryId,
+        eventCategory: "first_f",
       },
       {
         id: 9,
         name: EventTypes["Wild Card"],
         acronym: "WC",
-        categoryId: offTheBooksEventCategoryId,
-      },
-      {
-        id: 10,
-        name: EventTypes["2ndF"],
-        acronym: "2F",
-        categoryId: fellowshipEventCategoryId,
+        eventCategory: "first_f",
       },
     ])
     .returning();
@@ -355,28 +271,19 @@ export async function insertDatabaseStructure(
     ])
     .returning();
 
-  return { orgTypes, eventTypes, eventTags, eventCategories };
+  return { eventTypes, eventTags };
 }
 
 export async function insertData(data: {
   workoutData: WorkoutSheetData[];
   regionData: RegionSheetData[];
 }) {
-  const orgTypes = await db.select().from(schema.orgTypes);
-  const eventTypes = await db.select().from(schema.eventTypes);
-
-  const nationOrgTypeId = orgTypes.find(
-    (ot) => ot.name === OrgTypes.Nation.toString(),
-  )?.id;
-  if (nationOrgTypeId === undefined)
-    throw new Error("Nation org type not found");
-
   const insertedNation = await db
     .insert(schema.orgs)
     .values({
       name: "F3 Nation",
       isActive: true,
-      orgTypeId: nationOrgTypeId,
+      orgType: "nation",
     })
     .returning({ id: schema.orgs.id });
 
@@ -385,11 +292,6 @@ export async function insertData(data: {
     .map((d) => d.Sector || null)
     .filter(isTruthy)
     .filter(onlyUnique);
-  const sectorOrgTypeId = orgTypes.find(
-    (ot) => ot.name === OrgTypes.Sector.toString(),
-  )?.id;
-  if (sectorOrgTypeId === undefined)
-    throw new Error("Sector org type not found");
 
   const insertedSectors = await db
     .insert(schema.orgs)
@@ -397,7 +299,7 @@ export async function insertData(data: {
       sectorsToInsert.map((d) => ({
         name: d,
         isActive: true,
-        orgTypeId: sectorOrgTypeId,
+        orgType: "sector" as const,
         parentId: insertedNation[0]?.id,
       })),
     )
@@ -424,17 +326,13 @@ export async function insertData(data: {
         arr.findIndex((d2) => d2.name === d.name) === idx,
     );
 
-  const areaOrgTypeId = orgTypes.find(
-    (ot) => ot.name === OrgTypes.Area.toString(),
-  )?.id;
-  if (areaOrgTypeId === undefined) throw new Error("Area org type not found");
   const insertedAreas = await db
     .insert(schema.orgs)
     .values(
       areasToInsert.map((d) => ({
         name: d.name,
         isActive: true,
-        orgTypeId: areaOrgTypeId,
+        orgType: "area" as const,
         parentId: d.sectorId,
       })),
     )
@@ -459,9 +357,7 @@ export async function insertData(data: {
           const regionData: InferInsertModel<typeof schema.orgs> = {
             name: region["Region Name"] ?? "",
             isActive: true,
-            orgTypeId:
-              orgTypes.find((ot) => ot.name === OrgTypes.Region.toString())
-                ?.id ?? -1, // shouldn't ever happen
+            orgType: "region" as const,
             website:
               region.Website.includes("f3nation.com") ||
               region.Website.includes(".slack.com")
@@ -470,15 +366,15 @@ export async function insertData(data: {
             email: region["Region Email"],
             description: undefined, // NOTE: currently no region descriptions
             parentId: areaId,
-            created: dayjs(region.Created).toDate(),
-            updated: dayjs(region.Updated).toDate(),
+            created: dayjs(region.Created).format(),
+            updated: dayjs(region.Updated).format(),
           };
           return regionData;
         })
         .filter(isTruthy),
     )
     .onConflictDoNothing()
-    .returning({ id: schema.orgTypes.id, name: schema.orgTypes.name });
+    .returning({ id: schema.orgs.id, name: schema.orgs.name });
 
   console.log("inserted regions", regions.length, regions[0]);
 
@@ -546,8 +442,7 @@ export async function insertData(data: {
             .filter(onlyUnique)
             .join(", "), // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
-          orgTypeId:
-            orgTypes.find((ot) => ot.name === OrgTypes.AO.toString())?.id ?? -1,
+          orgType: "ao" as const,
           logoUrl: events[0]?.Logo,
           parentId: ao.regionId,
           description: undefined,
@@ -561,8 +456,8 @@ export async function insertData(data: {
             postalCode: events[0]?.["Postal Code"],
             country: events[0]?.Country,
           },
-          created: dayjs(created).toDate(),
-          updated: dayjs(updated).toDate(),
+          created: dayjs(created).format(),
+          updated: dayjs(updated).format(),
         };
         return aoData;
       }),
@@ -625,7 +520,11 @@ export async function insertData(data: {
       const orgId = aoOrg?.id;
       if (orgId == undefined) throw new Error("AO org id not found");
       return events.map((workout) => {
-        const dayOfWeek = DAY_ORDER.indexOf(workout.Weekday);
+        const dayOfWeek = DayOfWeek.includes(
+          workout.Weekday.toLowerCase() as DayOfWeek,
+        )
+          ? (workout.Weekday.toLowerCase() as DayOfWeek)
+          : null;
         const workoutAoLoc = aoLocs.find(
           (aoItem) =>
             ao.key ===
@@ -638,12 +537,11 @@ export async function insertData(data: {
         const [startTimeRaw, endTimeRaw] = workout.Time.split("-").map((time) =>
           time.trim(),
         );
-        // .format("HH:mm:ss")
         const startTime = startTimeRaw
-          ? dayjs(startTimeRaw.toLowerCase(), "hh:mm a")
+          ? dayjs(startTimeRaw.toLowerCase(), GRAVITY_FORMS_TIME_FORMAT)
           : undefined;
         const endTime = endTimeRaw
-          ? dayjs(endTimeRaw.toLowerCase(), "hh:mm a")
+          ? dayjs(endTimeRaw.toLowerCase(), GRAVITY_FORMS_TIME_FORMAT)
           : undefined;
         const workoutItem: InferInsertModel<typeof schema.events> = {
           locationId: workoutAoLoc?.id, // locationIdDict[workout.Location],
@@ -652,17 +550,13 @@ export async function insertData(data: {
           highlight: false,
           startDate: dayjs().format("YYYY-MM-DD"), // You might want to set a specific start date
           dayOfWeek,
-          startTime: startTime?.isValid() ? startTime.format("h:mm a") : null,
-          endTime: endTime?.isValid() ? endTime.format("h:mm a") : null,
+          startTime: startTime?.isValid() ? startTime.format("HHmm") : null,
+          endTime: endTime?.isValid() ? endTime.format("HHmm") : null,
           name: workout["Workout Name"].slice(0, 100),
           // eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
           description: workout.Note,
           recurrencePattern: "weekly",
           orgId,
-          meta: {
-            eventType: workout.Type,
-            eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id,
-          },
         };
         return workoutItem;
       });
@@ -674,33 +568,6 @@ export async function insertData(data: {
     const eventsChunk = eventsToInsert.slice(i, i + chunkSize);
     await db.insert(schema.events).values(eventsChunk).returning();
     console.log("inserted events", i + eventsChunk.length);
-  }
-
-  const insertedEvents = await db.select().from(schema.events);
-
-  const eventXEventTypesToInsert: InferInsertModel<
-    typeof schema.eventsXEventTypes
-  >[] = Object.values(insertedEvents)
-    .map((event) => {
-      const eventTypeId = event.meta?.eventTypeId as number;
-      if (!eventTypeId) return null;
-      return {
-        eventId: event.id,
-        eventTypeId,
-      };
-    })
-    .filter(isTruthy);
-
-  for (let i = 0; i < eventXEventTypesToInsert.length; i += chunkSize) {
-    const eventXEventTypesChunk = eventXEventTypesToInsert.slice(
-      i,
-      i + chunkSize,
-    );
-    await db
-      .insert(schema.eventsXEventTypes)
-      .values(eventXEventTypesChunk)
-      .returning();
-    console.log("inserted eventXEventTypes", i + eventXEventTypesChunk.length);
   }
 }
 

@@ -13,6 +13,26 @@ export type UpdateRequestStatus = (typeof UpdateRequestStatus)[number];
 export const Permissions = ["admin", "edit"] as const;
 export type Permissions = (typeof Permissions)[number];
 
+export const OrgType = ["ao", "region", "area", "sector", "nation"] as const;
+export type OrgType = (typeof OrgType)[number];
+
+export const DayOfWeek = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+export type DayOfWeek = (typeof DayOfWeek)[number];
+
+export const EventCadence = ["weekly", "monthly"] as const;
+export type EventCadence = (typeof EventCadence)[number];
+
+export const EventCategory = ["first_f", "second_f", "third_f"] as const;
+export type EventCategory = (typeof EventCategory)[number];
+
 export enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",

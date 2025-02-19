@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { DayOfWeek } from "@f3/shared/app/enums";
 import { aliasedTable, count, desc, eq, schema, sql } from "@f3/db";
 import { isTruthy } from "@f3/shared/common/functions";
 import { LocationInsertSchema } from "@f3/validators";
@@ -271,7 +272,7 @@ export const locationRouter = createTRPCRouter({
           events: {
             id: number;
             name: string;
-            dayOfWeek: number | null;
+            dayOfWeek: DayOfWeek | null;
             startTime: string | null;
             types: { id: number; name: string }[];
           }[];
@@ -378,13 +379,12 @@ export const locationRouter = createTRPCRouter({
     const regions = await ctx.db
       .select()
       .from(schema.orgs)
-      .innerJoin(schema.orgTypes, eq(schema.orgs.orgTypeId, schema.orgTypes.id))
-      .where(eq(schema.orgTypes.name, "Region"));
+      .where(eq(schema.orgs.orgType, "region"));
     return regions.map((region) => ({
-      id: region.orgs.id,
-      name: region.orgs.name,
-      logo: region.orgs.logoUrl,
-      website: region.orgs.website,
+      id: region.id,
+      name: region.name,
+      logo: region.logoUrl,
+      website: region.website,
     }));
   }),
   getRegionsWithLocation: publicProcedure.query(async ({ ctx }) => {

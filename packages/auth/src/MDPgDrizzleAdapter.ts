@@ -3,11 +3,13 @@ import type { MdAdapter } from "next-auth";
 import { and, eq } from "drizzle-orm";
 import omit from "lodash/omit";
 
+import type { UserRole } from "@f3/shared/app/enums";
 import { schema, sql } from "@f3/db";
 
 const {
   users,
   roles,
+  orgs,
   rolesXUsersXOrg,
   authAccounts: accounts,
   authSessions: sessions,
@@ -34,12 +36,27 @@ const getUser = async (
       id: users.id,
       email: users.email,
       emailVerified: users.emailVerified,
-      role: users.role,
       editingRegionIds: sql<string[]>`array_agg(${rolesXUsersXOrg.orgId})`,
+      roles: sql<
+        { orgId: number; orgName: string; roleName: UserRole }[]
+      >`COALESCE(
+          json_agg(
+            json_build_object(
+              'orgId', ${schema.orgs.id}, 
+              'orgName', ${schema.orgs.name}, 
+              'roleName', ${schema.roles.name}
+            )
+          ) 
+          FILTER (
+            WHERE ${schema.orgs.id} IS NOT NULL
+          ), 
+          '[]'
+        )`,
     })
     .from(users)
     .leftJoin(rolesXUsersXOrg, eq(users.id, rolesXUsersXOrg.userId))
     .leftJoin(roles, eq(rolesXUsersXOrg.roleId, roles.id))
+    .leftJoin(orgs, eq(orgs.id, rolesXUsersXOrg.orgId))
     .where("id" in data ? eq(users.id, data.id) : eq(users.email, data.email))
     .groupBy(users.id)
     .then((res) => res[0] ?? null);
@@ -97,16 +114,30 @@ export function MDPGDrizzleAdapter(
             id: users.id,
             email: users.email,
             emailVerified: users.emailVerified,
-            editingRegionIds: sql<
-              string[]
-            >`array_agg(${rolesXUsersXOrg.orgId})`,
+            roles: sql<
+              { orgId: number; orgName: string; roleName: UserRole }[]
+            >`COALESCE(
+              json_agg(
+                json_build_object(
+                  'orgId', ${schema.orgs.id}, 
+                  'orgName', ${schema.orgs.name}, 
+                  'roleName', ${schema.roles.name}
+                )
+              ) 
+              FILTER (
+                WHERE ${schema.orgs.id} IS NOT NULL
+              ), 
+              '[]'
+            )`,
           },
         })
         .from(sessions)
         .where(eq(sessions.sessionToken, data))
         .innerJoin(users, eq(users.id, sessions.userId))
         .leftJoin(rolesXUsersXOrg, eq(users.id, rolesXUsersXOrg.userId))
+        .leftJoin(orgs, eq(orgs.id, rolesXUsersXOrg.orgId))
         .leftJoin(roles, eq(rolesXUsersXOrg.roleId, roles.id))
+        .groupBy(users.id)
         .then((res) => res[0] ?? null);
 
       return session
@@ -114,8 +145,6 @@ export function MDPGDrizzleAdapter(
             ...session,
             user: {
               ...session.user,
-              editingRegionIds:
-                session.user.editingRegionIds.map((r) => Number(r)) ?? [],
             },
           }
         : null;

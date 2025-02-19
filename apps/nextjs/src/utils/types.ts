@@ -1,3 +1,5 @@
+import type { DayOfWeek } from "@f3/shared/app/enums";
+
 import type { RouterOutputs } from "~/trpc/types";
 
 export type F3MarkerLocation =
@@ -16,7 +18,7 @@ export interface SparseF3Marker {
   events: {
     id: number;
     name: string;
-    dayOfWeek: number | null;
+    dayOfWeek: DayOfWeek | null;
     startTime: string | null;
     types: { id: number; name: string }[];
   }[];
@@ -61,7 +63,7 @@ export interface F3LocationMapSearchResult {
       id: number;
       locationId: number;
       name: string;
-      dayOfWeek: number | null;
+      dayOfWeek: DayOfWeek | null;
       startTime: string | null;
       types: { id: number; name: string }[];
     };

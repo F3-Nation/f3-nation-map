@@ -6,7 +6,8 @@ import isNumber from "lodash/isNumber";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
+import { dayOfWeekToShortDayOfWeek } from "@f3/shared/app/functions";
 import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
@@ -122,12 +123,17 @@ export const MemoGroupMarker = memo(
                 style={{ zIndex: 1 }}
               >
                 {...events
-                  .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
+                  .sort(
+                    (a, b) =>
+                      DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
+                      DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
+                  )
                   .map((marker, markerIdx, markerArray) => {
                     const dotw = marker.dayOfWeek;
                     const isStart = markerIdx === 0;
                     const isEnd = markerIdx === markerArray.length - 1;
-                    const dayText = dotw !== null ? SHORT_DAY_ORDER[dotw] : 0;
+                    const dayText =
+                      dotw !== null ? dayOfWeekToShortDayOfWeek(dotw) : 0;
                     return (
                       <button
                         key={markerIdx + "-" + id}

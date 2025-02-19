@@ -3,8 +3,8 @@
 import type { LatLngLiteral } from "leaflet";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
-import { DEFAULT_CENTER } from "node_modules/@f3/shared/src/app/constants";
 
+import { DEFAULT_CENTER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";

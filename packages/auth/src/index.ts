@@ -40,9 +40,8 @@ export const {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.role = "role" in user ? user.role : "user";
         token.name = user.name;
-        token.editingRegionIds = user.editingRegionIds;
+        token.roles = user.roles;
       }
       return Promise.resolve(token);
     },
@@ -50,10 +49,11 @@ export const {
       const result = {
         ...session,
         id: token.id as string | undefined,
-        role: token.role as UserRole | undefined,
         email: token.email as string | undefined,
         name: token.name as string | undefined,
-        editingRegionIds: token.editingRegionIds as number[] | undefined,
+        roles: token.roles as
+          | { orgId: number; orgName: string; roleName: UserRole }[]
+          | undefined,
       };
       return Promise.resolve(result);
     },

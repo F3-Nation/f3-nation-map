@@ -15,7 +15,7 @@ export const areaRouter = createTRPCRouter({
       .select({
         id: areaOrg.id,
         name: areaOrg.name,
-        orgTypeId: areaOrg.orgTypeId,
+        orgType: areaOrg.orgType,
         defaultLocationId: areaOrg.defaultLocationId,
         description: areaOrg.description,
         isActive: areaOrg.isActive,
@@ -34,8 +34,7 @@ export const areaRouter = createTRPCRouter({
       .from(areaOrg)
       .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
       .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
-      .innerJoin(schema.orgTypes, eq(areaOrg.orgTypeId, schema.orgTypes.id))
-      .where(eq(schema.orgTypes.name, "Area"));
+      .where(eq(areaOrg.orgType, "area"));
 
     return areas;
   }),
@@ -53,20 +52,11 @@ export const areaRouter = createTRPCRouter({
 
   crupdate: publicProcedure
 
-    .input(AreaInsertSchema.partial({ id: true, orgTypeId: true }))
+    .input(AreaInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const areaOrgType = await ctx.db
-        .select({
-          id: schema.orgTypes.id,
-        })
-        .from(schema.orgTypes)
-        .where(eq(schema.orgTypes.name, "Area"));
-
-      if (areaOrgType === undefined) throw new Error("Area org type not found");
-
       const areaToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgTypeId: areaOrgType[0]?.id ?? -1,
+        orgType: "area",
         meta: {
           ...(input.meta as Record<string, string>),
         },

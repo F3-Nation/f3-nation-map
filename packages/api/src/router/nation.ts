@@ -12,7 +12,7 @@ export const nationRouter = createTRPCRouter({
         id: schema.orgs.id,
         parentId: schema.orgs.parentId,
         name: schema.orgs.name,
-        orgTypeId: schema.orgs.orgTypeId,
+        orgType: schema.orgs.orgType,
         defaultLocationId: schema.orgs.defaultLocationId,
         description: schema.orgs.description,
         isActive: schema.orgs.isActive,
@@ -27,8 +27,7 @@ export const nationRouter = createTRPCRouter({
         created: schema.orgs.created,
       })
       .from(schema.orgs)
-      .innerJoin(schema.orgTypes, eq(schema.orgs.orgTypeId, schema.orgTypes.id))
-      .where(eq(schema.orgTypes.name, "Nation"));
+      .where(eq(schema.orgs.orgType, "nation"));
 
     return nations;
   }),
@@ -44,22 +43,10 @@ export const nationRouter = createTRPCRouter({
     }),
 
   crupdate: publicProcedure
-
-    .input(NationInsertSchema.partial({ id: true, orgTypeId: true }))
+    .input(NationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const nationOrgType = await ctx.db
-        .select({
-          id: schema.orgTypes.id,
-        })
-        .from(schema.orgTypes)
-        .where(eq(schema.orgTypes.name, "Nation"));
-
-      if (nationOrgType === undefined)
-        throw new Error("Nation org type not found");
-
       const nationToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgTypeId: nationOrgType[0]?.id ?? -1,
         meta: {
           ...(input.meta as Record<string, string>),
         },
@@ -77,4 +64,8 @@ export const nationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await ctx.db.delete(schema.orgs).where(eq(schema.orgs.id, input.id));
     }),
+  allOrgs: publicProcedure.query(async ({ ctx }) => {
+    const orgs = await ctx.db.select().from(schema.orgs);
+    return orgs;
+  }),
 });

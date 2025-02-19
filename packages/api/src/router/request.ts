@@ -4,11 +4,16 @@ import { z } from "zod";
 
 import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
 import { desc, eq, schema } from "@f3/db";
-import { DAY_ORDER } from "@f3/shared/app/constants";
 import { RequestInsertSchema } from "@f3/validators";
 
 import type { Context } from "../trpc";
-import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import {
+  createTRPCRouter,
+  editorProcedure,
+  protectedProcedure,
+  publicProcedure,
+} from "../trpc";
 
 export const requestRouter = createTRPCRouter({
   all: editorProcedure.query(async ({ ctx }) => {
@@ -101,7 +106,7 @@ export const requestRouter = createTRPCRouter({
       return { success: true, inserted: omit(inserted, ["token"]) };
     }),
   // This can be public because it uses a db token for auth
-  validateSubmission: publicProcedure
+  validateSubmission: protectedProcedure
     .input(z.object({ token: z.string(), submissionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [updateRequest] = await ctx.db
@@ -117,8 +122,27 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Invalid token");
       }
 
+      if (updateRequest.regionId == undefined) {
+        throw new Error("Region ID is required");
+      }
+
+      const { success } = await checkHasRoleOnOrg({
+        orgId: updateRequest.regionId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+
+      if (!success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: `You do not have permission to edit this region. Please contact the administrator.`,
+        });
+      }
+
       const result = await applyUpdateRequest(ctx, {
         ...updateRequest,
+        regionId: updateRequest.regionId,
         reviewedBy: "email",
         meta: updateRequest.meta,
         eventMeta: updateRequest.eventMeta,
@@ -137,10 +161,10 @@ export const requestRouter = createTRPCRouter({
         });
       }
 
-      if (
-        ctx.session.role !== "admin" &&
-        !ctx.session.editingRegionIds.includes(input.regionId)
-      ) {
+      const isEditorOrAdminForThisRegion = ctx.session.roles.some((r) =>
+        ["editor", "admin"].includes(r.roleName),
+      );
+      if (!isEditorOrAdminForThisRegion) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "You are not authorized to edit this region",
@@ -166,10 +190,12 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Failed to find update request");
       }
 
-      if (
-        ctx.session.role !== "admin" &&
-        !ctx.session.editingRegionIds.includes(updateRequest.regionId)
-      ) {
+      const isEditorOrAdminForThisRegion = ctx.session.roles.some(
+        (r) =>
+          ["editor", "admin"].includes(r.roleName) &&
+          r.orgId === updateRequest.regionId,
+      );
+      if (!isEditorOrAdminForThisRegion) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "You are not authorized to edit this region",
@@ -199,13 +225,6 @@ export const applyUpdateRequest = async (
     updateRequest.locationId === -1
   ) {
     console.log("Getting existing ao");
-    const [aoOrg] = await ctx.db
-      .select({ id: schema.orgTypes.id })
-      .from(schema.orgTypes)
-      .where(eq(schema.orgTypes.name, "AO"));
-    console.log("aoOrg", aoOrg);
-
-    if (!aoOrg) throw new Error("Failed to find AO org type");
 
     // INSERT AO
     console.log("inserting ao", updateRequest);
@@ -213,7 +232,7 @@ export const applyUpdateRequest = async (
       .insert(schema.orgs)
       .values({
         parentId: updateRequest.regionId,
-        orgTypeId: aoOrg.id,
+        orgType: "ao",
         defaultLocationId: updateRequest.locationId,
         name: updateRequest.eventName ?? "",
         isActive: true,
@@ -272,7 +291,7 @@ export const applyUpdateRequest = async (
   const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {
     ...updateRequest,
     status: "approved",
-    reviewedAt: new Date(),
+    reviewedAt: new Date().toISOString(),
   };
 
   console.log("inserting update request", updateRequestInsertData);
@@ -302,9 +321,7 @@ export const applyUpdateRequest = async (
         endDate: updateRequest.eventEndDate ?? undefined,
         startTime: updateRequest.eventStartTime ?? undefined,
         endTime: updateRequest.eventEndTime ?? undefined,
-        dayOfWeek: updateRequest.eventDayOfWeek
-          ? DAY_ORDER.indexOf(updateRequest.eventDayOfWeek)
-          : undefined,
+        dayOfWeek: updateRequest.eventDayOfWeek,
         seriesId: updateRequest.eventSeriesId,
         isSeries: updateRequest.eventIsSeries ?? true,
         isActive: true,
@@ -331,9 +348,7 @@ export const applyUpdateRequest = async (
       isSeries: updateRequest.eventIsSeries ?? true,
       isActive: true,
       highlight: false,
-      dayOfWeek: updateRequest.eventDayOfWeek
-        ? DAY_ORDER.indexOf(updateRequest.eventDayOfWeek)
-        : undefined,
+      dayOfWeek: updateRequest.eventDayOfWeek,
       orgId: updateRequest.regionId,
       recurrencePattern: updateRequest.eventRecurrencePattern,
       recurrenceInterval: updateRequest.eventRecurrenceInterval,

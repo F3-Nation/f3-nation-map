@@ -49,7 +49,7 @@ export default function AdminNationsModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
-    schema: NationInsertSchema.partial({ orgTypeId: true }),
+    schema: NationInsertSchema,
     defaultValues: {
       id: nation?.id ?? undefined,
       name: nation?.name ?? "",

@@ -45,8 +45,8 @@ const columns: TableOptions<RouterOutputs["user"]["all"][number]>["columns"] = [
     cell: (cell) => <Cell {...cell} />,
   },
   {
-    accessorKey: "role",
-    meta: { name: "Role" },
+    accessorKey: "roles",
+    meta: { name: "Roles" },
     header: Header,
     cell: ({ row }) => {
       const roleStyles = {
@@ -62,14 +62,17 @@ const columns: TableOptions<RouterOutputs["user"]["all"][number]>["columns"] = [
       } as const;
 
       return (
-        <div className="flex items-center justify-start">
-          <span
-            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
-              roleStyles[row.original.role]
-            }`}
-          >
-            {roleLabels[row.original.role]}
-          </span>
+        <div className="flex flex-wrap items-center justify-start">
+          {row.original.roles.map((role) => (
+            <span
+              key={role.orgId}
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+                roleStyles[role.roleName]
+              }`}
+            >
+              {role.orgName} ({roleLabels[role.roleName]})
+            </span>
+          ))}
         </div>
       );
     },
@@ -121,7 +124,7 @@ const columns: TableOptions<RouterOutputs["user"]["all"][number]>["columns"] = [
     header: Header,
     cell: (cell) => (
       <Cell {...cell}>
-        {cell.row.original.regions.map((region) => region.name).join(", ")}
+        {cell.row.original.roles.map((role) => role.orgName).join(", ")}
       </Cell>
     ),
   },

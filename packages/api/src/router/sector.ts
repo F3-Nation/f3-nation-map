@@ -13,7 +13,7 @@ export const sectorRouter = createTRPCRouter({
         id: schema.orgs.id,
         parentId: schema.orgs.parentId,
         name: schema.orgs.name,
-        orgTypeId: schema.orgs.orgTypeId,
+        orgType: schema.orgs.orgType,
         defaultLocationId: schema.orgs.defaultLocationId,
         description: schema.orgs.description,
         isActive: schema.orgs.isActive,
@@ -30,8 +30,7 @@ export const sectorRouter = createTRPCRouter({
       })
       .from(schema.orgs)
       .innerJoin(nationOrg, eq(schema.orgs.parentId, nationOrg.id))
-      .innerJoin(schema.orgTypes, eq(schema.orgs.orgTypeId, schema.orgTypes.id))
-      .where(eq(schema.orgTypes.name, "Sector"));
+      .where(eq(schema.orgs.orgType, "sector"));
 
     return sectors;
   }),
@@ -48,21 +47,21 @@ export const sectorRouter = createTRPCRouter({
 
   crupdate: publicProcedure
 
-    .input(SectorInsertSchema.partial({ id: true, orgTypeId: true }))
+    .input(SectorInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
       const sectorOrgType = await ctx.db
         .select({
-          id: schema.orgTypes.id,
+          id: schema.orgs.id,
         })
-        .from(schema.orgTypes)
-        .where(eq(schema.orgTypes.name, "Sector"));
+        .from(schema.orgs)
+        .where(eq(schema.orgs.orgType, "sector"));
 
       if (sectorOrgType === undefined)
         throw new Error("Sector org type not found");
 
       const sectorToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgTypeId: sectorOrgType[0]?.id ?? -1,
+        orgType: "sector",
         meta: {
           ...(input.meta as Record<string, string>),
         },

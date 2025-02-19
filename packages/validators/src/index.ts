@@ -15,7 +15,12 @@ export const UserInsertSchema = createInsertSchema(users);
 
 export const CrupdateUserSchema = UserInsertSchema.extend({
   id: z.number(),
-  regionIds: z.number().array(),
+  roles: z
+    .object({
+      orgId: z.number(),
+      roleName: z.enum(["user", "editor", "admin"]),
+    })
+    .array(),
 });
 // AUTH SCHEMA
 export const EmailAuthSchema = UserInsertSchema.pick({
@@ -41,12 +46,12 @@ export const EventInsertSchema = createInsertSchema(events, {
       .refine((value) => value !== -1, { message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
   startTime: (s) =>
-    s.regex(/^\d{2}:\d{2}$/, {
-      message: "Start time must be in 24hr format (HH:MM)",
+    s.regex(/^\d{4}$/, {
+      message: "Start time must be in 24hr format (HHmm)",
     }),
   endTime: (s) =>
-    s.regex(/^\d{2}:\d{2}$/, {
-      message: "End time must be in 24hr format (HH:MM)",
+    s.regex(/^\d{4}$/, {
+      message: "End time must be in 24hr format (HHmm)",
     }),
 }).extend({
   regionId: z.number(),
@@ -124,12 +129,12 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   regionId: (s) =>
     s.refine((value) => value !== -1, { message: "Please select a region" }),
   eventStartTime: (s) =>
-    s.regex(/^\d{2}:\d{2}$/, {
-      message: "Start time must be in 24hr format (HH:MM)",
+    s.regex(/^\d{4}$/, {
+      message: "Start time must be in 24hr format (HHmm)",
     }),
   eventEndTime: (s) =>
-    s.regex(/^\d{2}:\d{2}$/, {
-      message: "End time must be in 24hr format (HH:MM)",
+    s.regex(/^\d{4}$/, {
+      message: "End time must be in 24hr format (HHmm)",
     }),
   submittedBy: (s) => s.email({ message: "Invalid email address" }),
 }).extend({

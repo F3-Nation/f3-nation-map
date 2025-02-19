@@ -50,7 +50,7 @@ export default function AdminAreasModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
-    schema: AreaInsertSchema.partial({ orgTypeId: true }),
+    schema: AreaInsertSchema,
     defaultValues: {
       id: area?.id ?? undefined,
       name: area?.name ?? "",
