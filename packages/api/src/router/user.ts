@@ -12,6 +12,13 @@ const schema = { ...schemaRaw, users: schemaRaw.users };
 
 export const userRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
+    const result = await checkHasRoleOnOrg({
+      orgId: 440,
+      session: ctx.session!,
+      db: ctx.db,
+      roleName: "editor",
+    });
+
     const users = await ctx.db
       .select({
         id: schema.users.id,
@@ -216,6 +223,23 @@ export const userRouter = createTRPCRouter({
         );
       }
 
-      return user;
+      const updatedRoles = await ctx.db
+        .select({
+          orgId: schema.rolesXUsersXOrg.orgId,
+          orgName: schema.orgs.name,
+          roleName: schema.roles.name,
+        })
+        .from(schema.rolesXUsersXOrg)
+        .leftJoin(schema.orgs, eq(schema.orgs.id, schema.rolesXUsersXOrg.orgId))
+        .leftJoin(
+          schema.roles,
+          eq(schema.roles.id, schema.rolesXUsersXOrg.roleId),
+        )
+        .where(eq(schema.rolesXUsersXOrg.userId, user.id));
+
+      return {
+        ...user,
+        roles: updatedRoles,
+      };
     }),
 });

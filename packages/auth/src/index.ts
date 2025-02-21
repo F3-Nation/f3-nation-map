@@ -36,20 +36,25 @@ export const {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
         token.roles = user.roles;
       }
+
+      if (trigger === "update" && session?.roles) {
+        token.roles = session.roles;
+      }
+
       return Promise.resolve(token);
     },
     async session({ session, token }) {
       const result = {
         ...session,
         id: token.id as string | undefined,
-        email: token.email as string | undefined,
+        email: token.email,
         name: token.name as string | undefined,
         roles: token.roles as
           | { orgId: number; orgName: string; roleName: UserRole }[]

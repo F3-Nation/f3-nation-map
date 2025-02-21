@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TRPCClientError } from "@trpc/client";
 import { Plus, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { z } from "zod";
 
 import type { RoleEntry } from "@f3/shared/app/types";
@@ -20,6 +21,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -47,6 +49,7 @@ export default function UserModal({
 }: {
   data: DataType[ModalType.ADMIN_USERS];
 }) {
+  const { data: session, update } = useSession();
   const utils = api.useUtils();
   const { data: user } = api.user.byId.useQuery({ id: data.id });
   const { data: orgs } = api.nation.allOrgs.useQuery();
@@ -83,8 +86,13 @@ export default function UserModal({
   }, [form, user]);
 
   const crupdateUser = api.user.crupdate.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await utils.user.invalidate();
+      const { roles } = data;
+      await update({
+        ...session,
+        roles,
+      });
       closeModal();
       toast.success("Successfully updated user");
       router.refresh();
@@ -277,6 +285,9 @@ export default function UserModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Roles</FormLabel>
+                      <FormDescription>
+                        Must sign out and back in to apply these new roles.
+                      </FormDescription>
                       <div className="space-y-2">
                         {((field.value as RoleEntry[]) || []).map(
                           (roleEntry, index) => (
