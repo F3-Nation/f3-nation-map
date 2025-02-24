@@ -61,7 +61,7 @@ export default function AdminWorkoutsModal({
       highlight: event?.highlight ?? true,
       isSeries: event?.isSeries ?? true,
       locationId: event?.locationId ?? -1,
-      dayOfWeek: event?.dayOfWeek ?? -1,
+      dayOfWeek: event?.dayOfWeek,
       startTime: event?.startTime?.slice(0, 5) ?? "05:30",
       endTime: event?.endTime?.slice(0, 5) ?? "06:15",
       email: event?.email ?? null,
@@ -79,7 +79,7 @@ export default function AdminWorkoutsModal({
       highlight: event?.highlight ?? true,
       isSeries: event?.isSeries ?? true,
       locationId: event?.locationId ?? -1,
-      dayOfWeek: event?.dayOfWeek ?? -1,
+      dayOfWeek: event?.dayOfWeek,
       startTime: event?.startTime?.slice(0, 5) ?? "05:30",
       endTime: event?.endTime?.slice(0, 5) ?? "06:15",
       email: event?.email ?? null,
@@ -192,11 +192,14 @@ export default function AdminWorkoutsModal({
                         <SelectContent>
                           {regions
                             ?.slice()
-                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .sort(
+                              (a, b) =>
+                                a.name?.localeCompare(b.name ?? "") ?? 0,
+                            )
                             .map((region) => (
                               <SelectItem
                                 key={`region-${region.id}`}
-                                value={region.id.toString()}
+                                value={region.id?.toString() ?? ""}
                               >
                                 {region.name}
                               </SelectItem>

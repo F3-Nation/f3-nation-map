@@ -57,7 +57,7 @@ export default function AdminRegionsModal({
   const form = useForm({
     schema: RegionInsertSchema.extend({
       badImage: z.boolean().default(false),
-    }).partial({ orgTypeId: true }),
+    }),
     defaultValues: {
       id: region?.id ?? undefined,
       name: region?.name ?? "",

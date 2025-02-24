@@ -252,3 +252,6 @@ export const PERMISSIONS = {
     description: "Edit permissions",
   },
 };
+
+export const START_END_TIME_DB_FORMAT = "HHmm" as const;
+export const START_END_TIME_DISPLAY_FORMAT = "h:mmA" as const;

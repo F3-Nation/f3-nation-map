@@ -5,7 +5,8 @@ import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
+import { dayOfWeekToShortDayOfWeek } from "@f3/shared/app/functions";
 import { cn } from "@f3/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
@@ -45,12 +46,18 @@ export const MemoSelectedGroupMarker = memo(
                 style={{ zIndex: 1 }}
               >
                 {filteredEvents
-                  .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
+                  .sort(
+                    (a, b) =>
+                      DayOfWeek.indexOf(a.dayOfWeek ?? "monday") -
+                      DayOfWeek.indexOf(b.dayOfWeek ?? "monday"),
+                  )
                   .map((marker, markerIdx, markerArray) => {
                     const dotw = marker.dayOfWeek;
                     const isStart = markerIdx === 0;
                     const isEnd = markerIdx === markerArray.length - 1;
-                    const dayText = dotw !== null ? SHORT_DAY_ORDER[dotw] : 0;
+                    const dayText = dotw
+                      ? dayOfWeekToShortDayOfWeek(dotw)
+                      : null;
                     return (
                       <button
                         key={markerIdx + "-" + id}

@@ -4,7 +4,6 @@ import type { TableOptions } from "@tanstack/react-table";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@f3/api";
-import { DAY_ORDER } from "@f3/shared/app/constants";
 import { Button } from "@f3/ui/button";
 import {
   DropdownMenu,
@@ -58,7 +57,7 @@ const columns: TableOptions<RouterOutputs["event"]["all"][number]>["columns"] =
     {
       accessorKey: "dayOfWeek",
       meta: { name: "Day of Week" },
-      accessorFn: (row) => DAY_ORDER[row.dayOfWeek ?? -1],
+      accessorFn: (row) => row.dayOfWeek ?? "sunday",
       header: Header,
       cell: Cell,
     },

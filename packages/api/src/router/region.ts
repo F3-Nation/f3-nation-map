@@ -16,7 +16,7 @@ export const regionRouter = createTRPCRouter({
         id: regionOrg.id,
         parentId: regionOrg.parentId,
         name: regionOrg.name,
-        orgTypeId: regionOrg.orgTypeId,
+        orgType: regionOrg.orgType,
         defaultLocationId: regionOrg.defaultLocationId,
         description: regionOrg.description,
         isActive: regionOrg.isActive,
@@ -34,11 +34,10 @@ export const regionRouter = createTRPCRouter({
         nation: nationOrg.name,
       })
       .from(regionOrg)
-      .innerJoin(schema.orgTypes, eq(regionOrg.orgTypeId, schema.orgTypes.id))
       .innerJoin(schema.orgs, eq(regionOrg.parentId, schema.orgs.id))
       .innerJoin(sectorOrg, eq(schema.orgs.parentId, sectorOrg.id))
       .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
-      .where(eq(schema.orgTypes.name, "Region"));
+      .where(eq(regionOrg.orgType, "region"));
 
     return regions;
   }),
@@ -55,20 +54,11 @@ export const regionRouter = createTRPCRouter({
 
   crupdate: publicProcedure
 
-    .input(RegionInsertSchema.partial({ id: true, orgTypeId: true }))
+    .input(RegionInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const regionOrgType = await ctx.db
-        .select({
-          id: schema.orgTypes.id,
-        })
-        .from(schema.orgTypes)
-        .where(eq(schema.orgTypes.name, "Region"));
-
-      if (regionOrgType === undefined)
-        throw new Error("Region org type not found");
       const regionToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgTypeId: regionOrgType[0]?.id ?? -1,
+        orgType: "region",
         meta: {
           ...(input.meta as Record<string, string>),
         },

@@ -127,7 +127,10 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.session?.role !== "editor" && ctx.session?.role !== "admin") {
+  const isEditorOrAdmin = ctx.session?.roles.some((r) =>
+    ["editor", "admin"].includes(r.roleName),
+  );
+  if (!isEditorOrAdmin) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({ ctx });

@@ -384,3 +384,8 @@ export type OrgMeta = {
 export type UpdateRequestMeta = Record<string, unknown>;
 
 export type AttendanceMeta = Record<string, unknown>;
+
+export interface RoleEntry {
+  orgId: number;
+  roleName: "editor" | "admin";
+}

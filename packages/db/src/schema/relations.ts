@@ -2,14 +2,12 @@ import { relations } from "drizzle-orm/relations";
 
 import {
   achievements,
-  achievementsXOrg,
   achievementsXUsers,
   attendance,
   attendanceTypes,
   attendanceXAttendanceTypes,
   authAccounts,
   authSessions,
-  eventCategories,
   events,
   eventsXEventTypes,
   eventTags,
@@ -20,7 +18,6 @@ import {
   locations,
   orgs,
   orgsXSlackSpaces,
-  orgTypes,
   permissions,
   positions,
   positionsXOrgsXUsers,
@@ -34,10 +31,6 @@ import {
 } from "./schema";
 
 export const orgsRelations = relations(orgs, ({ one, many }) => ({
-  orgType: one(orgTypes, {
-    fields: [orgs.orgTypeId],
-    references: [orgTypes.id],
-  }),
   org: one(orgs, {
     fields: [orgs.parentId],
     references: [orgs.id],
@@ -46,23 +39,29 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
   orgs: many(orgs, {
     relationName: "orgs_parentId_orgs_id",
   }),
+  achievements: many(achievements),
   positions: many(positions),
   events: many(events),
   eventTags: many(eventTags),
-  eventTypes: many(eventTypes),
   locations: many(locations),
+  eventTypes: many(eventTypes),
   users: many(users),
   updateRequests: many(updateRequests),
-  achievementsXOrgs: many(achievementsXOrg),
   orgsXSlackSpaces: many(orgsXSlackSpaces),
   positionsXOrgsXUsers: many(positionsXOrgsXUsers),
   rolesXUsersXOrgs: many(rolesXUsersXOrg),
 }));
 
-export const orgTypesRelations = relations(orgTypes, ({ many }) => ({
-  orgs: many(orgs),
-  positions: many(positions),
-}));
+export const achievementsRelations = relations(
+  achievements,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [achievements.specificOrgId],
+      references: [orgs.id],
+    }),
+    achievementsXUsers: many(achievementsXUsers),
+  }),
+);
 
 export const attendanceRelations = relations(attendance, ({ one, many }) => ({
   event: one(events, {
@@ -119,10 +118,6 @@ export const positionsRelations = relations(positions, ({ one, many }) => ({
     fields: [positions.orgId],
     references: [orgs.id],
   }),
-  orgType: one(orgTypes, {
-    fields: [positions.orgTypeId],
-    references: [orgTypes.id],
-  }),
   positionsXOrgsXUsers: many(positionsXOrgsXUsers),
 }));
 
@@ -142,15 +137,6 @@ export const slackSpacesRelations = relations(slackSpaces, ({ many }) => ({
   orgsXSlackSpaces: many(orgsXSlackSpaces),
 }));
 
-export const locationsRelations = relations(locations, ({ one, many }) => ({
-  events: many(events),
-  org: one(orgs, {
-    fields: [locations.orgId],
-    references: [orgs.id],
-  }),
-  updateRequests: many(updateRequests),
-}));
-
 export const authAccountsRelations = relations(authAccounts, ({ one }) => ({
   user: one(users, {
     fields: [authAccounts.userId],
@@ -165,6 +151,15 @@ export const authSessionsRelations = relations(authSessions, ({ one }) => ({
   }),
 }));
 
+export const locationsRelations = relations(locations, ({ one, many }) => ({
+  events: many(events),
+  org: one(orgs, {
+    fields: [locations.orgId],
+    references: [orgs.id],
+  }),
+  updateRequests: many(updateRequests),
+}));
+
 export const eventTagsRelations = relations(eventTags, ({ one, many }) => ({
   org: one(orgs, {
     fields: [eventTags.specificOrgId],
@@ -174,23 +169,12 @@ export const eventTagsRelations = relations(eventTags, ({ one, many }) => ({
 }));
 
 export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
-  eventCategory: one(eventCategories, {
-    fields: [eventTypes.categoryId],
-    references: [eventCategories.id],
-  }),
   org: one(orgs, {
     fields: [eventTypes.specificOrgId],
     references: [orgs.id],
   }),
   eventsXEventTypes: many(eventsXEventTypes),
 }));
-
-export const eventCategoriesRelations = relations(
-  eventCategories,
-  ({ many }) => ({
-    eventTypes: many(eventTypes),
-  }),
-);
 
 export const updateRequestsRelations = relations(updateRequests, ({ one }) => ({
   event: one(events, {
@@ -205,25 +189,6 @@ export const updateRequestsRelations = relations(updateRequests, ({ one }) => ({
     fields: [updateRequests.regionId],
     references: [orgs.id],
   }),
-}));
-
-export const achievementsXOrgRelations = relations(
-  achievementsXOrg,
-  ({ one }) => ({
-    achievement: one(achievements, {
-      fields: [achievementsXOrg.achievementId],
-      references: [achievements.id],
-    }),
-    org: one(orgs, {
-      fields: [achievementsXOrg.orgId],
-      references: [orgs.id],
-    }),
-  }),
-);
-
-export const achievementsRelations = relations(achievements, ({ many }) => ({
-  achievementsXOrgs: many(achievementsXOrg),
-  achievementsXUsers: many(achievementsXUsers),
 }));
 
 export const attendanceXAttendanceTypesRelations = relations(

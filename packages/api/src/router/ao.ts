@@ -18,7 +18,7 @@ export const aoRouter = createTRPCRouter({
         id: aoOrg.id,
         parentId: aoOrg.parentId,
         name: aoOrg.name,
-        orgTypeId: aoOrg.orgTypeId,
+        orgType: aoOrg.orgType,
         defaultLocationId: aoOrg.defaultLocationId,
         description: aoOrg.description,
         isActive: aoOrg.isActive,
@@ -37,12 +37,11 @@ export const aoRouter = createTRPCRouter({
         nation: nationOrg.name,
       })
       .from(aoOrg)
-      .innerJoin(schema.orgTypes, eq(aoOrg.orgTypeId, schema.orgTypes.id))
       .innerJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id))
       .innerJoin(areaOrg, eq(regionOrg.parentId, areaOrg.id))
       .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
       .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
-      .where(eq(schema.orgTypes.name, "AO"));
+      .where(eq(aoOrg.orgType, "ao"));
 
     return aos;
   }),
@@ -59,19 +58,11 @@ export const aoRouter = createTRPCRouter({
 
   crupdate: publicProcedure
 
-    .input(AOInsertSchema.partial({ id: true, orgTypeId: true }))
+    .input(AOInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const aoOrgType = await ctx.db
-        .select({
-          id: schema.orgTypes.id,
-        })
-        .from(schema.orgTypes)
-        .where(eq(schema.orgTypes.name, "AO"));
-
-      if (aoOrgType === undefined) throw new Error("AO org type not found");
       const aoToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgTypeId: aoOrgType[0]?.id ?? -1,
+        orgType: "ao",
         meta: {
           ...(input.meta as Record<string, string>),
         },

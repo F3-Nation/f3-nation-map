@@ -62,8 +62,14 @@ export const UpdateLocationModal = ({
   const formId = form.watch("id");
 
   const { data: session } = useSession();
-  const isAdmin = session?.role === "admin";
-  const canEditRegion = session?.editingRegionIds.includes(formRegionId);
+  const isAdmin = session?.roles.some(
+    (role) => role.roleName === "admin" && role.orgId === formRegionId,
+  );
+  const canEditRegion = session?.roles.some(
+    (role) =>
+      (role.roleName === "editor" || role.roleName === "admin") &&
+      role.orgId === formRegionId,
+  );
 
   const lat = data.lat;
   const lng = data.lng;
@@ -154,8 +160,7 @@ export const UpdateLocationModal = ({
       locationLng: data.lng ?? 0,
       eventStartTime: data.startTime?.slice(0, 5) ?? "05:30",
       eventEndTime: data.endTime?.slice(0, 5) ?? "06:15",
-      eventDayOfWeek:
-        typeof data.dayOfWeek === "number" ? DAY_ORDER[data.dayOfWeek] : "",
+      eventDayOfWeek: data.dayOfWeek,
       eventTypeIds: data.types?.map((type) => type.id) ?? [],
       eventDescription: data.eventDescription ?? "",
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
