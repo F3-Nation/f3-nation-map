@@ -1,35 +1,11 @@
-CREATE TABLE "accounts" (
-	"userId" integer NOT NULL,
-	"type" text NOT NULL,
-	"provider" text NOT NULL,
-	"provider_account_id" text NOT NULL,
-	"refresh_token" text,
-	"access_token" text,
-	"expires_at" integer,
-	"token_type" text,
-	"scope" text,
-	"id_token" text,
-	"session_state" text,
-	"created" timestamp DEFAULT now(),
-	"updated" timestamp
-);
---> statement-breakpoint
-CREATE TABLE "sessions" (
-	"session_token" text PRIMARY KEY NOT NULL,
-	"userId" integer NOT NULL,
-	"expires" timestamp NOT NULL,
-	"created" timestamp DEFAULT now(),
-	"updated" timestamp
-);
---> statement-breakpoint
-CREATE TABLE "verification_token" (
-	"identifier" text NOT NULL,
-	"token" text NOT NULL,
-	"expires" timestamp NOT NULL,
-	"created" timestamp DEFAULT now(),
-	"updated" timestamp
-);
---> statement-breakpoint
+CREATE TYPE "public"."day_of_week" AS ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');--> statement-breakpoint
+CREATE TYPE "public"."event_cadence" AS ENUM('weekly', 'monthly');--> statement-breakpoint
+CREATE TYPE "public"."event_category" AS ENUM('first_f', 'second_f', 'third_f');--> statement-breakpoint
+CREATE TYPE "public"."org_type" AS ENUM('ao', 'region', 'area', 'sector', 'nation');--> statement-breakpoint
+CREATE TYPE "public"."region_role" AS ENUM('user', 'editor', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."update_request_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
+CREATE TYPE "public"."user_role" AS ENUM('user', 'editor', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."user_status" AS ENUM('active', 'inactive');--> statement-breakpoint
 CREATE TABLE "achievements" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
@@ -37,13 +13,8 @@ CREATE TABLE "achievements" (
 	"verb" varchar NOT NULL,
 	"image_url" varchar,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "achievements_x_org" (
-	"achievement_id" integer NOT NULL,
-	"org_id" integer NOT NULL,
-	CONSTRAINT "achievements_x_org_pkey" PRIMARY KEY("achievement_id","org_id")
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"specific_org_id" integer
 );
 --> statement-breakpoint
 CREATE TABLE "achievements_x_users" (
@@ -82,12 +53,36 @@ CREATE TABLE "attendance_x_attendance_types" (
 	CONSTRAINT "attendance_x_attendance_types_pkey" PRIMARY KEY("attendance_id","attendance_type_id")
 );
 --> statement-breakpoint
-CREATE TABLE "event_categories" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar NOT NULL,
-	"description" varchar,
+CREATE TABLE "auth_accounts" (
+	"user_id" integer NOT NULL,
+	"type" varchar NOT NULL,
+	"provider" varchar NOT NULL,
+	"provider_account_id" varchar NOT NULL,
+	"refresh_token" varchar,
+	"access_token" varchar,
+	"expires_at" integer,
+	"token_type" varchar,
+	"scope" varchar,
+	"id_token" varchar,
+	"session_state" text,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
 	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "auth_sessions" (
+	"session_token" text PRIMARY KEY NOT NULL,
+	"user_id" integer NOT NULL,
+	"expires" timestamp NOT NULL,
+	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "auth_verification_tokens" (
+	"identifier" text NOT NULL,
+	"token" text NOT NULL,
+	"expires" timestamp NOT NULL,
+	"created" timestamp DEFAULT now(),
+	"updated" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE "event_tags" (
@@ -96,7 +91,8 @@ CREATE TABLE "event_tags" (
 	"description" varchar,
 	"color" varchar,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"specific_org_id" integer
 );
 --> statement-breakpoint
 CREATE TABLE "event_tags_x_events" (
@@ -105,47 +101,33 @@ CREATE TABLE "event_tags_x_events" (
 	CONSTRAINT "event_tags_x_events_pkey" PRIMARY KEY("event_id","event_tag_id")
 );
 --> statement-breakpoint
-CREATE TABLE "event_tags_x_org" (
-	"event_tag_id" integer NOT NULL,
-	"org_id" integer NOT NULL,
-	"color_override" varchar,
-	CONSTRAINT "event_tags_x_org_pkey" PRIMARY KEY("event_tag_id","org_id")
-);
---> statement-breakpoint
 CREATE TABLE "event_types" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"description" varchar,
 	"acronym" varchar,
-	"category_id" integer NOT NULL,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "event_types_x_org" (
-	"event_type_id" integer NOT NULL,
-	"org_id" integer NOT NULL,
-	"is_default" boolean NOT NULL,
-	CONSTRAINT "event_types_x_org_pkey" PRIMARY KEY("event_type_id","org_id")
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"specific_org_id" integer,
+	"event_category" "event_category" NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "events" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"org_id" integer NOT NULL,
 	"location_id" integer,
-	"event_type_id" integer,
 	"series_id" integer,
 	"is_series" boolean NOT NULL,
 	"is_active" boolean NOT NULL,
 	"highlight" boolean NOT NULL,
-	"start_date" date NOT NULL,
+	"start_date" date,
 	"end_date" date,
-	"start_time" time,
-	"end_time" time,
-	"day_of_week" integer,
+	"start_time" varchar,
+	"end_time" varchar,
+	"day_of_week" "day_of_week",
 	"name" varchar NOT NULL,
 	"description" varchar,
-	"recurrence_pattern" varchar,
+	"recurrence_pattern" "event_cadence",
 	"recurrence_interval" integer,
 	"index_within_interval" integer,
 	"pax_count" integer,
@@ -158,7 +140,8 @@ CREATE TABLE "events" (
 	"backblast_ts" double precision,
 	"meta" json,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"email" varchar
 );
 --> statement-breakpoint
 CREATE TABLE "events_x_event_types" (
@@ -193,8 +176,8 @@ CREATE TABLE "locations" (
 	"name" varchar NOT NULL,
 	"description" varchar,
 	"is_active" boolean NOT NULL,
-	"lat" double precision,
-	"lon" double precision,
+	"latitude" double precision,
+	"longitude" double precision,
 	"address_street" varchar,
 	"address_city" varchar,
 	"address_state" varchar,
@@ -202,46 +185,19 @@ CREATE TABLE "locations" (
 	"address_country" varchar,
 	"meta" json,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "magiclinkauthrecord" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"email" varchar NOT NULL,
-	"otp_hash" "bytea" NOT NULL,
-	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"expiration" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"client_ip" varchar NOT NULL,
-	"recent_attempts" integer NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "magiclinkauthsession" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"email" varchar NOT NULL,
-	"persistent_id" varchar NOT NULL,
-	"session_token" varchar NOT NULL,
-	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"expiration" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "org_types" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar NOT NULL,
-	"description" varchar,
-	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"email" varchar,
+	"address_street2" varchar
 );
 --> statement-breakpoint
 CREATE TABLE "orgs" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"parent_id" integer,
-	"org_type_id" integer NOT NULL,
 	"default_location_id" integer,
 	"name" varchar NOT NULL,
 	"description" varchar,
 	"is_active" boolean NOT NULL,
 	"logo_url" varchar,
-	"logo" text,
 	"website" varchar,
 	"email" varchar,
 	"twitter" varchar,
@@ -250,7 +206,8 @@ CREATE TABLE "orgs" (
 	"last_annual_review" date,
 	"meta" json,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"org_type" "org_type" NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "orgs_x_slack_spaces" (
@@ -271,10 +228,10 @@ CREATE TABLE "positions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"description" varchar,
-	"org_type_id" integer,
 	"org_id" integer,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"org_type" "org_type"
 );
 --> statement-breakpoint
 CREATE TABLE "positions_x_orgs_x_users" (
@@ -286,7 +243,7 @@ CREATE TABLE "positions_x_orgs_x_users" (
 --> statement-breakpoint
 CREATE TABLE "roles" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar NOT NULL,
+	"name" "region_role" NOT NULL,
 	"description" varchar,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
 	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -337,13 +294,58 @@ CREATE TABLE "slack_users" (
 	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "update_requests" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"token" uuid NOT NULL,
+	"region_id" integer NOT NULL,
+	"event_id" integer,
+	"event_type_ids" integer[],
+	"event_tag" varchar,
+	"event_series_id" integer,
+	"event_is_series" boolean,
+	"event_is_active" boolean,
+	"event_highlight" boolean,
+	"event_start_date" date,
+	"event_end_date" date,
+	"event_start_time" varchar,
+	"event_end_time" varchar,
+	"event_day_of_week" "day_of_week",
+	"event_name" varchar NOT NULL,
+	"event_description" varchar,
+	"event_recurrence_pattern" "event_cadence",
+	"event_recurrence_interval" integer,
+	"event_index_within_interval" integer,
+	"event_meta" json,
+	"event_contact_email" varchar,
+	"location_name" varchar,
+	"location_description" varchar,
+	"location_address" varchar,
+	"location_address2" varchar,
+	"location_city" varchar,
+	"location_state" varchar,
+	"location_zip" varchar,
+	"location_country" varchar,
+	"location_lat" real,
+	"location_lng" real,
+	"location_id" integer,
+	"location_contact_email" varchar,
+	"ao_logo" varchar,
+	"submitted_by" varchar NOT NULL,
+	"submitter_validated" boolean,
+	"reviewed_by" varchar,
+	"reviewed_at" timestamp,
+	"status" "update_request_status" DEFAULT 'pending' NOT NULL,
+	"meta" json,
+	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"f3_name" varchar,
 	"first_name" varchar,
 	"last_name" varchar,
 	"email" varchar NOT NULL,
-	"email_verified" timestamp,
 	"phone" varchar,
 	"home_region_id" integer,
 	"avatar_url" varchar,
@@ -353,77 +355,36 @@ CREATE TABLE "users" (
 	"emergency_contact" varchar,
 	"emergency_phone" varchar,
 	"emergency_notes" varchar,
+	"email_verified" timestamp,
+	"status" "user_status" DEFAULT 'active' NOT NULL,
 	CONSTRAINT "users_email_key" UNIQUE("email")
 );
 --> statement-breakpoint
-CREATE TABLE "update_requests" (
-	"id" uuid PRIMARY KEY NOT NULL,
-	"token" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"org_id" integer,
-	"event_id" integer,
-	"event_type" varchar(30),
-	"event_tag" varchar(30),
-	"event_series_id" integer,
-	"event_is_series" boolean,
-	"event_is_active" boolean,
-	"event_highlight" boolean,
-	"event_start_date" date,
-	"event_end_date" date,
-	"event_start_time" time,
-	"event_end_time" time,
-	"event_day_of_week" varchar(30),
-	"event_name" varchar(100) NOT NULL,
-	"event_description" text,
-	"event_recurrence_pattern" varchar(30),
-	"event_recurrence_interval" integer,
-	"event_index_within_interval" integer,
-	"event_meta" json,
-	"location_name" text,
-	"location_description" text,
-	"location_lat" numeric(8, 5),
-	"location_lon" numeric(8, 5),
-	"location_id" integer,
-	"submitted_by" text,
-	"submitter_validated" boolean DEFAULT false,
-	"validated_by" text,
-	"validated_at" timestamp,
-	"meta" json,
-	"created" timestamp DEFAULT now(),
-	"updated" timestamp
-);
---> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "achievements_x_org" ADD CONSTRAINT "achievements_x_org_achievement_id_fkey" FOREIGN KEY ("achievement_id") REFERENCES "public"."achievements"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "achievements_x_org" ADD CONSTRAINT "achievements_x_org_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "achievements" ADD CONSTRAINT "achievements_specific_org_id_fkey" FOREIGN KEY ("specific_org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "achievements_x_users" ADD CONSTRAINT "achievements_x_users_achievement_id_fkey" FOREIGN KEY ("achievement_id") REFERENCES "public"."achievements"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "achievements_x_users" ADD CONSTRAINT "achievements_x_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attendance" ADD CONSTRAINT "attendance_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attendance" ADD CONSTRAINT "attendance_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attendance_x_attendance_types" ADD CONSTRAINT "attendance_x_attendance_types_attendance_id_fkey" FOREIGN KEY ("attendance_id") REFERENCES "public"."attendance"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attendance_x_attendance_types" ADD CONSTRAINT "attendance_x_attendance_types_attendance_type_id_fkey" FOREIGN KEY ("attendance_type_id") REFERENCES "public"."attendance_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth_accounts" ADD CONSTRAINT "auth_accounts_userId_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth_sessions" ADD CONSTRAINT "auth_sessions_userId_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "event_tags" ADD CONSTRAINT "event_tags_specific_org_id_fkey" FOREIGN KEY ("specific_org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "event_tags_x_events" ADD CONSTRAINT "event_tags_x_events_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "event_tags_x_events" ADD CONSTRAINT "event_tags_x_events_event_tag_id_fkey" FOREIGN KEY ("event_tag_id") REFERENCES "public"."event_tags"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "event_tags_x_org" ADD CONSTRAINT "event_tags_x_org_event_tag_id_fkey" FOREIGN KEY ("event_tag_id") REFERENCES "public"."event_tags"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "event_tags_x_org" ADD CONSTRAINT "event_tags_x_org_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "event_types" ADD CONSTRAINT "event_types_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."event_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "event_types_x_org" ADD CONSTRAINT "event_types_x_org_event_type_id_fkey" FOREIGN KEY ("event_type_id") REFERENCES "public"."event_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "event_types_x_org" ADD CONSTRAINT "event_types_x_org_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "event_types" ADD CONSTRAINT "event_types_specific_org_id_fkey" FOREIGN KEY ("specific_org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events" ADD CONSTRAINT "events_location_id_fkey" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events" ADD CONSTRAINT "events_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events" ADD CONSTRAINT "events_series_id_fkey" FOREIGN KEY ("series_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "events" ADD CONSTRAINT "events_event_type_id_fkey" FOREIGN KEY ("event_type_id") REFERENCES "public"."event_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events_x_event_types" ADD CONSTRAINT "events_x_event_types_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events_x_event_types" ADD CONSTRAINT "events_x_event_types_event_type_id_fkey" FOREIGN KEY ("event_type_id") REFERENCES "public"."event_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "expansions_x_users" ADD CONSTRAINT "expansions_x_users_expansion_id_fkey" FOREIGN KEY ("expansion_id") REFERENCES "public"."expansions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "expansions_x_users" ADD CONSTRAINT "expansions_x_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "locations" ADD CONSTRAINT "locations_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "orgs" ADD CONSTRAINT "orgs_org_type_id_fkey" FOREIGN KEY ("org_type_id") REFERENCES "public"."org_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "orgs" ADD CONSTRAINT "orgs_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "orgs_x_slack_spaces" ADD CONSTRAINT "orgs_x_slack_spaces_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "orgs_x_slack_spaces" ADD CONSTRAINT "orgs_x_slack_spaces_slack_space_id_fkey" FOREIGN KEY ("slack_space_id") REFERENCES "public"."slack_spaces"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "positions" ADD CONSTRAINT "positions_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "positions" ADD CONSTRAINT "positions_org_type_id_fkey" FOREIGN KEY ("org_type_id") REFERENCES "public"."org_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "positions_x_orgs_x_users" ADD CONSTRAINT "positions_x_orgs_x_users_org_id_fkey" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "positions_x_orgs_x_users" ADD CONSTRAINT "positions_x_orgs_x_users_position_id_fkey" FOREIGN KEY ("position_id") REFERENCES "public"."positions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "positions_x_orgs_x_users" ADD CONSTRAINT "positions_x_orgs_x_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -433,7 +394,7 @@ ALTER TABLE "roles_x_users_x_org" ADD CONSTRAINT "roles_x_users_x_org_org_id_fke
 ALTER TABLE "roles_x_users_x_org" ADD CONSTRAINT "roles_x_users_x_org_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "roles_x_users_x_org" ADD CONSTRAINT "roles_x_users_x_org_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "slack_users" ADD CONSTRAINT "slack_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_home_region_id_fkey" FOREIGN KEY ("home_region_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_org_id_orgs_id_fk" FOREIGN KEY ("org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_event_id_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_location_id_fkey" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_region_id_fkey" FOREIGN KEY ("region_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_home_region_id_fkey" FOREIGN KEY ("home_region_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;
