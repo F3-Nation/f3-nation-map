@@ -88,12 +88,8 @@ export default function AdminLocationsModal({
       isActive: location?.isActive ?? true,
       orgId: location?.orgId ?? -1,
       regionId: location?.regionId ?? -1,
-      latitude: location?.latitude
-        ? parseFloat(location.latitude.toFixed(5))
-        : DEFAULT_CENTER[0],
-      longitude: location?.longitude
-        ? parseFloat(location.longitude.toFixed(5))
-        : DEFAULT_CENTER[1],
+      latitude: location?.latitude ? location.latitude : DEFAULT_CENTER[0],
+      longitude: location?.longitude ? location.longitude : DEFAULT_CENTER[1],
       addressStreet: location?.addressStreet ?? null,
       addressCity: location?.addressCity ?? null,
       addressState: location?.addressState ?? null,
@@ -111,12 +107,8 @@ export default function AdminLocationsModal({
       isActive: location?.isActive ?? true,
       orgId: location?.orgId ?? -1,
       regionId: location?.regionId ?? -1,
-      latitude: location?.latitude
-        ? parseFloat(location.latitude.toFixed(5))
-        : DEFAULT_CENTER[0],
-      longitude: location?.longitude
-        ? parseFloat(location.longitude.toFixed(5))
-        : DEFAULT_CENTER[1],
+      latitude: location?.latitude ? location.latitude : DEFAULT_CENTER[0],
+      longitude: location?.longitude ? location.longitude : DEFAULT_CENTER[1],
       addressStreet: location?.addressStreet ?? null,
       addressCity: location?.addressCity ?? null,
       addressState: location?.addressState ?? null,
@@ -146,8 +138,8 @@ export default function AdminLocationsModal({
     () => ({
       dragend(e: { target: L.Marker }) {
         const { lat, lng } = e.target.getLatLng();
-        form.setValue("latitude", parseFloat(lat.toFixed(5)));
-        form.setValue("longitude", parseFloat(lng.toFixed(5)));
+        form.setValue("latitude", lat);
+        form.setValue("longitude", lng);
       },
     }),
     [form],

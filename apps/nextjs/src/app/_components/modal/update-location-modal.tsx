@@ -466,6 +466,24 @@ export const UpdateLocationModal = ({
                   {form.formState.errors.locationCountry?.message}
                 </p>
               </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Latitude
+                </div>
+                <Input {...form.register("locationLat")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationLat?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Longitude
+                </div>
+                <Input {...form.register("locationLng")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationLng?.message}
+                </p>
+              </div>
             </div>
             <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
               Other Details:

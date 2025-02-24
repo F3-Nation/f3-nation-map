@@ -3,7 +3,7 @@ import omit from "lodash/omit";
 import { z } from "zod";
 
 import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
-import { desc, eq, schema } from "@f3/db";
+import { aliasedTable, desc, eq, schema } from "@f3/db";
 import { RequestInsertSchema } from "@f3/validators";
 
 import type { Context } from "../trpc";
@@ -17,23 +17,63 @@ import {
 
 export const requestRouter = createTRPCRouter({
   all: editorProcedure.query(async ({ ctx }) => {
+    const oldAoOrg = aliasedTable(schema.orgs, "old_ao_org");
+    const oldRegionOrg = aliasedTable(schema.orgs, "old_region_org");
+    const oldLocation = aliasedTable(schema.locations, "old_location");
+    const newRegionOrg = aliasedTable(schema.orgs, "new_region_org");
+
     const requests = await ctx.db
       .select({
         id: schema.updateRequests.id,
         submittedBy: schema.updateRequests.submittedBy,
         submitterValidated: schema.updateRequests.submitterValidated,
-        regionName: schema.orgs.name,
         oldWorkoutName: schema.events.name,
         newWorkoutName: schema.updateRequests.eventName,
+        // regionName: newRegionOrg.name,
+        // locationName: schema.updateRequests.locationName,
+        oldRegionName: oldRegionOrg.name,
+        newRegionName: newRegionOrg.name,
+        oldLocationName: oldLocation.name,
+        newLocationName: schema.updateRequests.locationName,
+        oldDayOfWeek: schema.events.dayOfWeek,
+        newDayOfWeek: schema.updateRequests.eventDayOfWeek,
+        oldStartTime: schema.events.startTime,
+        newStartTime: schema.updateRequests.eventStartTime,
+        oldEndTime: schema.events.endTime,
+        newEndTime: schema.updateRequests.eventEndTime,
+        oldDescription: schema.events.description,
+        newDescription: schema.updateRequests.eventDescription,
+        oldLocationAddress: oldLocation.addressStreet,
+        newLocationAddress: schema.updateRequests.locationAddress,
+        oldLocationAddress2: oldLocation.addressStreet2,
+        newLocationAddress2: schema.updateRequests.locationAddress2,
+        oldLocationCity: oldLocation.addressCity,
+        newLocationCity: schema.updateRequests.locationCity,
+        oldLocationState: oldLocation.addressState,
+        newLocationState: schema.updateRequests.locationState,
+        oldLocationCountry: oldLocation.addressCountry,
+        newLocationCountry: schema.updateRequests.locationCountry,
+        oldLocationZipCode: oldLocation.addressZip,
+        newLocationZipCode: schema.updateRequests.locationZip,
+        oldLocationLat: oldLocation.latitude,
+        newLocationLat: schema.updateRequests.locationLat,
+        oldLocationLng: oldLocation.longitude,
+        newLocationLng: schema.updateRequests.locationLng,
         created: schema.updateRequests.created,
         status: schema.updateRequests.status,
       })
       .from(schema.updateRequests)
-      .leftJoin(schema.orgs, eq(schema.updateRequests.regionId, schema.orgs.id))
+      .leftJoin(
+        newRegionOrg,
+        eq(schema.updateRequests.regionId, newRegionOrg.id),
+      )
       .leftJoin(
         schema.events,
         eq(schema.updateRequests.eventId, schema.events.id),
       )
+      .leftJoin(oldAoOrg, eq(oldAoOrg.id, schema.events.orgId))
+      .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, schema.events.orgId))
+      .leftJoin(oldLocation, eq(oldLocation.id, schema.events.locationId))
       .orderBy(desc(schema.updateRequests.created));
     console.log("requests", requests);
     return requests.map((request) => ({
