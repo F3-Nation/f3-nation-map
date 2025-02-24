@@ -39,7 +39,7 @@ interface AdapterSession {
 
 interface AdapterAccount {
   userId: number;
-  type: Extract<ProviderType, "oauth" | "oidc" | "email" | "webauthn">;
+  type: string; // Extract<ProviderType, "oauth" | "oidc" | "email" | "webauthn">;
   provider: string;
   providerAccountId: string;
 }
@@ -129,7 +129,8 @@ declare module "next-auth" {
      */
     linkAccount?(
       account: AdapterAccount,
-    ): Promise<void> | Awaitable<AdapterAccount | null | undefined>;
+      // ): Promise<void> | Awaitable<AdapterAccount | null | undefined>;
+    ): Awaitable<AdapterAccount | null | undefined>;
     /** @todo This method is currently not invoked yet. */
     unlinkAccount?(
       providerAccountId: Pick<AdapterAccount, "provider" | "providerAccountId">,

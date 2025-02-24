@@ -33,7 +33,7 @@ if (!("DATABASE_URL" in env))
 const _reseedUsers = async () => {
   await db.delete(schema.authAccounts);
   await db.delete(schema.authSessions);
-  await db.delete(schema.authVerificationToken);
+  await db.delete(schema.authVerificationTokens);
   await db.delete(schema.users);
   await db.delete(schema.updateRequests);
   await insertUsers();
@@ -58,7 +58,7 @@ const _reseedFromScratch = async () => {
 
   await db.delete(schema.authAccounts);
   await db.delete(schema.authSessions);
-  await db.delete(schema.authVerificationToken);
+  await db.delete(schema.authVerificationTokens);
   await db.delete(schema.users);
   await db.delete(schema.updateRequests);
 

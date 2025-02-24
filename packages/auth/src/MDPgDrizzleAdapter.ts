@@ -13,7 +13,7 @@ const {
   rolesXUsersXOrg,
   authAccounts: accounts,
   authSessions: sessions,
-  authVerificationToken: verificationTokens,
+  authVerificationTokens: verificationTokens,
 } = schema;
 
 type NonNullableProps<T> = {

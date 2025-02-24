@@ -371,6 +371,10 @@ export const isDDD = (
   ].includes(day);
 };
 
+export type SlackUserMeta = Record<string, unknown>;
+
+export type SlackSpacesMeta = Record<string, unknown>;
+
 export type UserMeta = Record<string, unknown>;
 
 export type EventMeta = Record<string, unknown>;

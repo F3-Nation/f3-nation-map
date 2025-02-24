@@ -6,7 +6,7 @@ const url = env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL is not defined");
 
 export default {
-  schema: "./src/schema",
+  schema: "./drizzle/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
     url,

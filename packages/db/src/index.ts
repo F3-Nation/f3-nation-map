@@ -8,7 +8,7 @@ import {
   attendanceTypes,
   authAccounts,
   authSessions,
-  authVerificationToken,
+  authVerificationTokens,
   events,
   eventsXEventTypes,
   eventTags,
@@ -22,14 +22,14 @@ import {
   slackUsers,
   updateRequests,
   users,
-} from "./schema/schema";
+} from "../drizzle/schema";
 
 export const schema = {
   attendance,
   attendanceTypes,
   authAccounts,
   authSessions,
-  authVerificationToken,
+  authVerificationTokens,
   events,
   eventTags,
   eventTypes,
