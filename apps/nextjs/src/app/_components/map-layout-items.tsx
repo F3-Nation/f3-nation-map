@@ -3,6 +3,7 @@
 import type { ComponentProps } from "react";
 
 import { Z_INDEX } from "@f3/shared/app/constants";
+import { classNames } from "@f3/shared/common/functions";
 
 import { mapStore } from "~/utils/store/map";
 import { DebugInfo } from "./map/debug-info";
@@ -23,6 +24,7 @@ const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
   const showDebugStore = mapStore.use.showDebug();
   const loaded = mapStore.use.loaded();
+  const hasMovedAwayFromLocation = mapStore.use.hasMovedAwayFromLocation();
 
   const showDebug =
     showDebugStore || (process.env.NODE_ENV === "development" && SHOW_DEBUG)
@@ -51,6 +53,22 @@ export const MapLayoutItems = () => {
       <DesktopLocationPanel>
         <DesktopLocationPanelContent />
       </DesktopLocationPanel>
+
+      {hasMovedAwayFromLocation && (
+        <button
+          className={classNames(
+            "rounded-xl bg-background px-4 py-1 text-sm text-foreground shadow",
+            "absolute left-2/4 top-14 z-[9999] -translate-x-2/4",
+          )}
+          onClick={() => {
+            mapStore.setState({
+              nearbyAreasCenter: mapStore.get("center"),
+            });
+          }}
+        >
+          See Nearby Areas
+        </button>
+      )}
 
       {/* Mobile */}
       <MobileAboveSearchBox>

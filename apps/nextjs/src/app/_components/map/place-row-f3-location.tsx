@@ -32,6 +32,7 @@ export const onClickPlaceRowF3Location = (
         lng: longitude,
         name: result.header,
       },
+      hasMovedAwayFromLocation: false,
     });
     setView({ lat: latitude, lng: longitude });
     // Use a timeout to allow the map animation to finish

@@ -41,6 +41,7 @@ export const FilteredMapResultsProvider = ({
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
+  const nearbyAreasCenter = mapStore.use.nearbyAreasCenter();
 
   const { data: allLocationMarkers, isLoading } =
     api.location.getLocationMarkersSparse.useQuery();
@@ -96,22 +97,25 @@ export const FilteredMapResultsProvider = ({
       return undefined;
     }
 
+    const center = nearbyAreasCenter ? nearbyAreasCenter : nearbyLocationCenter;
+
     const locationMarkersWithDistances = filteredLocationMarkers.map(
       (location) => {
         const distance = latLngToDistance(
           location.lat ?? null,
           location.lon ?? null,
-          nearbyLocationCenter?.lat ?? null,
-          nearbyLocationCenter?.lng ?? null,
+          center?.lat ?? null,
+          center?.lng ?? null,
         );
         return { ...location, distance };
       },
     );
+
     return locationMarkersWithDistances.sort((a, b) => {
       if (a.distance === null || b.distance === null) return 0;
       return a.distance - b.distance;
     });
-  }, [nearbyLocationCenter, filteredLocationMarkers]);
+  }, [nearbyLocationCenter, filteredLocationMarkers, nearbyAreasCenter]);
 
   return (
     <FilteredMapResultsContext.Provider

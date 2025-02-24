@@ -24,6 +24,7 @@ export const onClickF3RegionRow = (result: F3RegionMapSearchResult) => {
       lng: result.destination.lng,
       name: result.header,
     },
+    hasMovedAwayFromLocation: false,
   });
   setView({ lat: result.destination.lat, lng: result.destination.lng });
   setTimeout(() => {

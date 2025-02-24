@@ -2,7 +2,7 @@ import type { LatLng, LatLngBounds, LatLngLiteral, Map } from "leaflet";
 import type { MutableRefObject } from "react";
 import { createRef } from "react";
 
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@f3/shared/app/constants";
+import { DEFAULT_ZOOM } from "@f3/shared/app/constants";
 import { ZustandStore } from "@f3/shared/common/classes";
 
 const initialState = {
@@ -20,15 +20,17 @@ const initialState = {
   placeResultArea: null as string | null,
   placeResultLocation: null as LatLngLiteral | null,
   updateLocation: null as LatLngLiteral | null,
+  nearbyAreasCenter: null as LatLng | null,
   nearbyLocationCenter: {
-    lat: DEFAULT_CENTER[0],
-    lng: DEFAULT_CENTER[1],
+    lat: null as LatLngLiteral["lat"] | null,
+    lng: null as LatLngLiteral["lng"] | null,
   } as LatLngLiteral & { name?: string },
   tiles: "street" as "satellite" | "street",
   showDebug: false,
   loaded: false,
   dragging: false,
   hasMovedMap: false,
+  hasMovedAwayFromLocation: false,
 };
 
 export const mapStore = new ZustandStore({
