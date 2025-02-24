@@ -19,8 +19,8 @@ export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
         lat: latitude,
         lng: longitude,
         name: result.header,
+        type: "search",
       },
-      hasMovedAwayFromLocation: false,
     });
     setView({ lat: latitude, lng: longitude });
     setTimeout(() => {

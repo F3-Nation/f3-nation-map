@@ -7,7 +7,6 @@ import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
 import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import {
   Dialog,
@@ -89,7 +88,7 @@ export default function AdminRequestsModal({
       locationLng: request.locationLng ?? 0,
       eventStartTime: request.eventStartTime?.slice(0, 5) ?? "05:30",
       eventEndTime: request.eventEndTime?.slice(0, 5) ?? "06:15",
-      eventDayOfWeek: request.eventDayOfWeek ?? "",
+      eventDayOfWeek: request.eventDayOfWeek ?? "monday",
       eventTypeIds: request.eventTypeIds ?? [],
       eventDescription: request.eventDescription ?? "",
       regionId: request.regionId ?? -1,

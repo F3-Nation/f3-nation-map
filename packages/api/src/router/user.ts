@@ -12,13 +12,6 @@ const schema = { ...schemaRaw, users: schemaRaw.users };
 
 export const userRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
-    const result = await checkHasRoleOnOrg({
-      orgId: 440,
-      session: ctx.session!,
-      db: ctx.db,
-      roleName: "editor",
-    });
-
     const users = await ctx.db
       .select({
         id: schema.users.id,

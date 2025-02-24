@@ -5,6 +5,14 @@ import { createRef } from "react";
 import { DEFAULT_ZOOM } from "@f3/shared/app/constants";
 import { ZustandStore } from "@f3/shared/common/classes";
 
+export type NearbyLocationCenterType =
+  | "self"
+  | "search"
+  | "manual-update"
+  | "default"
+  | "click"
+  | "random";
+
 const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   zoom: DEFAULT_ZOOM,
@@ -20,17 +28,17 @@ const initialState = {
   placeResultArea: null as string | null,
   placeResultLocation: null as LatLngLiteral | null,
   updateLocation: null as LatLngLiteral | null,
-  nearbyAreasCenter: null as LatLng | null,
   nearbyLocationCenter: {
     lat: null as LatLngLiteral["lat"] | null,
     lng: null as LatLngLiteral["lng"] | null,
-  } as LatLngLiteral & { name?: string },
+    name: null as string | null,
+    type: "default" as NearbyLocationCenterType,
+  },
   tiles: "street" as "satellite" | "street",
   showDebug: false,
   loaded: false,
   dragging: false,
   hasMovedMap: false,
-  hasMovedAwayFromLocation: false,
 };
 
 export const mapStore = new ZustandStore({

@@ -1,6 +1,5 @@
 "use client";
 
-import type { LatLngLiteral } from "leaflet";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
@@ -19,15 +18,17 @@ export type LocationMarkerWithDistance = SparseF3Marker & {
 
 const FilteredMapResultsContext = createContext<{
   isLoading: boolean;
-  nearbyLocationCenter: LatLngLiteral & { name?: string };
+  nearbyLocationCenter: ReturnType<typeof mapStore.use.nearbyLocationCenter>;
   filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
   allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
   isLoading: true,
   nearbyLocationCenter: {
+    type: "default",
     lat: DEFAULT_CENTER[0],
     lng: DEFAULT_CENTER[1],
+    name: null,
   },
   filteredLocationMarkers: undefined,
   locationOrderedLocationMarkers: undefined,
@@ -41,7 +42,6 @@ export const FilteredMapResultsProvider = ({
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
-  const nearbyAreasCenter = mapStore.use.nearbyAreasCenter();
 
   const { data: allLocationMarkers, isLoading } =
     api.location.getLocationMarkersSparse.useQuery();
@@ -97,15 +97,13 @@ export const FilteredMapResultsProvider = ({
       return undefined;
     }
 
-    const center = nearbyAreasCenter ? nearbyAreasCenter : nearbyLocationCenter;
-
     const locationMarkersWithDistances = filteredLocationMarkers.map(
       (location) => {
         const distance = latLngToDistance(
           location.lat ?? null,
           location.lon ?? null,
-          center?.lat ?? null,
-          center?.lng ?? null,
+          nearbyLocationCenter?.lat ?? null,
+          nearbyLocationCenter?.lng ?? null,
         );
         return { ...location, distance };
       },
@@ -115,7 +113,7 @@ export const FilteredMapResultsProvider = ({
       if (a.distance === null || b.distance === null) return 0;
       return a.distance - b.distance;
     });
-  }, [nearbyLocationCenter, filteredLocationMarkers, nearbyAreasCenter]);
+  }, [nearbyLocationCenter, filteredLocationMarkers]);
 
   return (
     <FilteredMapResultsContext.Provider

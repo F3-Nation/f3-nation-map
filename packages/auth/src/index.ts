@@ -39,12 +39,13 @@ export const {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
+        token.email = user.email ?? undefined;
         token.name = user.name;
         token.roles = user.roles;
       }
 
-      if (trigger === "update" && session?.roles) {
+      if (trigger === "update" && session && "roles" in session) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         token.roles = session.roles;
       }
 

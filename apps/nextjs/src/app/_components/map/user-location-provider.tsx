@@ -41,6 +41,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         lat: position.coords.latitude,
         lng: position.coords.longitude,
         name: "you",
+        type: "self",
       },
 
       userGpsLocation: {
@@ -70,6 +71,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
             lat: randomLocation.lat,
             lng: randomLocation.lon,
             name: "random",
+            type: "random",
           },
         });
       }
@@ -100,12 +102,11 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
           lng: userGpsLocation.longitude,
         });
         mapStore.setState({
-          nearbyAreasCenter: null,
-          hasMovedAwayFromLocation: false,
           nearbyLocationCenter: {
             lat: userGpsLocation.latitude,
             lng: userGpsLocation.longitude,
             name: "you",
+            type: "self",
           },
         });
         return;

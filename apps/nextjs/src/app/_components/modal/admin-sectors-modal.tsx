@@ -50,10 +50,10 @@ export default function AdminSectorsModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
-    schema: SectorInsertSchema.partial({ orgTypeId: true }),
+    schema: SectorInsertSchema,
     defaultValues: {
       id: sector?.id ?? undefined,
-      name: sector?.name ?? "",
+      name: sector?.name ?? "Unknown",
       parentId: sector?.parentId ?? -1,
       defaultLocationId: sector?.defaultLocationId ?? null,
       isActive: sector?.isActive ?? true,
@@ -71,7 +71,7 @@ export default function AdminSectorsModal({
   useEffect(() => {
     form.reset({
       id: sector?.id ?? undefined,
-      name: sector?.name ?? "",
+      name: sector?.name ?? "Unknown",
       parentId: sector?.parentId ?? -1,
       defaultLocationId: sector?.defaultLocationId ?? null,
       isActive: sector?.isActive ?? true,

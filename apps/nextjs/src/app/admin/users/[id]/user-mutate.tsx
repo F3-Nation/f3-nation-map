@@ -199,11 +199,11 @@ export default function UserMutate({
                                 ];
                                 newRoles[index] = {
                                   orgId: roleEntry.orgId,
-                                  role: value as "editor" | "admin",
+                                  roleName: value as "editor" | "admin",
                                 };
                                 field.onChange(newRoles);
                               }}
-                              value={roleEntry.role}
+                              value={roleEntry.roleName}
                             >
                               <FormControl>
                                 <SelectTrigger className="w-[200px]">
@@ -233,7 +233,8 @@ export default function UserMutate({
                                   ...(field.value as RoleEntry[]),
                                 ];
                                 newRoles[index] = {
-                                  role: newRoles[index]?.role ?? "editor",
+                                  roleName:
+                                    newRoles[index]?.roleName ?? "editor",
                                   orgId,
                                 };
                                 field.onChange(newRoles);
@@ -275,7 +276,7 @@ export default function UserMutate({
                           className="mt-2"
                           onClick={() => {
                             const newRoleEntry: RoleEntry = {
-                              role: "editor",
+                              roleName: "editor",
                               orgId: 1,
                             };
                             field.onChange([

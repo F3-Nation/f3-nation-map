@@ -31,8 +31,8 @@ export const onClickPlaceRowF3Location = (
         lat: latitude,
         lng: longitude,
         name: result.header,
+        type: "search",
       },
-      hasMovedAwayFromLocation: false,
     });
     setView({ lat: latitude, lng: longitude });
     // Use a timeout to allow the map animation to finish

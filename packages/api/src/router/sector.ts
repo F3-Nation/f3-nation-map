@@ -46,7 +46,6 @@ export const sectorRouter = createTRPCRouter({
     }),
 
   crupdate: publicProcedure
-
     .input(SectorInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
       const sectorOrgType = await ctx.db

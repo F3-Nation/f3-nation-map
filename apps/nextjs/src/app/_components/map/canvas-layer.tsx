@@ -119,7 +119,8 @@ export const CanvasIconLayer = ({
           nearbyLocationCenter: {
             lat: item.lat,
             lng: item.lon,
-            name: "name" in item ? item.name : undefined,
+            name: "name" in item ? item.name : null,
+            type: "click",
           },
         });
 

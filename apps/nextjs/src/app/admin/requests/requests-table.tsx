@@ -4,7 +4,6 @@ import type { TableOptions } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
 import type { RouterOutputs } from "@f3/api";
-import { DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Badge } from "@f3/ui/badge";
 import { MDTable } from "@f3/ui/md-table";
@@ -102,9 +101,8 @@ const columns: TableOptions<
     cell: ({ row }) => {
       return (
         <div className="flex items-center justify-start">
-          {DAY_ORDER[row.original.oldDayOfWeek ?? 0] ===
-          row.original.newDayOfWeek ? (
-            <span>{DAY_ORDER[row.original.oldDayOfWeek ?? 0]}</span>
+          {row.original.oldDayOfWeek === row.original.newDayOfWeek ? (
+            <span>{row.original.oldDayOfWeek}</span>
           ) : (
             <div className="flex items-center justify-start gap-1">
               <span>{row.original.newDayOfWeek}</span>
