@@ -489,6 +489,7 @@ export const locationRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
     const regionOrg = aliasedTable(schema.orgs, "region_org");
     const locationOrg = aliasedTable(schema.orgs, "location_org");
+    const aoOrg = aliasedTable(schema.orgs, "ao_org");
 
     const [locations, events] = await Promise.all([
       ctx.db
@@ -497,6 +498,7 @@ export const locationRouter = createTRPCRouter({
           name: schema.locations.name,
           orgId: schema.locations.orgId,
           regionName: regionOrg.name,
+          aoName: aoOrg.name,
           description: schema.locations.description,
           isActive: schema.locations.isActive,
           latitude: schema.locations.latitude,
@@ -514,7 +516,8 @@ export const locationRouter = createTRPCRouter({
         })
         .from(schema.locations)
         .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
-        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id)),
+        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
+        .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id)),
       ctx.db
         .select({
           id: schema.events.id,
@@ -567,6 +570,7 @@ export const locationRouter = createTRPCRouter({
           description: schema.locations.description,
           isActive: schema.locations.isActive,
           created: schema.locations.created,
+          orgId: schema.locations.orgId,
           regionId: regionOrg.id,
           regionName: regionOrg.name,
           email: schema.locations.email,

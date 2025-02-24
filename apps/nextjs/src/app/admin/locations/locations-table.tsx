@@ -42,7 +42,12 @@ const columns: TableOptions<
     header: Header,
     cell: (cell) => <Cell {...cell} />,
   },
-
+  {
+    accessorKey: "aoName",
+    meta: { name: "AO" },
+    header: Header,
+    cell: (cell) => <Cell {...cell} />,
+  },
   {
     accessorKey: "name",
     meta: { name: "Location" },
@@ -86,18 +91,18 @@ const columns: TableOptions<
       );
     },
   },
-  {
-    accessorKey: "description",
-    meta: { name: "Description" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
-  {
-    accessorKey: "email",
-    meta: { name: "Email" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
+  // {
+  //   accessorKey: "description",
+  //   meta: { name: "Description" },
+  //   header: Header,
+  //   cell: (cell) => <Cell {...cell} />,
+  // },
+  // {
+  //   accessorKey: "email",
+  //   meta: { name: "Email" },
+  //   header: Header,
+  //   cell: (cell) => <Cell {...cell} />,
+  // },
   {
     accessorKey: "latitude",
     meta: { name: "Latitude" },
