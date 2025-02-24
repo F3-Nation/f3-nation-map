@@ -143,11 +143,11 @@ export default function AdminRequestsModal({
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
-        className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[1024px]`)}
+        className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
       >
-        <DialogHeader>
+        {/* <DialogHeader>
           <DialogTitle className="text-center">Edit Request</DialogTitle>
-        </DialogHeader>
+        </DialogHeader> */}
 
         <Form {...form}>
           <form onSubmit={onSubmit}>
@@ -350,6 +350,18 @@ export default function AdminRequestsModal({
               Location Details:
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Name
+                </div>
+                <Input
+                  {...form.register("locationName")}
+                  disabled={formRegionId === null}
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationName?.message}
+                </p>
+              </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Address
