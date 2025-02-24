@@ -4,6 +4,7 @@ import type { TableOptions } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
 import type { RouterOutputs } from "@f3/api";
+import { DAY_ORDER } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Badge } from "@f3/ui/badge";
 import { MDTable } from "@f3/ui/md-table";
@@ -41,7 +42,39 @@ const columns: TableOptions<
     accessorKey: "regionName",
     meta: { name: "Region" },
     header: Header,
-    cell: (cell) => <Cell {...cell} />,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldRegionName === row.original.newRegionName ? (
+            <span>{row.original.oldRegionName}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newRegionName}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "locationName",
+    meta: { name: "Location" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationName === row.original.newLocationName ? (
+            <span>{row.original.oldLocationName}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationName}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "workoutName",
@@ -50,11 +83,246 @@ const columns: TableOptions<
     cell: ({ row }) => {
       return (
         <div className="flex items-center justify-start">
-          {row.original.oldWorkoutName ? (
+          {row.original.oldWorkoutName === row.original.newWorkoutName ? (
             <span>{row.original.oldWorkoutName}</span>
           ) : (
             <div className="flex items-center justify-start gap-1">
               <span>{row.original.newWorkoutName}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "dayOfWeek",
+    meta: { name: "Day of Week" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {DAY_ORDER[row.original.oldDayOfWeek ?? 0] ===
+          row.original.newDayOfWeek ? (
+            <span>{DAY_ORDER[row.original.oldDayOfWeek ?? 0]}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newDayOfWeek}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "startTime",
+    meta: { name: "Start Time" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldStartTime === row.original.newStartTime ? (
+            <span>{row.original.oldStartTime?.slice(0, 5) ?? "05:30"}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newStartTime?.slice(0, 5) ?? "05:30"}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+
+  {
+    accessorKey: "endTime",
+    meta: { name: "End Time" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldEndTime === row.original.newEndTime ? (
+            <span>{row.original.oldEndTime?.slice(0, 5) ?? "06:15"}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newEndTime?.slice(0, 5) ?? "06:15"}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "description",
+    meta: { name: "Description" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldDescription === row.original.newDescription ? (
+            <span>{row.original.oldDescription}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newDescription}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "locationAddress",
+    meta: { name: "Street Address" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationAddress ===
+          row.original.newLocationAddress ? (
+            <span>{row.original.oldLocationAddress}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationAddress}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "locationAddress2",
+    meta: { name: "Street Address 2" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationAddress2 ===
+          row.original.newLocationAddress2 ? (
+            <span>{row.original.oldLocationAddress2}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationAddress2}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "locationCity",
+    meta: { name: "City" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationCity === row.original.newLocationCity ? (
+            <span>{row.original.oldLocationCity}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationCity}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "locationState",
+    meta: { name: "State" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationState === row.original.newLocationState ? (
+            <span>{row.original.oldLocationState}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationState}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "locationZip",
+    meta: { name: "ZipCode" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationZipCode ===
+          row.original.newLocationZipCode ? (
+            <span>{row.original.oldLocationZipCode}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationZipCode}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+
+  {
+    accessorKey: "locationCountry",
+    meta: { name: "City" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationCountry ===
+          row.original.newLocationCountry ? (
+            <span>{row.original.oldLocationCountry}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationCountry}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "latitude",
+    meta: { name: "Latitude" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationLat === row.original.newLocationLat ? (
+            <span>{row.original.oldLocationLat}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationLat}</span>
+              <Badge size={"sm"}>new</Badge>
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "longitude",
+    meta: { name: "Longitude" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start">
+          {row.original.oldLocationLng === row.original.newLocationLng ? (
+            <span>{row.original.oldLocationLng}</span>
+          ) : (
+            <div className="flex items-center justify-start gap-1">
+              <span>{row.original.newLocationLng}</span>
               <Badge size={"sm"}>new</Badge>
             </div>
           )}

@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import L from "leaflet";
 import { CircleHelp } from "lucide-react";
+import ReactDOMServer from "react-dom/server";
+import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import { z } from "zod";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { DEFAULT_CENTER, Z_INDEX } from "@f3/shared/app/constants";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import {
@@ -31,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@f3/ui/select";
+import { Spinner } from "@f3/ui/spinner";
 import { Textarea } from "@f3/ui/textarea";
 import { toast } from "@f3/ui/toast";
 import {
@@ -45,6 +49,22 @@ import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
 
+interface MapUpdaterProps {
+  latitude: number;
+  longitude: number;
+}
+
+const MapUpdater: React.FC<MapUpdaterProps> = ({ latitude, longitude }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (latitude && longitude) {
+      map.setView([latitude, longitude], 13);
+    }
+  }, [latitude, longitude, map]);
+
+  return null;
+};
 export default function AdminLocationsModal({
   data,
 }: {
@@ -53,7 +73,9 @@ export default function AdminLocationsModal({
   const utils = api.useUtils();
   const { data: location } = api.location.byId.useQuery({ id: data.id ?? -1 });
   const { data: regions } = api.region.all.useQuery();
+  const { data: aos } = api.ao.all.useQuery();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     schema: LocationInsertSchema.extend({
@@ -64,9 +86,10 @@ export default function AdminLocationsModal({
       name: location?.name ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
+      orgId: location?.orgId ?? -1,
       regionId: location?.regionId ?? -1,
-      latitude: location?.latitude ?? null,
-      longitude: location?.longitude ?? null,
+      latitude: location?.latitude ? location.latitude : DEFAULT_CENTER[0],
+      longitude: location?.longitude ? location.longitude : DEFAULT_CENTER[1],
       addressStreet: location?.addressStreet ?? null,
       addressCity: location?.addressCity ?? null,
       addressState: location?.addressState ?? null,
@@ -82,9 +105,10 @@ export default function AdminLocationsModal({
       name: location?.name ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
+      orgId: location?.orgId ?? -1,
       regionId: location?.regionId ?? -1,
-      latitude: location?.latitude ?? null,
-      longitude: location?.longitude ?? null,
+      latitude: location?.latitude ? location.latitude : DEFAULT_CENTER[0],
+      longitude: location?.longitude ? location.longitude : DEFAULT_CENTER[1],
       addressStreet: location?.addressStreet ?? null,
       addressCity: location?.addressCity ?? null,
       addressState: location?.addressState ?? null,
@@ -110,6 +134,17 @@ export default function AdminLocationsModal({
     },
   });
 
+  const dragEventHandler = useMemo(
+    () => ({
+      dragend(e: { target: L.Marker }) {
+        const { lat, lng } = e.target.getLatLng();
+        form.setValue("latitude", lat);
+        form.setValue("longitude", lng);
+      },
+    }),
+    [form],
+  );
+
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
@@ -125,12 +160,21 @@ export default function AdminLocationsModal({
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(
-                  (data) => {
-                    crupdateLocation.mutate(data);
+                  async (data) => {
+                    setIsSubmitting(true);
+                    try {
+                      await crupdateLocation.mutateAsync(data);
+                    } catch (error) {
+                      toast.error("Failed to update location");
+                      console.error(error);
+                    } finally {
+                      setIsSubmitting(false);
+                    }
                   },
                   (error) => {
-                    toast.error("Failed to update user");
+                    toast.error("Failed to update location");
                     console.log(error);
+                    setIsSubmitting(false);
                   },
                 )}
                 className="space-y-4"
@@ -186,13 +230,15 @@ export default function AdminLocationsModal({
                       control={form.control}
                       name="regionId"
                       render={({ field }) => (
-                        <FormItem key={`area-${field.value}`}>
+                        <FormItem key={`region-${field.value}`}>
                           <FormLabel>Region</FormLabel>
                           <Select
                             value={field.value?.toString()}
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
+                            onValueChange={(value) => {
+                              const selectedValue = Number(value);
+                              field.onChange(selectedValue);
+                              form.setValue("orgId", -1); // Reset ao selection
+                            }}
                             defaultValue={field.value?.toString()}
                           >
                             <SelectTrigger>
@@ -215,6 +261,54 @@ export default function AdminLocationsModal({
                           <FormMessage />
                         </FormItem>
                       )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="orgId"
+                      render={({ field }) => {
+                        const filteredAOs = aos?.filter(
+                          (ao) => ao.parentId === form.watch("regionId"),
+                        );
+                        return (
+                          <FormItem key={`ao-${field.value}`}>
+                            <FormLabel>Location</FormLabel>
+                            <Select
+                              value={field.value?.toString()}
+                              onValueChange={(value) => {
+                                field.onChange(Number(value));
+
+                                const selectedAO = aos?.find(
+                                  (ao) => ao.id === Number(value),
+                                );
+                                if (selectedAO) {
+                                  form.setValue("orgId", Number(selectedAO.id));
+                                }
+                              }}
+                              defaultValue={field.value?.toString()}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select an AO" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {filteredAOs
+                                  ?.slice()
+                                  .sort((a, b) => a.name.localeCompare(b.name))
+                                  .map((location) => (
+                                    <SelectItem
+                                      key={`ao-${location.id}`}
+                                      value={location.id.toString()}
+                                    >
+                                      {location.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
 
@@ -402,7 +496,13 @@ export default function AdminLocationsModal({
                         Cancel
                       </Button>
                       <Button type="submit" className="w-full">
-                        Save Changes
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            Saving... <Spinner className="size-4" />
+                          </div>
+                        ) : (
+                          "Save Changes"
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -410,7 +510,42 @@ export default function AdminLocationsModal({
               </form>
             </Form>
           </div>
-          <div className="w-1/2">MAP CONTAINER</div>
+          <div className="w-1/2">
+            <MapContainer
+              center={[
+                form.getValues("latitude") ?? DEFAULT_CENTER[0],
+                form.getValues("longitude") ?? DEFAULT_CENTER[1],
+              ]}
+              zoom={14}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+              <Marker
+                position={[
+                  form.getValues("latitude") ?? DEFAULT_CENTER[0],
+                  form.getValues("longitude") ?? DEFAULT_CENTER[1],
+                ]}
+                icon={L.divIcon({
+                  iconSize: [24, 24],
+                  iconAnchor: [12, 12],
+                  className: "bg-transparent",
+                  html: ReactDOMServer.renderToString(
+                    <div className="bg-transparent">
+                      <div className="flex h-6 w-6  items-center justify-center rounded-full bg-blue-500/30">
+                        <div className="h-3 w-3 rounded-full border-[1px] border-white bg-blue-500" />
+                      </div>
+                    </div>,
+                  ),
+                })}
+                draggable={true}
+                eventHandlers={dragEventHandler}
+              />
+              <MapUpdater
+                latitude={form.getValues("latitude") ?? DEFAULT_CENTER[0]}
+                longitude={form.getValues("longitude") ?? DEFAULT_CENTER[1]}
+              />
+            </MapContainer>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
