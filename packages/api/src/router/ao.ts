@@ -1,9 +1,11 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { aliasedTable, eq, schema } from "@f3/db";
 import { AOInsertSchema } from "@f3/validators";
 
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 
 export const aoRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
@@ -56,10 +58,27 @@ export const aoRouter = createTRPCRouter({
       return { ...ao };
     }),
 
-  crupdate: publicProcedure
-
+  crupdate: editorProcedure
     .input(AOInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      if (!input.parentId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Parent ID is required",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.parentId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to update this AO",
+        });
+      }
       const aoToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
         orgType: "ao",

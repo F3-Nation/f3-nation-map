@@ -24,6 +24,7 @@ import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
 export const DesktopLocationPanelContent = () => {
+  const utils = api.useUtils();
   const mode = appStore.use.mode();
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
@@ -252,11 +253,18 @@ export const DesktopLocationPanelContent = () => {
             <button
               className="mt-4 flex flex-row items-center justify-center gap-2 rounded-md bg-blue-600 px-2 py-1 text-white"
               onClick={(e) => {
+                const possiblyEditedLocations =
+                  utils.location.getLocationMarkersSparse.getData();
+                const possiblyEditedLocation = possiblyEditedLocations?.find(
+                  (location) => location.id === locationId,
+                );
                 const event = results?.events.find(
                   (event) => event.eventId === selectedEventId,
                 );
-                const lat = results?.location.lat;
-                const lng = results?.location.lon;
+                const lat =
+                  possiblyEditedLocation?.lat ?? results?.location.lat;
+                const lng =
+                  possiblyEditedLocation?.lon ?? results?.location.lon;
                 if (typeof lat !== "number" || typeof lng !== "number") {
                   toast.error("Invalid lat or lng");
                   return;

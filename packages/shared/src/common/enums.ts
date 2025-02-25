@@ -9,6 +9,7 @@ export enum Header {
 }
 
 export enum Case {
+  LowerCase = "lowercase",
   CamelCase = "camelCase",
   PascalCase = "PascalCase",
   SnakeCase = "snake_case",

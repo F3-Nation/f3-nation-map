@@ -199,7 +199,9 @@ const ControlledSelect = <T extends FieldValues>(
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-destructive">{fieldState.error?.message}</p>
+            <p className="text-xs text-destructive">
+              {fieldState.error?.message}
+            </p>
           </>
         );
       }}

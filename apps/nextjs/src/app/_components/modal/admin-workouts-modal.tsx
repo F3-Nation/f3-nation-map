@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import {
@@ -300,8 +301,8 @@ export default function AdminWorkoutsModal({
                           <SelectValue placeholder="Select day of week" />
                         </SelectTrigger>
                         <SelectContent>
-                          {DAY_ORDER.map((day, index) => (
-                            <SelectItem key={index} value={index.toString()}>
+                          {DayOfWeek.map((day) => (
+                            <SelectItem key={day} value={day}>
                               {day}
                             </SelectItem>
                           ))}

@@ -82,15 +82,17 @@ export const MemoGroupMarker = memo(
               ...(isNumber(eventId) ? { eventId } : {}),
             });
           },
-          drag: (e) => {
-            setSelectedItem({
-              locationId: null,
-              eventId: null,
+          dragstart: () => {
+            selectedItemStore.setState({
+              isEditDragging: true,
             });
-            console.log("dragstart", e);
+          },
+          drag: () => {
+            selectedItemStore.setState({
+              isEditDragging: true,
+            });
           },
           dragend: (e: { target: L.Marker }) => {
-            console.log("dragend", e);
             const lat = e.target.getLatLng().lat;
             const lon = e.target.getLatLng().lng;
             utils.location.getLocationMarker.setData({ id }, (prev) =>
@@ -108,6 +110,12 @@ export const MemoGroupMarker = memo(
                 });
               },
             );
+            // Slight delay to allow the marker to be updated
+            setTimeout(() => {
+              selectedItemStore.setState({
+                isEditDragging: false,
+              });
+            }, 100);
           },
           click: (e) => {
             const eventIdString = Array.from(

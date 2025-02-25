@@ -62,8 +62,6 @@ const _reseedFromScratch = async () => {
   await db.delete(schema.users);
   await db.delete(schema.updateRequests);
 
-  await insertDatabaseStructure(workoutData);
-
   SEED_LOGS && console.log("Inserting data");
   await insertData({ regionData, workoutData });
 
@@ -258,6 +256,12 @@ export async function insertDatabaseStructure(
         acronym: "WC",
         eventCategory: "first_f",
       },
+      {
+        id: 10,
+        name: EventTypes.Sports,
+        acronym: "SP",
+        eventCategory: "first_f",
+      },
     ])
     .returning();
 
@@ -278,6 +282,7 @@ export async function insertData(data: {
   workoutData: WorkoutSheetData[];
   regionData: RegionSheetData[];
 }) {
+  const { eventTypes } = await insertDatabaseStructure(data.workoutData);
   const insertedNation = await db
     .insert(schema.orgs)
     .values({
@@ -543,6 +548,15 @@ export async function insertData(data: {
         const endTime = endTimeRaw
           ? dayjs(endTimeRaw.toLowerCase(), GRAVITY_FORMS_TIME_FORMAT)
           : undefined;
+
+        const eventTypeId = eventTypes.find((et) => {
+          const eventType = getCleanedEventType(workout.Type);
+          return et.name === eventType;
+        })?.id;
+        if (eventTypeId === undefined)
+          throw new Error(
+            `Event type id is undefined for event ${workout.Type}, ${getCleanedEventType(workout.Type)}`,
+          );
         const workoutItem: InferInsertModel<typeof schema.events> = {
           locationId: workoutAoLoc?.id, // locationIdDict[workout.Location],
           isActive: true,
@@ -553,7 +567,7 @@ export async function insertData(data: {
           startTime: startTime?.isValid() ? startTime.format("HHmm") : null,
           endTime: endTime?.isValid() ? endTime.format("HHmm") : null,
           name: workout["Workout Name"].slice(0, 100),
-          // eventTypeId: eventTypes.find((et) => et.name === workout.Type)?.id, // Bootcamp
+          meta: { eventTypeId },
           description: workout.Note,
           recurrencePattern: "weekly",
           orgId,
@@ -561,6 +575,7 @@ export async function insertData(data: {
         return workoutItem;
       });
     });
+
   console.log("events to insert:", eventsToInsert.length, eventsToInsert[0]);
 
   const chunkSize = 1000;
@@ -569,6 +584,20 @@ export async function insertData(data: {
     await db.insert(schema.events).values(eventsChunk).returning();
     console.log("inserted events", i + eventsChunk.length);
   }
+
+  const insertedEvents = await db.select().from(schema.events);
+
+  await db
+    .insert(schema.eventsXEventTypes)
+    .values(
+      insertedEvents.map((e) => {
+        return {
+          eventId: e.id,
+          eventTypeId: e.meta?.eventTypeId as number,
+        };
+      }),
+    )
+    .returning();
 }
 
 const getLatLonKey = ({
@@ -588,4 +617,22 @@ const getLatLonKey = ({
     return undefined;
   }
   return `${latStr},${lonStr}`;
+};
+
+const getCleanedEventType = (eventTypeRaw: string) => {
+  if (eventTypeRaw === "Cycling") return "Bike";
+  if (
+    eventTypeRaw === "Strength/Conditioning/Tabata/WIB" ||
+    eventTypeRaw === "CORE"
+  )
+    return "Bootcamp";
+  if (eventTypeRaw === "Obstacle Training" || eventTypeRaw === "Sandbag")
+    return "Gear";
+  if (eventTypeRaw === "Mobility/Stretch") return "Mobility";
+  if (
+    eventTypeRaw === "Run with Pain Stations" ||
+    eventTypeRaw === "Speed/Strength Running"
+  )
+    return "Run";
+  return eventTypeRaw;
 };

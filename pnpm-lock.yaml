@@ -639,6 +639,9 @@ importers:
       '@f3/db':
         specifier: workspace:*
         version: link:../db
+      '@f3/shared':
+        specifier: workspace:*
+        version: link:../shared
       drizzle-zod:
         specifier: ^0.6.1
         version: 0.6.1(drizzle-orm@0.38.4)(zod@3.24.1)

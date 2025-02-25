@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import omit from "lodash/omit";
 import { z } from "zod";
 
+import type { DayOfWeek } from "@f3/shared/app/enums";
 import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
 import { aliasedTable, desc, eq, schema } from "@f3/db";
 import { RequestInsertSchema } from "@f3/validators";
@@ -72,10 +73,9 @@ export const requestRouter = createTRPCRouter({
         eq(schema.updateRequests.eventId, schema.events.id),
       )
       .leftJoin(oldAoOrg, eq(oldAoOrg.id, schema.events.orgId))
-      .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, schema.events.orgId))
+      .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, oldAoOrg.parentId))
       .leftJoin(oldLocation, eq(oldLocation.id, schema.events.locationId))
       .orderBy(desc(schema.updateRequests.created));
-    console.log("requests", requests);
     return requests.map((request) => ({
       ...request,
     }));
@@ -201,10 +201,15 @@ export const requestRouter = createTRPCRouter({
         });
       }
 
-      const isEditorOrAdminForThisRegion = ctx.session.roles.some((r) =>
-        ["editor", "admin"].includes(r.roleName),
-      );
-      if (!isEditorOrAdminForThisRegion) {
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.regionId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      console.log("roleCheckResult", roleCheckResult);
+
+      if (!roleCheckResult.success) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "You are not authorized to edit this region",
@@ -230,12 +235,15 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Failed to find update request");
       }
 
-      const isEditorOrAdminForThisRegion = ctx.session.roles.some(
-        (r) =>
-          ["editor", "admin"].includes(r.roleName) &&
-          r.orgId === updateRequest.regionId,
-      );
-      if (!isEditorOrAdminForThisRegion) {
+      const { success: hasPermissionToEditThisRegion } =
+        await checkHasRoleOnOrg({
+          orgId: updateRequest.regionId,
+          session: ctx.session,
+          db: ctx.db,
+          roleName: "editor",
+        });
+
+      if (!hasPermissionToEditThisRegion) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "You are not authorized to edit this region",
@@ -252,18 +260,16 @@ export const applyUpdateRequest = async (
   ctx: Context,
   updateRequest: Omit<
     z.infer<typeof RequestInsertSchema>,
-    "meta" | "eventMeta"
+    "meta" | "eventMeta" | "eventDayOfWeek"
   > & {
     reviewedBy: string;
     meta?: UpdateRequestMeta | null;
     eventMeta?: EventMeta | null;
+    eventDayOfWeek?: DayOfWeek | null;
   },
 ) => {
   // LOCATION
-  if (
-    updateRequest.locationId == undefined ||
-    updateRequest.locationId === -1
-  ) {
+  if (updateRequest.locationId == undefined) {
     console.log("Getting existing ao");
 
     // INSERT AO
@@ -357,11 +363,12 @@ export const applyUpdateRequest = async (
         name: updateRequest.eventName,
         locationId: updateRequest.locationId,
         description: updateRequest.eventDescription,
+        // Use undefined to not remove the existing value
         startDate: updateRequest.eventStartDate ?? undefined,
         endDate: updateRequest.eventEndDate ?? undefined,
         startTime: updateRequest.eventStartTime ?? undefined,
         endTime: updateRequest.eventEndTime ?? undefined,
-        dayOfWeek: updateRequest.eventDayOfWeek,
+        dayOfWeek: updateRequest.eventDayOfWeek ?? undefined,
         seriesId: updateRequest.eventSeriesId,
         isSeries: updateRequest.eventIsSeries ?? true,
         isActive: true,
@@ -396,10 +403,27 @@ export const applyUpdateRequest = async (
       meta: updateRequest.eventMeta,
       email: updateRequest.eventContactEmail,
     };
+
     const [_inserted] = await ctx.db
       .insert(schema.events)
       .values(newEvent)
       .returning();
+
+    console.log("inserting event type", newEvent);
+    if (!_inserted) {
+      throw new Error("Failed to insert event");
+    }
+
+    console.log("updating event types", updateRequest.eventTypeIds);
+    await ctx.db
+      .delete(schema.eventsXEventTypes)
+      .where(eq(schema.eventsXEventTypes.eventId, _inserted.id));
+    await ctx.db.insert(schema.eventsXEventTypes).values(
+      updateRequest.eventTypeIds?.map((id) => ({
+        eventId: _inserted.id,
+        eventTypeId: id,
+      })) ?? [],
+    );
   }
 
   return { success: true, updateRequest: omit(updated, ["token"]) };

@@ -114,7 +114,7 @@ const VirtualizedCommand = <T,>({
                 height: `${virtualOption.size}px`,
                 transform: `translateY(${virtualOption.start}px)`,
               }}
-              key={sortedFilteredOptions[virtualOption.index]?.label}
+              key={sortedFilteredOptions[virtualOption.index]?.value}
               value={sortedFilteredOptions[virtualOption.index]?.value}
               onSelect={(selectedItem) => {
                 const item = sortedFilteredOptions[virtualOption.index]?.value;

@@ -1,8 +1,9 @@
 import type { Session } from "@f3/auth";
 import type { UserRole } from "@f3/shared/app/enums";
-import { aliasedTable, eq, or, schema } from "@f3/db";
+import { aliasedTable, eq, schema } from "@f3/db";
 
 import type { Context } from "./trpc";
+import { isDevMode } from "./utils";
 
 export const checkHasRoleOnOrg = async ({
   session,
@@ -28,15 +29,19 @@ export const checkHasRoleOnOrg = async ({
     "roles",
     session.roles,
   );
-  // Bypass for certain emails
-  // if (session.email === "declan@mountaindev.com") {
-  //   return {
-  //     success: true,
-  //     orgId: orgId,
-  //     roleName: roleName,
-  //     mode: "direct-permission",
-  //   };
-  // }
+
+  // F3 Nation
+  if (
+    orgId === 1 &&
+    (session.email === "declan@mountaindev.com" || isDevMode)
+  ) {
+    return {
+      success: true,
+      orgId,
+      roleName,
+      mode: "direct-permission",
+    };
+  }
 
   const hasDirectAccessForThisOrg = session.roles.some(
     (r) =>
@@ -71,15 +76,7 @@ export const checkHasRoleOnOrg = async ({
     .leftJoin(level3Org, eq(level2Org.parentId, level3Org.id))
     .leftJoin(level4Org, eq(level3Org.parentId, level4Org.id))
     .leftJoin(level5Org, eq(level4Org.parentId, level5Org.id))
-    .where(
-      or(
-        eq(level1Org.id, orgId),
-        eq(level2Org.id, orgId),
-        eq(level3Org.id, orgId),
-        eq(level4Org.id, orgId),
-        eq(level5Org.id, orgId),
-      ),
-    );
+    .where(eq(level1Org.id, orgId));
 
   const allAncestorOrgIds = allParentOrgIds.flatMap((o) => [
     o.level1Id,
@@ -92,7 +89,7 @@ export const checkHasRoleOnOrg = async ({
   const matchingPermission = session.roles.find(
     (r) =>
       (r.roleName === "admin" || r.roleName === roleName) &&
-      allAncestorOrgIds.includes(orgId),
+      allAncestorOrgIds.includes(r.orgId),
   );
 
   if (matchingPermission) {

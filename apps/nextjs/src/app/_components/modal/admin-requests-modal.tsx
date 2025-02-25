@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TRPCClientError } from "@trpc/client";
 import { Controller } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
-import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
+import { Case } from "@f3/shared/common/enums";
+import { convertCase } from "@f3/shared/common/functions";
 import { Button } from "@f3/ui/button";
 import {
   Dialog,
@@ -55,64 +59,61 @@ export default function AdminRequestsModal({
     },
   });
 
-  const formRegionId = form.watch("regionId");
-  const formEventId = form.watch("eventId");
   const formId = form.watch("id");
+  const formRegionId = form.watch("regionId");
+  const formLocationId = form.watch("locationId");
+  const formEventId = form.watch("eventId");
 
   const utils = api.useUtils();
   const { data: regions } = api.location.getRegions.useQuery();
-  const { data: locationEvents } = api.location.getRegionAos.useQuery(
-    { regionId: formRegionId ?? -1 },
-    { enabled: formRegionId !== null },
-  );
+  const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
+
+  const sortedLocationOptions = useMemo(() => {
+    return locations
+      ?.map(({ name, id, events, regionName, regionId }) => ({
+        label: `${name || events.map((e) => e.name).join(", ")} ${
+          regionName ? `(${regionName})` : ""
+        }`,
+        value: id.toString(),
+        regionId,
+      }))
+      ?.sort((a, b) =>
+        a.regionId === formRegionId && b.regionId !== formRegionId
+          ? -1
+          : a.regionId !== formRegionId && b.regionId === formRegionId
+            ? 1
+            : a.label.localeCompare(b.label),
+      );
+  }, [locations, formRegionId]);
+
   const validateSubmissionByAdmin =
     api.request.validateSubmissionByAdmin.useMutation();
   const rejectSubmissionByAdmin = api.request.rejectSubmission.useMutation();
-
-  useEffect(() => {
-    if (!request) return;
-    form.reset({
-      id: request.id,
-      eventId: request.eventId ?? -1,
-      locationId: request.locationId ?? -1,
-      eventName: request.eventName ?? "",
-      // workoutWebsite: request.web ?? "",
-      locationAddress: request.locationAddress ?? "",
-      locationAddress2: request.locationAddress2 ?? "",
-      locationCity: request.locationCity ?? "",
-      locationState: request.locationState ?? "",
-      locationZip: request.locationZip ?? "",
-      locationCountry: request.locationCountry ?? "",
-      locationLat: request.locationLat ?? 0,
-      locationLng: request.locationLng ?? 0,
-      eventStartTime: request.eventStartTime?.slice(0, 5) ?? "05:30",
-      eventEndTime: request.eventEndTime?.slice(0, 5) ?? "06:15",
-      eventDayOfWeek: request.eventDayOfWeek ?? "monday",
-      eventTypeIds: request.eventTypeIds ?? [],
-      eventDescription: request.eventDescription ?? "",
-      regionId: request.regionId ?? -1,
-      aoLogo: request.aoLogo ?? "",
-      submittedBy: request.submittedBy ?? "",
-    });
-  }, [request, form, eventTypes]);
 
   const onSubmit = form.handleSubmit(
     async (values) => {
       setIsSubmitting(true);
       console.log(values);
       await validateSubmissionByAdmin
-        .mutateAsync({
-          ...values,
-        })
+        .mutateAsync(values)
         .then(() => {
           void utils.event.invalidate();
           void utils.location.invalidate();
           void utils.request.invalidate();
           router.refresh();
-          setIsSubmitting(false);
-          toast.error("Approved update");
+          toast.success("Approved update");
           closeModal();
+        })
+        .catch((error) => {
+          if (error instanceof TRPCClientError) {
+            toast.error(error.message);
+          } else {
+            toast.error("Failed to approve update");
+          }
+        })
+        .finally(() => {
+          setIsSubmitting(false);
         });
     },
     (error) => {
@@ -137,6 +138,34 @@ export default function AdminRequestsModal({
       });
   };
 
+  useEffect(() => {
+    if (!request) return;
+    form.reset({
+      id: request.id,
+      eventId: request.eventId ?? null,
+      locationId: request.locationId ?? null,
+      eventName: request.eventName ?? "",
+      // workoutWebsite: request.web ?? "",
+      locationName: request.locationName ?? "",
+      locationAddress: request.locationAddress ?? "",
+      locationAddress2: request.locationAddress2 ?? "",
+      locationCity: request.locationCity ?? "",
+      locationState: request.locationState ?? "",
+      locationZip: request.locationZip ?? "",
+      locationCountry: request.locationCountry ?? "",
+      locationLat: request.locationLat ?? 0,
+      locationLng: request.locationLng ?? 0,
+      eventStartTime: request.eventStartTime?.slice(0, 5) ?? "05:30",
+      eventEndTime: request.eventEndTime?.slice(0, 5) ?? "06:15",
+      eventDayOfWeek: request.eventDayOfWeek ?? "monday",
+      eventTypeIds: request.eventTypeIds ?? [],
+      eventDescription: request.eventDescription ?? "",
+      regionId: request.regionId ?? null,
+      aoLogo: request.aoLogo ?? "",
+      submittedBy: request.submittedBy ?? "",
+    });
+  }, [request, form, eventTypes]);
+
   if (!request) return <div>Loading...</div>;
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
@@ -144,10 +173,6 @@ export default function AdminRequestsModal({
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
         className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
       >
-        {/* <DialogHeader>
-          <DialogTitle className="text-center">Edit Request</DialogTitle>
-        </DialogHeader> */}
-
         <Form {...form}>
           <form onSubmit={onSubmit}>
             <DialogHeader>
@@ -156,83 +181,17 @@ export default function AdminRequestsModal({
                 <p className="text-sm text-muted-foreground">
                   Form ID: {formId}
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  Event ID: {formEventId}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Location ID: {formLocationId}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Region ID: {formRegionId}
+                </p>
               </DialogTitle>
             </DialogHeader>
-            <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-              Update Existing Event:
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Region
-                </div>
-                <VirtualizedCombobox
-                  // buttonClassName="w-full rounded-md py-3 font-normal"
-                  // hideSearchIcon
-                  key={formRegionId?.toString()}
-                  // disabled if we got this from the data param
-                  options={
-                    regions
-                      ?.map((region) => ({
-                        label: region.name,
-                        value: region.id.toString(),
-                      }))
-                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-                  }
-                  value={formRegionId?.toString()}
-                  onSelect={(item) => {
-                    const region = regions?.find(
-                      (region) => region.id.toString() === item,
-                    );
-                    form.setValue("regionId", region?.id ?? -1);
-                  }}
-                  searchPlaceholder="Select"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.regionId?.message}
-                </p>
-              </div>
-              {typeof request.eventId === "number" && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Event
-                  </div>
-                  <VirtualizedCombobox
-                    // buttonClassName="w-full rounded-md py-3 font-normal"
-                    // disabled if we got this from the data param
-                    disabled={typeof request.eventId === "number"}
-                    // hideSearchIcon
-                    key={formEventId?.toString()}
-                    options={[
-                      {
-                        label: "New event",
-                        value: "-1",
-                      },
-                      ...(locationEvents
-                        ?.map((location) => ({
-                          label: location.events.name,
-                          value: location.events.id.toString(),
-                        }))
-                        .sort((a, b) => a.label.localeCompare(b.label)) ?? []),
-                    ]}
-                    value={formEventId?.toString()}
-                    onSelect={(item) => {
-                      const location = locationEvents?.find(
-                        (location) => location.events.id.toString() === item,
-                      );
-                      form.setValue("eventId", location?.events.id ?? -1);
-                    }}
-                    searchPlaceholder={
-                      !formRegionId
-                        ? "Select a region first"
-                        : locationEvents?.length === 0
-                          ? "No events found"
-                          : "Select"
-                    }
-                  />
-                </div>
-              )}
-            </div>
             <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
               Event Details:
             </h2>
@@ -257,9 +216,13 @@ export default function AdminRequestsModal({
                 <ControlledSelect
                   control={form.control}
                   name="eventDayOfWeek"
-                  options={DAY_ORDER.map((day) => ({
-                    label: day,
+                  options={DayOfWeek.map((day) => ({
                     value: day,
+                    label: convertCase({
+                      str: day,
+                      fromCase: Case.LowerCase,
+                      toCase: Case.TitleCase,
+                    }),
                   }))}
                   placeholder="Select a day of the week"
                 />
@@ -296,7 +259,7 @@ export default function AdminRequestsModal({
                   name="eventTypeIds"
                   render={({ field, fieldState }) => {
                     return (
-                      <>
+                      <div>
                         <Select
                           value={field.value?.[0]?.toString()}
                           onValueChange={(value) => {
@@ -326,10 +289,12 @@ export default function AdminRequestsModal({
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-destructive">
-                          {fieldState.error?.message}
-                        </p>
-                      </>
+                        {fieldState.error && (
+                          <p className="text-xs text-destructive">
+                            You must select at least one event type
+                          </p>
+                        )}
+                      </div>
                     );
                   }}
                 />
@@ -348,15 +313,49 @@ export default function AdminRequestsModal({
             <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
               Location Details:
             </h2>
+            <div className="mb-3">
+              <VirtualizedCombobox
+                key={formLocationId?.toString()}
+                options={sortedLocationOptions ?? []}
+                value={formLocationId?.toString()}
+                onSelect={(item) => {
+                  const location = locations?.find(
+                    ({ id }) => id.toString() === item,
+                  );
+                  form.setValue("locationId", location?.id ?? null);
+                  if (!location) return;
+                  form.setValue("locationName", location.name);
+                  form.setValue("locationAddress", location.addressStreet);
+                  form.setValue("locationAddress2", location.addressStreet2);
+                  form.setValue("locationCity", location.addressCity);
+                  form.setValue("locationState", location.addressState);
+                  form.setValue("locationZip", location.addressZip);
+                  form.setValue("locationCountry", location.addressCountry);
+                  form.setValue("locationLat", location.latitude);
+                  form.setValue("locationLng", location.longitude);
+                  if (location?.regionId == undefined) {
+                    // @ts-expect-error -- must remove regionId from form
+                    form.setValue("regionId", null);
+                  } else {
+                    form.setValue("regionId", location?.regionId);
+                  }
+                }}
+                searchPlaceholder="Select"
+              />
+              <div className="mx-3 text-xs text-muted-foreground">
+                Select a location above to move this workout to a different
+                location
+              </div>
+            </div>
+            <div className="my-2 text-base font-bold text-foreground">
+              The fields below update the AO for all associated workouts
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Name
                 </div>
-                <Input
-                  {...form.register("locationName")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationName")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationName?.message}
                 </p>
@@ -365,10 +364,7 @@ export default function AdminRequestsModal({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Address
                 </div>
-                <Input
-                  {...form.register("locationAddress")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationAddress")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationAddress?.message}
                 </p>
@@ -377,10 +373,7 @@ export default function AdminRequestsModal({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Address 2
                 </div>
-                <Input
-                  {...form.register("locationAddress2")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationAddress2")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationAddress2?.message}
                 </p>
@@ -389,10 +382,7 @@ export default function AdminRequestsModal({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location City
                 </div>
-                <Input
-                  {...form.register("locationCity")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationCity")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationCity?.message}
                 </p>
@@ -401,10 +391,7 @@ export default function AdminRequestsModal({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location State
                 </div>
-                <Input
-                  {...form.register("locationState")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationState")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationState?.message}
                 </p>
@@ -413,10 +400,7 @@ export default function AdminRequestsModal({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Zip
                 </div>
-                <Input
-                  {...form.register("locationZip")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationZip")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationZip?.message}
                 </p>
@@ -446,6 +430,33 @@ export default function AdminRequestsModal({
                 <Input {...form.register("locationLng")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationLng?.message?.toString()}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Region
+                </div>
+                <VirtualizedCombobox
+                  key={formRegionId?.toString()}
+                  options={
+                    regions
+                      ?.map((region) => ({
+                        label: region.name,
+                        value: region.id.toString(),
+                      }))
+                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+                  }
+                  value={formRegionId?.toString()}
+                  onSelect={(item) => {
+                    const region = regions?.find(
+                      (region) => region.id.toString() === item,
+                    );
+                    form.setValue("regionId", region?.id ?? -1);
+                  }}
+                  searchPlaceholder="Select"
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.regionId?.message}
                 </p>
               </div>
             </div>

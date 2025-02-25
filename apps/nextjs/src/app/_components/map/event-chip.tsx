@@ -1,3 +1,6 @@
+// Must disable these since we can't use a button in a button
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 "use client";
 
 import type { DayOfWeek } from "@f3/shared/app/enums";
@@ -67,7 +70,7 @@ export const EventChip = (props: {
       )
     : null;
   return (
-    <button
+    <div
       key={event.id}
       className={cn(
         "flex flex-row items-center ",
@@ -145,6 +148,6 @@ export const EventChip = (props: {
           <RunSvgComponent height={iconSize} width={iconSize} />
         ) : null}
       </div>
-    </button>
+    </div>
   );
 };

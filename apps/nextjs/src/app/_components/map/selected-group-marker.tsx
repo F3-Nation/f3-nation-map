@@ -122,6 +122,8 @@ export const MemoSelectedGroupMarker = memo(
   (prev, next) =>
     prev.panel === next.panel &&
     prev.isFar === next.isFar &&
+    prev.group.lat === next.group.lat &&
+    prev.group.lon === next.group.lon &&
     prev.group.id === next.group.id &&
     prev.group.events.length === next.group.events.length &&
     prev.selectedEventIdInGroup === next.selectedEventIdInGroup,

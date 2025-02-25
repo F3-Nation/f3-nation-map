@@ -324,7 +324,7 @@ export default function UserModal({
                                 options={
                                   orgs?.map((region) => ({
                                     value: region.id.toString(),
-                                    label: region.name,
+                                    label: `${region.name} (${region.orgType})`,
                                   })) ?? []
                                 }
                                 searchPlaceholder="Select a region"
