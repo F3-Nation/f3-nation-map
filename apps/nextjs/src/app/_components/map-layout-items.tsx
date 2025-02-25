@@ -72,8 +72,9 @@ export const MapLayoutItems = () => {
         <button
           className={classNames(
             "rounded-xl bg-background px-4 py-1 text-sm text-foreground shadow",
-            "absolute left-2/4 top-14 z-[9999] -translate-x-2/4",
+            "absolute left-2/4 top-14 -translate-x-2/4",
           )}
+          style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
           onClick={() => {
             const center = mapStore.get("center");
             if (!center) return;
