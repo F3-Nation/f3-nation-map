@@ -22,13 +22,21 @@ import {
 } from "~/utils/store/selected-item";
 
 export const MemoGroupMarker = memo(
-  ({ group, show }: { group: SparseF3Marker; show: boolean }) => {
+  ({
+    group,
+    show,
+    mode,
+  }: {
+    group: SparseF3Marker;
+    show: boolean;
+    mode: "edit" | "view";
+  }) => {
     const utils = api.useUtils();
     const { lat, lon, events, id } = group;
     if (!show || lat === null || lon === null) return null;
     return (
       <Marker
-        draggable
+        draggable={mode === "edit"}
         position={[lat, lon]}
         eventHandlers={{
           mouseout: () => {
@@ -188,7 +196,8 @@ export const MemoGroupMarker = memo(
   (prev, next) =>
     prev.show === next.show &&
     prev.group.id === next.group.id &&
-    prev.group.events.length === next.group.events.length,
+    prev.group.events.length === next.group.events.length &&
+    prev.mode === next.mode,
 );
 
 MemoGroupMarker.displayName = "MemoGroupMarker";

@@ -34,7 +34,6 @@ export const EventChip = (props: {
   };
   hideName?: boolean;
 }) => {
-  console.log("event", props.event);
   const {
     event,
     location,
