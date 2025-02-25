@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamicImport from "next/dynamic";
 import { useRouter } from "next/navigation";
-import L from "leaflet";
 import { CircleHelp } from "lucide-react";
-import ReactDOMServer from "react-dom/server";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import { z } from "zod";
 
 import { DEFAULT_CENTER, Z_INDEX } from "@f3/shared/app/constants";
@@ -49,22 +47,22 @@ import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
 
-interface MapUpdaterProps {
+const DynamicImportLeafletMapSimple = dynamicImport(
+  () => import("~/app/_components/map/leaflet-map-simple"),
+  { ssr: false },
+);
+
+interface LeafletMapSimpleProps {
   latitude: number;
   longitude: number;
+  dragEventHandler?: {
+    dragend?: (e: { target: L.Marker }) => void;
+  };
 }
 
-const MapUpdater: React.FC<MapUpdaterProps> = ({ latitude, longitude }) => {
-  const map = useMap();
+const LeafletMapWithProps =
+  DynamicImportLeafletMapSimple as unknown as React.FC<LeafletMapSimpleProps>;
 
-  useEffect(() => {
-    if (latitude && longitude) {
-      map.setView([latitude, longitude], 13);
-    }
-  }, [latitude, longitude, map]);
-
-  return null;
-};
 export default function AdminLocationsModal({
   data,
 }: {
@@ -511,40 +509,11 @@ export default function AdminLocationsModal({
             </Form>
           </div>
           <div className="w-1/2">
-            <MapContainer
-              center={[
-                form.getValues("latitude") ?? DEFAULT_CENTER[0],
-                form.getValues("longitude") ?? DEFAULT_CENTER[1],
-              ]}
-              zoom={14}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-              <Marker
-                position={[
-                  form.getValues("latitude") ?? DEFAULT_CENTER[0],
-                  form.getValues("longitude") ?? DEFAULT_CENTER[1],
-                ]}
-                icon={L.divIcon({
-                  iconSize: [24, 24],
-                  iconAnchor: [12, 12],
-                  className: "bg-transparent",
-                  html: ReactDOMServer.renderToString(
-                    <div className="bg-transparent">
-                      <div className="flex h-6 w-6  items-center justify-center rounded-full bg-blue-500/30">
-                        <div className="h-3 w-3 rounded-full border-[1px] border-white bg-blue-500" />
-                      </div>
-                    </div>,
-                  ),
-                })}
-                draggable={true}
-                eventHandlers={dragEventHandler}
-              />
-              <MapUpdater
-                latitude={form.getValues("latitude") ?? DEFAULT_CENTER[0]}
-                longitude={form.getValues("longitude") ?? DEFAULT_CENTER[1]}
-              />
-            </MapContainer>
+            <LeafletMapWithProps
+              latitude={form.getValues("latitude") ?? DEFAULT_CENTER[0]}
+              longitude={form.getValues("longitude") ?? DEFAULT_CENTER[1]}
+              dragEventHandler={dragEventHandler}
+            />
           </div>
         </div>
       </DialogContent>
