@@ -296,7 +296,7 @@ CREATE TABLE "slack_users" (
 --> statement-breakpoint
 CREATE TABLE "update_requests" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"token" uuid NOT NULL,
+	"token" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"region_id" integer NOT NULL,
 	"event_id" integer,
 	"event_type_ids" integer[],

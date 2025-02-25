@@ -453,7 +453,7 @@ export const updateRequests = pgTable(
   "update_requests",
   {
     id: uuid().primaryKey().notNull(),
-    token: uuid().notNull(),
+    token: uuid().defaultRandom().notNull(),
     regionId: integer("region_id").notNull(),
     eventId: integer("event_id"),
     eventTypeIds: integer("event_type_ids").array(),

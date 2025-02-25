@@ -1,5 +1,5 @@
 {
-  "id": "0dc27b6f-05d6-41dd-ac09-30d7c60b3d53",
+  "id": "07ebe326-6f8f-4680-aa41-65f18e8c7b45",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2140,7 +2140,8 @@
           "name": "token",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "region_id": {
           "name": "region_id",
