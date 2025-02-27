@@ -43,7 +43,6 @@ export enum EventTypes {
   Bike = "Bike",
   Gear = "Gear",
   "Wild Card" = "Wild Card",
-  "2ndF" = "2ndF",
   Sports = "Sports",
   // Cycling // Bike
   // CORE // Bootcamp
