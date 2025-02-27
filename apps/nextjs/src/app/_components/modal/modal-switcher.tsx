@@ -6,11 +6,16 @@ import { BreakPoints } from "@f3/shared/app/constants";
 
 import type { DataType } from "~/utils/store/modal";
 import { ModalType, useOpenModal } from "~/utils/store/modal";
+import AdminAOsModal from "./admin-aos-modal";
+import AdminAreasModal from "./admin-areas-modal";
 import AdminLocationsModal from "./admin-locations-modal";
+import AdminNationsModal from "./admin-nations-modal";
 import AdminRegionsModal from "./admin-regions-modal";
 import AdminRequestsModal from "./admin-requests-modal";
+import AdminSectorsModal from "./admin-sectors-modal";
 import AdminUsersModal from "./admin-users-modal";
 import AdminWorkoutsModal from "./admin-workouts-modal";
+import DeleteModal from "./delete-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
 import SettingsModal from "./settings-modal";
@@ -61,9 +66,27 @@ export default function ModalSwitcher() {
           data={data as DataType[ModalType.ADMIN_LOCATIONS]}
         />
       );
+    case ModalType.ADMIN_NATIONS:
+      return (
+        <AdminNationsModal data={data as DataType[ModalType.ADMIN_NATIONS]} />
+      );
+    case ModalType.ADMIN_SECTORS:
+      return (
+        <AdminSectorsModal data={data as DataType[ModalType.ADMIN_SECTORS]} />
+      );
+    case ModalType.ADMIN_AREAS:
+      return <AdminAreasModal data={data as DataType[ModalType.ADMIN_AREAS]} />;
     case ModalType.ADMIN_REGIONS:
       return (
         <AdminRegionsModal data={data as DataType[ModalType.ADMIN_REGIONS]} />
+      );
+    case ModalType.ADMIN_AOS:
+      return <AdminAOsModal data={data as DataType[ModalType.ADMIN_AOS]} />;
+    case ModalType.ADMIN_DELETE_CONFIRMATION:
+      return (
+        <DeleteModal
+          data={data as DataType[ModalType.ADMIN_DELETE_CONFIRMATION]}
+        />
       );
     default:
       return null;

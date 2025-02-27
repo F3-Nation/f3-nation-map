@@ -6,11 +6,13 @@ import isNumber from "lodash/isNumber";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
+import { dayOfWeekToShortDayOfWeek } from "@f3/shared/app/functions";
 import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
+import { api } from "~/trpc/server-side-react-helpers";
 import { groupMarkerClick } from "~/utils/actions/group-marker-click";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import {
@@ -20,11 +22,21 @@ import {
 } from "~/utils/store/selected-item";
 
 export const MemoGroupMarker = memo(
-  ({ group, show }: { group: SparseF3Marker; show: boolean }) => {
+  ({
+    group,
+    show,
+    mode,
+  }: {
+    group: SparseF3Marker;
+    show: boolean;
+    mode: "edit" | "view";
+  }) => {
+    const utils = api.useUtils();
     const { lat, lon, events, id } = group;
     if (!show || lat === null || lon === null) return null;
     return (
       <Marker
+        draggable={mode === "edit"}
         position={[lat, lon]}
         eventHandlers={{
           mouseout: () => {
@@ -70,6 +82,41 @@ export const MemoGroupMarker = memo(
               ...(isNumber(eventId) ? { eventId } : {}),
             });
           },
+          dragstart: () => {
+            selectedItemStore.setState({
+              isEditDragging: true,
+            });
+          },
+          drag: () => {
+            selectedItemStore.setState({
+              isEditDragging: true,
+            });
+          },
+          dragend: (e: { target: L.Marker }) => {
+            const lat = e.target.getLatLng().lat;
+            const lon = e.target.getLatLng().lng;
+            utils.location.getLocationMarker.setData({ id }, (prev) =>
+              !prev ? undefined : { ...prev, lat, lon },
+            );
+            utils.location.getLocationMarkersSparse.setData(
+              undefined,
+              (prev) => {
+                if (!prev) return undefined;
+                return prev.map((location) => {
+                  if (location.id === id) {
+                    return { ...location, lat, lon };
+                  }
+                  return location;
+                });
+              },
+            );
+            // Slight delay to allow the marker to be updated
+            setTimeout(() => {
+              selectedItemStore.setState({
+                isEditDragging: false,
+              });
+            }, 100);
+          },
           click: (e) => {
             const eventIdString = Array.from(
               (e.originalEvent.target as HTMLDivElement)?.classList,
@@ -92,12 +139,17 @@ export const MemoGroupMarker = memo(
                 style={{ zIndex: 1 }}
               >
                 {...events
-                  .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
+                  .sort(
+                    (a, b) =>
+                      DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
+                      DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
+                  )
                   .map((marker, markerIdx, markerArray) => {
                     const dotw = marker.dayOfWeek;
                     const isStart = markerIdx === 0;
                     const isEnd = markerIdx === markerArray.length - 1;
-                    const dayText = dotw !== null ? SHORT_DAY_ORDER[dotw] : 0;
+                    const dayText =
+                      dotw !== null ? dayOfWeekToShortDayOfWeek(dotw) : 0;
                     return (
                       <button
                         key={markerIdx + "-" + id}
@@ -152,7 +204,8 @@ export const MemoGroupMarker = memo(
   (prev, next) =>
     prev.show === next.show &&
     prev.group.id === next.group.id &&
-    prev.group.events.length === next.group.events.length,
+    prev.group.events.length === next.group.events.length &&
+    prev.mode === next.mode,
 );
 
 MemoGroupMarker.displayName = "MemoGroupMarker";

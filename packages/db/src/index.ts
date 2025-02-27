@@ -4,43 +4,41 @@ import postgres from "postgres";
 import { env } from "@f3/env";
 
 import {
-  nextAuthAccounts,
-  nextAuthSessions,
-  nextAuthVerificationTokens,
-} from "./schema/auth";
-import {
   attendance,
   attendanceTypes,
-  eventCategories,
+  authAccounts,
+  authSessions,
+  authVerificationTokens,
   events,
   eventsXEventTypes,
   eventTags,
   eventTypes,
   locations,
   orgs,
-  orgTypes,
+  permissions,
   roles,
+  rolesXPermissions,
   rolesXUsersXOrg,
   slackUsers,
+  updateRequests,
   users,
-} from "./schema/schema";
-import { updateRequests } from "./schema/update-requests";
+} from "../drizzle/schema";
 
 export const schema = {
-  attendanceTypes,
   attendance,
+  attendanceTypes,
+  authAccounts,
+  authSessions,
+  authVerificationTokens,
   events,
-  eventCategories,
   eventTags,
   eventTypes,
   eventsXEventTypes,
   locations,
-  nextAuthAccounts,
-  nextAuthSessions,
-  nextAuthVerificationTokens,
   orgs,
-  orgTypes,
+  permissions,
   roles,
+  rolesXPermissions,
   rolesXUsersXOrg,
   slackUsers,
   updateRequests,

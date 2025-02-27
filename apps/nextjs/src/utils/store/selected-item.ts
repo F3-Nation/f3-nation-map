@@ -11,6 +11,7 @@ export const selectedItemStore = new ZustandStore({
     hideSelectedItem: false,
     panelLocationId: null as number | null,
     panelEventId: null as number | null,
+    isEditDragging: false,
   },
   persistOptions: {
     name: "selected-item-store",

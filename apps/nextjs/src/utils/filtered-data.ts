@@ -1,5 +1,7 @@
 // filteredData.ts
 
+import type { DayOfWeek } from "@f3/shared/app/enums";
+import { START_END_TIME_DB_FORMAT } from "@f3/shared/app/constants";
 import isWithinRadius from "@f3/shared/app/functions";
 import { isTruthy } from "@f3/shared/common/functions";
 
@@ -12,7 +14,7 @@ import { mapStore } from "./store/map";
 export const filterData = <
   T extends {
     events: {
-      dayOfWeek: number | null;
+      dayOfWeek: DayOfWeek | null;
       startTime: string | null;
       types: { id: number; name: string }[];
     }[];
@@ -38,13 +40,13 @@ export const filterData = <
       ].every((f) => f === false);
 
       const specificDayFilterMatch = [
-        filters.daySu && event.dayOfWeek === 0,
-        filters.dayM && event.dayOfWeek === 1,
-        filters.dayTu && event.dayOfWeek === 2,
-        filters.dayW && event.dayOfWeek === 3,
-        filters.dayTh && event.dayOfWeek === 4,
-        filters.dayF && event.dayOfWeek === 5,
-        filters.daySa && event.dayOfWeek === 6,
+        filters.daySu && event.dayOfWeek === "sunday",
+        filters.dayM && event.dayOfWeek === "monday",
+        filters.dayTu && event.dayOfWeek === "tuesday",
+        filters.dayW && event.dayOfWeek === "wednesday",
+        filters.dayTh && event.dayOfWeek === "thursday",
+        filters.dayF && event.dayOfWeek === "friday",
+        filters.daySa && event.dayOfWeek === "saturday",
         // filters.today && event.dayOfWeek === currentDay,
         // filters.tomorrow && event.dayOfWeek === getNextDay(currentDay),
       ].some((f) => f === true);
@@ -52,7 +54,7 @@ export const filterData = <
       const includeThisLocationMarkerOnDays =
         noDayFilters || specificDayFilterMatch;
 
-      const startDayjs = dayjs(event.startTime, "HH:mm:ss");
+      const startDayjs = dayjs(event.startTime, START_END_TIME_DB_FORMAT);
       const startIsAM = startDayjs.format("a") === "am";
       const includeThisLocationMarkerOnAmPm =
         (!filters.am || startIsAM) && (!filters.pm || !startIsAM);
@@ -76,9 +78,6 @@ export const filterData = <
       if (filters.beforeAfterTime !== TimeSelection.none) {
         const hour = filters.beforeAfterTime.slice(0, -2);
         const period = filters.beforeAfterTime.slice(-2);
-        // const [hour, period] = filters.beforeAfterTime
-        //   .split(/(\d+)/)
-        //   .filter(Boolean);
         let filterTime = parseInt(hour ?? "0", 10);
         const stationStartTime = parseInt(
           event.startTime?.split(":")?.[0] ?? "0",

@@ -37,16 +37,13 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
 
   const setUserGpsLocation = useCallback((position: GeolocationPosition) => {
     mapStore.setState({
-      // If the nearby location center is already set, don't override it
-      ...(!mapStore.get("nearbyLocationCenter")
-        ? {
-            nearbyLocationCenter: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              name: "you",
-            },
-          }
-        : {}),
+      nearbyLocationCenter: {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        name: "you",
+        type: "self",
+      },
+
       userGpsLocation: {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -74,6 +71,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
             lat: randomLocation.lat,
             lng: randomLocation.lon,
             name: "random",
+            type: "random",
           },
         });
       }
@@ -102,6 +100,14 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         setViewIfNotMovedMap({
           lat: userGpsLocation.latitude,
           lng: userGpsLocation.longitude,
+        });
+        mapStore.setState({
+          nearbyLocationCenter: {
+            lat: userGpsLocation.latitude,
+            lng: userGpsLocation.longitude,
+            name: "you",
+            type: "self",
+          },
         });
         return;
       } else {

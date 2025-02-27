@@ -23,6 +23,7 @@ export const onClickF3RegionRow = (result: F3RegionMapSearchResult) => {
       lat: result.destination.lat,
       lng: result.destination.lng,
       name: result.header,
+      type: "search",
     },
   });
   setView({ lat: result.destination.lat, lng: result.destination.lng });

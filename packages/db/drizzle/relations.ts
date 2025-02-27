@@ -2,14 +2,12 @@ import { relations } from "drizzle-orm/relations";
 
 import {
   achievements,
-  achievementsXOrg,
   achievementsXUsers,
   attendance,
   attendanceTypes,
   attendanceXAttendanceTypes,
   authAccounts,
   authSessions,
-  eventCategories,
   events,
   eventsXEventTypes,
   eventTags,
@@ -20,7 +18,6 @@ import {
   locations,
   orgs,
   orgsXSlackSpaces,
-  orgTypes,
   permissions,
   positions,
   positionsXOrgsXUsers,
@@ -33,48 +30,26 @@ import {
   users,
 } from "./schema";
 
+export const slackUsersRelations = relations(slackUsers, ({ one }) => ({
+  user: one(users, {
+    fields: [slackUsers.userId],
+    references: [users.id],
+  }),
+}));
+
 export const usersRelations = relations(users, ({ one, many }) => ({
+  slackUsers: many(slackUsers),
+  attendances: many(attendance),
+  authSessions: many(authSessions),
   org: one(orgs, {
     fields: [users.homeRegionId],
     references: [orgs.id],
   }),
-  attendances: many(attendance),
-  slackUsers: many(slackUsers),
-  authAccounts: many(authAccounts),
-  authSessions: many(authSessions),
   achievementsXUsers: many(achievementsXUsers),
   positionsXOrgsXUsers: many(positionsXOrgsXUsers),
   rolesXUsersXOrgs: many(rolesXUsersXOrg),
   expansionsXUsers: many(expansionsXUsers),
-}));
-
-export const orgsRelations = relations(orgs, ({ one, many }) => ({
-  users: many(users),
-  orgType: one(orgTypes, {
-    fields: [orgs.orgTypeId],
-    references: [orgTypes.id],
-  }),
-  org: one(orgs, {
-    fields: [orgs.parentId],
-    references: [orgs.id],
-    relationName: "orgs_parentId_orgs_id",
-  }),
-  orgs: many(orgs, {
-    relationName: "orgs_parentId_orgs_id",
-  }),
-  positions: many(positions),
-  updateRequests: many(updateRequests),
-  events: many(events),
-  locations: many(locations),
-  achievementsXOrgs: many(achievementsXOrg),
-  orgsXSlackSpaces: many(orgsXSlackSpaces),
-  positionsXOrgsXUsers: many(positionsXOrgsXUsers),
-  rolesXUsersXOrgs: many(rolesXUsersXOrg),
-}));
-
-export const orgTypesRelations = relations(orgTypes, ({ many }) => ({
-  orgs: many(orgs),
-  positions: many(positions),
+  authAccounts: many(authAccounts),
 }));
 
 export const attendanceRelations = relations(attendance, ({ one, many }) => ({
@@ -91,7 +66,6 @@ export const attendanceRelations = relations(attendance, ({ one, many }) => ({
 
 export const eventsRelations = relations(events, ({ one, many }) => ({
   attendances: many(attendance),
-  updateRequests: many(updateRequests),
   location: one(locations, {
     fields: [events.locationId],
     references: [locations.id],
@@ -108,82 +82,48 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   events: many(events, {
     relationName: "events_seriesId_events_id",
   }),
+  updateRequests: many(updateRequests),
   eventTagsXEvents: many(eventTagsXEvents),
   eventsXEventTypes: many(eventsXEventTypes),
 }));
 
-export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
-  eventCategory: one(eventCategories, {
-    fields: [eventTypes.categoryId],
-    references: [eventCategories.id],
-  }),
-  eventsXEventTypes: many(eventsXEventTypes),
-}));
-
-export const eventCategoriesRelations = relations(
-  eventCategories,
-  ({ many }) => ({
-    eventTypes: many(eventTypes),
-  }),
-);
-
-export const positionsRelations = relations(positions, ({ one, many }) => ({
-  org: one(orgs, {
-    fields: [positions.orgId],
-    references: [orgs.id],
-  }),
-  orgType: one(orgTypes, {
-    fields: [positions.orgTypeId],
-    references: [orgTypes.id],
-  }),
-  positionsXOrgsXUsers: many(positionsXOrgsXUsers),
-}));
-
-export const slackUsersRelations = relations(slackUsers, ({ one }) => ({
-  user: one(users, {
-    fields: [slackUsers.userId],
-    references: [users.id],
-  }),
-  slackSpace: one(slackSpaces, {
-    fields: [slackUsers.slackTeamId],
-    references: [slackSpaces.teamId],
-  }),
-}));
-
-export const slackSpacesRelations = relations(slackSpaces, ({ many }) => ({
-  slackUsers: many(slackUsers),
-  orgsXSlackSpaces: many(orgsXSlackSpaces),
-}));
-
-export const updateRequestsRelations = relations(updateRequests, ({ one }) => ({
-  org: one(orgs, {
-    fields: [updateRequests.orgId],
-    references: [orgs.id],
-  }),
-  event: one(events, {
-    fields: [updateRequests.eventId],
-    references: [events.id],
-  }),
-  location: one(locations, {
-    fields: [updateRequests.locationId],
-    references: [locations.id],
-  }),
-}));
-
 export const locationsRelations = relations(locations, ({ one, many }) => ({
-  updateRequests: many(updateRequests),
-  events: many(events),
   org: one(orgs, {
     fields: [locations.orgId],
     references: [orgs.id],
   }),
+  events: many(events),
+  updateRequests: many(updateRequests),
 }));
 
-export const authAccountsRelations = relations(authAccounts, ({ one }) => ({
-  user: one(users, {
-    fields: [authAccounts.userId],
-    references: [users.id],
+export const orgsRelations = relations(orgs, ({ one, many }) => ({
+  locations: many(locations),
+  eventTags: many(eventTags),
+  users: many(users),
+  achievements: many(achievements),
+  eventTypes: many(eventTypes),
+  org: one(orgs, {
+    fields: [orgs.parentId],
+    references: [orgs.id],
+    relationName: "orgs_parentId_orgs_id",
   }),
+  orgs: many(orgs, {
+    relationName: "orgs_parentId_orgs_id",
+  }),
+  positions: many(positions),
+  events: many(events),
+  updateRequests: many(updateRequests),
+  orgsXSlackSpaces: many(orgsXSlackSpaces),
+  positionsXOrgsXUsers: many(positionsXOrgsXUsers),
+  rolesXUsersXOrgs: many(rolesXUsersXOrg),
+}));
+
+export const eventTagsRelations = relations(eventTags, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [eventTags.specificOrgId],
+    references: [orgs.id],
+  }),
+  eventTagsXEvents: many(eventTagsXEvents),
 }));
 
 export const authSessionsRelations = relations(authSessions, ({ one }) => ({
@@ -193,91 +133,47 @@ export const authSessionsRelations = relations(authSessions, ({ one }) => ({
   }),
 }));
 
-export const achievementsXOrgRelations = relations(
-  achievementsXOrg,
-  ({ one }) => ({
-    achievement: one(achievements, {
-      fields: [achievementsXOrg.achievementId],
-      references: [achievements.id],
-    }),
+export const achievementsRelations = relations(
+  achievements,
+  ({ one, many }) => ({
     org: one(orgs, {
-      fields: [achievementsXOrg.orgId],
+      fields: [achievements.specificOrgId],
       references: [orgs.id],
     }),
+    achievementsXUsers: many(achievementsXUsers),
   }),
 );
 
-export const achievementsRelations = relations(achievements, ({ many }) => ({
-  achievementsXOrgs: many(achievementsXOrg),
-  achievementsXUsers: many(achievementsXUsers),
+export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [eventTypes.specificOrgId],
+    references: [orgs.id],
+  }),
+  eventsXEventTypes: many(eventsXEventTypes),
 }));
 
-export const attendanceXAttendanceTypesRelations = relations(
-  attendanceXAttendanceTypes,
-  ({ one }) => ({
-    attendance: one(attendance, {
-      fields: [attendanceXAttendanceTypes.attendanceId],
-      references: [attendance.id],
-    }),
-    attendanceType: one(attendanceTypes, {
-      fields: [attendanceXAttendanceTypes.attendanceTypeId],
-      references: [attendanceTypes.id],
-    }),
+export const positionsRelations = relations(positions, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [positions.orgId],
+    references: [orgs.id],
   }),
-);
-
-export const attendanceTypesRelations = relations(
-  attendanceTypes,
-  ({ many }) => ({
-    attendanceXAttendanceTypes: many(attendanceXAttendanceTypes),
-  }),
-);
-
-export const eventTagsXEventsRelations = relations(
-  eventTagsXEvents,
-  ({ one }) => ({
-    event: one(events, {
-      fields: [eventTagsXEvents.eventId],
-      references: [events.id],
-    }),
-    eventTag: one(eventTags, {
-      fields: [eventTagsXEvents.eventTagId],
-      references: [eventTags.id],
-    }),
-  }),
-);
-
-export const eventTagsRelations = relations(eventTags, ({ many }) => ({
-  eventTagsXEvents: many(eventTagsXEvents),
+  positionsXOrgsXUsers: many(positionsXOrgsXUsers),
 }));
 
-export const eventsXEventTypesRelations = relations(
-  eventsXEventTypes,
-  ({ one }) => ({
-    event: one(events, {
-      fields: [eventsXEventTypes.eventId],
-      references: [events.id],
-    }),
-    eventType: one(eventTypes, {
-      fields: [eventsXEventTypes.eventTypeId],
-      references: [eventTypes.id],
-    }),
+export const updateRequestsRelations = relations(updateRequests, ({ one }) => ({
+  event: one(events, {
+    fields: [updateRequests.eventId],
+    references: [events.id],
   }),
-);
-
-export const orgsXSlackSpacesRelations = relations(
-  orgsXSlackSpaces,
-  ({ one }) => ({
-    org: one(orgs, {
-      fields: [orgsXSlackSpaces.orgId],
-      references: [orgs.id],
-    }),
-    slackSpace: one(slackSpaces, {
-      fields: [orgsXSlackSpaces.slackSpaceId],
-      references: [slackSpaces.id],
-    }),
+  location: one(locations, {
+    fields: [updateRequests.locationId],
+    references: [locations.id],
   }),
-);
+  org: one(orgs, {
+    fields: [updateRequests.regionId],
+    references: [orgs.id],
+  }),
+}));
 
 export const rolesXPermissionsRelations = relations(
   rolesXPermissions,
@@ -300,6 +196,73 @@ export const permissionsRelations = relations(permissions, ({ many }) => ({
 export const rolesRelations = relations(roles, ({ many }) => ({
   rolesXPermissions: many(rolesXPermissions),
   rolesXUsersXOrgs: many(rolesXUsersXOrg),
+}));
+
+export const eventTagsXEventsRelations = relations(
+  eventTagsXEvents,
+  ({ one }) => ({
+    event: one(events, {
+      fields: [eventTagsXEvents.eventId],
+      references: [events.id],
+    }),
+    eventTag: one(eventTags, {
+      fields: [eventTagsXEvents.eventTagId],
+      references: [eventTags.id],
+    }),
+  }),
+);
+
+export const eventsXEventTypesRelations = relations(
+  eventsXEventTypes,
+  ({ one }) => ({
+    event: one(events, {
+      fields: [eventsXEventTypes.eventId],
+      references: [events.id],
+    }),
+    eventType: one(eventTypes, {
+      fields: [eventsXEventTypes.eventTypeId],
+      references: [eventTypes.id],
+    }),
+  }),
+);
+
+export const attendanceXAttendanceTypesRelations = relations(
+  attendanceXAttendanceTypes,
+  ({ one }) => ({
+    attendance: one(attendance, {
+      fields: [attendanceXAttendanceTypes.attendanceId],
+      references: [attendance.id],
+    }),
+    attendanceType: one(attendanceTypes, {
+      fields: [attendanceXAttendanceTypes.attendanceTypeId],
+      references: [attendanceTypes.id],
+    }),
+  }),
+);
+
+export const attendanceTypesRelations = relations(
+  attendanceTypes,
+  ({ many }) => ({
+    attendanceXAttendanceTypes: many(attendanceXAttendanceTypes),
+  }),
+);
+
+export const orgsXSlackSpacesRelations = relations(
+  orgsXSlackSpaces,
+  ({ one }) => ({
+    org: one(orgs, {
+      fields: [orgsXSlackSpaces.orgId],
+      references: [orgs.id],
+    }),
+    slackSpace: one(slackSpaces, {
+      fields: [orgsXSlackSpaces.slackSpaceId],
+      references: [slackSpaces.id],
+    }),
+  }),
+);
+
+export const slackSpacesRelations = relations(slackSpaces, ({ many }) => ({
+  orgsXSlackSpaces: many(orgsXSlackSpaces),
 }));
 
 export const achievementsXUsersRelations = relations(
@@ -368,4 +331,11 @@ export const expansionsXUsersRelations = relations(
 
 export const expansionsRelations = relations(expansions, ({ many }) => ({
   expansionsXUsers: many(expansionsXUsers),
+}));
+
+export const authAccountsRelations = relations(authAccounts, ({ one }) => ({
+  user: one(users, {
+    fields: [authAccounts.userId],
+    references: [users.id],
+  }),
 }));

@@ -1,10 +1,9 @@
 "use client";
 
-import type { LatLngLiteral } from "leaflet";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
-import { DEFAULT_CENTER } from "node_modules/@f3/shared/src/app/constants";
 
+import { DEFAULT_CENTER } from "@f3/shared/app/constants";
 import { RERENDER_LOGS } from "@f3/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
@@ -19,15 +18,17 @@ export type LocationMarkerWithDistance = SparseF3Marker & {
 
 const FilteredMapResultsContext = createContext<{
   isLoading: boolean;
-  nearbyLocationCenter: LatLngLiteral & { name?: string };
+  nearbyLocationCenter: ReturnType<typeof mapStore.use.nearbyLocationCenter>;
   filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
   allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
   isLoading: true,
   nearbyLocationCenter: {
+    type: "default",
     lat: DEFAULT_CENTER[0],
     lng: DEFAULT_CENTER[1],
+    name: null,
   },
   filteredLocationMarkers: undefined,
   locationOrderedLocationMarkers: undefined,
@@ -107,6 +108,7 @@ export const FilteredMapResultsProvider = ({
         return { ...location, distance };
       },
     );
+
     return locationMarkersWithDistances.sort((a, b) => {
       if (a.distance === null || b.distance === null) return 0;
       return a.distance - b.distance;

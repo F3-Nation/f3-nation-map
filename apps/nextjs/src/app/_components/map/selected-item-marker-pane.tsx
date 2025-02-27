@@ -18,6 +18,7 @@ export const SelectedIconMarkerPane = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
   const zoom = mapStore.use.zoom();
   const isMobile = isTouchDevice();
+  const isEditDragging = selectedItemStore.use.isEditDragging();
   const eventId = selectedItemStore.use.eventId();
   const locationId = selectedItemStore.use.locationId();
   const panelLocationId = selectedItemStore.use.panelLocationId();
@@ -48,7 +49,7 @@ export const SelectedIconMarkerPane = () => {
         style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
         className="pointer-events-none"
       >
-        {!filteredSelectedItem ? null : (
+        {isEditDragging || !filteredSelectedItem ? null : (
           <MemoSelectedGroupMarker
             alwaysShowFillInsteadOfOutline={isMobile}
             group={filteredSelectedItem}
@@ -67,7 +68,7 @@ export const SelectedIconMarkerPane = () => {
         style={{ zIndex: Z_INDEX.SELECTED_ICON_MARKER_PANE }}
         className="pointer-events-none"
       >
-        {!filteredPanelItem ? null : (
+        {isEditDragging || !filteredPanelItem ? null : (
           <MemoSelectedGroupMarker
             panel
             group={filteredPanelItem}

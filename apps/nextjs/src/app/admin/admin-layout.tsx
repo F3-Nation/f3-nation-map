@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Earth,
   Globe,
   MapPin,
   PersonStanding,
@@ -108,6 +109,17 @@ const Layout = ({
               <PersonStanding />
               Events (BETA)
             </Link>
+
+            <Link
+              className={cn(
+                "mb-3 flex flex-row items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium",
+                pathname === routes.admin.aos.__path ? "bg-[#D6D6D6]" : "",
+              )}
+              href={routes.admin.aos.__path}
+            >
+              <Globe />
+              AOs (BETA)
+            </Link>
             <Link
               className={cn(
                 "mb-3 flex flex-row items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium",
@@ -117,6 +129,38 @@ const Layout = ({
             >
               <Globe />
               Regions (BETA)
+            </Link>
+            <Link
+              className={cn(
+                "mb-3 flex flex-row items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium",
+                pathname === routes.admin.areas.__path ? "bg-[#D6D6D6]" : "",
+              )}
+              href={routes.admin.areas.__path}
+            >
+              <Earth />
+              Areas (BETA)
+            </Link>
+            <Link
+              className={cn(
+                "mb-3 flex flex-row items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium",
+                pathname === routes.admin.sectors.__path ? "bg-[#D6D6D6]" : "",
+              )}
+              href={routes.admin.sectors.__path}
+            >
+              <Earth />
+              Sectors (BETA)
+            </Link>
+            <Link
+              className={cn(
+                "mb-3 flex flex-row items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium",
+                pathname === routes.admin.theNation.__path
+                  ? "bg-[#D6D6D6]"
+                  : "",
+              )}
+              href={routes.admin.theNation.__path}
+            >
+              <Earth />
+              The Nation (BETA)
             </Link>
           </div>
         </div>

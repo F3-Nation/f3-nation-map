@@ -36,24 +36,30 @@ export const {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
-        token.role = "role" in user ? user.role : "user";
+        token.email = user.email ?? undefined;
         token.name = user.name;
-        token.editingRegionIds = user.editingRegionIds;
+        token.roles = user.roles;
       }
+
+      if (trigger === "update" && session && "roles" in session) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        token.roles = session.roles;
+      }
+
       return Promise.resolve(token);
     },
     async session({ session, token }) {
       const result = {
         ...session,
         id: token.id as string | undefined,
-        role: token.role as UserRole | undefined,
-        email: token.email as string | undefined,
+        email: token.email,
         name: token.name as string | undefined,
-        editingRegionIds: token.editingRegionIds as number[] | undefined,
+        roles: token.roles as
+          | { orgId: number; orgName: string; roleName: UserRole }[]
+          | undefined,
       };
       return Promise.resolve(result);
     },

@@ -1,6 +1,6 @@
-import omit from "lodash/omit";
 import { z } from "zod";
 
+import type { DayOfWeek } from "@f3/shared/app/enums";
 import { aliasedTable, count, desc, eq, schema, sql } from "@f3/db";
 import { isTruthy } from "@f3/shared/common/functions";
 import { LocationInsertSchema } from "@f3/validators";
@@ -272,7 +272,7 @@ export const locationRouter = createTRPCRouter({
           events: {
             id: number;
             name: string;
-            dayOfWeek: number | null;
+            dayOfWeek: DayOfWeek | null;
             startTime: string | null;
             types: { id: number; name: string }[];
           }[];
@@ -379,13 +379,12 @@ export const locationRouter = createTRPCRouter({
     const regions = await ctx.db
       .select()
       .from(schema.orgs)
-      .innerJoin(schema.orgTypes, eq(schema.orgs.orgTypeId, schema.orgTypes.id))
-      .where(eq(schema.orgTypes.name, "Region"));
+      .where(eq(schema.orgs.orgType, "region"));
     return regions.map((region) => ({
-      id: region.orgs.id,
-      name: region.orgs.name,
-      logo: region.orgs.logoUrl,
-      website: region.orgs.website,
+      id: region.id,
+      name: region.name,
+      logo: region.logoUrl,
+      website: region.website,
     }));
   }),
   getRegionsWithLocation: publicProcedure.query(async ({ ctx }) => {
@@ -490,13 +489,16 @@ export const locationRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
     const regionOrg = aliasedTable(schema.orgs, "region_org");
     const locationOrg = aliasedTable(schema.orgs, "location_org");
+    const aoOrg = aliasedTable(schema.orgs, "ao_org");
 
     const [locations, events] = await Promise.all([
       ctx.db
         .select({
           id: schema.locations.id,
           name: schema.locations.name,
+          orgId: schema.locations.orgId,
           regionName: regionOrg.name,
+          aoName: aoOrg.name,
           description: schema.locations.description,
           isActive: schema.locations.isActive,
           latitude: schema.locations.latitude,
@@ -510,10 +512,12 @@ export const locationRouter = createTRPCRouter({
           addressCountry: schema.locations.addressCountry,
           meta: schema.locations.meta,
           created: schema.locations.created,
+          regionId: regionOrg.id,
         })
         .from(schema.locations)
         .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
-        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id)),
+        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
+        .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id)),
       ctx.db
         .select({
           id: schema.events.id,
@@ -554,25 +558,6 @@ export const locationRouter = createTRPCRouter({
     //   .from(schema.events)
     // return { locations, events };
   }),
-  allActive: publicProcedure.query(async ({ ctx }) => {
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const locationOrg = aliasedTable(schema.orgs, "location_org");
-
-    const [locations] = await Promise.all([
-      ctx.db
-        .select({
-          id: schema.locations.id,
-          name: schema.locations.name,
-          regionId: regionOrg.id,
-        })
-        .from(schema.locations)
-        .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
-        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
-        .where(eq(schema.locations.isActive, true))
-        .orderBy(schema.locations.name),
-    ]);
-    return locations;
-  }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -585,6 +570,7 @@ export const locationRouter = createTRPCRouter({
           description: schema.locations.description,
           isActive: schema.locations.isActive,
           created: schema.locations.created,
+          orgId: schema.locations.orgId,
           regionId: regionOrg.id,
           regionName: regionOrg.name,
           email: schema.locations.email,
@@ -605,17 +591,21 @@ export const locationRouter = createTRPCRouter({
       return location;
     }),
   crupdate: publicProcedure
-    .input(LocationInsertSchema)
+
+    .input(LocationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const [updated] = await ctx.db
+      const locationToCrupdate: typeof schema.locations.$inferInsert = {
+        ...input,
+        meta: {
+          ...(input.meta as Record<string, string>),
+        },
+      };
+      await ctx.db
         .insert(schema.locations)
-        .values(input)
+        .values(locationToCrupdate)
         .onConflictDoUpdate({
           target: [schema.locations.id],
-          set: input,
-        })
-        .returning();
-
-      return { success: true, inserted: omit(updated, ["token"]) };
+          set: locationToCrupdate,
+        });
     }),
 });

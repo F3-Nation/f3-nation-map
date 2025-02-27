@@ -4,7 +4,12 @@ import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
 import { Edit, PlusCircle, X } from "lucide-react";
 
-import { DAY_ORDER } from "@f3/shared/app/constants";
+import type { DayOfWeek } from "@f3/shared/app/enums";
+import {
+  START_END_TIME_DB_FORMAT,
+  START_END_TIME_DISPLAY_FORMAT,
+} from "@f3/shared/app/constants";
+import { getReadableDayOfWeek } from "@f3/shared/app/functions";
 import { cn } from "@f3/ui";
 import { Skeleton } from "@f3/ui/skeleton";
 import { toast } from "@f3/ui/toast";
@@ -19,6 +24,7 @@ import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
 
 export const DesktopLocationPanelContent = () => {
+  const utils = api.useUtils();
   const mode = appStore.use.mode();
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
@@ -172,9 +178,9 @@ export const DesktopLocationPanelContent = () => {
                       lng: lng,
                       workoutWebsite: results?.location.aoWebsite,
                       aoLogo: results?.location.aoLogo,
-                      startTime: "00:00:00",
-                      endTime: "00:00:00",
-                      dayOfWeek: 0,
+                      startTime: "0000",
+                      endTime: "0000",
+                      dayOfWeek: "monday",
                       types: [{ id: 1, name: "Bootcamp" }],
                       eventDescription: "",
                     });
@@ -247,11 +253,18 @@ export const DesktopLocationPanelContent = () => {
             <button
               className="mt-4 flex flex-row items-center justify-center gap-2 rounded-md bg-blue-600 px-2 py-1 text-white"
               onClick={(e) => {
+                const possiblyEditedLocations =
+                  utils.location.getLocationMarkersSparse.getData();
+                const possiblyEditedLocation = possiblyEditedLocations?.find(
+                  (location) => location.id === locationId,
+                );
                 const event = results?.events.find(
                   (event) => event.eventId === selectedEventId,
                 );
-                const lat = results?.location.lat;
-                const lng = results?.location.lon;
+                const lat =
+                  possiblyEditedLocation?.lat ?? results?.location.lat;
+                const lng =
+                  possiblyEditedLocation?.lon ?? results?.location.lon;
                 if (typeof lat !== "number" || typeof lng !== "number") {
                   toast.error("Invalid lat or lng");
                   return;
@@ -264,6 +277,7 @@ export const DesktopLocationPanelContent = () => {
                   workoutName: event?.eventName,
                   workoutWebsite: results?.location.aoWebsite,
                   aoLogo: results?.location.aoLogo,
+                  locationName: results?.location.locationName,
                   locationAddress: results?.location.locationAddress,
                   locationAddress2: results?.location.locationAddress2,
                   locationCity: results?.location.locationCity,
@@ -306,29 +320,31 @@ export const DesktopLocationPanelContent = () => {
 const getWhenFromWorkout = (params: {
   startTime: string | null;
   endTime: string | null;
-  dayOfWeek: number | null;
+  dayOfWeek: DayOfWeek | null;
   condensed?: boolean;
 }) => {
   const event = params;
   const condensed = params.condensed ?? false;
-  const dayOfWeek =
-    event.dayOfWeek === null ? undefined : DAY_ORDER[event.dayOfWeek];
   const startTimeRaw =
     event.startTime === null
       ? undefined
-      : dayjs(event.startTime, "HH:mm:ss").format("h:mmA");
+      : dayjs(event.startTime, START_END_TIME_DB_FORMAT).format(
+          START_END_TIME_DISPLAY_FORMAT,
+        );
 
   const startTime = !condensed
     ? startTimeRaw
     : startTimeRaw?.replace(":00", "");
 
-  const endTime = dayjs(event.endTime, "HH:mm:ss").format("h:mmA");
+  const endTime = dayjs(event.endTime, START_END_TIME_DB_FORMAT).format(
+    START_END_TIME_DISPLAY_FORMAT,
+  );
 
-  const duration = dayjs(event.endTime, "HH:mm:ss").diff(
-    dayjs(event.startTime, "HH:mm:ss"),
+  const duration = dayjs(event.endTime, START_END_TIME_DB_FORMAT).diff(
+    dayjs(event.startTime, START_END_TIME_DB_FORMAT),
     "minutes",
   );
-  return `${dayOfWeek} ${startTime} - ${endTime} (${duration}min)`;
+  return `${getReadableDayOfWeek(event.dayOfWeek)} ${startTime} - ${endTime} (${duration}min)`;
 };
 
 const WorkoutDetailsSkeleton = () => {

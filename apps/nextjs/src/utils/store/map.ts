@@ -2,8 +2,16 @@ import type { LatLng, LatLngBounds, LatLngLiteral, Map } from "leaflet";
 import type { MutableRefObject } from "react";
 import { createRef } from "react";
 
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@f3/shared/app/constants";
+import { DEFAULT_ZOOM } from "@f3/shared/app/constants";
 import { ZustandStore } from "@f3/shared/common/classes";
+
+export type NearbyLocationCenterType =
+  | "self"
+  | "search"
+  | "manual-update"
+  | "default"
+  | "click"
+  | "random";
 
 const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
@@ -21,9 +29,11 @@ const initialState = {
   placeResultLocation: null as LatLngLiteral | null,
   updateLocation: null as LatLngLiteral | null,
   nearbyLocationCenter: {
-    lat: DEFAULT_CENTER[0],
-    lng: DEFAULT_CENTER[1],
-  } as LatLngLiteral & { name?: string },
+    lat: null as LatLngLiteral["lat"] | null,
+    lng: null as LatLngLiteral["lng"] | null,
+    name: null as string | null,
+    type: "default" as NearbyLocationCenterType,
+  },
   tiles: "street" as "satellite" | "street",
   showDebug: false,
   loaded: false,

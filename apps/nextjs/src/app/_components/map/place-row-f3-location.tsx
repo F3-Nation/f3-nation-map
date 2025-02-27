@@ -31,6 +31,7 @@ export const onClickPlaceRowF3Location = (
         lat: latitude,
         lng: longitude,
         name: result.header,
+        type: "search",
       },
     });
     setView({ lat: latitude, lng: longitude });

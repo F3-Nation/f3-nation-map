@@ -1,7 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, X } from "lucide-react";
 
+import type { RoleEntry } from "@f3/shared/app/types";
+import { safeParseInt } from "@f3/shared/common/functions";
 import { Button } from "@f3/ui/button";
 import {
   Form,
@@ -24,6 +28,7 @@ import { toast } from "@f3/ui/toast";
 import { CrupdateUserSchema } from "@f3/validators";
 
 import type { RouterOutputs } from "~/trpc/types";
+import { VirtualizedCombobox } from "~/app/_components/virtualized-combobox";
 import { api } from "~/trpc/react";
 
 export default function UserMutate({
@@ -33,6 +38,10 @@ export default function UserMutate({
 }) {
   const router = useRouter();
   const utils = api.useUtils();
+  const { data: regions } = api.region.all.useQuery();
+  const sortedRegions = useMemo(() => {
+    return regions?.sort((a, b) => a.name.localeCompare(b.name)) ?? [];
+  }, [regions]);
 
   const form = useForm({
     schema: CrupdateUserSchema,
@@ -42,7 +51,7 @@ export default function UserMutate({
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       email: user?.email ?? "",
-      role: user?.role ?? "user",
+      roles: user?.roles ?? [],
     },
   });
 
@@ -175,26 +184,112 @@ export default function UserMutate({
 
               <FormField
                 control={form.control}
-                name="role"
+                name="roles"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="appraiser">Appraiser</SelectItem>
-                        <SelectItem value="data-entry">Data Entry</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Roles</FormLabel>
+                    <div className="space-y-2">
+                      {((field.value as RoleEntry[]) || []).map(
+                        (roleEntry, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Select
+                              onValueChange={(value) => {
+                                const newRoles = [
+                                  ...(field.value as RoleEntry[]),
+                                ];
+                                newRoles[index] = {
+                                  orgId: roleEntry.orgId,
+                                  roleName: value as "editor" | "admin",
+                                };
+                                field.onChange(newRoles);
+                              }}
+                              value={roleEntry.roleName}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-[200px]">
+                                  <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="editor">Editor</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <VirtualizedCombobox
+                              value={roleEntry.orgId.toString()}
+                              options={sortedRegions.map((region) => ({
+                                value: region.id.toString(),
+                                label: region.name,
+                              }))}
+                              searchPlaceholder="Select a region"
+                              onSelect={(value) => {
+                                const orgId = safeParseInt(value as string);
+                                if (orgId == undefined) {
+                                  toast.error("Invalid orgId");
+                                  return;
+                                }
+                                const newRoles = [
+                                  ...(field.value as RoleEntry[]),
+                                ];
+                                newRoles[index] = {
+                                  roleName:
+                                    newRoles[index]?.roleName ?? "editor",
+                                  orgId,
+                                };
+                                field.onChange(newRoles);
+                              }}
+                              isMulti={false}
+                            />
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const newRoles = [
+                                  ...(field.value as RoleEntry[]),
+                                ];
+                                newRoles.splice(index, 1);
+                                field.onChange(newRoles);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ),
+                      )}
+
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col">
+                          <p className="text-xs text-gray-500">
+                            Admins can invite & edit
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Editors can edit
+                          </p>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => {
+                            const newRoleEntry: RoleEntry = {
+                              roleName: "editor",
+                              orgId: 1,
+                            };
+                            field.onChange([
+                              ...((field.value as RoleEntry[]) ?? []),
+                              newRoleEntry,
+                            ]);
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Role
+                        </Button>
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

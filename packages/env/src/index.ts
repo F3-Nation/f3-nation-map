@@ -20,9 +20,18 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),
+    NEXT_PUBLIC_CHANNEL: z.enum([
+      "local",
+      "ci",
+      "branch",
+      "dev",
+      "staging",
+      "prod",
+    ]),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
+    NEXT_PUBLIC_CHANNEL: process.env.NEXT_PUBLIC_CHANNEL,
   },
   skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

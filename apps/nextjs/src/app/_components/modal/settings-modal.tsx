@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@f3/ui/dialog";
 
-import { api } from "~/trpc/react";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { closeModal } from "~/utils/store/modal";
@@ -22,8 +21,6 @@ export default function SettingsModal() {
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-  const isAdmin = session?.role === "admin";
-  const { data: regions } = api.location.getRegions.useQuery();
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
@@ -182,15 +179,15 @@ export default function SettingsModal() {
                     {session.email}
                   </span>
                 </p>
-                <p className="text-xs text-gray-500">
-                  Role: <span className="font-medium">{session.role}, </span>
-                  Editing regions:{" "}
-                  <span className="font-medium">
-                    {session.editingRegionIds.map(
-                      (id) => regions?.find((r) => r.id === id)?.name,
-                    )}
-                  </span>
-                </p>
+                {// Keep the nullish check on roles for legacy sessions that did not have roles
+                session.roles?.map((role) => (
+                  <p
+                    key={`${role.orgId}-${role.roleName}`}
+                    className="text-xs text-gray-500"
+                  >
+                    {role.orgName} ({role.roleName})
+                  </p>
+                ))}
               </div>
               <Link href={"/api/auth/signout"}>
                 <button

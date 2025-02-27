@@ -3,8 +3,9 @@
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
+import { Z_INDEX } from "@f3/shared/app/constants";
+
 import { cn } from ".";
-import { Z_INDEX } from "../../shared/src/app/constants";
 
 const Drawer = ({
   shouldScaleBackground = true,

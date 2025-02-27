@@ -2,9 +2,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { TRPCClientError } from "@trpc/client";
+import { Plus, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { z } from "zod";
 
+import type { RoleEntry } from "@f3/shared/app/types";
 import { Z_INDEX } from "@f3/shared/app/constants";
+import { safeParseInt } from "@f3/shared/common/functions";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import {
@@ -16,6 +21,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -43,8 +49,10 @@ export default function UserModal({
 }: {
   data: DataType[ModalType.ADMIN_USERS];
 }) {
+  const { data: session, update } = useSession();
   const utils = api.useUtils();
   const { data: user } = api.user.byId.useQuery({ id: data.id });
+  const { data: orgs } = api.nation.allOrgs.useQuery();
   const router = useRouter();
 
   const form = useForm({
@@ -53,19 +61,12 @@ export default function UserModal({
     }),
     defaultValues: {
       id: user?.id ?? -1,
-      //name: user?.name ?? "",
       f3Name: user?.f3Name ?? "",
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       email: user?.email ?? "",
-      // phone: user?.phone ?? null,
-      // emergencyContact: user?.emergencyContact ?? null,
-      // emergencyPhone: user?.emergencyPhone ?? null,
-      // emergencyNotes: user?.emergencyNotes ?? null,
-      role: user?.role ?? "user",
+      roles: user?.roles ?? [],
       status: user?.status ?? "active",
-      regionIds: user?.regions.map((region) => region.id) ?? [],
-      // homeRegionIds: user?.homeRegionIds ?? 0,
     },
   });
 
@@ -78,29 +79,34 @@ export default function UserModal({
         firstName: user?.firstName ?? "",
         lastName: user?.lastName ?? "",
         email: user?.email ?? "",
-        role: user?.role ?? "user",
+        roles: user?.roles,
         status: user?.status ?? "active",
-        regionIds: user?.regions.map((region) => region.id) ?? [],
-        // homeRegionIds: user?.homeRegionIds ?? 0,
       });
     }
   }, [form, user]);
 
-  const { data: regions } = api.region.all.useQuery();
-
   const crupdateUser = api.user.crupdate.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await utils.user.invalidate();
+      const { roles } = data;
+      await update({
+        ...session,
+        roles,
+      });
       closeModal();
       toast.success("Successfully updated user");
       router.refresh();
     },
     onError: (err) => {
-      toast.error(
-        err?.data?.code === "UNAUTHORIZED"
-          ? "You must be logged in to update users"
-          : "Failed to update user",
-      );
+      if (err instanceof TRPCClientError) {
+        toast.error(err.message);
+      } else {
+        toast.error(
+          err?.data?.code === "UNAUTHORIZED"
+            ? "You must be logged in to update users"
+            : "Failed to update user",
+        );
+      }
     },
   });
 
@@ -206,34 +212,6 @@ export default function UserModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="editor">Editor</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -271,40 +249,153 @@ export default function UserModal({
                   )}
                 />
               </div>
+
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="regionIds"
+                  name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Editing Regions</FormLabel>
-                      <FormControl>
-                        <VirtualizedCombobox
-                          isMulti
-                          // buttonClassName="w-full rounded-md py-3 font-normal"
-                          // hideSearchIcon
-                          // key={data.id?.toString()}
-                          // disabled if we got this from the data param
-                          // disabled={typeof data.regionId === "number"}
-                          options={
-                            regions
-                              ?.map((region) => ({
-                                label: region.name,
-                                value: region.id.toString(),
-                              }))
-                              .sort((a, b) => a.label.localeCompare(b.label)) ??
-                            []
-                          }
-                          value={field.value?.map(String)}
-                          onSelect={(item) => {
-                            console.log("onSelect", item);
-                            if (Array.isArray(item)) {
-                              form.setValue("regionIds", item.map(Number));
-                            }
-                          }}
-                          searchPlaceholder="Select"
-                        />
-                      </FormControl>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="mb-4 w-full px-2">
+                <FormField
+                  control={form.control}
+                  name="roles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Roles</FormLabel>
+                      <FormDescription>
+                        Must sign out and back in to apply these new roles.
+                      </FormDescription>
+                      <div className="space-y-2">
+                        {((field.value as RoleEntry[]) || []).map(
+                          (roleEntry, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2"
+                            >
+                              <Select
+                                onValueChange={(value) => {
+                                  const newRoles = [
+                                    ...(field.value as RoleEntry[]),
+                                  ];
+                                  newRoles[index] = {
+                                    orgId: roleEntry.orgId,
+                                    roleName: value as "editor" | "admin",
+                                  };
+                                  field.onChange(newRoles);
+                                }}
+                                value={roleEntry.roleName}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Select a role" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="editor">Editor</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              <VirtualizedCombobox
+                                value={roleEntry.orgId.toString()}
+                                options={
+                                  orgs?.map((region) => ({
+                                    value: region.id.toString(),
+                                    label: `${region.name} (${region.orgType})`,
+                                  })) ?? []
+                                }
+                                searchPlaceholder="Select a region"
+                                onSelect={(value) => {
+                                  const orgId = safeParseInt(value as string);
+                                  if (orgId == undefined) {
+                                    toast.error("Invalid orgId");
+                                    return;
+                                  }
+                                  const newRoles = [
+                                    ...(field.value as RoleEntry[]),
+                                  ];
+                                  newRoles[index] = {
+                                    roleName:
+                                      newRoles[index]?.roleName ?? "editor",
+                                    orgId,
+                                  };
+                                  field.onChange(newRoles);
+                                }}
+                                isMulti={false}
+                              />
+
+                              <Button
+                                variant="ghost"
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  const newRoles = [
+                                    ...(field.value as RoleEntry[]),
+                                  ];
+                                  newRoles.splice(index, 1);
+                                  field.onChange(newRoles);
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ),
+                        )}
+
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-col">
+                            <p className="text-xs text-gray-500">
+                              Admins can invite & edit
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Editors can edit
+                            </p>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => {
+                              const newRoleEntry: RoleEntry = {
+                                roleName: "editor",
+                                orgId: 1,
+                              };
+                              field.onChange([
+                                ...((field.value as RoleEntry[]) ?? []),
+                                newRoleEntry,
+                              ]);
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Role
+                          </Button>
+                        </div>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -402,34 +493,6 @@ export default function UserModal({
                   />
                 )}
               </div> */}
-
-              <div className="mb-4 w-1/2 px-2">
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
               <div className="mb-4 w-full px-2">
                 <div className="flex space-x-4 pt-4">

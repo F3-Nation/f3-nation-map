@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+import { useEffect, useMemo, useState } from "react";
 import gte from "lodash/gte";
 import { useSession } from "next-auth/react";
 import { Controller } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
-import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
+import { Case } from "@f3/shared/common/enums";
+import { convertCase } from "@f3/shared/common/functions";
 import { Button } from "@f3/ui/button";
 import {
   Dialog,
@@ -30,6 +34,7 @@ import { RequestInsertSchema } from "@f3/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
+import { isDevMode } from "~/trpc/util";
 import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
 import { uploadLogo } from "~/utils/image/upload-logo";
 import { appStore } from "~/utils/store/app";
@@ -58,24 +63,47 @@ export const UpdateLocationModal = ({
 
   // Get data information
   const formRegionId = form.watch("regionId");
+  const formLocationId = form.watch("locationId");
   const formEventId = form.watch("eventId");
   const formId = form.watch("id");
 
   const { data: session } = useSession();
-  const isAdmin = session?.role === "admin";
-  const canEditRegion = session?.editingRegionIds.includes(formRegionId);
+  const isAdmin = session?.roles.some(
+    (role) => role.roleName === "admin" && role.orgId === formRegionId,
+  );
 
-  const lat = data.lat;
-  const lng = data.lng;
+  const canEditRegion = session?.roles.some(
+    (role) =>
+      (role.roleName === "editor" || role.roleName === "admin") &&
+      role.orgId === formRegionId,
+  );
+
   const mode = data.mode;
 
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
-  const { data: locationEvents } = api.location.getRegionAos.useQuery(
-    { regionId: formRegionId ?? -1 },
-    { enabled: formRegionId !== null && formRegionId !== -1 },
-  );
+  const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
+  const { data: possiblyUpdatedLocationMarkers } =
+    api.location.getLocationMarkersSparse.useQuery();
+
+  const sortedLocationOptions = useMemo(() => {
+    return locations
+      ?.map(({ name, id, events, regionName, regionId }) => ({
+        label: `${name || events.map((e) => e.name).join(", ")} ${
+          regionName ? `(${regionName})` : ""
+        }`,
+        value: id.toString(),
+        regionId,
+      }))
+      ?.sort((a, b) =>
+        a.regionId === formRegionId && b.regionId !== formRegionId
+          ? -1
+          : a.regionId !== formRegionId && b.regionId === formRegionId
+            ? 1
+            : a.label.localeCompare(b.label),
+      );
+  }, [locations, formRegionId]);
 
   const onSubmit = form.handleSubmit(
     async (values) => {
@@ -92,7 +120,7 @@ export const UpdateLocationModal = ({
           eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
         };
 
-        if (isAdmin) {
+        if (canEditRegion) {
           await submitUpdateRequestAdmin(updateRequestData);
           toast.success("Map updated");
           void utils.location.invalidate();
@@ -109,6 +137,7 @@ export const UpdateLocationModal = ({
       } catch (error) {
         console.error("Error submitting update request", error);
         toast.error("Failed to submit update request");
+        setIsSubmitting(false);
       }
     },
     (errors) => {
@@ -135,31 +164,68 @@ export const UpdateLocationModal = ({
   );
 
   useEffect(() => {
-    form.reset({
-      id: uuid(),
-      regionId: data.regionId ?? -1,
-      eventId: data.eventId ?? -1,
-      locationId: data.locationId ?? -1,
-      eventName: data.workoutName ?? "",
-      aoLogo: data.aoLogo ?? "",
-      locationAddress: data.locationAddress ?? "",
-      locationAddress2: data.locationAddress2 ?? "",
-      locationCity: data.locationCity ?? "",
-      locationState: data.locationState ?? "",
-      locationZip: data.locationZip ?? "",
-      locationCountry: data.locationCountry ?? "",
-      locationLat: data.lat ?? 0,
-      locationLng: data.lng ?? 0,
-      eventStartTime: data.startTime?.slice(0, 5) ?? "05:30",
-      eventEndTime: data.endTime?.slice(0, 5) ?? "06:15",
-      eventDayOfWeek:
-        typeof data.dayOfWeek === "number" ? DAY_ORDER[data.dayOfWeek] : "",
-      eventTypeIds: data.types?.map((type) => type.id) ?? [],
-      eventDescription: data.eventDescription ?? "",
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-      submittedBy: session?.email || appStore.get("myEmail"),
-    });
+    form.setValue("id", uuid());
+    if (data.regionId != undefined) {
+      form.setValue("regionId", data.regionId);
+    } else {
+      // @ts-expect-error -- must remove regionId from form
+      form.setValue("regionId", null);
+    }
+    form.setValue("eventId", data.eventId ?? null);
+    form.setValue("locationId", data.locationId ?? null);
+    form.setValue("eventName", data.workoutName ?? "");
+    form.setValue("aoLogo", data.aoLogo ?? "");
+    form.setValue("locationName", data.locationName ?? "");
+    form.setValue("locationAddress", data.locationAddress ?? "");
+    form.setValue("locationAddress2", data.locationAddress2 ?? "");
+    form.setValue("locationCity", data.locationCity ?? "");
+    form.setValue("locationState", data.locationState ?? "");
+    form.setValue("locationZip", data.locationZip ?? "");
+    form.setValue("locationCountry", data.locationCountry ?? "");
+    form.setValue("locationLat", data.lat);
+    form.setValue("locationLng", data.lng);
+    form.setValue("eventStartTime", data.startTime?.slice(0, 5) ?? "0530");
+    form.setValue("eventEndTime", data.endTime?.slice(0, 5) ?? "0615");
+    if (data.dayOfWeek) {
+      form.setValue("eventDayOfWeek", data.dayOfWeek);
+    } else {
+      // @ts-expect-error -- must remove dayOfWeek from form
+      form.setValue("eventDayOfWeek", null);
+    }
+    form.setValue("eventTypeIds", data.types?.map((type) => type.id) ?? []);
+    form.setValue("eventDescription", data.eventDescription ?? "");
+
+    form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
   }, [data, form, session?.email]);
+
+  useEffect(() => {
+    const location = locations?.find(({ id }) => id === formLocationId);
+    // If the location is being edited, update the location with the possibly updated location
+    const possiblyUpdatedLocation = possiblyUpdatedLocationMarkers?.find(
+      (location) => location.id === formLocationId,
+    );
+    if (possiblyUpdatedLocation && location) {
+      location.latitude = possiblyUpdatedLocation.lat;
+      location.longitude = possiblyUpdatedLocation.lon;
+    }
+    if (location) {
+      form.setValue("locationName", location.name ?? "");
+      form.setValue("locationAddress", location.addressStreet ?? "");
+      form.setValue("locationAddress2", location.addressStreet2 ?? "");
+      form.setValue("locationCity", location.addressCity ?? "");
+      form.setValue("locationState", location.addressState ?? "");
+      form.setValue("locationZip", location.addressZip ?? "");
+      form.setValue("locationCountry", location.addressCountry ?? "");
+      form.setValue("locationLat", location.latitude ?? null);
+      form.setValue("locationLng", location.longitude ?? null);
+      if (location.regionId == undefined) {
+        // @ts-expect-error -- must remove regionId from form
+        form.setValue("regionId", null);
+      } else {
+        form.setValue("regionId", location.regionId);
+      }
+    }
+  }, [formLocationId, form, locations, possiblyUpdatedLocationMarkers]);
 
   return (
     <Dialog
@@ -173,7 +239,7 @@ export const UpdateLocationModal = ({
         className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
       >
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={onSubmit}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
                 {mode === "edit-event"
@@ -182,89 +248,20 @@ export const UpdateLocationModal = ({
                     ? "New Location"
                     : "New Event"}
                 <p className="text-sm text-muted-foreground">
-                  {lat?.toFixed(5)}, {lng?.toFixed(5)}
+                  Form ID: {formId}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Form ID: {formId}
+                  Form Region ID: {formRegionId}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Form Location ID: {formLocationId}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Form Event ID: {formEventId}
                 </p>
               </DialogTitle>
             </DialogHeader>
 
-            <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-              Update Existing Event:
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Region
-                </div>
-                <VirtualizedCombobox
-                  // buttonClassName="w-full rounded-md py-3 font-normal"
-                  // hideSearchIcon
-                  key={formRegionId?.toString()}
-                  // disabled if we got this from the data param
-                  options={
-                    regions
-                      ?.map((region) => ({
-                        label: region.name,
-                        value: region.id.toString(),
-                      }))
-                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-                  }
-                  value={formRegionId?.toString()}
-                  onSelect={(item) => {
-                    const region = regions?.find(
-                      (region) => region.id.toString() === item,
-                    );
-                    form.setValue("regionId", region?.id ?? -1);
-                  }}
-                  searchPlaceholder="Select"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.regionId?.message}
-                </p>
-              </div>
-              {typeof data.eventId === "number" && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Event
-                  </div>
-                  <VirtualizedCombobox
-                    // buttonClassName="w-full rounded-md py-3 font-normal"
-                    // disabled if we got this from the data param
-                    disabled={typeof data.eventId === "number"}
-                    // hideSearchIcon
-                    key={formEventId?.toString()}
-                    options={[
-                      {
-                        label: "New event",
-                        value: "-1",
-                      },
-                      ...(locationEvents
-                        ?.map((location) => ({
-                          label: location.events.name,
-                          value: location.events.id.toString(),
-                        }))
-                        .sort((a, b) => a.label.localeCompare(b.label)) ?? []),
-                    ]}
-                    value={formEventId?.toString()}
-                    onSelect={(item) => {
-                      const location = locationEvents?.find(
-                        (location) => location.events.id.toString() === item,
-                      );
-                      form.setValue("eventId", location?.events.id ?? -1);
-                    }}
-                    searchPlaceholder={
-                      !formRegionId
-                        ? "Select a region first"
-                        : locationEvents?.length === 0
-                          ? "No events found"
-                          : "Select"
-                    }
-                  />
-                </div>
-              )}
-            </div>
             <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
               Event Details:
             </h2>
@@ -273,10 +270,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Workout Name
                 </div>
-                <Input
-                  {...form.register("eventName")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("eventName")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.eventName?.message}
                 </p>
@@ -289,15 +283,16 @@ export const UpdateLocationModal = ({
                 <ControlledSelect
                   control={form.control}
                   name="eventDayOfWeek"
-                  options={DAY_ORDER.map((day) => ({
-                    label: day,
+                  options={DayOfWeek.map((day) => ({
                     value: day,
+                    label: convertCase({
+                      str: day,
+                      fromCase: Case.LowerCase,
+                      toCase: Case.TitleCase,
+                    }),
                   }))}
                   placeholder="Select a day of the week"
                 />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.eventDayOfWeek?.message}
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -328,11 +323,10 @@ export const UpdateLocationModal = ({
                   name="eventTypeIds"
                   render={({ field, fieldState }) => {
                     return (
-                      <>
+                      <div>
                         <Select
                           value={field.value?.[0]?.toString()}
                           onValueChange={(value) => {
-                            console.log("value", value);
                             if (value) {
                               field.onChange([Number(value)]);
                             }
@@ -355,10 +349,12 @@ export const UpdateLocationModal = ({
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-destructive">
-                          {fieldState.error?.message}
-                        </p>
-                      </>
+                        {fieldState.error && (
+                          <p className="text-xs text-destructive">
+                            You must select at least one event type
+                          </p>
+                        )}
+                      </div>
                     );
                   }}
                 />
@@ -377,15 +373,42 @@ export const UpdateLocationModal = ({
             <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
               Location Details:
             </h2>
+            <div className="mb-3">
+              <VirtualizedCombobox
+                key={formLocationId?.toString()}
+                options={sortedLocationOptions ?? []}
+                value={formLocationId?.toString()}
+                onSelect={(item) => {
+                  const location = locations?.find(
+                    ({ id }) => id.toString() === item,
+                  );
+                  form.setValue("locationId", location?.id ?? null);
+                }}
+                searchPlaceholder="Select"
+              />
+              <div className="mx-3 text-xs text-muted-foreground">
+                Select a location above to move this workout to a different
+                location
+              </div>
+            </div>
+            <div className="my-2 text-base font-bold text-foreground">
+              The fields below update the AO for all associated workouts
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Name
+                </div>
+                <Input {...form.register("locationName")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationName?.message}
+                </p>
+              </div>
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Address
                 </div>
-                <Input
-                  {...form.register("locationAddress")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationAddress")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationAddress?.message}
                 </p>
@@ -394,10 +417,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Address 2
                 </div>
-                <Input
-                  {...form.register("locationAddress2")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationAddress2")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationAddress2?.message}
                 </p>
@@ -406,10 +426,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location City
                 </div>
-                <Input
-                  {...form.register("locationCity")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationCity")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationCity?.message}
                 </p>
@@ -418,10 +435,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location State
                 </div>
-                <Input
-                  {...form.register("locationState")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationState")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationState?.message}
                 </p>
@@ -430,10 +444,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Zip
                 </div>
-                <Input
-                  {...form.register("locationZip")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("locationZip")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationZip?.message}
                 </p>
@@ -445,6 +456,53 @@ export const UpdateLocationModal = ({
                 <Input {...form.register("locationCountry")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationCountry?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Latitude
+                </div>
+                <Input {...form.register("locationLat")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationLat?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Longitude
+                </div>
+                <Input {...form.register("locationLng")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationLng?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Region
+                </div>
+                <VirtualizedCombobox
+                  key={formRegionId?.toString()}
+                  options={
+                    regions
+                      ?.map((region) => ({
+                        label: region.name,
+                        value: region.id.toString(),
+                      }))
+                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+                  }
+                  value={formRegionId?.toString()}
+                  onSelect={(item) => {
+                    const region = regions?.find(
+                      (region) => region.id.toString() === item,
+                    );
+                    if (region) {
+                      form.setValue("regionId", region.id);
+                    }
+                  }}
+                  searchPlaceholder="Select"
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.regionId?.message}
                 </p>
               </div>
             </div>
@@ -521,16 +579,13 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Submitter Email
                 </div>
-                <Input
-                  {...form.register("submittedBy")}
-                  disabled={formRegionId === null}
-                />
+                <Input {...form.register("submittedBy")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.submittedBy?.message}
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-stretch justify-end gap-2">
+            <div className="mt-4 flex flex-col items-stretch justify-end gap-2">
               <Button
                 type="button"
                 className="bg-blue-600 text-white hover:bg-blue-600/80"
@@ -563,6 +618,47 @@ export const UpdateLocationModal = ({
               >
                 Cancel
               </Button>
+              {isDevMode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const values = form.getValues();
+                    !values.eventName &&
+                      form.setValue("eventName", "Test Event");
+                    !values.eventDayOfWeek &&
+                      form.setValue("eventDayOfWeek", "monday");
+                    !values.submittedBy &&
+                      form.setValue("submittedBy", "test@test.com");
+                    !values.aoLogo &&
+                      form.setValue("aoLogo", "https://placehold.co/640x640");
+                    !values.locationName &&
+                      form.setValue("locationName", "Test Location");
+                    !values.locationAddress &&
+                      form.setValue("locationAddress", "123 Test St");
+                    !values.locationAddress2 &&
+                      form.setValue("locationAddress2", "Apt 1");
+                    !values.locationCity &&
+                      form.setValue("locationCity", "Test City");
+                    !values.locationState &&
+                      form.setValue("locationState", "CA");
+                    !values.locationZip &&
+                      form.setValue("locationZip", "12345");
+                    !values.locationCountry &&
+                      form.setValue("locationCountry", "USA");
+                    !values.eventTypeIds?.length &&
+                      form.setValue("eventTypeIds", [1]);
+                    !values.eventStartTime &&
+                      form.setValue("eventStartTime", "0900");
+                    !values.eventEndTime &&
+                      form.setValue("eventEndTime", "1000");
+                    !values.eventDescription &&
+                      form.setValue("eventDescription", "Test Description");
+                  }}
+                >
+                  (DEV) Load Test Data
+                </Button>
+              )}
             </div>
           </form>
         </Form>

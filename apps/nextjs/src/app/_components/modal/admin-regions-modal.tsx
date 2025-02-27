@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller } from "react-hook-form";
 import { z } from "zod";
@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@f3/ui/select";
+import { Spinner } from "@f3/ui/spinner";
 import { Textarea } from "@f3/ui/textarea";
 import { toast } from "@f3/ui/toast";
 import { RegionInsertSchema } from "@f3/validators";
@@ -48,18 +49,19 @@ export default function AdminRegionsModal({
   data: DataType[ModalType.ADMIN_REGIONS];
 }) {
   const utils = api.useUtils();
-  const { data: region } = api.region.byId.useQuery({ id: data.id });
+  const { data: region } = api.region.byId.useQuery({ id: data.id ?? -1 });
   const { data: areas } = api.area.all.useQuery();
   const router = useRouter();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     schema: RegionInsertSchema.extend({
       badImage: z.boolean().default(false),
     }),
     defaultValues: {
+      id: region?.id ?? undefined,
       name: region?.name ?? "",
-      parentId: region?.parentId ?? 0,
-      orgTypeId: region?.orgTypeId ?? 2,
+      parentId: region?.parentId ?? -1,
       defaultLocationId: region?.defaultLocationId ?? null,
       isActive: region?.isActive ?? true,
       description: region?.description ?? "",
@@ -77,10 +79,9 @@ export default function AdminRegionsModal({
 
   useEffect(() => {
     form.reset({
-      id: region?.id ?? -1,
+      id: region?.id ?? undefined,
       name: region?.name ?? "",
-      orgTypeId: region?.orgTypeId ?? 2,
-      parentId: region?.parentId ?? 0,
+      parentId: region?.parentId ?? -1,
       defaultLocationId: region?.defaultLocationId ?? null,
       isActive: region?.isActive ?? true,
       description: region?.description ?? "",
@@ -112,8 +113,19 @@ export default function AdminRegionsModal({
   });
 
   const formRegionId = form.watch("id");
-  // TODO: generate a real formId
-  const formId = "1";
+
+  const generateRandomString = (length: number) => {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length),
+      );
+    }
+    return result;
+  };
+  const formId = generateRandomString(10);
 
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
@@ -128,11 +140,21 @@ export default function AdminRegionsModal({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(
-              (data) => {
-                crupdateRegion.mutate(data);
+              async (data) => {
+                setIsSubmitting(true);
+                try {
+                  await crupdateRegion.mutateAsync(data);
+                } catch (error) {
+                  toast.error("Failed to update region");
+                  console.error(error);
+                } finally {
+                  setIsSubmitting(false);
+                }
               },
-              () => {
+              (error) => {
                 toast.error("Failed to update region");
+                console.log(error);
+                setIsSubmitting(false);
               },
             )}
             className="space-y-4"
@@ -188,14 +210,17 @@ export default function AdminRegionsModal({
                           <SelectValue placeholder="Select an area" />
                         </SelectTrigger>
                         <SelectContent>
-                          {areas?.map((area) => (
-                            <SelectItem
-                              key={`area-${area.id}`}
-                              value={area.id.toString()}
-                            >
-                              {area.name}
-                            </SelectItem>
-                          ))}
+                          {areas
+                            ?.slice()
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((area) => (
+                              <SelectItem
+                                key={`area-${area.id}`}
+                                value={area.id.toString()}
+                              >
+                                {area.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -207,7 +232,7 @@ export default function AdminRegionsModal({
                 <div className="mb-3 text-sm font-medium text-black">Logo</div>
                 <Controller
                   control={form.control}
-                  name="logo"
+                  name="logoUrl"
                   render={({ field: { onChange, value } }) => {
                     return (
                       <div className="flex items-center gap-2">
@@ -385,6 +410,34 @@ export default function AdminRegionsModal({
                   )}
                 />
               </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value === "true")
+                        }
+                        value={field.value ? "true" : "false"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="true">Active</SelectItem>
+                          <SelectItem value="false">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <div className="mb-4 w-full px-2">
                 <FormField
                   control={form.control}
@@ -415,7 +468,13 @@ export default function AdminRegionsModal({
                     Cancel
                   </Button>
                   <Button type="submit" className="w-full">
-                    Save Changes
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        Saving... <Spinner className="size-4" />
+                      </div>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </Button>
                 </div>
               </div>

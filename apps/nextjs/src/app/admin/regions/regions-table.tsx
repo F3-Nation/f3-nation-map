@@ -1,12 +1,20 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@f3/api";
+import { Button } from "@f3/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@f3/ui/dropdown-menu";
 import { MDTable } from "@f3/ui/md-table";
 import { Cell, Header } from "@f3/ui/table";
 
-import { ModalType, openModal } from "~/utils/store/modal";
+import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 
 export const RegionsTable = ({
   regions,
@@ -34,8 +42,8 @@ export const RegionsTable = ({
 const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
   [
     {
-      accessorKey: "logo",
-      meta: { name: "Logo" },
+      accessorKey: "name",
+      meta: { name: "Region" },
       header: Header,
       cell: (cell) => <Cell {...cell} />,
     },
@@ -46,8 +54,15 @@ const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
       cell: (cell) => <Cell {...cell} />,
     },
     {
-      accessorKey: "name",
-      meta: { name: "Name" },
+      accessorKey: "sector",
+      meta: { name: "Sector" },
+      header: Header,
+      cell: (cell) => <Cell {...cell} />,
+    },
+
+    {
+      accessorKey: "nation",
+      meta: { name: "Nation" },
       header: Header,
       cell: (cell) => <Cell {...cell} />,
     },
@@ -71,24 +86,24 @@ const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
         );
       },
     },
-    {
-      accessorKey: "description",
-      meta: { name: "Description" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
-    {
-      accessorKey: "website",
-      meta: { name: "Website" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
-    {
-      accessorKey: "email",
-      meta: { name: "Email" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
+    // {
+    //   accessorKey: "description",
+    //   meta: { name: "Description" },
+    //   header: Header,
+    //   cell: (cell) => <Cell {...cell} />,
+    // },
+    // {
+    //   accessorKey: "website",
+    //   meta: { name: "Website" },
+    //   header: Header,
+    //   cell: (cell) => <Cell {...cell} />,
+    // },
+    // {
+    //   accessorKey: "email",
+    //   meta: { name: "Email" },
+    //   header: Header,
+    //   cell: (cell) => <Cell {...cell} />,
+    // },
     // {
     //   accessorKey: "twitter",
     //   meta: { name: "Twitter" },
@@ -123,5 +138,35 @@ const columns: TableOptions<RouterOutputs["region"]["all"][number]>["columns"] =
       meta: { name: "Created At" },
       header: Header,
       cell: Cell,
+    },
+
+    {
+      id: "id",
+      enableHiding: false,
+      cell: ({ row }) => {
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                    id: Number(row.original.id),
+                    type: DeleteType.REGION,
+                  });
+                }}
+              >
+                <div>Delete</div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];

@@ -1,3 +1,4 @@
+import type { JWT } from "next-auth";
 import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -29,14 +30,16 @@ const withAdmin: MiddlewareFactory = (next: NextMiddleware) => {
       );
     }
 
-    const payload = await getToken({
+    const payload: JWT | null = await getToken({
       req: request,
       secret,
       salt: cookieToken.name,
       cookieName: cookieToken.name,
     });
 
-    if (payload?.role !== "admin") {
+    const isAdmin = payload?.roles.some((role) => role.roleName === "admin");
+
+    if (!isAdmin) {
       return NextResponse.redirect(
         new URL(`${routes.auth.signIn.__path}?reason=not-admin`, request.url),
       );

@@ -1,35 +1,82 @@
 import { TRPCError } from "@trpc/server";
+import dayjs from "dayjs";
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import { desc, eq, schema } from "@f3/db";
-import { DAY_ORDER } from "@f3/shared/app/constants";
+import type { DayOfWeek } from "@f3/shared/app/enums";
+import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
+import { aliasedTable, desc, eq, schema } from "@f3/db";
 import { RequestInsertSchema } from "@f3/validators";
 
 import type { Context } from "../trpc";
-import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import {
+  createTRPCRouter,
+  editorProcedure,
+  protectedProcedure,
+  publicProcedure,
+} from "../trpc";
 
 export const requestRouter = createTRPCRouter({
   all: editorProcedure.query(async ({ ctx }) => {
+    const oldAoOrg = aliasedTable(schema.orgs, "old_ao_org");
+    const oldRegionOrg = aliasedTable(schema.orgs, "old_region_org");
+    const oldLocation = aliasedTable(schema.locations, "old_location");
+    const newRegionOrg = aliasedTable(schema.orgs, "new_region_org");
+
     const requests = await ctx.db
       .select({
         id: schema.updateRequests.id,
         submittedBy: schema.updateRequests.submittedBy,
         submitterValidated: schema.updateRequests.submitterValidated,
-        regionName: schema.orgs.name,
         oldWorkoutName: schema.events.name,
         newWorkoutName: schema.updateRequests.eventName,
+        // regionName: newRegionOrg.name,
+        // locationName: schema.updateRequests.locationName,
+        oldRegionName: oldRegionOrg.name,
+        newRegionName: newRegionOrg.name,
+        oldLocationName: oldLocation.name,
+        newLocationName: schema.updateRequests.locationName,
+        oldDayOfWeek: schema.events.dayOfWeek,
+        newDayOfWeek: schema.updateRequests.eventDayOfWeek,
+        oldStartTime: schema.events.startTime,
+        newStartTime: schema.updateRequests.eventStartTime,
+        oldEndTime: schema.events.endTime,
+        newEndTime: schema.updateRequests.eventEndTime,
+        oldDescription: schema.events.description,
+        newDescription: schema.updateRequests.eventDescription,
+        oldLocationAddress: oldLocation.addressStreet,
+        newLocationAddress: schema.updateRequests.locationAddress,
+        oldLocationAddress2: oldLocation.addressStreet2,
+        newLocationAddress2: schema.updateRequests.locationAddress2,
+        oldLocationCity: oldLocation.addressCity,
+        newLocationCity: schema.updateRequests.locationCity,
+        oldLocationState: oldLocation.addressState,
+        newLocationState: schema.updateRequests.locationState,
+        oldLocationCountry: oldLocation.addressCountry,
+        newLocationCountry: schema.updateRequests.locationCountry,
+        oldLocationZipCode: oldLocation.addressZip,
+        newLocationZipCode: schema.updateRequests.locationZip,
+        oldLocationLat: oldLocation.latitude,
+        newLocationLat: schema.updateRequests.locationLat,
+        oldLocationLng: oldLocation.longitude,
+        newLocationLng: schema.updateRequests.locationLng,
         created: schema.updateRequests.created,
         status: schema.updateRequests.status,
       })
       .from(schema.updateRequests)
-      .leftJoin(schema.orgs, eq(schema.updateRequests.regionId, schema.orgs.id))
+      .leftJoin(
+        newRegionOrg,
+        eq(schema.updateRequests.regionId, newRegionOrg.id),
+      )
       .leftJoin(
         schema.events,
         eq(schema.updateRequests.eventId, schema.events.id),
       )
+      .leftJoin(oldAoOrg, eq(oldAoOrg.id, schema.events.orgId))
+      .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, oldAoOrg.parentId))
+      .leftJoin(oldLocation, eq(oldLocation.id, schema.events.locationId))
       .orderBy(desc(schema.updateRequests.created));
-    console.log("requests", requests);
     return requests.map((request) => ({
       ...request,
     }));
@@ -100,7 +147,7 @@ export const requestRouter = createTRPCRouter({
       return { success: true, inserted: omit(inserted, ["token"]) };
     }),
   // This can be public because it uses a db token for auth
-  validateSubmission: publicProcedure
+  validateSubmission: protectedProcedure
     .input(z.object({ token: z.string(), submissionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [updateRequest] = await ctx.db
@@ -116,9 +163,30 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Invalid token");
       }
 
+      if (updateRequest.regionId == undefined) {
+        throw new Error("Region ID is required");
+      }
+
+      const { success } = await checkHasRoleOnOrg({
+        orgId: updateRequest.regionId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+
+      if (!success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: `You do not have permission to edit this region. Please contact the administrator.`,
+        });
+      }
+
       const result = await applyUpdateRequest(ctx, {
         ...updateRequest,
+        regionId: updateRequest.regionId,
         reviewedBy: "email",
+        meta: updateRequest.meta,
+        eventMeta: updateRequest.eventMeta,
       });
 
       return result;
@@ -134,10 +202,15 @@ export const requestRouter = createTRPCRouter({
         });
       }
 
-      if (
-        ctx.session.role !== "admin" &&
-        !ctx.session.editingRegionIds.includes(input.regionId)
-      ) {
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.regionId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      console.log("roleCheckResult", roleCheckResult);
+
+      if (!roleCheckResult.success) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "You are not authorized to edit this region",
@@ -163,10 +236,15 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Failed to find update request");
       }
 
-      if (
-        ctx.session.role !== "admin" &&
-        !ctx.session.editingRegionIds.includes(updateRequest.regionId)
-      ) {
+      const { success: hasPermissionToEditThisRegion } =
+        await checkHasRoleOnOrg({
+          orgId: updateRequest.regionId,
+          session: ctx.session,
+          db: ctx.db,
+          roleName: "editor",
+        });
+
+      if (!hasPermissionToEditThisRegion) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "You are not authorized to edit this region",
@@ -181,26 +259,27 @@ export const requestRouter = createTRPCRouter({
 
 export const applyUpdateRequest = async (
   ctx: Context,
-  updateRequest: z.infer<typeof RequestInsertSchema> & { reviewedBy: string },
+  updateRequest: Omit<
+    z.infer<typeof RequestInsertSchema>,
+    "meta" | "eventMeta" | "eventDayOfWeek"
+  > & {
+    reviewedBy: string;
+    meta?: UpdateRequestMeta | null;
+    eventMeta?: EventMeta | null;
+    eventDayOfWeek?: DayOfWeek | null;
+  },
 ) => {
   // LOCATION
-  if (
-    updateRequest.locationId == undefined ||
-    updateRequest.locationId === -1
-  ) {
-    const [aoOrg] = await ctx.db
-      .select({ id: schema.orgTypes.id })
-      .from(schema.orgTypes)
-      .where(eq(schema.orgTypes.name, "AO"));
-
-    if (!aoOrg) throw new Error("Failed to find AO org type");
+  if (updateRequest.locationId == undefined) {
+    console.log("Getting existing ao");
 
     // INSERT AO
+    console.log("inserting ao", updateRequest);
     const [ao] = await ctx.db
       .insert(schema.orgs)
       .values({
         parentId: updateRequest.regionId,
-        orgTypeId: aoOrg.id,
+        orgType: "ao",
         defaultLocationId: updateRequest.locationId,
         name: updateRequest.eventName ?? "",
         isActive: true,
@@ -211,6 +290,7 @@ export const applyUpdateRequest = async (
     if (!ao) throw new Error("Failed to insert AO");
 
     // INSERT LOCATION
+    console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
       name: updateRequest.locationName ?? "",
       description: updateRequest.locationDescription ?? "",
@@ -236,9 +316,11 @@ export const applyUpdateRequest = async (
     }
     updateRequest.locationId = location.id;
   } else {
+    console.log("updating location", updateRequest);
     await ctx.db
       .update(schema.locations)
       .set({
+        name: updateRequest.locationName ?? "",
         description: updateRequest.locationDescription,
         addressStreet: updateRequest.locationAddress,
         addressStreet2: updateRequest.locationAddress2,
@@ -256,9 +338,10 @@ export const applyUpdateRequest = async (
   const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {
     ...updateRequest,
     status: "approved",
-    reviewedAt: new Date(),
+    reviewedAt: new Date().toISOString(),
   };
 
+  console.log("inserting update request", updateRequestInsertData);
   const [updated] = await ctx.db
     .insert(schema.updateRequests)
     .values(updateRequestInsertData)
@@ -274,19 +357,19 @@ export const applyUpdateRequest = async (
 
   // EVENT
   if (updateRequest.eventId != undefined) {
+    console.log("updating event", updateRequest);
     await ctx.db
       .update(schema.events)
       .set({
         name: updateRequest.eventName,
         locationId: updateRequest.locationId,
         description: updateRequest.eventDescription,
+        // Use undefined to not remove the existing value
         startDate: updateRequest.eventStartDate ?? undefined,
         endDate: updateRequest.eventEndDate ?? undefined,
         startTime: updateRequest.eventStartTime ?? undefined,
         endTime: updateRequest.eventEndTime ?? undefined,
-        dayOfWeek: updateRequest.eventDayOfWeek
-          ? DAY_ORDER.indexOf(updateRequest.eventDayOfWeek)
-          : undefined,
+        dayOfWeek: updateRequest.eventDayOfWeek ?? undefined,
         seriesId: updateRequest.eventSeriesId,
         isSeries: updateRequest.eventIsSeries ?? true,
         isActive: true,
@@ -300,11 +383,12 @@ export const applyUpdateRequest = async (
       })
       .where(eq(schema.events.id, updateRequest.eventId));
   } else {
+    console.log("inserting event", updateRequest);
     const newEvent: typeof schema.events.$inferInsert = {
       name: updateRequest.eventName,
       locationId: updateRequest.locationId,
       description: updateRequest.eventDescription,
-      startDate: updateRequest.eventStartDate ?? undefined,
+      startDate: updateRequest.eventStartDate ?? dayjs().format("YYYY-MM-DD"),
       endDate: updateRequest.eventEndDate ?? undefined,
       startTime: updateRequest.eventStartTime ?? undefined,
       endTime: updateRequest.eventEndTime ?? undefined,
@@ -312,9 +396,7 @@ export const applyUpdateRequest = async (
       isSeries: updateRequest.eventIsSeries ?? true,
       isActive: true,
       highlight: false,
-      dayOfWeek: updateRequest.eventDayOfWeek
-        ? DAY_ORDER.indexOf(updateRequest.eventDayOfWeek)
-        : undefined,
+      dayOfWeek: updateRequest.eventDayOfWeek,
       orgId: updateRequest.regionId,
       recurrencePattern: updateRequest.eventRecurrencePattern,
       recurrenceInterval: updateRequest.eventRecurrenceInterval,
@@ -322,10 +404,27 @@ export const applyUpdateRequest = async (
       meta: updateRequest.eventMeta,
       email: updateRequest.eventContactEmail,
     };
+
     const [_inserted] = await ctx.db
       .insert(schema.events)
       .values(newEvent)
       .returning();
+
+    console.log("inserting event type", newEvent);
+    if (!_inserted) {
+      throw new Error("Failed to insert event");
+    }
+
+    console.log("updating event types", updateRequest.eventTypeIds);
+    await ctx.db
+      .delete(schema.eventsXEventTypes)
+      .where(eq(schema.eventsXEventTypes.eventId, _inserted.id));
+    await ctx.db.insert(schema.eventsXEventTypes).values(
+      updateRequest.eventTypeIds?.map((id) => ({
+        eventId: _inserted.id,
+        eventTypeId: id,
+      })) ?? [],
+    );
   }
 
   return { success: true, updateRequest: omit(updated, ["token"]) };

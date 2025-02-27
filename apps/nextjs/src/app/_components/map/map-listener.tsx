@@ -51,7 +51,10 @@ export const MapListener = () => {
       }
     },
     dragstart: () => {
-      mapStore.setState({ dragging: true, hasMovedMap: true });
+      mapStore.setState({
+        dragging: true,
+        hasMovedMap: true,
+      });
       selectedItemStore.setState({
         locationId: null,
         eventId: null,
@@ -63,7 +66,14 @@ export const MapListener = () => {
       const bounds = mapEvents.getBounds();
       const isMobile = isTouchDevice();
       mapStore.setState({ bounds, center, dragging: false });
-      if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
+      if (isMobile)
+        mapStore.setState({
+          nearbyLocationCenter: {
+            ...center,
+            name: null,
+            type: "manual-update",
+          },
+        });
     },
     moveend: () => {
       // console.log("mapEvents moveend");
@@ -74,7 +84,14 @@ export const MapListener = () => {
         center,
         hasMovedMap: true,
       });
-      if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
+      if (isMobile)
+        mapStore.setState({
+          nearbyLocationCenter: {
+            ...center,
+            name: null,
+            type: "manual-update",
+          },
+        });
     },
     // zoomlevelschange fires when the map first loads
     zoomlevelschange: () => {
@@ -83,7 +100,14 @@ export const MapListener = () => {
       const bounds = mapEvents.getBounds();
       const isMobile = isTouchDevice();
       mapStore.setState({ zoom: mapEvents.getZoom(), bounds, center });
-      if (isMobile) mapStore.setState({ nearbyLocationCenter: center });
+      if (isMobile)
+        mapStore.setState({
+          nearbyLocationCenter: {
+            ...center,
+            name: null,
+            type: "manual-update",
+          },
+        });
     },
     // zoom: () => {
     //   console.log("mapEvents zoom");

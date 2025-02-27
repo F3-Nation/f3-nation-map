@@ -1,62 +1,78 @@
 import { z } from "zod";
 
 import { aliasedTable, eq, schema } from "@f3/db";
-import { RegionInsertSchema } from "@f3/validators";
+import { AreaInsertSchema } from "@f3/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const areaRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const areaOrg = aliasedTable(schema.orgs, "area_org");
+    const sectorOrg = aliasedTable(schema.orgs, "sector_org");
+    const nationOrg = aliasedTable(schema.orgs, "nation_org");
 
-    const regions = await ctx.db
+    const areas = await ctx.db
       .select({
-        id: regionOrg.id,
-        name: regionOrg.name,
-        orgTypeId: regionOrg.orgTypeId,
-        defaultLocationId: regionOrg.defaultLocationId,
-        description: regionOrg.description,
-        isActive: regionOrg.isActive,
-        logoUrl: regionOrg.logoUrl,
-        website: regionOrg.website,
-        email: regionOrg.email,
-        twitter: regionOrg.twitter,
-        facebook: regionOrg.facebook,
-        instagram: regionOrg.instagram,
-        lastAnnualReview: regionOrg.lastAnnualReview,
-        meta: regionOrg.meta,
-        created: regionOrg.created,
-        area: schema.orgs.name,
+        id: areaOrg.id,
+        name: areaOrg.name,
+        orgType: areaOrg.orgType,
+        defaultLocationId: areaOrg.defaultLocationId,
+        description: areaOrg.description,
+        isActive: areaOrg.isActive,
+        logoUrl: areaOrg.logoUrl,
+        website: areaOrg.website,
+        email: areaOrg.email,
+        twitter: areaOrg.twitter,
+        facebook: areaOrg.facebook,
+        instagram: areaOrg.instagram,
+        lastAnnualReview: areaOrg.lastAnnualReview,
+        meta: areaOrg.meta,
+        created: areaOrg.created,
+        sector: sectorOrg.name,
+        nation: nationOrg.name,
       })
-      .from(regionOrg)
-      .innerJoin(schema.orgTypes, eq(regionOrg.orgTypeId, schema.orgTypes.id))
-      .innerJoin(schema.orgs, eq(regionOrg.parentId, schema.orgs.id))
-      .where(eq(schema.orgTypes.name, "Area"));
+      .from(areaOrg)
+      .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
+      .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
+      .where(eq(areaOrg.orgType, "area"));
 
-    return regions;
+    return areas;
   }),
 
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const regionOrg = aliasedTable(schema.orgs, "region_org");
-      const [region] = await ctx.db
+      const areaOrg = aliasedTable(schema.orgs, "area_org");
+      const [area] = await ctx.db
         .select()
-        .from(regionOrg)
-        .where(eq(regionOrg.id, input.id));
-      return { ...region };
+        .from(areaOrg)
+        .where(eq(areaOrg.id, input.id));
+      return { ...area };
     }),
 
   crupdate: publicProcedure
-    .input(RegionInsertSchema)
+
+    .input(AreaInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const regionOrg = aliasedTable(schema.orgs, "region_org");
-      const regionToCrupdate: typeof schema.orgs.$inferInsert = {
+      const areaToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
+        orgType: "area",
         meta: {
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db.insert(regionOrg).values(regionToCrupdate);
+      await ctx.db
+        .insert(schema.orgs)
+        .values(areaToCrupdate)
+        .onConflictDoUpdate({
+          target: [schema.orgs.id],
+          set: areaToCrupdate,
+        });
+    }),
+
+  delete: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(schema.orgs).where(eq(schema.orgs.id, input.id));
     }),
 });

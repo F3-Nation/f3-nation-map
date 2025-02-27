@@ -43,10 +43,12 @@ export default function NoAccess() {
           ) : (
             <>
               <p className="text-sm text-gray-500">
-                Your role:{" "}
-                <span className="font-medium text-red-600">
-                  {session?.role}
-                </span>
+                Your roles:{" "}
+                {session?.roles?.map((role) => (
+                  <span key={role.orgId} className="font-medium text-red-600">
+                    {role.orgName} - {role.roleName}
+                  </span>
+                ))}
                 <br />
                 Required role:{" "}
                 <span className="font-medium text-green-600">

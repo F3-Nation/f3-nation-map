@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Z_INDEX } from "@f3/shared/app/constants";
+import { DayOfWeek } from "@f3/shared/app/enums";
 import { cn } from "@f3/ui";
 import { Button } from "@f3/ui/button";
 import {
@@ -44,16 +45,16 @@ export default function AdminWorkoutsModal({
   data: DataType[ModalType.ADMIN_EVENTS];
 }) {
   const utils = api.useUtils();
-  const { data: regions } = api.region.allActive.useQuery();
-  const { data: locations } = api.location.allActive.useQuery();
-  const { data: event } = api.event.byId.useQuery({ id: data.id });
+  const { data: regions } = api.region.all.useQuery();
+  const { data: locations } = api.location.all.useQuery();
+  const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     schema: EventInsertSchema,
     defaultValues: {
-      id: event?.id ?? -1,
+      id: event?.id ?? undefined,
       name: event?.name ?? "",
       isActive: event?.isActive ?? true,
       description: event?.description ?? "",
@@ -61,17 +62,17 @@ export default function AdminWorkoutsModal({
       highlight: event?.highlight ?? true,
       isSeries: event?.isSeries ?? true,
       locationId: event?.locationId ?? -1,
-      startDate: event?.startDate ?? new Date().toLocaleDateString(),
-      dayOfWeek: event?.dayOfWeek ?? new Date().getDay(),
-      startTime: event?.startTime ?? null,
-      endTime: event?.endTime ?? null,
+      dayOfWeek: event?.dayOfWeek,
+      startTime: event?.startTime?.slice(0, 5) ?? "05:30",
+      endTime: event?.endTime?.slice(0, 5) ?? "06:15",
       email: event?.email ?? null,
+      regionId: event?.regionId ?? 0,
     },
   });
 
   useEffect(() => {
     form.reset({
-      id: event?.id ?? -1,
+      id: event?.id ?? undefined,
       name: event?.name ?? "",
       isActive: event?.isActive ?? true,
       description: event?.description ?? "",
@@ -79,11 +80,11 @@ export default function AdminWorkoutsModal({
       highlight: event?.highlight ?? true,
       isSeries: event?.isSeries ?? true,
       locationId: event?.locationId ?? -1,
-      startDate: event?.startDate ?? new Date().toLocaleDateString(),
-      dayOfWeek: event?.dayOfWeek ?? new Date().getDay(),
-      startTime: event?.startTime ?? null,
-      endTime: event?.endTime ?? null,
+      dayOfWeek: event?.dayOfWeek,
+      startTime: event?.startTime?.slice(0, 5) ?? "05:30",
+      endTime: event?.endTime?.slice(0, 5) ?? "06:15",
       email: event?.email ?? null,
+      regionId: event?.regionId ?? 0,
     });
   }, [form, event]);
 
@@ -91,14 +92,14 @@ export default function AdminWorkoutsModal({
     onSuccess: async () => {
       await utils.event.invalidate();
       closeModal();
-      toast.success("Successfully updated workout");
+      toast.success("Successfully updated event");
       router.refresh();
     },
     onError: (err) => {
       toast.error(
         err?.data?.code === "UNAUTHORIZED"
-          ? "You must be logged in to update users"
-          : "Failed to update user",
+          ? "You must be logged in to update events"
+          : "Failed to update event",
       );
     },
   });
@@ -110,7 +111,7 @@ export default function AdminWorkoutsModal({
         className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Workout</DialogTitle>
+          <DialogTitle className="text-center">Edit Event</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -121,14 +122,14 @@ export default function AdminWorkoutsModal({
                 try {
                   await crupdateEvent.mutateAsync(data);
                 } catch (error) {
-                  toast.error("Failed to update user");
+                  toast.error("Failed to update event");
                   console.error(error);
                 } finally {
                   setIsSubmitting(false);
                 }
               },
               (error) => {
-                toast.error("Failed to update user");
+                toast.error("Failed to update event");
                 console.log(error);
                 setIsSubmitting(false);
               },
@@ -173,9 +174,9 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="orgId"
+                  name="regionId"
                   render={({ field }) => (
-                    <FormItem key={`area-${field.value}`}>
+                    <FormItem key={`region-${field.value}`}>
                       <FormLabel>Region</FormLabel>
                       <Select
                         value={field.value?.toString()}
@@ -190,14 +191,20 @@ export default function AdminWorkoutsModal({
                           <SelectValue placeholder="Select a region" />
                         </SelectTrigger>
                         <SelectContent>
-                          {regions?.map((region) => (
-                            <SelectItem
-                              key={`region-${region.id}`}
-                              value={region.id.toString()}
-                            >
-                              {region.name}
-                            </SelectItem>
-                          ))}
+                          {regions
+                            ?.slice()
+                            .sort(
+                              (a, b) =>
+                                a.name?.localeCompare(b.name ?? "") ?? 0,
+                            )
+                            .map((region) => (
+                              <SelectItem
+                                key={`region-${region.id}`}
+                                value={region.id?.toString() ?? ""}
+                              >
+                                {region.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -211,30 +218,44 @@ export default function AdminWorkoutsModal({
                   name="locationId"
                   render={({ field }) => {
                     const filteredLocations = locations?.filter(
-                      (location) => location.regionId === form.watch("orgId"),
+                      (location) =>
+                        location.regionId === form.watch("regionId"),
                     );
                     return (
-                      <FormItem key={`area-${field.value}`}>
+                      <FormItem key={`location-${field.value}`}>
                         <FormLabel>Location</FormLabel>
                         <Select
                           value={field.value?.toString()}
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          }
+                          onValueChange={(value) => {
+                            field.onChange(Number(value));
+
+                            const selectedLocation = locations?.find(
+                              (location) => location.id === Number(value),
+                            );
+                            if (selectedLocation) {
+                              form.setValue(
+                                "orgId",
+                                Number(selectedLocation.orgId),
+                              );
+                            }
+                          }}
                           defaultValue={field.value?.toString()}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select a location" />
                           </SelectTrigger>
                           <SelectContent>
-                            {filteredLocations?.map((location) => (
-                              <SelectItem
-                                key={`location-${location.id}`}
-                                value={location.id.toString()}
-                              >
-                                {location.name}
-                              </SelectItem>
-                            ))}
+                            {filteredLocations
+                              ?.slice()
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((location) => (
+                                <SelectItem
+                                  key={`location-${location.id}`}
+                                  value={location.id.toString()}
+                                >
+                                  {location.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -263,21 +284,30 @@ export default function AdminWorkoutsModal({
                   )}
                 />
               </div>
+
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="startDate"
+                  name="dayOfWeek"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Start Date"
-                          type="date"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
+                    <FormItem key={`dayOfWeek-${field.value}`}>
+                      <FormLabel>Day of Week</FormLabel>
+                      <Select
+                        value={field.value?.toString()}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        defaultValue={field.value?.toString()}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select day of week" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DayOfWeek.map((day) => (
+                            <SelectItem key={day} value={day}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -289,11 +319,10 @@ export default function AdminWorkoutsModal({
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time</FormLabel>
+                      <FormLabel>Start Time (24hr format)</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Start Time"
-                          type="time"
                           {...field}
                           value={field.value ?? ""}
                         />
@@ -309,11 +338,10 @@ export default function AdminWorkoutsModal({
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time</FormLabel>
+                      <FormLabel>End Time (24hr format)</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="End Time"
-                          type="time"
                           {...field}
                           value={field.value ?? ""}
                         />

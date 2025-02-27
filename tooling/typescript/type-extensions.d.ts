@@ -18,11 +18,17 @@ interface VerificationToken {
   token: string;
 }
 
+type OrgRole = {
+  orgId: number;
+  orgName: string;
+  roleName: UserRole;
+};
+
 interface AdapterUser {
   id: number;
   email: string;
-  emailVerified: Date | null;
-  editingRegionIds: number[];
+  emailVerified: string | null;
+  roles: OrgRole[];
 }
 
 interface AdapterSession {
@@ -33,11 +39,19 @@ interface AdapterSession {
 
 interface AdapterAccount {
   userId: number;
-  type: Extract<ProviderType, "oauth" | "oidc" | "email" | "webauthn">;
+  type: string; // Extract<ProviderType, "oauth" | "oidc" | "email" | "webauthn">;
   provider: string;
   providerAccountId: string;
 }
 
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id?: string | number;
+    email: string | undefined;
+    roles: OrgRole[];
+    signinunixsecondsepoch: number;
+  }
+}
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -47,23 +61,21 @@ interface AdapterAccount {
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
+    id: number;
     email: string | undefined;
-    role: UserRole | undefined;
-    editingRegionIds: number[];
+    roles: OrgRole[];
   }
 
   interface JWT extends DefaultJWT {
     id?: string | number;
     email: string | undefined;
-    role: UserRole | undefined;
+    roles: OrgRole[];
     signinunixsecondsepoch: number;
-    editingRegionIds: number[];
   }
 
   interface User {
     // ...other properties
-    role: UserRole;
-    editingRegionIds: number[];
+    roles: OrgRole[];
   }
 
   interface MdAdapter {
@@ -117,7 +129,8 @@ declare module "next-auth" {
      */
     linkAccount?(
       account: AdapterAccount,
-    ): Promise<void> | Awaitable<AdapterAccount | null | undefined>;
+      // ): Promise<void> | Awaitable<AdapterAccount | null | undefined>;
+    ): Awaitable<AdapterAccount | null | undefined>;
     /** @todo This method is currently not invoked yet. */
     unlinkAccount?(
       providerAccountId: Pick<AdapterAccount, "provider" | "providerAccountId">,

@@ -1,6 +1,10 @@
+// Must disable these since we can't use a button in a button
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 "use client";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
+import type { DayOfWeek } from "@f3/shared/app/enums";
+import { getReadableDayOfWeek } from "@f3/shared/app/functions";
 import { cn } from "@f3/ui";
 
 import { dayjs } from "~/utils/frontendDayjs";
@@ -19,7 +23,7 @@ export const EventChip = (props: {
   onClick?: () => void;
   event: {
     name?: string;
-    dayOfWeek: number | null;
+    dayOfWeek: DayOfWeek | null;
     startTime: string | null;
     endTime?: string | null;
     id: number;
@@ -40,16 +44,10 @@ export const EventChip = (props: {
     selected,
     variant = "interactive",
   } = props;
-  const calcDayOfWeek =
-    event.dayOfWeek === null
-      ? undefined
-      : size === "large"
-        ? SHORT_DAY_ORDER[event.dayOfWeek]
-        : SHORT_DAY_ORDER[event.dayOfWeek];
   const startTimeRaw =
     event.startTime === null
       ? undefined
-      : dayjs(event.startTime, "HH:mm:ss").format("h:mmA");
+      : dayjs(event.startTime, "HHmm").format("h:mmA");
 
   const iconSize = size === "small" ? 16 : size === "medium" ? 16 : 24;
 
@@ -66,13 +64,13 @@ export const EventChip = (props: {
     ) : null;
 
   const duration = event.endTime
-    ? dayjs(event.endTime, "HH:mm:ss").diff(
-        dayjs(event.startTime, "HH:mm:ss"),
+    ? dayjs(event.endTime, "HHmm").diff(
+        dayjs(event.startTime, "HHmm"),
         "minutes",
       )
     : null;
   return (
-    <button
+    <div
       key={event.id}
       className={cn(
         "flex flex-row items-center ",
@@ -135,7 +133,7 @@ export const EventChip = (props: {
           </div>
         ) : null}
         <div className="line-clamp-1 flex-shrink-0 text-left">
-          {calcDayOfWeek} {startTime}
+          {getReadableDayOfWeek(event.dayOfWeek)} {startTime}
         </div>
         {size === "small" || !duration ? null : ` (${duration}m)`}
       </div>
@@ -150,6 +148,6 @@ export const EventChip = (props: {
           <RunSvgComponent height={iconSize} width={iconSize} />
         ) : null}
       </div>
-    </button>
+    </div>
   );
 };

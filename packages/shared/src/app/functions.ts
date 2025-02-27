@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { GroupedMapData, LeafletWorkoutData } from "@f3/shared/app/types";
 import { isDDD } from "@f3/shared/app/types";
 
+import type { DayOfWeek } from "./enums";
 import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "./constants";
 
 export function groupMarkersByLocation(_mapData: LeafletWorkoutData[]) {
@@ -103,3 +104,31 @@ export const dateOrIso = z.union([
   z.date(),
   z.string().refine(isISODate, { message: "Not a valid ISO string date " }),
 ]);
+
+export const dayOfWeekToShortDayOfWeek = (dayOfWeek: DayOfWeek): string => {
+  switch (dayOfWeek) {
+    case "sunday":
+      return "Su";
+    case "monday":
+      return "M";
+    case "tuesday":
+      return "Tu";
+    case "wednesday":
+      return "W";
+    case "thursday":
+      return "Th";
+    case "friday":
+      return "F";
+    case "saturday":
+      return "Sa";
+    default:
+      return "Su";
+  }
+};
+
+export const getReadableDayOfWeek = (dayOfWeek: DayOfWeek | null) => {
+  if (!dayOfWeek) {
+    return null;
+  }
+  return dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+};

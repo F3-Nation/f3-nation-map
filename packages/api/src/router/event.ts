@@ -33,7 +33,6 @@ export const eventRouter = createTRPCRouter({
       )
       .leftJoin(locationOrg, eq(locationOrg.id, schema.locations.orgId))
       .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId));
-
     return workouts;
   }),
   byId: publicProcedure
@@ -49,7 +48,8 @@ export const eventRouter = createTRPCRouter({
           isActive: schema.events.isActive,
           location: schema.locations.name,
           regionName: regionOrg.name,
-          orgId: schema.events.orgId, //region
+          regionId: regionOrg.id,
+          orgId: schema.events.orgId,
           locationId: schema.events.locationId,
           startDate: schema.events.startDate,
           dayOfWeek: schema.events.dayOfWeek,
@@ -72,9 +72,14 @@ export const eventRouter = createTRPCRouter({
       return event;
     }),
   crupdate: publicProcedure
-    .input(EventInsertSchema)
+    .input(EventInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const eventToUpdate: typeof schema.events.$inferInsert = input;
+      const eventToUpdate: typeof schema.events.$inferInsert = {
+        ...input,
+        meta: {
+          ...(input.meta as Record<string, string>),
+        },
+      };
       await ctx.db
         .insert(schema.events)
         .values(eventToUpdate)
@@ -86,4 +91,9 @@ export const eventRouter = createTRPCRouter({
   types: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.select().from(schema.eventTypes);
   }),
+  delete: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(schema.events).where(eq(schema.events.id, input.id));
+    }),
 });

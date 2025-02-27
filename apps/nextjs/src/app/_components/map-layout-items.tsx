@@ -1,9 +1,12 @@
 "use client";
 
 import type { ComponentProps } from "react";
+import { useMemo } from "react";
 
 import { Z_INDEX } from "@f3/shared/app/constants";
+import { classNames } from "@f3/shared/common/functions";
 
+import { latLngToMeters } from "~/utils/lat-lng-to-meters";
 import { mapStore } from "~/utils/store/map";
 import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
@@ -23,6 +26,19 @@ const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
   const showDebugStore = mapStore.use.showDebug();
   const loaded = mapStore.use.loaded();
+  const center = mapStore.use.center();
+  const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
+  // If the center is more than 100 meters away from the nearbyLocationCenter, then we have moved away from the location
+  const hasMovedAwayFromLocation = useMemo(() => {
+    return (
+      latLngToMeters(
+        center?.lat,
+        center?.lng,
+        nearbyLocationCenter.lat,
+        nearbyLocationCenter.lng,
+      ) > 1000
+    ); // one km
+  }, [center, nearbyLocationCenter]);
 
   const showDebug =
     showDebugStore || (process.env.NODE_ENV === "development" && SHOW_DEBUG)
@@ -52,6 +68,29 @@ export const MapLayoutItems = () => {
         <DesktopLocationPanelContent />
       </DesktopLocationPanel>
 
+      {hasMovedAwayFromLocation && (
+        <button
+          className={classNames(
+            "rounded-xl bg-background px-4 py-1 text-sm text-foreground shadow",
+            "absolute left-2/4 top-14 -translate-x-2/4",
+          )}
+          style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+          onClick={() => {
+            const center = mapStore.get("center");
+            if (!center) return;
+            mapStore.setState({
+              nearbyLocationCenter: {
+                ...center,
+                name: null,
+                type: "manual-update",
+              },
+            });
+          }}
+        >
+          Show nearby areas
+        </button>
+      )}
+
       {/* Mobile */}
       <MobileAboveSearchBox>
         <div className="mb-1 flex w-full flex-row items-end justify-end px-1">
@@ -75,6 +114,7 @@ export const MapLayoutItems = () => {
     </>
   );
 };
+
 const DesktopTopLeftButtons = (props: ComponentProps<"div">) => (
   <div
     style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}

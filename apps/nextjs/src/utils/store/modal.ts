@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import type { DayOfWeek } from "@f3/shared/app/enums";
 import { ZustandStore } from "@f3/shared/common/classes";
 
 import { hideSelectedItem } from "./selected-item";
@@ -15,7 +16,20 @@ export enum ModalType {
   ADMIN_REQUESTS = "ADMIN_REQUESTS",
   ADMIN_EVENTS = "ADMIN_EVENTS",
   ADMIN_LOCATIONS = "ADMIN_LOCATIONS",
+  ADMIN_NATIONS = "ADMIN_NATIONS",
+  ADMIN_SECTORS = "ADMIN_SECTORS",
+  ADMIN_AREAS = "ADMIN_AREAS",
   ADMIN_REGIONS = "ADMIN_REGIONS",
+  ADMIN_AOS = "ADMIN_AOS",
+  ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
+}
+export enum DeleteType {
+  AREA = "AREA",
+  AO = "AO",
+  EVENT = "EVENT",
+  REGION = "REGION",
+  SECTOR = "SECTOR",
+  NATION = "NATION",
 }
 
 export interface DataType {
@@ -34,9 +48,10 @@ export interface DataType {
     lng: number;
     startTime?: string | null;
     endTime?: string | null;
-    dayOfWeek?: number | null;
+    dayOfWeek?: DayOfWeek | null;
     types?: { id: number; name: string }[];
     eventDescription?: string | null;
+    locationName?: string | null;
     locationAddress?: string | null;
     locationAddress2?: string | null;
     locationCity?: string | null;
@@ -58,13 +73,29 @@ export interface DataType {
     id: string;
   };
   [ModalType.ADMIN_EVENTS]: {
-    id: number;
+    id?: number | null;
   };
   [ModalType.ADMIN_LOCATIONS]: {
-    id: number;
+    id?: number | null;
+  };
+  [ModalType.ADMIN_NATIONS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_SECTORS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_AREAS]: {
+    id?: number | null;
   };
   [ModalType.ADMIN_REGIONS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_AOS]: {
+    id?: number | null;
+  };
+  [ModalType.ADMIN_DELETE_CONFIRMATION]: {
     id: number;
+    type: DeleteType;
   };
 }
 
@@ -109,4 +140,12 @@ export const closeModal = () => {
   modalStore.setState({
     modals: lessOneModals,
   });
+  // Modal becomes unresponsive when closing with select menu open or similar
+  // https://github.com/shadcn-ui/ui/issues/1912#issuecomment-2613189967
+  setTimeout(() => {
+    const body = document.querySelector("body");
+    if (body) {
+      body.style.pointerEvents = "auto";
+    }
+  }, 500);
 };
