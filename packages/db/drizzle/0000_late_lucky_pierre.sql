@@ -120,7 +120,7 @@ CREATE TABLE "events" (
 	"is_series" boolean NOT NULL,
 	"is_active" boolean NOT NULL,
 	"highlight" boolean NOT NULL,
-	"start_date" date,
+	"start_date" date NOT NULL,
 	"end_date" date,
 	"start_time" varchar,
 	"end_time" varchar,

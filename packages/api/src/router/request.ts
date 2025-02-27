@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import dayjs from "dayjs";
 import omit from "lodash/omit";
 import { z } from "zod";
 
@@ -387,7 +388,7 @@ export const applyUpdateRequest = async (
       name: updateRequest.eventName,
       locationId: updateRequest.locationId,
       description: updateRequest.eventDescription,
-      startDate: updateRequest.eventStartDate ?? undefined,
+      startDate: updateRequest.eventStartDate ?? dayjs().format("YYYY-MM-DD"),
       endDate: updateRequest.eventEndDate ?? undefined,
       startTime: updateRequest.eventStartTime ?? undefined,
       endTime: updateRequest.eventEndTime ?? undefined,

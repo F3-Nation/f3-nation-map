@@ -562,7 +562,10 @@ export async function insertData(data: {
           isActive: true,
           isSeries: true,
           highlight: false,
-          startDate: dayjs().format("YYYY-MM-DD"), // You might want to set a specific start date
+          startDate:
+            workout.Created === "0000-00-00 00:00:00"
+              ? dayjs().toISOString()
+              : workout.Created,
           dayOfWeek,
           startTime: startTime?.isValid() ? startTime.format("HHmm") : null,
           endTime: endTime?.isValid() ? endTime.format("HHmm") : null,

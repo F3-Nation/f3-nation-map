@@ -403,7 +403,7 @@ export const events = pgTable(
     isSeries: boolean("is_series").notNull(),
     isActive: boolean("is_active").notNull(),
     highlight: boolean().notNull(),
-    startDate: date("start_date"),
+    startDate: date("start_date").notNull(),
     endDate: date("end_date"),
     startTime: varchar("start_time"),
     endTime: varchar("end_time"),
