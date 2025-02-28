@@ -377,12 +377,19 @@ export type SlackSpacesMeta = Record<string, unknown>;
 
 export type UserMeta = Record<string, unknown>;
 
-export type EventMeta = Record<string, unknown>;
+export type EventMeta = {
+  eventTypeId?: number;
+  mapSeed?: boolean;
+} & Record<string, unknown>;
 
-export type LocationMeta = Record<string, unknown>;
+export type LocationMeta = {
+  latLonKey?: string;
+  mapSeed?: boolean;
+} & Record<string, unknown>;
 
 export type OrgMeta = {
   latLonKey?: string;
+  mapSeed?: boolean;
 } & Record<string, unknown>;
 
 export type UpdateRequestMeta = Record<string, unknown>;

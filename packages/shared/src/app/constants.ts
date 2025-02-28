@@ -240,18 +240,5 @@ export enum Permissions {
   EDIT = "edit",
 }
 
-export const PERMISSIONS = {
-  [Permissions.ADMIN]: {
-    id: 1,
-    name: Permissions.ADMIN,
-    description: "Admin permissions",
-  },
-  [Permissions.EDIT]: {
-    id: 2,
-    name: Permissions.EDIT,
-    description: "Edit permissions",
-  },
-};
-
 export const START_END_TIME_DB_FORMAT = "HHmm" as const;
 export const START_END_TIME_DISPLAY_FORMAT = "h:mmA" as const;
