@@ -1,6 +1,6 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 
-import type { LeafletWorkoutData } from "@f3/shared/app/types";
+import type { LeafletWorkoutData } from "@acme/shared/app/types";
 
 export const creds = {
   private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY!,

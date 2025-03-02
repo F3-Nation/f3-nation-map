@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import type {
   F3LocationMapSearchResult,

@@ -3,7 +3,7 @@ import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 
-import { DEFAULT_CENTER } from "@f3/shared/app/constants";
+import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 
 const MapUpdater = ({
   lat,

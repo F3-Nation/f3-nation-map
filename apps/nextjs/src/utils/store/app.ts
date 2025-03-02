@@ -1,6 +1,6 @@
 import { createRef } from "react";
 
-import { ZustandStore } from "@f3/shared/common/classes";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,

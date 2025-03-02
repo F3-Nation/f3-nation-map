@@ -6,7 +6,7 @@ import type { z } from "zod";
 import handlebars from "handlebars";
 import nodemailer, { createTestAccount } from "nodemailer";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 import type { feedbackSchema } from "./router/feedback";
 

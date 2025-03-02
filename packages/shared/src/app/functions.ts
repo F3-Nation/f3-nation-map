@@ -1,10 +1,12 @@
+import type {
+    GroupedMapData,
+    LeafletWorkoutData,
+} from "@acme/shared/app/types";
+import { isDDD } from "@acme/shared/app/types";
 import { z } from "zod";
 
-import type { GroupedMapData, LeafletWorkoutData } from "@f3/shared/app/types";
-import { isDDD } from "@f3/shared/app/types";
-
-import type { DayOfWeek } from "./enums";
 import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "./constants";
+import type { DayOfWeek } from "./enums";
 
 export function groupMarkersByLocation(_mapData: LeafletWorkoutData[]) {
   // Object to hold the results, with lat-lng as key

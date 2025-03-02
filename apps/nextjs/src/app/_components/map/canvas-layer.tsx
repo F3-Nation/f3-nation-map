@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import { useMap } from "react-leaflet";
 
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
-import { isTruthy } from "@f3/shared/common/functions";
-import { useTheme } from "@f3/ui/theme";
+import { CLOSE_ZOOM } from "@acme/shared/app/constants";
+import { isTruthy } from "@acme/shared/common/functions";
+import { useTheme } from "@acme/ui/theme";
 
 import type { F3Marker, F3MarkerLocation } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";

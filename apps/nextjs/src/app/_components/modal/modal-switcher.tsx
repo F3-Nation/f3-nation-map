@@ -2,7 +2,7 @@
 
 import { useWindowSize } from "@react-hook/window-size";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints } from "@acme/shared/app/constants";
 
 import type { DataType } from "~/utils/store/modal";
 import { ModalType, useOpenModal } from "~/utils/store/modal";

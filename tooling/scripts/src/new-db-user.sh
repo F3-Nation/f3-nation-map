@@ -11,7 +11,7 @@ PASSWORD=$2
 DBNAME=$3
 
 # Load environment variables
-DATABASE_URL=$(pnpm -F scripts with-env tsx -e "const { env } = require('@f3/env'); console.log(env.DATABASE_URL);" | tail -n 1)
+DATABASE_URL=$(pnpm -F scripts with-env tsx -e "const { env } = require('@acme/env'); console.log(env.DATABASE_URL);" | tail -n 1)
 
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then

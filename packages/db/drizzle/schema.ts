@@ -27,7 +27,7 @@ import type {
   SlackUserMeta,
   UpdateRequestMeta,
   UserMeta,
-} from "@f3/shared/app/types";
+} from "@acme/shared/app/types";
 import {
   DayOfWeek,
   EventCadence,
@@ -37,7 +37,7 @@ import {
   UpdateRequestStatus,
   UserRole,
   UserStatus,
-} from "@f3/shared/app/enums";
+} from "@acme/shared/app/enums";
 
 export const userRole = pgEnum("user_role", UserRole);
 export const dayOfWeek = pgEnum("day_of_week", DayOfWeek);

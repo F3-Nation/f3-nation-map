@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm/sql";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 import { db } from ".";
 import { alembicVersion } from "../drizzle/schema";

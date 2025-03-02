@@ -2,10 +2,10 @@
 
 import type { TableOptions } from "@tanstack/react-table";
 
-import type { RouterOutputs } from "@f3/api";
-import { MDTable } from "@f3/ui/md-table";
-import { Cell, Header } from "@f3/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
+import type { RouterOutputs } from "@acme/api";
+import { MDTable } from "@acme/ui/md-table";
+import { Cell, Header } from "@acme/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 
 import { ModalType, openModal } from "~/utils/store/modal";
 

@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
-import baseConfig from "@f3/tailwind-config/web";
+import baseConfig from "@acme/tailwind-config/web";
 
 const SIDEBAR_WIDTH = 360;
 

@@ -1,8 +1,8 @@
 import type { MutableRefObject } from "react";
 import { createRef } from "react";
 
-import type { PlaceResult } from "@f3/shared/app/types";
-import { ZustandStore } from "@f3/shared/common/classes";
+import type { PlaceResult } from "@acme/shared/app/types";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 const initialState = {
   text: "",

@@ -15,19 +15,19 @@ vi.mock("react", () => ({
   useContext: vi.fn(() => []),
 }));
 
-vi.mock("@f3/ui/button", () => ({
+vi.mock("@acme/ui/button", () => ({
   Button: vi.fn(),
 }));
 
-vi.mock("@f3/ui/input", () => ({
+vi.mock("@acme/ui/input", () => ({
   Input: vi.fn(),
 }));
 
-vi.mock("@f3/ui/toast", () => ({
+vi.mock("@acme/ui/toast", () => ({
   toast: vi.fn(),
 }));
 
-vi.mock("@f3/ui/form", () => ({
+vi.mock("@acme/ui/form", () => ({
   Form: vi.fn(),
   FormControl: vi.fn(),
   FormField: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("@f3/ui/form", () => ({
   useForm: vi.fn(),
 }));
 
-vi.mock("@f3/ui/toast", () => ({
+vi.mock("@acme/ui/toast", () => ({
   toast: vi.fn(),
 }));
 

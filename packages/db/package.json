@@ -1,5 +1,5 @@
 {
-  "name": "@f3/db",
+  "name": "@acme/db",
   "version": "0.1.0",
   "private": true,
   "exports": {
@@ -26,8 +26,8 @@
     "update-db": "pnpm with-env node -r esbuild-register src/update-db.ts"
   },
   "dependencies": {
-    "@f3/env": "workspace:*",
-    "@f3/shared": "workspace:*",
+    "@acme/env": "workspace:*",
+    "@acme/shared": "workspace:*",
     "dotenv-cli": "^7.3.0",
     "drizzle-orm": "^0.38.4",
     "esbuild-register": "^3.5.0",
@@ -35,9 +35,9 @@
     "postgres": "^3.4.3"
   },
   "devDependencies": {
-    "@f3/eslint-config": "workspace:*",
-    "@f3/prettier-config": "workspace:*",
-    "@f3/tsconfig": "workspace:*",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
     "@faker-js/faker": "^8.1.0",
     "drizzle-kit": "^0.30.2",
     "eslint": "^8.56.0",
@@ -47,8 +47,8 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@f3/eslint-config/base"
+      "@acme/eslint-config/base"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

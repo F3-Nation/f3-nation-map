@@ -3,10 +3,10 @@
 import type { ComponentProps } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
-import { Spinner } from "@f3/ui/spinner";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
+import { Spinner } from "@acme/ui/spinner";
 
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
 import { setSelectedItem } from "~/utils/store/selected-item";

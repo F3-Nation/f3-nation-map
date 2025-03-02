@@ -1,9 +1,9 @@
 import { createTRPCClient, httpLink } from "@trpc/client";
 import superjson from "superjson";
 
-import type { AppRouter } from "@f3/api";
-import { AppType } from "@f3/shared/app/constants";
-import { Header } from "@f3/shared/common/enums";
+import type { AppRouter } from "@acme/api";
+import { AppType } from "@acme/shared/app/constants";
+import { Header } from "@acme/shared/common/enums";
 
 import { getBaseUrl } from "./util";
 

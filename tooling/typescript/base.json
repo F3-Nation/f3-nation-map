@@ -16,7 +16,7 @@
     "jsx": "preserve",
     "incremental": true,
     "noUncheckedIndexedAccess": true,
-    "types": ["@f3/tsconfig/type-extensions"]
+    "types": ["@acme/tsconfig/type-extensions"]
   },
   "exclude": ["node_modules", "build", "dist", ".next", ".expo"]
 }

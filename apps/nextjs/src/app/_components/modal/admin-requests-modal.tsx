@@ -7,19 +7,19 @@ import { Controller } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { Case } from "@f3/shared/common/enums";
-import { convertCase } from "@f3/shared/common/functions";
-import { Button } from "@f3/ui/button";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { Case } from "@acme/shared/common/enums";
+import { convertCase } from "@acme/shared/common/functions";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
-import { Form, useForm } from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/dialog";
+import { Form, useForm } from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   ControlledSelect,
   Select,
@@ -27,11 +27,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { Spinner } from "@f3/ui/spinner";
-import { Textarea } from "@f3/ui/textarea";
-import { toast } from "@f3/ui/toast";
-import { RequestInsertSchema } from "@f3/validators";
+} from "@acme/ui/select";
+import { Spinner } from "@acme/ui/spinner";
+import { Textarea } from "@acme/ui/textarea";
+import { toast } from "@acme/ui/toast";
+import { RequestInsertSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";

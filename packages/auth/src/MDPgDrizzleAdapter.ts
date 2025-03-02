@@ -3,8 +3,8 @@ import type { MdAdapter } from "next-auth";
 import { and, eq } from "drizzle-orm";
 import omit from "lodash/omit";
 
-import type { UserRole } from "@f3/shared/app/enums";
-import { schema, sql } from "@f3/db";
+import type { UserRole } from "@acme/shared/app/enums";
+import { schema, sql } from "@acme/db";
 
 const {
   users,

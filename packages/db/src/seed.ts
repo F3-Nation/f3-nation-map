@@ -1,19 +1,19 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
-import { eq, inArray, sql } from "@f3/db";
-import { env } from "@f3/env";
+import { eq, inArray, sql } from "@acme/db";
+import { env } from "@acme/env";
 import {
   DayOfWeek,
   EventTags,
   EventTypes,
   RegionRole,
-} from "@f3/shared/app/enums";
+} from "@acme/shared/app/enums";
 import {
   isTruthy,
   onlyUnique,
   safeParseFloat,
-} from "@f3/shared/common/functions";
+} from "@acme/shared/common/functions";
 
 import type { InferInsertModel } from ".";
 import type {

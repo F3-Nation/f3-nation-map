@@ -1,4 +1,4 @@
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import { useUserLocation } from "../map/user-location-provider";
 

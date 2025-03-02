@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { HEADER_HEIGHT } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
+import { HEADER_HEIGHT } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
 
 import { MapSearchBox } from "./map/map-searchbox-desktop";
 import { DesktopSidebarContainer } from "./sidebar/desktop-sidebar-container";

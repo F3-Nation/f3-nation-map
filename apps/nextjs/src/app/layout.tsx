@@ -3,9 +3,9 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { SessionProvider } from "next-auth/react";
 
-import { cn } from "@f3/ui";
-import { ThemeProvider } from "@f3/ui/theme";
-import { Toaster } from "@f3/ui/toast";
+import { cn } from "@acme/ui";
+import { ThemeProvider } from "@acme/ui/theme";
+import { Toaster } from "@acme/ui/toast";
 
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
@@ -13,7 +13,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import "leaflet/dist/leaflet.css";
 import "~/app/globals.css";
 
-import { TooltipProvider } from "@f3/ui/tooltip";
+import { TooltipProvider } from "@acme/ui/tooltip";
 
 import { KeyPressProvider } from "~/utils/key-press/provider";
 import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";

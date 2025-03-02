@@ -1,6 +1,6 @@
-import type { Session } from "@f3/auth";
-import type { UserRole } from "@f3/shared/app/enums";
-import { aliasedTable, eq, schema } from "@f3/db";
+import type { Session } from "@acme/auth";
+import type { UserRole } from "@acme/shared/app/enums";
+import { aliasedTable, eq, schema } from "@acme/db";
 
 import type { Context } from "./trpc";
 import { isDevMode } from "./utils";

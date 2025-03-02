@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next/types";
 import { createOpenApiNextHandler } from "trpc-openapi";
 
-import { appRouter, createTRPCContext } from "@f3/api";
+import { appRouter, createTRPCContext } from "@acme/api";
 
 // If you need to enable cors, you can do so like this:
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {

@@ -1,7 +1,7 @@
 "use client";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 
 import { mapStore } from "~/utils/store/map";
 import { useFilteredMapResults } from "./filtered-map-results-provider";

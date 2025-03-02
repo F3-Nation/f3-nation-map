@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import { mapStore } from "~/utils/store/map";
 

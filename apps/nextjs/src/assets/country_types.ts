@@ -1,4 +1,4 @@
-import type { Location } from "@f3/shared/app/types";
+import type { Location } from "@acme/shared/app/types";
 
 export interface Countries {
   type: string;

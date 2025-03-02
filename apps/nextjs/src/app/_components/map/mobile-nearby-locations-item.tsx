@@ -2,10 +2,10 @@
 
 import isNumber from "lodash/isNumber";
 
-import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { onlyUnique } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { onlyUnique } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";

@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
-import { DEFAULT_CENTER } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { DEFAULT_CENTER } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
 import { api } from "~/trpc/react";

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
-import { ZustandStore } from "@f3/shared/common/classes";
+import type { DayOfWeek } from "@acme/shared/app/enums";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 import { hideSelectedItem } from "./selected-item";
 

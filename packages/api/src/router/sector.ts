@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { aliasedTable, eq, schema } from "@f3/db";
-import { SectorInsertSchema } from "@f3/validators";
+import { aliasedTable, eq, schema } from "@acme/db";
+import { SectorInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 

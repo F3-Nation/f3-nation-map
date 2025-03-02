@@ -1,6 +1,6 @@
 "use server";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { api } from "~/trpc/server";
 import { NearbyLocationItem } from "./nearby-location-item";

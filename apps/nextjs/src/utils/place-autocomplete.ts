@@ -1,8 +1,8 @@
 import axios from "axios";
 
-import type { PlaceResult } from "@f3/shared/app/types";
-import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "@f3/shared/app/constants";
-import { zoomToRadius } from "@f3/shared/app/functions";
+import type { PlaceResult } from "@acme/shared/app/types";
+import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "@acme/shared/app/constants";
+import { zoomToRadius } from "@acme/shared/app/functions";
 
 import { env } from "~/env";
 

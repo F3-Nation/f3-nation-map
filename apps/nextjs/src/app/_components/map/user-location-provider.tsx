@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { getRandomLocation } from "~/utils/random-location";
 import { setView } from "~/utils/set-view";

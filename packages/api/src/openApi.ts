@@ -1,6 +1,6 @@
 import { generateOpenApiDocument } from "trpc-openapi";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 import { appRouter } from ".";
 

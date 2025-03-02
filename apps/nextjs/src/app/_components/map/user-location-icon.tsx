@@ -2,8 +2,8 @@
 
 import { LocateFixed } from "lucide-react";
 
-import { cn } from "@f3/ui";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
+import { cn } from "@acme/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 
 import { isTouchDevice } from "~/utils/is-touch-device";
 import { ModalType, openModal } from "~/utils/store/modal";

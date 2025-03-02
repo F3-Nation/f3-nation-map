@@ -2,8 +2,8 @@ import type { CellContext, Column } from "@tanstack/react-table";
 import * as React from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
-import { Case } from "@f3/shared/common/enums";
-import { convertCase } from "@f3/shared/common/functions";
+import { Case } from "@acme/shared/common/enums";
+import { convertCase } from "@acme/shared/common/functions";
 
 import { cn } from ".";
 import { Button } from "./button";

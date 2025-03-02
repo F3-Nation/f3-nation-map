@@ -7,7 +7,7 @@ import {
   getTestMessageUrl,
 } from "nodemailer";
 
-import { isProduction } from "@f3/shared/common/constants";
+import { isProduction } from "@acme/shared/common/constants";
 
 const SHOW_MOBILE = false;
 

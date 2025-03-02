@@ -12,9 +12,9 @@ import { vi } from "vitest";
 import "@testing-library/jest-dom";
 import "vitest-canvas-mock";
 
-import type { AppRouter } from "@f3/api";
+import type { AppRouter } from "@acme/api";
 
-vi.mock("@f3/auth", () => ({
+vi.mock("@acme/auth", () => ({
   auth: vi.fn(),
 }));
 

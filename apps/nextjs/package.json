@@ -1,5 +1,5 @@
 {
-  "name": "@f3/nextjs",
+  "name": "@acme/nextjs",
   "version": "0.31.0",
   "private": true,
   "type": "module",
@@ -16,14 +16,14 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@f3/api": "workspace:^0.1.0",
-    "@f3/auth": "workspace:^0.1.0",
-    "@f3/db": "workspace:^0.1.0",
-    "@f3/env": "workspace:^0.1.0",
-    "@f3/shared": "workspace:^0.1.0",
-    "@f3/tailwind-config": "workspace:^0.1.0",
-    "@f3/ui": "workspace:^0.1.0",
-    "@f3/validators": "workspace:^0.1.0",
+    "@acme/api": "workspace:^0.1.0",
+    "@acme/auth": "workspace:^0.1.0",
+    "@acme/db": "workspace:^0.1.0",
+    "@acme/env": "workspace:^0.1.0",
+    "@acme/shared": "workspace:^0.1.0",
+    "@acme/tailwind-config": "workspace:^0.1.0",
+    "@acme/ui": "workspace:^0.1.0",
+    "@acme/validators": "workspace:^0.1.0",
     "@formkit/auto-animate": "^0.8.1",
     "@radix-ui/react-dialog": "^1.0.4",
     "@react-hook/window-size": "^3.1.1",
@@ -61,9 +61,9 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@f3/eslint-config": "workspace:^0.2.0",
-    "@f3/prettier-config": "workspace:^0.1.0",
-    "@f3/tsconfig": "workspace:*",
+    "@acme/eslint-config": "workspace:^0.2.0",
+    "@acme/prettier-config": "workspace:^0.1.0",
+    "@acme/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^15.0.2",
     "@types/dompurify": "^3.0.5",
@@ -90,10 +90,10 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@f3/eslint-config/base",
-      "@f3/eslint-config/nextjs",
-      "@f3/eslint-config/react"
+      "@acme/eslint-config/base",
+      "@acme/eslint-config/nextjs",
+      "@acme/eslint-config/react"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

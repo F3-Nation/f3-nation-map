@@ -3,7 +3,7 @@ import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet/Marker";
 import { Pane } from "react-leaflet/Pane";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { mapStore } from "~/utils/store/map";
 import { ModalType, openModal } from "~/utils/store/modal";

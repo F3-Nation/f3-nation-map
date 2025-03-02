@@ -1,4 +1,4 @@
-import type { DayOfWeek } from "@f3/shared/app/enums";
+import type { DayOfWeek } from "@acme/shared/app/enums";
 
 import type { RouterOutputs } from "~/trpc/types";
 

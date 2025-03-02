@@ -4,15 +4,15 @@ import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
 import { Edit, PlusCircle, X } from "lucide-react";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
+import type { DayOfWeek } from "@acme/shared/app/enums";
 import {
   START_END_TIME_DB_FORMAT,
   START_END_TIME_DISPLAY_FORMAT,
-} from "@f3/shared/app/constants";
-import { getReadableDayOfWeek } from "@f3/shared/app/functions";
-import { cn } from "@f3/ui";
-import { Skeleton } from "@f3/ui/skeleton";
-import { toast } from "@f3/ui/toast";
+} from "@acme/shared/app/constants";
+import { getReadableDayOfWeek } from "@acme/shared/app/functions";
+import { cn } from "@acme/ui";
+import { Skeleton } from "@acme/ui/skeleton";
+import { toast } from "@acme/ui/toast";
 
 import { api } from "~/trpc/react";
 import { dayjs } from "~/utils/frontendDayjs";

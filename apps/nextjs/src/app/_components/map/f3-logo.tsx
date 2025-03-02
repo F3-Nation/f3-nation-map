@@ -2,8 +2,8 @@ import type { LinkProps } from "next/link";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 
 export const F3Logo = ({
   className,

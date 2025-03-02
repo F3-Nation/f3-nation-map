@@ -3,10 +3,10 @@ import dayjs from "dayjs";
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
-import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
-import { aliasedTable, desc, eq, schema } from "@f3/db";
-import { RequestInsertSchema } from "@f3/validators";
+import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { EventMeta, UpdateRequestMeta } from "@acme/shared/app/types";
+import { aliasedTable, desc, eq, schema } from "@acme/db";
+import { RequestInsertSchema } from "@acme/validators";
 
 import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -105,6 +105,7 @@ export const requestRouter = createTRPCRouter({
         submitterValidated: false,
         reviewedBy: null,
         reviewedAt: null,
+        eventMeta: input.eventMeta as EventMeta,
       };
 
       const [inserted] = await ctx.db
@@ -220,6 +221,7 @@ export const requestRouter = createTRPCRouter({
       const result = await applyUpdateRequest(ctx, {
         ...input,
         reviewedBy,
+        eventMeta: input.eventMeta as EventMeta,
       });
 
       return result;

@@ -1,9 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { UserRole } from "@f3/shared/app/enums";
-import { and, eq, schema as schemaRaw, sql } from "@f3/db";
-import { CrupdateUserSchema } from "@f3/validators";
+import type { UserRole } from "@acme/shared/app/enums";
+import { and, eq, schema as schemaRaw, sql } from "@acme/db";
+import { CrupdateUserSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";

@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { cn } from ".";
 import { buttonVariants } from "./button";

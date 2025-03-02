@@ -13,10 +13,10 @@ import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
   SIDEBAR_WIDTH,
-} from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { useTheme } from "@f3/ui/theme";
-import { toast } from "@f3/ui/toast";
+} from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { useTheme } from "@acme/ui/theme";
+import { toast } from "@acme/ui/toast";
 
 import type { F3MarkerLocation } from "~/utils/types";
 import { clientUtils } from "~/trpc/server-side-react-helpers";

@@ -7,8 +7,8 @@ import {
   orgs,
   updateRequests,
   users,
-} from "@f3/db/schema/schema";
-import { DayOfWeek } from "@f3/shared/app/enums";
+} from "@acme/db/schema/schema";
+import { DayOfWeek } from "@acme/shared/app/enums";
 
 // USER SCHEMA
 export const UserSelectSchema = createSelectSchema(users);

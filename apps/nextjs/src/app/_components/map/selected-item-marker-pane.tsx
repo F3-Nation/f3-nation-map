@@ -2,8 +2,8 @@
 
 import { Pane } from "react-leaflet/Pane";
 
-import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { CLOSE_ZOOM, Z_INDEX } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { filterData } from "~/utils/filtered-data";
 import { isTouchDevice } from "~/utils/is-touch-device";

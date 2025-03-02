@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, ChevronDownIcon } from "lucide-react";
 
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,13 +13,13 @@ import {
   CommandInput,
   CommandItem,
   CommandSeparator,
-} from "@f3/ui/command";
-import { Label } from "@f3/ui/label";
+} from "@acme/ui/command";
+import { Label } from "@acme/ui/label";
 import {
   Popover,
   PopoverContentWithoutPortal,
   PopoverTrigger,
-} from "@f3/ui/popover";
+} from "@acme/ui/popover";
 
 const MIN_WIDTH = 300;
 

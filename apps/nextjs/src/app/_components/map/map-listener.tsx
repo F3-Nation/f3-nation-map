@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useWindowWidth } from "@react-hook/window-size";
 import { useMapEvents } from "react-leaflet";
 
-import { BreakPoints } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { BreakPoints } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { isTouchDevice } from "~/utils/is-touch-device";
 import { appStore } from "~/utils/store/app";

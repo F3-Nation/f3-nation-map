@@ -9,7 +9,7 @@ RUN yarn global add turbo@^1.12.3
 COPY . .
 
 # Prune the workspace to only include nextjs and its dependencies
-RUN turbo prune @f3/nextjs --docker
+RUN turbo prune @acme/nextjs --docker
 
 FROM --platform=linux/amd64 node:20-alpine AS installer
 RUN apk add --no-cache libc6-compat openssl && apk update

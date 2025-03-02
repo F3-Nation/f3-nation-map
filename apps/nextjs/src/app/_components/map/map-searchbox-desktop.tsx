@@ -8,13 +8,13 @@ import {
   DEFAULT_CENTER,
   SIDEBAR_WIDTH,
   Z_INDEX,
-} from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
-import { Checkbox } from "@f3/ui/checkbox";
-import { Input } from "@f3/ui/input";
-import { Label } from "@f3/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
-import { Spinner } from "@f3/ui/spinner";
+} from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
+import { Checkbox } from "@acme/ui/checkbox";
+import { Input } from "@acme/ui/input";
+import { Label } from "@acme/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
+import { Spinner } from "@acme/ui/spinner";
 
 import { api } from "~/trpc/react";
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";

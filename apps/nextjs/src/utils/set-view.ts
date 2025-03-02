@@ -1,4 +1,4 @@
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
+import { CLOSE_ZOOM } from "@acme/shared/app/constants";
 
 import { isTouchDevice } from "./is-touch-device";
 import { mapStore } from "./store/map";

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { isProduction, RERENDER_LOGS } from "@f3/shared/common/constants";
-import { onlyUnique } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { isProduction, RERENDER_LOGS } from "@acme/shared/common/constants";
+import { onlyUnique } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { isTouchDevice } from "~/utils/is-touch-device";

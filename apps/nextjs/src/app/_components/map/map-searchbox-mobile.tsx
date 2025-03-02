@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, XCircle } from "lucide-react";
 
-import { DEFAULT_CENTER, Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
-import { Input } from "@f3/ui/input";
+import { DEFAULT_CENTER, Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
+import { Input } from "@acme/ui/input";
 
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
 import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";

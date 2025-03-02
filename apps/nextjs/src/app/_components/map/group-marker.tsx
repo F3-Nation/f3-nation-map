@@ -6,10 +6,10 @@ import isNumber from "lodash/isNumber";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { dayOfWeekToShortDayOfWeek } from "@f3/shared/app/functions";
-import { safeParseInt } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
+import { safeParseInt } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
 import { api } from "~/trpc/server-side-react-helpers";

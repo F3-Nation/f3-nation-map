@@ -1,9 +1,9 @@
 // filteredData.ts
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
-import { START_END_TIME_DB_FORMAT } from "@f3/shared/app/constants";
-import isWithinRadius from "@f3/shared/app/functions";
-import { isTruthy } from "@f3/shared/common/functions";
+import type { DayOfWeek } from "@acme/shared/app/enums";
+import { START_END_TIME_DB_FORMAT } from "@acme/shared/app/constants";
+import isWithinRadius from "@acme/shared/app/functions";
+import { isTruthy } from "@acme/shared/common/functions";
 
 import type { FiltersType } from "./store/filter";
 import type { LocationMarkerWithDistance } from "~/app/_components/map/filtered-map-results-provider";

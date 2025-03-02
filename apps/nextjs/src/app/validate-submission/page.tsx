@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { ValidateSubmission } from "./validate-submission";
 

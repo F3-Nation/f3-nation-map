@@ -3,7 +3,7 @@ import { httpLink, loggerLink } from "@trpc/client";
 import { createTRPCQueryUtils, createTRPCReact } from "@trpc/react-query";
 import SuperJSON from "superjson";
 
-import type { AppRouter } from "@f3/api";
+import type { AppRouter } from "@acme/api";
 
 import { getBaseUrl } from "./util";
 

@@ -3,9 +3,9 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 "use client";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
-import { getReadableDayOfWeek } from "@f3/shared/app/functions";
-import { cn } from "@f3/ui";
+import type { DayOfWeek } from "@acme/shared/app/enums";
+import { getReadableDayOfWeek } from "@acme/shared/app/functions";
+import { cn } from "@acme/ui";
 
 import { dayjs } from "~/utils/frontendDayjs";
 import { isTouchDevice } from "~/utils/is-touch-device";

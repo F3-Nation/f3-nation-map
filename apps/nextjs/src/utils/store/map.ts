@@ -2,8 +2,8 @@ import type { LatLng, LatLngBounds, LatLngLiteral, Map } from "leaflet";
 import type { MutableRefObject } from "react";
 import { createRef } from "react";
 
-import { DEFAULT_ZOOM } from "@f3/shared/app/constants";
-import { ZustandStore } from "@f3/shared/common/classes";
+import { DEFAULT_ZOOM } from "@acme/shared/app/constants";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 export type NearbyLocationCenterType =
   | "self"

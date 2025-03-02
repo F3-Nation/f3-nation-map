@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { Header } from "./header";
 import { SubmitBugReportCard } from "./submit-bug-report-card";

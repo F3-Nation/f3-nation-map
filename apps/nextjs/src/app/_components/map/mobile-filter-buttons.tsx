@@ -8,7 +8,7 @@ import {
   Sunset,
 } from "lucide-react";
 
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import {
   filterStore,

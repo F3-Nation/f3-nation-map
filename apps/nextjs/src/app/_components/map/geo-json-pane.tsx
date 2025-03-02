@@ -1,8 +1,8 @@
 import type { GeoJSONProps } from "react-leaflet";
 import { GeoJSON } from "react-leaflet";
 
-import { COUNTRY_ZOOM } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { COUNTRY_ZOOM } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { VISIBLE_COUNTRIES } from "~/assets/visible-countries";
 import { mapStore } from "~/utils/store/map";

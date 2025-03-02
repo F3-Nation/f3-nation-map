@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
-import { aliasedTable, count, desc, eq, schema, sql } from "@f3/db";
-import { isTruthy } from "@f3/shared/common/functions";
-import { LocationInsertSchema } from "@f3/validators";
+import type { DayOfWeek } from "@acme/shared/app/enums";
+import { aliasedTable, count, desc, eq, schema, sql } from "@acme/db";
+import { isTruthy } from "@acme/shared/common/functions";
+import { LocationInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 

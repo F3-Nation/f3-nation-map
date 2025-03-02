@@ -1,5 +1,5 @@
 {
-  "name": "@f3/validators",
+  "name": "@acme/validators",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -14,23 +14,23 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@f3/shared": "workspace:*",
-    "@f3/db": "workspace:*",
+    "@acme/db": "workspace:*",
+    "@acme/shared": "workspace:*",
     "drizzle-zod": "^0.6.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@f3/eslint-config": "workspace:*",
-    "@f3/prettier-config": "workspace:*",
-    "@f3/tsconfig": "workspace:*",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
   },
   "eslintConfig": {
     "extends": [
-      "@f3/eslint-config/base"
+      "@acme/eslint-config/base"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

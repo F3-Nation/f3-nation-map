@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { aliasedTable, eq, schema } from "@f3/db";
-import { AOInsertSchema } from "@f3/validators";
+import { aliasedTable, eq, schema } from "@acme/db";
+import { AOInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";

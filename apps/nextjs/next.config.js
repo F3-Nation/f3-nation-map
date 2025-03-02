@@ -5,7 +5,7 @@ const jiti = _jiti(fileURLToPath(import.meta.url));
 
 // Import env files to validate at build time. Use jiti so we can load .ts files in here.
 jiti("./src/env");
-jiti("@f3/env");
+jiti("@acme/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -21,11 +21,11 @@ const config = {
 
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
-    "@f3/api",
-    "@f3/auth",
-    "@f3/db",
-    "@f3/ui",
-    "@f3/validators",
+    "@acme/api",
+    "@acme/auth",
+    "@acme/db",
+    "@acme/ui",
+    "@acme/validators",
   ],
 
   images: {

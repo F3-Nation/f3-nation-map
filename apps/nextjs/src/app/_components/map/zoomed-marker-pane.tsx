@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { Pane } from "react-leaflet";
 
-import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { CLOSE_ZOOM, Z_INDEX } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";

@@ -2,7 +2,7 @@ import type { PgDialect, PgSession } from "drizzle-orm/pg-core";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js/driver";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 import { db as connection } from ".";
 import drizzleConfig from "../drizzle.config";

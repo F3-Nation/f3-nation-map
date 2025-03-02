@@ -4,22 +4,22 @@ import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
 import { Edit, PlusCircle } from "lucide-react";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
+import type { DayOfWeek } from "@acme/shared/app/enums";
 import {
   START_END_TIME_DB_FORMAT,
   START_END_TIME_DISPLAY_FORMAT,
   Z_INDEX,
-} from "@f3/shared/app/constants";
-import { getReadableDayOfWeek } from "@f3/shared/app/functions";
-import { cn } from "@f3/ui";
+} from "@acme/shared/app/constants";
+import { getReadableDayOfWeek } from "@acme/shared/app/functions";
+import { cn } from "@acme/ui";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
-import { Skeleton } from "@f3/ui/skeleton";
-import { toast } from "@f3/ui/toast";
+} from "@acme/ui/dialog";
+import { Skeleton } from "@acme/ui/skeleton";
+import { toast } from "@acme/ui/toast";
 
 import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";

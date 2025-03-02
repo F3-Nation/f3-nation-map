@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
-import { toast } from "@f3/ui/toast";
+} from "@acme/ui/dialog";
+import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { vanillaApi } from "~/trpc/vanilla";

@@ -3,14 +3,14 @@ import { CircleHelp, Eye, Moon, Pencil, Sun, SunMoon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
+} from "@acme/ui/dialog";
 
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";

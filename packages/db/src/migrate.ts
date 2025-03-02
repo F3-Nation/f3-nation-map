@@ -1,6 +1,6 @@
 import { migrate as migrator } from "drizzle-orm/postgres-js/migrator";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 import { db, sql } from ".";
 import { alembicVersionValue, reset } from "./reset";
