@@ -60,7 +60,7 @@ export const WorkoutDetailsModal = ({
 
   const workoutFields = {
     Name: workout?.eventName,
-    What: workout?.types.map((type) => type.name).join(", "),
+    What: workout?.types.join(", "),
     Where: location?.fullAddress ? (
       <Link
         href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
@@ -224,7 +224,7 @@ export const WorkoutDetailsModal = ({
                         startTime: "00:00:00",
                         endTime: "00:00:00",
                         dayOfWeek: "sunday",
-                        types: [{ id: 1, name: "Bootcamp" }],
+                        types: ["Bootcamp"],
                         eventDescription: "",
                       });
                     }}

@@ -101,6 +101,7 @@ export const requestRouter = createTRPCRouter({
 
       const updateRequest: typeof schema.updateRequests.$inferInsert = {
         ...input,
+        token: crypto.randomUUID(),
         submittedBy,
         submitterValidated: false,
         reviewedBy: null,
@@ -339,6 +340,7 @@ export const applyUpdateRequest = async (
 
   const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {
     ...updateRequest,
+    token: crypto.randomUUID(),
     status: "approved",
     reviewedAt: new Date().toISOString(),
   };

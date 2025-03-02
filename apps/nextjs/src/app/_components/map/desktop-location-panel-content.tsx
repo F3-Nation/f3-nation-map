@@ -59,7 +59,7 @@ export const DesktopLocationPanelContent = () => {
 
   const workoutFields = {
     Name: workout?.eventName,
-    What: workout?.types.map((type) => type.name).join(", "),
+    What: workout?.types.join(", "),
     Where: location?.fullAddress ? (
       <Link
         href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
@@ -181,7 +181,7 @@ export const DesktopLocationPanelContent = () => {
                       startTime: "0000",
                       endTime: "0000",
                       dayOfWeek: "monday",
-                      types: [{ id: 1, name: "Bootcamp" }],
+                      types: ["Bootcamp"],
                       eventDescription: "",
                     });
                   }}

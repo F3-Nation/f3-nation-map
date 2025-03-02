@@ -16,7 +16,7 @@ import { LocationInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
-const AllLocationMarkerFilterDataSchema = z
+const _AllLocationMarkerFilterDataSchema = z
   .object({
     id: z.number(),
     name: z.string().optional(),
@@ -33,6 +33,23 @@ const AllLocationMarkerFilterDataSchema = z
       .array(),
   })
   .array();
+
+const LowBandwidthF3Marker = z.tuple([
+  z.number(),
+  z.string(),
+  z.string().nullable(),
+  z
+    .tuple([
+      z.number(),
+      z.string(),
+      z.enum(DayOfWeek).nullable(),
+      z.string().nullable(),
+      z.array(z.string()),
+    ])
+    .array(),
+]);
+
+type LowBandwidthF3Marker = z.infer<typeof LowBandwidthF3Marker>;
 
 export const locationRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
@@ -113,7 +130,8 @@ export const locationRouter = createTRPCRouter({
       .from(schema.locations);
   }),
   allLocationMarkerFilterData: publicProcedure
-    .output(AllLocationMarkerFilterDataSchema)
+    // .output(AllLocationMarkerFilterDataSchema)
+    .output(LowBandwidthF3Marker.array())
     .query(async ({ ctx }) => {
       const start = Date.now();
       console.log("allLocationMarkerFilterData start");
@@ -131,9 +149,7 @@ export const locationRouter = createTRPCRouter({
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
             name: schema.events.name,
-            types: sql<
-              { id: number; name: string }[]
-            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
+            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
           },
         })
         .from(schema.locations)
@@ -181,8 +197,8 @@ export const locationRouter = createTRPCRouter({
           number,
           {
             id: number;
-            name?: string;
-            logo?: string | null;
+            name: string;
+            logo: string | null;
             events: Omit<
               NonNullable<(typeof locationsAndEvents)[number]["events"]>,
               "locationId"
@@ -196,7 +212,22 @@ export const locationRouter = createTRPCRouter({
         Date.now() - start,
       );
 
-      return Object.values(locationEvents);
+      const lowBandwidthLocationEvents: LowBandwidthF3Marker[] = Object.values(
+        locationEvents,
+      ).map((locationEvent) => [
+        locationEvent.id,
+        locationEvent.name,
+        locationEvent.logo,
+        locationEvent.events.map((event) => [
+          event.id,
+          event.name,
+          event.dayOfWeek,
+          event.startTime,
+          event.types,
+        ]),
+      ]);
+
+      return lowBandwidthLocationEvents;
     }),
   getLocationMarker: publicProcedure
     .input(z.object({ id: z.number() }))
@@ -225,9 +256,7 @@ export const locationRouter = createTRPCRouter({
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
             description: schema.events.description,
-            types: sql<
-              { id: number; name: string }[]
-            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
+            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
             name: schema.events.name,
           },
           // locations: { id: schema.locations.id },
@@ -409,9 +438,7 @@ export const locationRouter = createTRPCRouter({
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
             description: schema.events.description,
-            types: sql<
-              { id: number; name: string }[]
-            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
+            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
           })
           .from(schema.events)
           .where(eq(schema.events.locationId, input.locationId))

@@ -49,7 +49,7 @@ export interface DataType {
     startTime?: string | null;
     endTime?: string | null;
     dayOfWeek?: DayOfWeek | null;
-    types?: { id: number; name: string }[];
+    types?: string[];
     eventDescription?: string | null;
     locationName?: string | null;
     locationAddress?: string | null;

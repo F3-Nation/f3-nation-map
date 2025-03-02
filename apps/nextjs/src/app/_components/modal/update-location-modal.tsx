@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { DayOfWeek } from "@acme/shared/app/enums";
 import { Case } from "@acme/shared/common/enums";
-import { convertCase } from "@acme/shared/common/functions";
+import { convertCase, isTruthy } from "@acme/shared/common/functions";
 import { Button } from "@acme/ui/button";
 import {
   Dialog,
@@ -192,11 +192,16 @@ export const UpdateLocationModal = ({
       // @ts-expect-error -- must remove dayOfWeek from form
       form.setValue("eventDayOfWeek", null);
     }
-    form.setValue("eventTypeIds", data.types?.map((type) => type.id) ?? []);
+    form.setValue(
+      "eventTypeIds",
+      data.types
+        ?.map((type) => eventTypes?.find((t) => t.name === type)?.id)
+        .filter(isTruthy) ?? [],
+    );
     form.setValue("eventDescription", data.eventDescription ?? "");
 
     form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
-  }, [data, form, session?.email]);
+  }, [data, eventTypes, form, session?.email]);
 
   useEffect(() => {
     const location = locations?.find(({ id }) => id === formLocationId);

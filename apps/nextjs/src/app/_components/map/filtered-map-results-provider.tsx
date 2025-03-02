@@ -45,12 +45,31 @@ export const FilteredMapResultsProvider = ({
 
   const { data: allLocationMarkers, isLoading } =
     api.location.getLocationMarkersSparse.useQuery();
-  const { data: allLocationMarkerFilterData } =
+  const { data: lowBandwidthAllLocationMarkerFilterData } =
     api.location.allLocationMarkerFilterData.useQuery();
   const filters = filterStore.useBoundStore();
 
   const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
-    if (!allLocationMarkers || !allLocationMarkerFilterData) return undefined;
+    if (!allLocationMarkers || !lowBandwidthAllLocationMarkerFilterData)
+      return undefined;
+
+    const allLocationMarkerFilterData =
+      lowBandwidthAllLocationMarkerFilterData.map((location) => {
+        return {
+          id: location[0],
+          name: location[1],
+          logo: location[2],
+          events: location[3].map((event) => {
+            return {
+              id: event[0],
+              name: event[1],
+              dayOfWeek: event[2],
+              startTime: event[3],
+              types: event[4],
+            };
+          }),
+        };
+      });
 
     const locationIdToLatLng = allLocationMarkers.reduce(
       (acc, location) => {
@@ -80,7 +99,7 @@ export const FilteredMapResultsProvider = ({
           locationIdToLatLng[location.id]?.locationDescription ?? null,
       };
     });
-  }, [allLocationMarkerFilterData, allLocationMarkers]);
+  }, [allLocationMarkers, lowBandwidthAllLocationMarkerFilterData]);
 
   const filteredLocationMarkers = useMemo(() => {
     if (!allLocationMarkersWithLatLngAndFilterData) return undefined;
