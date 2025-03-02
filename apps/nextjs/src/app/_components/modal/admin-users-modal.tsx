@@ -89,10 +89,9 @@ export default function UserModal({
     onSuccess: async (data) => {
       await utils.user.invalidate();
       const { roles } = data;
-      await update({
-        ...session,
-        roles,
-      });
+      if (session?.id === data.id && data.roles.length > 0) {
+        await update({ ...session, roles });
+      }
       closeModal();
       toast.success("Successfully updated user");
       router.refresh();

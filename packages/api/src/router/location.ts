@@ -1,46 +1,86 @@
 import { z } from "zod";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
-import { aliasedTable, count, desc, eq, schema, sql } from "@acme/db";
+import {
+  aliasedTable,
+  count,
+  desc,
+  eq,
+  isNotNull,
+  schema,
+  sql,
+} from "@acme/db";
+import { DayOfWeek } from "@acme/shared/app/enums";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
-export const locationRouter = createTRPCRouter({
-  getLocationMarkersSparse: publicProcedure.query(({ ctx }) => {
-    return ctx.db
-      .select({
-        id: schema.locations.id,
-        lat: schema.locations.latitude,
-        lon: schema.locations.longitude,
-        locationDescription: schema.locations.description,
+const AllLocationMarkerFilterDataSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    logo: z.string().nullable(),
+    events: z
+      .object({
+        id: z.number(),
+        locationId: z.number().nullable(),
+        dayOfWeek: z.enum(DayOfWeek).nullable(),
+        startTime: z.string().nullable(),
+        endTime: z.string().nullable(),
+        types: z.array(z.object({ id: z.number(), name: z.string() })),
+        name: z.string(),
       })
-      .from(schema.locations);
-  }),
-  allLocationMarkerFilterData: publicProcedure.query(async ({ ctx }) => {
+      .array(),
+  })
+  .array();
+
+export const locationRouter = createTRPCRouter({
+  all: publicProcedure.query(async ({ ctx }) => {
+    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const locationOrg = aliasedTable(schema.orgs, "location_org");
+    const aoOrg = aliasedTable(schema.orgs, "ao_org");
+
     const [locations, events] = await Promise.all([
       ctx.db
         .select({
           id: schema.locations.id,
           name: schema.locations.name,
-          logo: schema.orgs.logoUrl,
+          orgId: schema.locations.orgId,
+          regionName: regionOrg.name,
+          aoName: aoOrg.name,
+          description: schema.locations.description,
+          isActive: schema.locations.isActive,
+          latitude: schema.locations.latitude,
+          longitude: schema.locations.longitude,
+          email: schema.locations.email,
+          addressStreet: schema.locations.addressStreet,
+          addressStreet2: schema.locations.addressStreet2,
+          addressCity: schema.locations.addressCity,
+          addressState: schema.locations.addressState,
+          addressZip: schema.locations.addressZip,
+          addressCountry: schema.locations.addressCountry,
+          meta: schema.locations.meta,
+          created: schema.locations.created,
+          regionId: regionOrg.id,
         })
         .from(schema.locations)
-        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id)),
+        .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
+        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
+        .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id)),
       ctx.db
         .select({
           id: schema.events.id,
           locationId: schema.events.locationId,
           dayOfWeek: schema.events.dayOfWeek,
           startTime: schema.events.startTime,
-          endTime: schema.events.endTime,
-          types: sql<
-            { id: number; name: string }[]
-          >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
+          type: schema.eventTypes.name,
           name: schema.events.name,
         })
         .from(schema.events)
+        .innerJoin(
+          schema.locations,
+          eq(schema.events.locationId, schema.locations.id),
+        )
         .leftJoin(
           schema.eventsXEventTypes,
           eq(schema.eventsXEventTypes.eventId, schema.events.id),
@@ -48,13 +88,8 @@ export const locationRouter = createTRPCRouter({
         .leftJoin(
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
-        )
-        .groupBy(schema.events.id),
+        ),
     ]);
-    // console.log("locations", locations.length, locations[0]);
-    // console.log("events", events.length, events[0]);
-
-    // combine locations and events
     const locationEvents = locations.map((location) => {
       const eventsForThisLocation = events.filter(
         (event) => event.locationId === location.id,
@@ -67,6 +102,94 @@ export const locationRouter = createTRPCRouter({
 
     return locationEvents;
   }),
+  getLocationMarkersSparse: publicProcedure.query(({ ctx }) => {
+    return ctx.db
+      .select({
+        id: schema.locations.id,
+        lat: schema.locations.latitude,
+        lon: schema.locations.longitude,
+        locationDescription: schema.locations.description,
+      })
+      .from(schema.locations);
+  }),
+  allLocationMarkerFilterData: publicProcedure
+    .output(AllLocationMarkerFilterDataSchema)
+    .query(async ({ ctx }) => {
+      // throw new Error("Not implemented");
+      const locationsAndEvents = await ctx.db
+        .select({
+          locations: {
+            id: schema.locations.id,
+            name: schema.locations.name,
+            logo: schema.orgs.logoUrl,
+          },
+          events: {
+            id: schema.events.id,
+            locationId: schema.events.locationId,
+            dayOfWeek: schema.events.dayOfWeek,
+            startTime: schema.events.startTime,
+            endTime: schema.events.endTime,
+            name: schema.events.name,
+            types: sql<
+              { id: number; name: string }[]
+            >`json_agg(json_build_object('id', ${schema.eventTypes.id}, 'name', ${schema.eventTypes.name}))`,
+          },
+        })
+        .from(schema.locations)
+        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+        .leftJoin(
+          schema.events,
+          eq(schema.events.locationId, schema.locations.id),
+        )
+        .leftJoin(
+          schema.eventsXEventTypes,
+          eq(schema.eventsXEventTypes.eventId, schema.events.id),
+        )
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+        )
+        .groupBy(
+          schema.locations.id,
+          schema.locations.name,
+          schema.orgs.logoUrl,
+          schema.events.id,
+        );
+
+      // Reduce the results into the expected format
+      const locationEvents = locationsAndEvents.reduce(
+        (acc, item) => {
+          const location = item.locations;
+          const event = item.events;
+
+          if (!acc[location.id]) {
+            acc[location.id] = {
+              ...location,
+              events: [],
+            };
+          }
+
+          if (event?.id != undefined) {
+            acc[location.id]?.events.push(event);
+          }
+
+          return acc;
+        },
+        {} as Record<
+          number,
+          {
+            id: number;
+            name: string;
+            logo: string | null;
+            events: NonNullable<
+              (typeof locationsAndEvents)[number]["events"]
+            >[];
+          }
+        >,
+      );
+
+      return Object.values(locationEvents);
+    }),
   getLocationMarker: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -142,59 +265,6 @@ export const locationRouter = createTRPCRouter({
       );
       return locationEvents[input.id];
     }),
-  // getAllLocationMarkersBackup: publicProcedure.query(async ({ ctx }) => {
-  //   const [locations, events] = await Promise.all([
-  //     ctx.db
-  //       .select({
-  //         id: schema.locations.id,
-  //         lat: schema.locations.lat,
-  //         lon: schema.locations.lon,
-  //         name: schema.locations.name,
-  //         isActive: schema.locations.isActive,
-  //         created: schema.locations.created,
-  //         updated: schema.locations.updated,
-  //         meta: schema.locations.meta,
-  //         locationDescription: schema.locations.description,
-  //         orgId: schema.locations.orgId,
-  //         logo: schema.orgs.logo,
-  //         website: schema.orgs.website,
-  //       })
-  //       .from(schema.locations)
-  //       .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id)),
-  //     ctx.db
-  //       .select({
-  //         id: schema.events.id,
-  //         locationId: schema.events.locationId,
-  //         dayOfWeek: schema.events.dayOfWeek,
-  //         startTime: schema.events.startTime,
-  //         endTime: schema.events.endTime,
-  //         description: schema.events.description,
-  //         eventTypeId: schema.events.eventTypeId,
-  //         type: schema.eventTypes.name,
-  //         name: schema.events.name,
-  //       })
-  //       .from(schema.events)
-  //       .leftJoin(
-  //         schema.eventTypes,
-  //         eq(schema.eventTypes.id, schema.events.eventTypeId),
-  //       ),
-  //   ]);
-  //   // console.log("locations", locations.length, locations[0]);
-  //   // console.log("events", events.length, events[0]);
-
-  //   // combine locations and events
-  //   const locationEvents = locations.map((location) => {
-  //     const eventsForThisLocation = events
-  //       .filter((event) => event.locationId === location.id)
-  //       .map((event) => ({ ...event, logo: location.logo }));
-  //     return {
-  //       ...location,
-  //       events: eventsForThisLocation,
-  //     };
-  //   });
-
-  //   return locationEvents;
-  // }),
   getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
     const ao = aliasedTable(schema.orgs, "ao");
     const events = await ctx.db
@@ -481,82 +551,10 @@ export const locationRouter = createTRPCRouter({
   getWorkoutCount: publicProcedure.query(async ({ ctx }) => {
     const [result] = await ctx.db
       .select({ count: count() })
-      .from(schema.events);
+      .from(schema.events)
+      .where(isNotNull(schema.events.locationId));
 
     return { count: result?.count };
-  }),
-
-  all: publicProcedure.query(async ({ ctx }) => {
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const locationOrg = aliasedTable(schema.orgs, "location_org");
-    const aoOrg = aliasedTable(schema.orgs, "ao_org");
-
-    const [locations, events] = await Promise.all([
-      ctx.db
-        .select({
-          id: schema.locations.id,
-          name: schema.locations.name,
-          orgId: schema.locations.orgId,
-          regionName: regionOrg.name,
-          aoName: aoOrg.name,
-          description: schema.locations.description,
-          isActive: schema.locations.isActive,
-          latitude: schema.locations.latitude,
-          longitude: schema.locations.longitude,
-          email: schema.locations.email,
-          addressStreet: schema.locations.addressStreet,
-          addressStreet2: schema.locations.addressStreet2,
-          addressCity: schema.locations.addressCity,
-          addressState: schema.locations.addressState,
-          addressZip: schema.locations.addressZip,
-          addressCountry: schema.locations.addressCountry,
-          meta: schema.locations.meta,
-          created: schema.locations.created,
-          regionId: regionOrg.id,
-        })
-        .from(schema.locations)
-        .leftJoin(locationOrg, eq(schema.locations.orgId, locationOrg.id))
-        .leftJoin(regionOrg, eq(locationOrg.parentId, regionOrg.id))
-        .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id)),
-      ctx.db
-        .select({
-          id: schema.events.id,
-          locationId: schema.events.locationId,
-          dayOfWeek: schema.events.dayOfWeek,
-          startTime: schema.events.startTime,
-          type: schema.eventTypes.name,
-          name: schema.events.name,
-        })
-        .from(schema.events)
-        .leftJoin(
-          schema.eventsXEventTypes,
-          eq(schema.eventsXEventTypes.eventId, schema.events.id),
-        )
-        .leftJoin(
-          schema.eventTypes,
-          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
-        ),
-    ]);
-    // console.log("locations", locations.length, locations[0]);
-    // console.log("events", events.length, events[0]);
-
-    // combine locations and events
-    const locationEvents = locations.map((location) => {
-      const eventsForThisLocation = events.filter(
-        (event) => event.locationId === location.id,
-      );
-      return {
-        ...location,
-        events: eventsForThisLocation,
-      };
-    });
-
-    return locationEvents;
-
-    // const events = await ctx.db
-    //   .select()
-    //   .from(schema.events)
-    // return { locations, events };
   }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))

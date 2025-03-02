@@ -27,12 +27,13 @@ export const eventRouter = createTRPCRouter({
         created: schema.events.created,
       })
       .from(schema.events)
-      .leftJoin(
+      .innerJoin(
         schema.locations,
         eq(schema.locations.id, schema.events.locationId),
       )
       .leftJoin(locationOrg, eq(locationOrg.id, schema.locations.orgId))
-      .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId));
+      .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId))
+      .where(eq(schema.events.isSeries, false));
     return workouts;
   }),
   byId: publicProcedure

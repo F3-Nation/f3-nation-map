@@ -4,6 +4,7 @@ import {
   date,
   doublePrecision,
   foreignKey,
+  index,
   integer,
   json,
   pgEnum,
@@ -207,6 +208,9 @@ export const locations = pgTable(
     addressStreet2: varchar("address_street2"),
   },
   (table) => [
+    index("idx_locations_org_id").on(table.orgId),
+    index("idx_locations_name").on(table.name),
+    index("idx_locations_is_active").on(table.isActive),
     foreignKey({
       columns: [table.orgId],
       foreignColumns: [orgs.id],
@@ -361,6 +365,9 @@ export const orgs = pgTable(
     orgType: orgType("org_type").notNull(),
   },
   (table) => [
+    index("idx_orgs_parent_id").on(table.parentId),
+    index("idx_orgs_org_type").on(table.orgType),
+    index("idx_orgs_is_active").on(table.isActive),
     foreignKey({
       columns: [table.parentId],
       foreignColumns: [table.id],
@@ -431,6 +438,9 @@ export const events = pgTable(
     email: varchar(),
   },
   (table) => [
+    index("idx_events_location_id").on(table.locationId),
+    index("idx_events_org_id").on(table.orgId),
+    index("idx_events_is_active").on(table.isActive),
     foreignKey({
       columns: [table.locationId],
       foreignColumns: [locations.id],
@@ -574,6 +584,8 @@ export const eventsXEventTypes = pgTable(
     eventTypeId: integer("event_type_id").notNull(),
   },
   (table) => [
+    index("idx_events_x_event_types_event_id").on(table.eventId),
+    index("idx_events_x_event_types_event_type_id").on(table.eventTypeId),
     foreignKey({
       columns: [table.eventId],
       foreignColumns: [events.id],

@@ -151,6 +151,7 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
 }).extend({
   id: z.string(),
   regionId: z.number(),
+  eventMeta: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const UpdateRequestSelectSchema = createSelectSchema(updateRequests);
