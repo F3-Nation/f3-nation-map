@@ -16,8 +16,6 @@ import "~/app/globals.css";
 import { TooltipProvider } from "@acme/ui/tooltip";
 
 import { KeyPressProvider } from "~/utils/key-press/provider";
-import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
-import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
 import { UserLocationProvider } from "./_components/map/user-location-provider";
 import ModalSwitcher from "./_components/modal/modal-switcher";
 import { ShadCnContainer } from "./_components/shad-cn-container-ref";
@@ -67,12 +65,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     <SessionProvider>
       <TRPCReactProvider>
         <UserLocationProvider>
-          <FilteredMapResultsProvider>
-            {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
-            <TextSearchResultsProvider>
-              <KeyPressProvider>{children}</KeyPressProvider>
-            </TextSearchResultsProvider>
-          </FilteredMapResultsProvider>
+          <KeyPressProvider>{children}</KeyPressProvider>
         </UserLocationProvider>
       </TRPCReactProvider>
     </SessionProvider>

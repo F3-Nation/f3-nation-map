@@ -9,19 +9,6 @@ export type F3Marker = NonNullable<
   RouterOutputs["location"]["getLocationMarker"]
 >;
 
-export type LowBandwidthF3Marker = [
-  number, // id
-  string, // locationDescription
-  [
-    number, //id
-    string, //name
-    DayOfWeek, //dayOfWeek
-    string, //startTime
-    string[], //types
-  ],
-  string?, //logo
-];
-
 export interface SparseF3Marker {
   id: number;
   lat: number | null;

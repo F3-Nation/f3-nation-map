@@ -3,11 +3,11 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
+import type { RouterOutputs } from "@acme/api";
 import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
-import { api } from "~/trpc/react";
 import { filterData } from "~/utils/filtered-data";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
@@ -17,13 +17,11 @@ export type LocationMarkerWithDistance = SparseF3Marker & {
 };
 
 const FilteredMapResultsContext = createContext<{
-  isLoading: boolean;
   nearbyLocationCenter: ReturnType<typeof mapStore.use.nearbyLocationCenter>;
   filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
   allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
-  isLoading: true,
   nearbyLocationCenter: {
     type: "default",
     lat: DEFAULT_CENTER[0],
@@ -36,17 +34,17 @@ const FilteredMapResultsContext = createContext<{
 });
 
 export const FilteredMapResultsProvider = ({
+  allLocationMarkers,
+  lowBandwidthAllLocationMarkerFilterData,
   children,
 }: {
+  allLocationMarkers: RouterOutputs["location"]["getLocationMarkersSparse"];
+  lowBandwidthAllLocationMarkerFilterData: RouterOutputs["location"]["allLocationMarkerFilterData"];
   children: ReactNode;
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
 
-  const { data: allLocationMarkers, isLoading } =
-    api.location.getLocationMarkersSparse.useQuery();
-  const { data: lowBandwidthAllLocationMarkerFilterData } =
-    api.location.allLocationMarkerFilterData.useQuery();
   const filters = filterStore.useBoundStore();
 
   const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
@@ -141,7 +139,6 @@ export const FilteredMapResultsProvider = ({
         locationOrderedLocationMarkers,
         allLocationMarkersWithLatLngAndFilterData,
         nearbyLocationCenter,
-        isLoading,
       }}
     >
       {children}

@@ -155,3 +155,38 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
 });
 
 export const UpdateRequestSelectSchema = createSelectSchema(updateRequests);
+
+export const AllLocationMarkerFilterDataSchema = z
+  .object({
+    id: z.number(),
+    name: z.string().optional(),
+    logo: z.string().nullish(),
+    events: z
+      .object({
+        id: z.number(),
+        dayOfWeek: z.enum(DayOfWeek).nullable(),
+        startTime: z.string().nullable(),
+        endTime: z.string().nullable(),
+        types: z.array(z.object({ id: z.number(), name: z.string() })),
+        name: z.string(),
+      })
+      .array(),
+  })
+  .array();
+
+export const LowBandwidthF3Marker = z.tuple([
+  z.number(),
+  z.string(),
+  z.string().nullable(),
+  z
+    .tuple([
+      z.number(),
+      z.string(),
+      z.enum(DayOfWeek).nullable(),
+      z.string().nullable(),
+      z.array(z.string()),
+    ])
+    .array(),
+]);
+
+export type LowBandwidthF3Marker = z.infer<typeof LowBandwidthF3Marker>;

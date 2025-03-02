@@ -1,6 +1,7 @@
 import omit from "lodash/omit";
 import { z } from "zod";
 
+import type { DayOfWeek } from "@acme/shared/app/enums";
 import {
   aliasedTable,
   count,
@@ -10,46 +11,10 @@ import {
   schema,
   sql,
 } from "@acme/db";
-import { DayOfWeek } from "@acme/shared/app/enums";
 import { isTruthy } from "@acme/shared/common/functions";
-import { LocationInsertSchema } from "@acme/validators";
+import { LocationInsertSchema, LowBandwidthF3Marker } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
-
-const _AllLocationMarkerFilterDataSchema = z
-  .object({
-    id: z.number(),
-    name: z.string().optional(),
-    logo: z.string().nullish(),
-    events: z
-      .object({
-        id: z.number(),
-        dayOfWeek: z.enum(DayOfWeek).nullable(),
-        startTime: z.string().nullable(),
-        endTime: z.string().nullable(),
-        types: z.array(z.object({ id: z.number(), name: z.string() })),
-        name: z.string(),
-      })
-      .array(),
-  })
-  .array();
-
-const LowBandwidthF3Marker = z.tuple([
-  z.number(),
-  z.string(),
-  z.string().nullable(),
-  z
-    .tuple([
-      z.number(),
-      z.string(),
-      z.enum(DayOfWeek).nullable(),
-      z.string().nullable(),
-      z.array(z.string()),
-    ])
-    .array(),
-]);
-
-type LowBandwidthF3Marker = z.infer<typeof LowBandwidthF3Marker>;
 
 export const locationRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
@@ -130,7 +95,6 @@ export const locationRouter = createTRPCRouter({
       .from(schema.locations);
   }),
   allLocationMarkerFilterData: publicProcedure
-    // .output(AllLocationMarkerFilterDataSchema)
     .output(LowBandwidthF3Marker.array())
     .query(async ({ ctx }) => {
       const start = Date.now();
