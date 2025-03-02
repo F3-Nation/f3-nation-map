@@ -1,13 +1,11 @@
 import { Suspense } from "react";
 import dynamicImport from "next/dynamic";
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import superjson from "superjson";
 
-import { appRouter, createTRPCContext } from "@acme/api";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { MapLayoutItems } from "~/app/_components/map-layout-items";
 import { MapPageWrapper } from "~/app/_components/map-page-wrapper";
+import { ssg } from "~/trpc/ssg";
 
 const DynamicImportLeafletMap = dynamicImport(
   () => import("~/app/_components/map/leaflet-map"),
@@ -15,16 +13,6 @@ const DynamicImportLeafletMap = dynamicImport(
 );
 
 export default async function MapPage() {
-  const ssg = createServerSideHelpers({
-    router: appRouter,
-    ctx: await createTRPCContext({
-      headers: null,
-      session: "none",
-    }),
-    transformer: superjson,
-  });
-
-  // const locationMarkersSparse = await api.location.getLocationMarkersSparse()
   const locationMarkersSparse =
     await ssg.location.getLocationMarkersSparse.fetch();
 

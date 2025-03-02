@@ -12,7 +12,7 @@ import { safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
-import { api } from "~/trpc/server-side-react-helpers";
+import { api } from "~/trpc/react";
 import { groupMarkerClick } from "~/utils/actions/group-marker-click";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import {

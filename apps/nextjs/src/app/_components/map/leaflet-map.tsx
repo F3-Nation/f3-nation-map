@@ -19,7 +19,7 @@ import { useTheme } from "@acme/ui/theme";
 import { toast } from "@acme/ui/toast";
 
 import type { F3MarkerLocation } from "~/utils/types";
-import { clientUtils } from "~/trpc/server-side-react-helpers";
+import { queryClientUtils } from "~/trpc/react";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { CanvasIconLayer } from "./canvas-layer";
@@ -48,14 +48,15 @@ export const LeafletMap = ({
   RERENDER_LOGS && console.log("LeafletMap rerender");
   const [width, height] = useWindowSize();
   const { mapRef } = useMapRef();
+  const hasSetUtils = useRef(false);
 
-  // TODO: Find a better way to load server side data into the query cache
-  useEffect(() => {
-    clientUtils.location.getLocationMarkersSparse.setData(
+  if (!hasSetUtils.current) {
+    hasSetUtils.current = true;
+    queryClientUtils.location.getLocationMarkersSparse.setData(
       undefined,
       sparseLocations,
     );
-  }, [sparseLocations]);
+  }
 
   useEffect(() => {
     const error = searchParamsRef.current;

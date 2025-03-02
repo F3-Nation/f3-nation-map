@@ -45,7 +45,7 @@ export const createTRPCContext = async (opts: {
     ">>> tRPC Request from",
     source,
     "by",
-    session?.user ?? "a guest",
+    session?.user?.email ?? "a guest",
     "at",
     ip,
   );

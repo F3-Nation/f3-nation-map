@@ -1,4 +1,4 @@
-import { clientUtils } from "~/trpc/server-side-react-helpers";
+import { queryClientUtils } from "~/trpc/react";
 import { isTouchDevice } from "../is-touch-device";
 import { setView } from "../set-view";
 import { openPanel, selectedItemStore } from "../store/selected-item";
@@ -24,7 +24,7 @@ export const groupMarkerClick = ({
       hideSelectedItem: false,
     });
   }
-  const location = clientUtils.location.getLocationMarkersSparse
+  const location = queryClientUtils.location.getLocationMarkersSparse
     .getData()
     ?.find((marker) => marker.id === locationId);
   if (typeof location?.lat === "number" && typeof location?.lon === "number") {

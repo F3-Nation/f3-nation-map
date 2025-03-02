@@ -1,3 +1,4 @@
+import omit from "lodash/omit";
 import { z } from "zod";
 
 import {
@@ -18,12 +19,11 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 const AllLocationMarkerFilterDataSchema = z
   .object({
     id: z.number(),
-    name: z.string(),
-    logo: z.string().nullable(),
+    name: z.string().optional(),
+    logo: z.string().nullish(),
     events: z
       .object({
         id: z.number(),
-        locationId: z.number().nullable(),
         dayOfWeek: z.enum(DayOfWeek).nullable(),
         startTime: z.string().nullable(),
         endTime: z.string().nullable(),
@@ -115,7 +115,8 @@ export const locationRouter = createTRPCRouter({
   allLocationMarkerFilterData: publicProcedure
     .output(AllLocationMarkerFilterDataSchema)
     .query(async ({ ctx }) => {
-      // throw new Error("Not implemented");
+      const start = Date.now();
+      console.log("allLocationMarkerFilterData start");
       const locationsAndEvents = await ctx.db
         .select({
           locations: {
@@ -155,6 +156,7 @@ export const locationRouter = createTRPCRouter({
           schema.orgs.logoUrl,
           schema.events.id,
         );
+      console.log("allLocationMarkerFilterData query done", Date.now() - start);
 
       // Reduce the results into the expected format
       const locationEvents = locationsAndEvents.reduce(
@@ -170,7 +172,7 @@ export const locationRouter = createTRPCRouter({
           }
 
           if (event?.id != undefined) {
-            acc[location.id]?.events.push(event);
+            acc[location.id]?.events.push(omit(event, "locationId"));
           }
 
           return acc;
@@ -179,13 +181,19 @@ export const locationRouter = createTRPCRouter({
           number,
           {
             id: number;
-            name: string;
-            logo: string | null;
-            events: NonNullable<
-              (typeof locationsAndEvents)[number]["events"]
+            name?: string;
+            logo?: string | null;
+            events: Omit<
+              NonNullable<(typeof locationsAndEvents)[number]["events"]>,
+              "locationId"
             >[];
           }
         >,
+      );
+
+      console.log(
+        "allLocationMarkerFilterData reduce done",
+        Date.now() - start,
       );
 
       return Object.values(locationEvents);

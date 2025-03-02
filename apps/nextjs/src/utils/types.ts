@@ -13,7 +13,7 @@ export interface SparseF3Marker {
   id: number;
   lat: number | null;
   lon: number | null;
-  logo: string | null;
+  logo?: string | null;
   locationDescription: string | null;
   events: {
     id: number;

@@ -1,15 +1,69 @@
 "use client";
 
+import type { QueryClient } from "@tanstack/react-query";
 import React, { Suspense, useEffect, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-
 import {
-  api,
-  globalQueryClient,
-  globalTrpcClient,
-} from "./server-side-react-helpers";
+  createTRPCQueryUtils,
+  createTRPCReact,
+  httpLink,
+  loggerLink,
+} from "@trpc/react-query";
+import SuperJSON from "superjson";
 
-export { api };
+import type { AppRouter } from "@acme/api";
+import { AppType } from "@acme/shared/app/constants";
+import { isDevelopment } from "@acme/shared/common/constants";
+import { Header } from "@acme/shared/common/enums";
+
+import { createQueryClient } from "./query-client";
+import { getBaseUrl } from "./util";
+
+export const api = createTRPCReact<AppRouter>();
+
+export const createTrpcClient = () => {
+  return api.createClient({
+    links: [
+      loggerLink({
+        enabled: (op) =>
+          isDevelopment ||
+          (op.direction === "down" && op.result instanceof Error),
+      }),
+      httpLink({
+        transformer: SuperJSON,
+        url: getBaseUrl() + "/api/trpc",
+        headers() {
+          const headers = new Headers();
+          headers.set(Header.Source, AppType.WEB);
+          return headers;
+        },
+      }),
+    ],
+  });
+};
+
+let clientQueryClientSingleton: QueryClient | undefined = undefined;
+const getQueryClient = () => {
+  if (typeof window === "undefined") {
+    // Server: always make a new query client
+    return createQueryClient();
+  } else {
+    // Browser: use singleton pattern to keep the same query client
+    return (clientQueryClientSingleton ??= createQueryClient());
+  }
+};
+
+let clientTrpcClientSingleton: ReturnType<typeof createTrpcClient> | undefined =
+  undefined;
+const getTrpcClient = () => {
+  if (typeof window === "undefined") {
+    // Server: always make a new trpc client
+    return createTrpcClient();
+  } else {
+    // Browser: use singleton pattern to keep the same trpc client
+    return (clientTrpcClientSingleton ??= createTrpcClient());
+  }
+};
 
 // https://tanstack.com/query/latest/docs/framework/react/devtools
 const ReactQueryDevtoolsProduction = React.lazy(() =>
@@ -21,13 +75,11 @@ const ReactQueryDevtoolsProduction = React.lazy(() =>
 );
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
-  // const [queryClient] = useState(() => globalQueryClient);
+  const queryClient = getQueryClient();
 
-  const [showDevtools, setShowDevtools] = useState(
-    process.env.NODE_ENV === "development" && false,
-  );
+  const [showDevtools, setShowDevtools] = useState(isDevelopment);
 
-  // const [trpcClient] = useState(() => globalTrpcClient);
+  const [trpcClient] = useState(() => getTrpcClient());
 
   useEffect(() => {
     // @ts-expect-error -- add toggleDevtools to window
@@ -35,8 +87,8 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <QueryClientProvider client={globalQueryClient}>
-      <api.Provider client={globalTrpcClient} queryClient={globalQueryClient}>
+    <QueryClientProvider client={queryClient}>
+      <api.Provider client={trpcClient} queryClient={queryClient}>
         {props.children}
         {showDevtools && (
           <Suspense fallback={null}>
@@ -47,3 +99,8 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     </QueryClientProvider>
   );
 }
+
+export const queryClientUtils = createTRPCQueryUtils({
+  queryClient: getQueryClient(),
+  client: getTrpcClient(),
+});
