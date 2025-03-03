@@ -360,6 +360,33 @@ export default function AdminRequestsModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
+                  Location Region
+                </div>
+                <VirtualizedCombobox
+                  key={formRegionId?.toString()}
+                  options={
+                    regions
+                      ?.map((region) => ({
+                        label: region.name,
+                        value: region.id.toString(),
+                      }))
+                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+                  }
+                  value={formRegionId?.toString()}
+                  onSelect={(item) => {
+                    const region = regions?.find(
+                      (region) => region.id.toString() === item,
+                    );
+                    form.setValue("regionId", region?.id ?? -1);
+                  }}
+                  searchPlaceholder="Select"
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.regionId?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
                   Location Name
                 </div>
                 <Input {...form.register("locationName")} />
@@ -446,33 +473,6 @@ export default function AdminRequestsModal({
                 <Input {...form.register("locationLng")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationLng?.message?.toString()}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Location Region
-                </div>
-                <VirtualizedCombobox
-                  key={formRegionId?.toString()}
-                  options={
-                    regions
-                      ?.map((region) => ({
-                        label: region.name,
-                        value: region.id.toString(),
-                      }))
-                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-                  }
-                  value={formRegionId?.toString()}
-                  onSelect={(item) => {
-                    const region = regions?.find(
-                      (region) => region.id.toString() === item,
-                    );
-                    form.setValue("regionId", region?.id ?? -1);
-                  }}
-                  searchPlaceholder="Select"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.regionId?.message}
                 </p>
               </div>
             </div>

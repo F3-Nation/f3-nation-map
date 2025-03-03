@@ -75,6 +75,7 @@ export const DesktopLocationPanelContent = () => {
       Name: event?.eventName,
       What: event?.types.join(", "),
       Where: [
+        location?.locationName ? <p>{location.locationName}</p> : null,
         location?.fullAddress ? (
           <Link
             href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
@@ -85,7 +86,9 @@ export const DesktopLocationPanelContent = () => {
           </Link>
         ) : null,
         location?.locationDescription ? (
-          <p>{location.locationDescription}</p>
+          <p className="text-sm text-muted-foreground">
+            {location.locationDescription}
+          </p>
         ) : null,
       ].filter(isTruthy),
       When: event ? getWhenFromWorkout(event) : "",

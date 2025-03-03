@@ -81,6 +81,7 @@ export const WorkoutDetailsModal = ({
     Name: workout?.eventName,
     What: workout?.types.join(", "),
     Where: [
+      location?.locationName ? <p>{location.locationName}</p> : null,
       location?.fullAddress ? (
         <Link
           href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
@@ -91,7 +92,9 @@ export const WorkoutDetailsModal = ({
         </Link>
       ) : null,
       location?.locationDescription ? (
-        <p>{location.locationDescription}</p>
+        <p className="text-sm text-muted-foreground">
+          {location.locationDescription}
+        </p>
       ) : null,
     ].filter(isTruthy),
     When: workout ? getWhenFromWorkout(workout) : "",

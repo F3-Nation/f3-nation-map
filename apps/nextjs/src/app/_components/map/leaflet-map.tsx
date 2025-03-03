@@ -11,6 +11,7 @@ import { MapContainer, TileLayer } from "react-leaflet";
 
 import { DEFAULT_CENTER, SIDEBAR_WIDTH } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { safeParseFloat } from "@acme/shared/common/functions";
 import { useTheme } from "@acme/ui/theme";
 import { toast } from "@acme/ui/toast";
 
@@ -39,6 +40,9 @@ export const LeafletMap = ({
   const center = mapStore.use.center();
   const zoom = mapStore.use.zoom();
   const searchParams = useSearchParams();
+  const queryLat = safeParseFloat(searchParams?.get("lat"));
+  const queryLon = safeParseFloat(searchParams?.get("lon"));
+  const queryZoom = safeParseFloat(searchParams?.get("zoom"));
   const router = useRouter();
   const pathname = usePathname();
   const searchParamsRef = useRef(searchParams?.get("error"));
@@ -80,16 +84,18 @@ export const LeafletMap = ({
           mapStore.setState({ loaded: true });
         }}
         center={
-          userLocation
-            ? { lat: userLocation.latitude, lng: userLocation.longitude }
-            : center
-              ? center
-              : DEFAULT_CENTER
+          queryLat != null && queryLon != null
+            ? { lat: queryLat, lng: queryLon }
+            : userLocation
+              ? { lat: userLocation.latitude, lng: userLocation.longitude }
+              : center
+                ? center
+                : DEFAULT_CENTER
         }
         // https://stackoverflow.com/questions/13851888/how-can-i-change-the-default-loading-tile-color-in-leafletjs
         // tile loading background color is here:
         preferCanvas={true}
-        zoom={zoom}
+        zoom={queryZoom ?? zoom}
         zoomSnap={0.1}
         scrollWheelZoom={false} // disable original zoom function
         smoothWheelZoom={true} // enable smooth zoom
