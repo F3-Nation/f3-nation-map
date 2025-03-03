@@ -16,7 +16,7 @@ export const appStore = new ZustandStore({
   persistOptions: {
     name: "app-store",
     version: 1,
-    persistedKeys: ["myEmail"],
+    persistedKeys: ["myEmail", "mode"],
     getStorage: () => localStorage,
   },
 });

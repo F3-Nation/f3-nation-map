@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { DayOfWeek, RequestType } from "@acme/shared/app/enums";
 import { ZustandStore } from "@acme/shared/common/classes";
 
+import { mapStore } from "./map";
 import { hideSelectedItem } from "./selected-item";
 
 export enum ModalType {
@@ -22,6 +23,8 @@ export enum ModalType {
   ADMIN_REGIONS = "ADMIN_REGIONS",
   ADMIN_AOS = "ADMIN_AOS",
   ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
+  DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
+  ADMIN_DELETE_REQUEST = "ADMIN_DELETE_REQUEST",
 }
 export enum DeleteType {
   AREA = "AREA",
@@ -32,32 +35,122 @@ export enum DeleteType {
   NATION = "NATION",
 }
 
+export const eventDefaults = {
+  eventId: -1,
+  workoutName: "",
+  startTime: "0530",
+  endTime: "0615",
+  dayOfWeek: null,
+  types: ["Bootcamp"],
+  eventDescription: "",
+};
+
+export const locationDefaults = {
+  locationId: null,
+  locationName: "",
+  locationAddress: "",
+  locationAddress2: "",
+  locationCity: "",
+  locationState: "",
+  locationZip: "",
+  locationCountry: "",
+  locationDescription: "",
+  aoLogo: "",
+  workoutWebsite: "",
+  regionId: null,
+};
+
+export const eventAndLocationToUpdateRequest = ({
+  event,
+  location,
+}: {
+  event:
+    | {
+        eventId: number;
+        eventName: string;
+        startTime: string | null;
+        endTime: string | null;
+        dayOfWeek: DayOfWeek | null;
+        types: string[];
+        description: string | null;
+      }
+    | undefined;
+  location: {
+    lat: number;
+    lon: number;
+    locationId: number;
+    locationName: string;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    aoWebsite: string | null;
+    aoLogo: string | null;
+    regionId: number | null;
+  };
+}): Omit<DataType[ModalType.UPDATE_LOCATION], "mode" | "requestType"> => {
+  const possiblyEditedLoc = mapStore.get("modifiedLocationMarkers")[
+    location.locationId
+  ];
+
+  const lat = possiblyEditedLoc?.lat ?? location.lat;
+  const lng = possiblyEditedLoc?.lon ?? location.lon;
+
+  return {
+    eventId: event?.eventId ?? null,
+    workoutName: event?.eventName ?? null,
+    lat,
+    lng,
+    startTime: event?.startTime ?? null,
+    endTime: event?.endTime ?? null,
+    dayOfWeek: event?.dayOfWeek ?? null,
+    types: event?.types ?? [],
+    eventDescription: event?.description ?? null,
+    locationId: location.locationId,
+    locationName: location.locationName,
+    locationAddress: location.locationAddress,
+    locationAddress2: location.locationAddress2,
+    locationCity: location.locationCity,
+    locationState: location.locationState,
+    locationZip: location.locationZip,
+    locationCountry: location.locationCountry,
+    locationDescription: location.locationDescription,
+    regionId: location.regionId,
+    workoutWebsite: location.aoWebsite,
+    aoLogo: location.aoLogo,
+  };
+};
+
 export interface DataType {
   [ModalType.HOW_TO_JOIN]: {
     content?: ReactNode;
   };
   [ModalType.UPDATE_LOCATION]: {
-    mode: "edit-event" | "new-location" | "new-event";
-    locationId?: number | null;
-    eventId?: number | null;
-    regionId?: number | null;
-    workoutName?: string | null;
-    workoutWebsite?: string | null;
-    aoLogo?: string | null;
+    requestType: RequestType;
+    locationId: number | null;
+    eventId: number | null;
+    regionId: number | null;
+    workoutName: string | null;
+    workoutWebsite: string | null;
+    aoLogo: string | null;
     lat: number;
     lng: number;
-    startTime?: string | null;
-    endTime?: string | null;
-    dayOfWeek?: DayOfWeek | null;
-    types?: string[];
-    eventDescription?: string | null;
-    locationName?: string | null;
-    locationAddress?: string | null;
-    locationAddress2?: string | null;
-    locationCity?: string | null;
-    locationState?: string | null;
-    locationZip?: string | null;
-    locationCountry?: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    dayOfWeek: DayOfWeek | null;
+    types: string[];
+    eventDescription: string | null;
+    locationName: string | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
   };
   [ModalType.WORKOUT_DETAILS]: {
     locationId?: number | null;
@@ -96,6 +189,13 @@ export interface DataType {
   [ModalType.ADMIN_DELETE_CONFIRMATION]: {
     id: number;
     type: DeleteType;
+  };
+  [ModalType.DELETE_CONFIRMATION]: {
+    type: DeleteType;
+    onConfirm: () => void;
+  };
+  [ModalType.ADMIN_DELETE_REQUEST]: {
+    id: string;
   };
 }
 

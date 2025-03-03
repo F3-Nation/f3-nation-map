@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { aliasedTable, eq, schema } from "@acme/db";
+import { aliasedTable, and, eq, schema } from "@acme/db";
 import { AOInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -43,7 +43,7 @@ export const aoRouter = createTRPCRouter({
       .innerJoin(areaOrg, eq(regionOrg.parentId, areaOrg.id))
       .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
       .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
-      .where(eq(aoOrg.orgType, "ao"));
+      .where(and(eq(aoOrg.orgType, "ao"), eq(aoOrg.isActive, true)));
 
     return aos;
   }),
@@ -97,6 +97,9 @@ export const aoRouter = createTRPCRouter({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(schema.orgs).where(eq(schema.orgs.id, input.id));
+      await ctx.db
+        .update(schema.orgs)
+        .set({ isActive: false })
+        .where(eq(schema.orgs.id, input.id));
     }),
 });

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import gte from "lodash/gte";
 import { useSession } from "next-auth/react";
 import { Controller } from "react-hook-form";
@@ -38,6 +39,7 @@ import { isDevMode } from "~/trpc/util";
 import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
 import { uploadLogo } from "~/utils/image/upload-logo";
 import { appStore } from "~/utils/store/app";
+import { mapStore } from "~/utils/store/map";
 import { closeModal } from "~/utils/store/modal";
 import { DebouncedImage } from "../debounced-image";
 import { VirtualizedCombobox } from "../virtualized-combobox";
@@ -47,12 +49,15 @@ export const UpdateLocationModal = ({
 }: {
   data: DataType[ModalType.UPDATE_LOCATION];
 }) => {
+  const router = useRouter();
+  const { data: canEditRegion } = api.request.canEditRegion.useQuery(
+    { orgId: data.regionId ?? -1 },
+    { enabled: !!data.regionId },
+  );
   const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutateAsync: submitUpdateRequest } =
     api.request.submitUpdateRequest.useMutation();
-  const { mutateAsync: submitUpdateRequestAdmin } =
-    api.request.validateSubmissionByAdmin.useMutation();
 
   const form = useForm({
     schema: RequestInsertSchema.extend({
@@ -72,20 +77,10 @@ export const UpdateLocationModal = ({
     (role) => role.roleName === "admin" && role.orgId === formRegionId,
   );
 
-  const canEditRegion = session?.roles.some(
-    (role) =>
-      (role.roleName === "editor" || role.roleName === "admin") &&
-      role.orgId === formRegionId,
-  );
-
-  const mode = data.mode;
-
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
   const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
-  const { data: possiblyUpdatedLocationMarkers } =
-    api.location.getLocationMarkersSparse.useQuery();
 
   const sortedLocationOptions = useMemo(() => {
     return locations
@@ -120,17 +115,20 @@ export const UpdateLocationModal = ({
           eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
         };
 
-        if (canEditRegion) {
-          await submitUpdateRequestAdmin(updateRequestData);
-          toast.success("Map updated");
-          void utils.location.invalidate();
-          void utils.event.invalidate();
-        } else {
-          await submitUpdateRequest(updateRequestData);
-          toast.success(
-            "Request submitted. Please check your email to validate your submission.",
-          );
-        }
+        await submitUpdateRequest(updateRequestData).then((result) => {
+          if (result.status === "pending") {
+            toast.success(
+              "Request submitted. An admin will review your submission soon.",
+            );
+          } else if (result.status === "rejected") {
+            toast.error("Failed to submit update request");
+          } else if (result.status === "approved") {
+            void utils.location.invalidate();
+            void utils.event.invalidate();
+            toast.success("Update request automatically applied");
+            router.refresh();
+          }
+        });
 
         setIsSubmitting(false);
         closeModal();
@@ -165,16 +163,15 @@ export const UpdateLocationModal = ({
 
   useEffect(() => {
     form.setValue("id", uuid());
+    form.setValue("requestType", data.requestType);
     if (data.regionId != undefined) {
       form.setValue("regionId", data.regionId);
     } else {
       // @ts-expect-error -- must remove regionId from form
       form.setValue("regionId", null);
     }
-    form.setValue("eventId", data.eventId ?? null);
+
     form.setValue("locationId", data.locationId ?? null);
-    form.setValue("eventName", data.workoutName ?? "");
-    form.setValue("aoLogo", data.aoLogo ?? "");
     form.setValue("locationName", data.locationName ?? "");
     form.setValue("locationAddress", data.locationAddress ?? "");
     form.setValue("locationAddress2", data.locationAddress2 ?? "");
@@ -184,8 +181,15 @@ export const UpdateLocationModal = ({
     form.setValue("locationCountry", data.locationCountry ?? "");
     form.setValue("locationLat", data.lat);
     form.setValue("locationLng", data.lng);
+    form.setValue("locationDescription", data.locationDescription ?? "");
+
+    form.setValue("aoLogo", data.aoLogo ?? "");
+
+    form.setValue("eventId", data.eventId ?? null);
+    form.setValue("eventName", data.workoutName ?? "");
     form.setValue("eventStartTime", data.startTime?.slice(0, 5) ?? "0530");
     form.setValue("eventEndTime", data.endTime?.slice(0, 5) ?? "0615");
+    form.setValue("eventDescription", data.eventDescription ?? "");
     if (data.dayOfWeek) {
       form.setValue("eventDayOfWeek", data.dayOfWeek);
     } else {
@@ -203,35 +207,6 @@ export const UpdateLocationModal = ({
     form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
   }, [data, eventTypes, form, session?.email]);
 
-  useEffect(() => {
-    const location = locations?.find(({ id }) => id === formLocationId);
-    // If the location is being edited, update the location with the possibly updated location
-    const possiblyUpdatedLocation = possiblyUpdatedLocationMarkers?.find(
-      (location) => location.id === formLocationId,
-    );
-    if (possiblyUpdatedLocation && location) {
-      location.latitude = possiblyUpdatedLocation.lat;
-      location.longitude = possiblyUpdatedLocation.lon;
-    }
-    if (location) {
-      form.setValue("locationName", location.name ?? "");
-      form.setValue("locationAddress", location.addressStreet ?? "");
-      form.setValue("locationAddress2", location.addressStreet2 ?? "");
-      form.setValue("locationCity", location.addressCity ?? "");
-      form.setValue("locationState", location.addressState ?? "");
-      form.setValue("locationZip", location.addressZip ?? "");
-      form.setValue("locationCountry", location.addressCountry ?? "");
-      form.setValue("locationLat", location.latitude ?? null);
-      form.setValue("locationLng", location.longitude ?? null);
-      if (location.regionId == undefined) {
-        // @ts-expect-error -- must remove regionId from form
-        form.setValue("regionId", null);
-      } else {
-        form.setValue("regionId", location.regionId);
-      }
-    }
-  }, [formLocationId, form, locations, possiblyUpdatedLocationMarkers]);
-
   return (
     <Dialog
       open={true}
@@ -247,9 +222,9 @@ export const UpdateLocationModal = ({
           <form onSubmit={onSubmit}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
-                {mode === "edit-event"
+                {data.requestType === "edit"
                   ? "Edit Event"
-                  : mode === "new-location"
+                  : data.requestType === "create-location"
                     ? "New Location"
                     : "New Event"}
                 <p className="text-sm text-muted-foreground">
@@ -388,6 +363,36 @@ export const UpdateLocationModal = ({
                     ({ id }) => id.toString() === item,
                   );
                   form.setValue("locationId", location?.id ?? null);
+                  if (!location) return;
+                  // We need to keep the lat lng when the marker has been moved
+                  const possiblyUpdatedLocation = mapStore.get(
+                    "modifiedLocationMarkers",
+                  )[location.id];
+                  form.setValue("locationName", location.name);
+                  form.setValue(
+                    "locationDescription",
+                    location.description ?? "",
+                  );
+                  form.setValue("locationAddress", location.addressStreet);
+                  form.setValue("locationAddress2", location.addressStreet2);
+                  form.setValue("locationCity", location.addressCity);
+                  form.setValue("locationState", location.addressState);
+                  form.setValue("locationZip", location.addressZip);
+                  form.setValue("locationCountry", location.addressCountry);
+                  form.setValue(
+                    "locationLat",
+                    possiblyUpdatedLocation?.lat ?? location.latitude,
+                  );
+                  form.setValue(
+                    "locationLng",
+                    possiblyUpdatedLocation?.lon ?? location.longitude,
+                  );
+                  if (location?.regionId == undefined) {
+                    // @ts-expect-error -- must remove regionId from form
+                    form.setValue("regionId", null);
+                  } else {
+                    form.setValue("regionId", location?.regionId);
+                  }
                 }}
                 searchPlaceholder="Select"
               />
@@ -407,6 +412,15 @@ export const UpdateLocationModal = ({
                 <Input {...form.register("locationName")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationName?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Description
+                </div>
+                <Textarea {...form.register("locationDescription")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationDescription?.message}
                 </p>
               </div>
               <div className="space-y-2">

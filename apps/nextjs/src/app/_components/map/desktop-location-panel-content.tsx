@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
-import { Edit, PlusCircle, X } from "lucide-react";
+import { Edit, PlusCircle, Trash, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
 import {
@@ -10,14 +12,23 @@ import {
   START_END_TIME_DISPLAY_FORMAT,
 } from "@acme/shared/app/constants";
 import { getReadableDayOfWeek } from "@acme/shared/app/functions";
+import { isTruthy } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Skeleton } from "@acme/ui/skeleton";
 import { toast } from "@acme/ui/toast";
 
 import { api } from "~/trpc/react";
+import { vanillaApi } from "~/trpc/vanilla";
 import { dayjs } from "~/utils/frontendDayjs";
 import { appStore } from "~/utils/store/app";
-import { ModalType, openModal } from "~/utils/store/modal";
+import {
+  DeleteType,
+  eventAndLocationToUpdateRequest,
+  eventDefaults,
+  modalStore,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { closePanel, selectedItemStore } from "~/utils/store/selected-item";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
@@ -25,6 +36,8 @@ import { EventChip } from "../map/event-chip";
 
 export const DesktopLocationPanelContent = () => {
   const utils = api.useUtils();
+  const { data: session } = useSession();
+  const router = useRouter();
   const mode = appStore.use.mode();
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
@@ -37,7 +50,7 @@ export const DesktopLocationPanelContent = () => {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     panelEventId,
   );
-  const workout = useMemo(
+  const event = useMemo(
     () => results?.events.find((event) => event.eventId === selectedEventId),
     [selectedEventId, results],
   );
@@ -57,44 +70,55 @@ export const DesktopLocationPanelContent = () => {
     setSelectedEventId(panelEventId);
   }, [panelEventId]);
 
-  const workoutFields = {
-    Name: workout?.eventName,
-    What: workout?.types.join(", "),
-    Where: location?.fullAddress ? (
-      <Link
-        href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
-        target="_blank"
-        className="underline"
-      >
-        {location.fullAddress}
-      </Link>
-    ) : null,
-    When: workout ? getWhenFromWorkout(workout) : "",
-    Website: location?.aoWebsite ? (
-      <Link href={location.aoWebsite} target="_blank" className="underline">
-        {location.aoWebsite}
-      </Link>
-    ) : null,
-    Notes: workout?.description ? textLink(workout.description) : null,
-  };
+  const workoutFields = useMemo(
+    () => ({
+      Name: event?.eventName,
+      What: event?.types.join(", "),
+      Where: [
+        location?.fullAddress ? (
+          <Link
+            href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
+            target="_blank"
+            className="underline"
+          >
+            {location.fullAddress}
+          </Link>
+        ) : null,
+        location?.locationDescription ? (
+          <p>{location.locationDescription}</p>
+        ) : null,
+      ].filter(isTruthy),
+      When: event ? getWhenFromWorkout(event) : "",
+      Website: location?.aoWebsite ? (
+        <Link href={location.aoWebsite} target="_blank" className="underline">
+          {location.aoWebsite}
+        </Link>
+      ) : null,
+      Notes: event?.description ? textLink(event.description) : null,
+    }),
+    [event, location],
+  );
 
-  const regionFields = {
-    Name: location?.regionName,
-    Website: location?.regionWebsite ? (
-      <Link
-        href={location?.regionWebsite}
-        target="_blank"
-        className="underline"
-      >
-        {location.regionWebsite}
-      </Link>
-    ) : null,
-    Logo: location?.regionLogo,
-  };
+  const regionFields = useMemo(
+    () => ({
+      Name: location?.regionName,
+      Website: location?.regionWebsite ? (
+        <Link
+          href={location?.regionWebsite}
+          target="_blank"
+          className="underline"
+        >
+          {location.regionWebsite}
+        </Link>
+      ) : null,
+      Logo: location?.regionLogo,
+    }),
+    [location],
+  );
 
   return !open ? null : (
     <div className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow dark:border">
-      {!results?.location || !results.events.length || isLoading ? (
+      {!location || !event || isLoading ? (
         <WorkoutDetailsSkeleton />
       ) : (
         <>
@@ -111,7 +135,7 @@ export const DesktopLocationPanelContent = () => {
               />
             </div>
             <div className="line-clamp-2 flex-1 text-left text-2xl font-bold sm:text-4xl">
-              {workout?.eventName ?? "Workout Information"}
+              {event?.eventName ?? "Workout Information"}
             </div>
           </div>
 
@@ -158,31 +182,13 @@ export const DesktopLocationPanelContent = () => {
                     { "gap-2 py-0": true },
                   )}
                   onClick={() => {
-                    const lat = results?.location.lat ?? 0;
-                    const lng = results?.location.lon ?? 0;
-                    if (typeof lat !== "number" || typeof lng !== "number") {
-                      toast.error("Invalid lat or lng");
-                    }
                     openModal(ModalType.UPDATE_LOCATION, {
-                      mode: "new-event",
-                      locationId: locationId,
-                      regionId: results?.location.regionId,
-                      eventId: -1,
-                      locationAddress: results?.location.locationAddress,
-                      locationAddress2: results?.location.locationAddress2,
-                      locationCity: results?.location.locationCity,
-                      locationState: results?.location.locationState,
-                      locationZip: results?.location.locationZip,
-                      locationCountry: results?.location.locationCountry,
-                      lat: lat,
-                      lng: lng,
-                      workoutWebsite: results?.location.aoWebsite,
-                      aoLogo: results?.location.aoLogo,
-                      startTime: "0000",
-                      endTime: "0000",
-                      dayOfWeek: "monday",
-                      types: ["Bootcamp"],
-                      eventDescription: "",
+                      requestType: "create-event",
+                      ...eventAndLocationToUpdateRequest({
+                        event: undefined,
+                        location,
+                      }),
+                      ...eventDefaults,
                     });
                   }}
                 >
@@ -250,54 +256,63 @@ export const DesktopLocationPanelContent = () => {
           </Link>
 
           {mode === "edit" ? (
-            <button
-              className="mt-4 flex flex-row items-center justify-center gap-2 rounded-md bg-blue-600 px-2 py-1 text-white"
-              onClick={(e) => {
-                const possiblyEditedLocations =
-                  utils.location.getLocationMarkersSparse.getData();
-                const possiblyEditedLocation = possiblyEditedLocations?.find(
-                  (location) => location.id === locationId,
-                );
-                const event = results?.events.find(
-                  (event) => event.eventId === selectedEventId,
-                );
-                const lat =
-                  possiblyEditedLocation?.lat ?? results?.location.lat;
-                const lng =
-                  possiblyEditedLocation?.lon ?? results?.location.lon;
-                if (typeof lat !== "number" || typeof lng !== "number") {
-                  toast.error("Invalid lat or lng");
-                  return;
-                }
-                openModal(ModalType.UPDATE_LOCATION, {
-                  mode: "edit-event",
-                  locationId: locationId,
-                  eventId: selectedEventId,
-                  regionId: results?.location.regionId,
-                  workoutName: event?.eventName,
-                  workoutWebsite: results?.location.aoWebsite,
-                  aoLogo: results?.location.aoLogo,
-                  locationName: results?.location.locationName,
-                  locationAddress: results?.location.locationAddress,
-                  locationAddress2: results?.location.locationAddress2,
-                  locationCity: results?.location.locationCity,
-                  locationState: results?.location.locationState,
-                  locationZip: results?.location.locationZip,
-                  locationCountry: results?.location.locationCountry,
-                  lat: lat,
-                  lng: lng,
-                  startTime: event?.startTime,
-                  endTime: event?.endTime,
-                  dayOfWeek: event?.dayOfWeek,
-                  types: event?.types,
-                  eventDescription: event?.description,
-                });
-                e.stopPropagation();
-              }}
-            >
-              <Edit className="h-4 w-4" />
-              <span>Edit Event</span>
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                className="mt-4 flex flex-row items-center justify-center gap-2 rounded-md bg-blue-600 px-2 py-1 text-white"
+                onClick={(e) => {
+                  if (!results) return;
+                  // Get the possibly edited locations from the cache
+
+                  openModal(ModalType.UPDATE_LOCATION, {
+                    requestType: "edit",
+                    ...eventAndLocationToUpdateRequest({
+                      event,
+                      location,
+                    }),
+                  });
+                  e.stopPropagation();
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit Event</span>
+              </button>
+              <button
+                className="flex flex-row items-center justify-center gap-2 rounded-md px-2 py-1 text-red-600"
+                onClick={(e) => {
+                  openModal(ModalType.DELETE_CONFIRMATION, {
+                    type: DeleteType.EVENT,
+                    onConfirm: () => {
+                      if (location.regionId == null) {
+                        toast.error("Location is not associated with a region");
+                        return;
+                      }
+                      void vanillaApi.request.submitDeleteRequest
+                        .mutate({
+                          regionId: location.regionId,
+                          eventId: event.eventId,
+                          eventName: event.eventName,
+                          submittedBy: session?.user?.email ?? "",
+                        })
+                        .then((result) => {
+                          void utils.location.invalidate();
+                          router.refresh();
+                          toast.success(
+                            result.status === "pending"
+                              ? "Delete request submitted"
+                              : "Successfully deleted event",
+                          );
+                          // Close all modals
+                          modalStore.setState({ modals: [] });
+                        });
+                    },
+                  });
+                  e.stopPropagation();
+                }}
+              >
+                <Trash className="h-4 w-4" />
+                <span>Delete Event</span>
+              </button>
+            </div>
           ) : null}
           <div className="h-8" />
           <div className="absolute right-2 top-2 flex flex-row gap-2">

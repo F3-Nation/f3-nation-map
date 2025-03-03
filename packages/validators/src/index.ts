@@ -116,6 +116,13 @@ export const AOInsertSchema = createInsertSchema(orgs, {
 });
 export const AOSelectSchema = createSelectSchema(orgs);
 
+export const DeleteRequestSchema = z.object({
+  eventId: z.number(),
+  eventName: z.string(),
+  regionId: z.number(),
+  submittedBy: z.string(),
+});
+
 // REQUEST UPDATE SCHEMA
 export const RequestInsertSchema = createInsertSchema(updateRequests, {
   eventTypeIds: (s) =>
@@ -131,14 +138,7 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   locationState: (s) => s.min(1, { message: "Location state is required" }),
   locationZip: (s) => s.min(1, { message: "Location zip is required" }),
   locationCountry: (s) => s.min(1, { message: "Location country is required" }),
-  regionId: z
-    .number({
-      required_error: "Region is required",
-      message: "Region is required",
-      invalid_type_error: "Region is required",
-      description: "Region is required",
-    })
-    .min(0, { message: "Region is required" }),
+  regionId: z.number({ invalid_type_error: "Region is required" }),
   eventStartTime: (s) =>
     s.regex(/^\d{4}$/, {
       message: "Start time must be in 24hr format (HHmm)",
@@ -150,7 +150,6 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   submittedBy: (s) => s.email({ message: "Invalid email address" }),
 }).extend({
   id: z.string(),
-  regionId: z.number(),
   eventMeta: z.record(z.string(), z.unknown()).optional(),
 });
 

@@ -35,6 +35,7 @@ import {
   EventCategory,
   OrgType,
   RegionRole,
+  RequestType,
   UpdateRequestStatus,
   UserRole,
   UserStatus,
@@ -51,6 +52,7 @@ export const updateRequestStatus = pgEnum(
   UpdateRequestStatus,
 );
 export const userStatus = pgEnum("user_status", UserStatus);
+export const requestType = pgEnum("request_type", RequestType);
 
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
@@ -462,8 +464,9 @@ export const events = pgTable(
 export const updateRequests = pgTable(
   "update_requests",
   {
-    id: uuid().primaryKey().notNull(),
+    id: uuid().primaryKey().defaultRandom().notNull(),
     token: uuid().defaultRandom().notNull(),
+    requestType: requestType("request_type").notNull(),
     regionId: integer("region_id").notNull(),
     eventId: integer("event_id"),
     eventTypeIds: integer("event_type_ids").array(),

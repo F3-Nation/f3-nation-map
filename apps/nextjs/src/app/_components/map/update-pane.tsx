@@ -6,7 +6,12 @@ import { Pane } from "react-leaflet/Pane";
 import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { mapStore } from "~/utils/store/map";
-import { ModalType, openModal } from "~/utils/store/modal";
+import {
+  eventDefaults,
+  locationDefaults,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 
 export const UpdatePane = () => {
   const updateLocation = mapStore.use.updateLocation();
@@ -20,7 +25,9 @@ export const UpdatePane = () => {
             eventHandlers={{
               click: () => {
                 openModal(ModalType.UPDATE_LOCATION, {
-                  mode: "new-location",
+                  requestType: "create-location",
+                  ...eventDefaults,
+                  ...locationDefaults,
                   lat: updateLocation.lat,
                   lng: updateLocation.lng,
                 });

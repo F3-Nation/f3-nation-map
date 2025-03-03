@@ -142,6 +142,7 @@ export default function AdminRequestsModal({
     if (!request) return;
     form.reset({
       id: request.id,
+      requestType: request.requestType,
       eventId: request.eventId ?? null,
       locationId: request.locationId ?? null,
       eventName: request.eventName ?? "",
@@ -155,6 +156,7 @@ export default function AdminRequestsModal({
       locationCountry: request.locationCountry ?? "",
       locationLat: request.locationLat ?? 0,
       locationLng: request.locationLng ?? 0,
+      locationDescription: request.locationDescription ?? "",
       eventStartTime: request.eventStartTime?.slice(0, 5) ?? "05:30",
       eventEndTime: request.eventEndTime?.slice(0, 5) ?? "06:15",
       eventDayOfWeek: request.eventDayOfWeek ?? "monday",
@@ -325,6 +327,10 @@ export default function AdminRequestsModal({
                   form.setValue("locationId", location?.id ?? null);
                   if (!location) return;
                   form.setValue("locationName", location.name);
+                  form.setValue(
+                    "locationDescription",
+                    location.description ?? "",
+                  );
                   form.setValue("locationAddress", location.addressStreet);
                   form.setValue("locationAddress2", location.addressStreet2);
                   form.setValue("locationCity", location.addressCity);
@@ -358,6 +364,15 @@ export default function AdminRequestsModal({
                 <Input {...form.register("locationName")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationName?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Description
+                </div>
+                <Textarea {...form.register("locationDescription")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationDescription?.message}
                 </p>
               </div>
               <div className="space-y-2">

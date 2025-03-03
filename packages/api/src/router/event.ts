@@ -32,8 +32,7 @@ export const eventRouter = createTRPCRouter({
         eq(schema.locations.id, schema.events.locationId),
       )
       .leftJoin(locationOrg, eq(locationOrg.id, schema.locations.orgId))
-      .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId))
-      .where(eq(schema.events.isSeries, false));
+      .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId));
     return workouts;
   }),
   byId: publicProcedure
@@ -95,6 +94,9 @@ export const eventRouter = createTRPCRouter({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(schema.events).where(eq(schema.events.id, input.id));
+      await ctx.db
+        .update(schema.events)
+        .set({ isActive: false })
+        .where(eq(schema.events.id, input.id));
     }),
 });

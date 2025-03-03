@@ -736,8 +736,8 @@ const getLatLonKey = ({
     typeof latitude === "number" ? latitude : safeParseFloat(latitude);
   const lonNum =
     typeof longitude === "number" ? longitude : safeParseFloat(longitude);
-  const latStr = latNum?.toFixed(4); // 4 digits is 11m
-  const lonStr = lonNum?.toFixed(4); // 4 digits is 11m
+  const latStr = latNum?.toFixed(3); // 4 digits is 11m
+  const lonStr = lonNum?.toFixed(3); // 4 digits is 11m
   if (latStr === undefined || lonStr === undefined) {
     return undefined;
   }

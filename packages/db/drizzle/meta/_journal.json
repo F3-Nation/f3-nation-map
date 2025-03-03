@@ -15,6 +15,13 @@
       "when": 1740916324646,
       "tag": "0001_melodic_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1740959330293,
+      "tag": "0002_parallel_madame_hydra",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import omit from "lodash/omit";
 import { z } from "zod";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { LowBandwidthF3Marker } from "@acme/validators";
 import {
   aliasedTable,
   count,
@@ -12,7 +13,7 @@ import {
   sql,
 } from "@acme/db";
 import { isTruthy } from "@acme/shared/common/functions";
-import { LocationInsertSchema, LowBandwidthF3Marker } from "@acme/validators";
+import { LocationInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -94,105 +95,95 @@ export const locationRouter = createTRPCRouter({
       })
       .from(schema.locations);
   }),
-  allLocationMarkerFilterData: publicProcedure
-    .output(LowBandwidthF3Marker.array())
-    .query(async ({ ctx }) => {
-      const start = Date.now();
-      console.log("allLocationMarkerFilterData start");
-      const locationsAndEvents = await ctx.db
-        .select({
-          locations: {
-            id: schema.locations.id,
-            name: schema.locations.name,
-            logo: schema.orgs.logoUrl,
-          },
-          events: {
-            id: schema.events.id,
-            locationId: schema.events.locationId,
-            dayOfWeek: schema.events.dayOfWeek,
-            startTime: schema.events.startTime,
-            endTime: schema.events.endTime,
-            name: schema.events.name,
-            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
-          },
-        })
-        .from(schema.locations)
-        .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
-        .leftJoin(
-          schema.events,
-          eq(schema.events.locationId, schema.locations.id),
-        )
-        .leftJoin(
-          schema.eventsXEventTypes,
-          eq(schema.eventsXEventTypes.eventId, schema.events.id),
-        )
-        .leftJoin(
-          schema.eventTypes,
-          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
-        )
-        .groupBy(
-          schema.locations.id,
-          schema.locations.name,
-          schema.orgs.logoUrl,
-          schema.events.id,
-        );
-      console.log("allLocationMarkerFilterData query done", Date.now() - start);
-
-      // Reduce the results into the expected format
-      const locationEvents = locationsAndEvents.reduce(
-        (acc, item) => {
-          const location = item.locations;
-          const event = item.events;
-
-          if (!acc[location.id]) {
-            acc[location.id] = {
-              ...location,
-              events: [],
-            };
-          }
-
-          if (event?.id != undefined) {
-            acc[location.id]?.events.push(omit(event, "locationId"));
-          }
-
-          return acc;
+  allLocationMarkerFilterData: publicProcedure.query(async ({ ctx }) => {
+    const locationsAndEvents = await ctx.db
+      .select({
+        locations: {
+          id: schema.locations.id,
+          name: schema.locations.name,
+          logo: schema.orgs.logoUrl,
         },
-        {} as Record<
-          number,
-          {
-            id: number;
-            name: string;
-            logo: string | null;
-            events: Omit<
-              NonNullable<(typeof locationsAndEvents)[number]["events"]>,
-              "locationId"
-            >[];
-          }
-        >,
+        events: {
+          id: schema.events.id,
+          locationId: schema.events.locationId,
+          dayOfWeek: schema.events.dayOfWeek,
+          startTime: schema.events.startTime,
+          endTime: schema.events.endTime,
+          name: schema.events.name,
+          types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
+        },
+      })
+      .from(schema.locations)
+      .leftJoin(schema.orgs, eq(schema.locations.orgId, schema.orgs.id))
+      .leftJoin(
+        schema.events,
+        eq(schema.events.locationId, schema.locations.id),
+      )
+      .leftJoin(
+        schema.eventsXEventTypes,
+        eq(schema.eventsXEventTypes.eventId, schema.events.id),
+      )
+      .leftJoin(
+        schema.eventTypes,
+        eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+      )
+      .groupBy(
+        schema.locations.id,
+        schema.locations.name,
+        schema.orgs.logoUrl,
+        schema.events.id,
       );
 
-      console.log(
-        "allLocationMarkerFilterData reduce done",
-        Date.now() - start,
-      );
+    // Reduce the results into the expected format
+    const locationEvents = locationsAndEvents.reduce(
+      (acc, item) => {
+        const location = item.locations;
+        const event = item.events;
 
-      const lowBandwidthLocationEvents: LowBandwidthF3Marker[] = Object.values(
-        locationEvents,
-      ).map((locationEvent) => [
-        locationEvent.id,
-        locationEvent.name,
-        locationEvent.logo,
-        locationEvent.events.map((event) => [
-          event.id,
-          event.name,
-          event.dayOfWeek,
-          event.startTime,
-          event.types,
-        ]),
-      ]);
+        if (!acc[location.id]) {
+          acc[location.id] = {
+            ...location,
+            events: [],
+          };
+        }
 
-      return lowBandwidthLocationEvents;
-    }),
+        if (event?.id != undefined) {
+          acc[location.id]?.events.push(omit(event, "locationId"));
+        }
+
+        return acc;
+      },
+      {} as Record<
+        number,
+        {
+          id: number;
+          name: string;
+          logo: string | null;
+          events: Omit<
+            NonNullable<(typeof locationsAndEvents)[number]["events"]>,
+            "locationId"
+          >[];
+        }
+      >,
+    );
+
+    const lowBandwidthLocationEvents: LowBandwidthF3Marker[] = Object.values(
+      locationEvents,
+    ).map((locationEvent) => [
+      locationEvent.id,
+      locationEvent.name,
+      locationEvent.logo,
+      locationEvent.events.map((event) => [
+        event.id,
+        event.name,
+        event.dayOfWeek,
+        event.startTime,
+        event.types,
+      ]),
+    ]);
+
+    return lowBandwidthLocationEvents;
+  }),
   getLocationMarker: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -417,11 +408,18 @@ export const locationRouter = createTRPCRouter({
           .groupBy(schema.events.id),
       ]);
 
-      if (!locationResult) {
+      // This also validates that the location is not undefined
+      if (
+        locationResult?.lat == undefined ||
+        locationResult?.lon == undefined
+      ) {
         return null;
       }
+
       const location = {
         ...locationResult,
+        lat: locationResult.lat,
+        lon: locationResult.lon,
         fullAddress: [
           locationResult.locationAddress,
           locationResult.locationAddress2,

@@ -8,6 +8,7 @@ import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
+import { api } from "~/trpc/react";
 import { filterData } from "~/utils/filtered-data";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
@@ -33,17 +34,23 @@ const FilteredMapResultsContext = createContext<{
   allLocationMarkersWithLatLngAndFilterData: undefined,
 });
 
-export const FilteredMapResultsProvider = ({
-  allLocationMarkers,
-  lowBandwidthAllLocationMarkerFilterData,
-  children,
-}: {
+export const FilteredMapResultsProvider = (params: {
   allLocationMarkers: RouterOutputs["location"]["getLocationMarkersSparse"];
   lowBandwidthAllLocationMarkerFilterData: RouterOutputs["location"]["allLocationMarkerFilterData"];
   children: ReactNode;
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
+  const { data: allLocationMarkersQuery } =
+    api.location.getLocationMarkersSparse.useQuery();
+  const { data: lowBandwidthAllLocationMarkerFilterDataQuery } =
+    api.location.allLocationMarkerFilterData.useQuery();
+
+  const allLocationMarkers =
+    allLocationMarkersQuery ?? params.allLocationMarkers;
+  const lowBandwidthAllLocationMarkerFilterData =
+    lowBandwidthAllLocationMarkerFilterDataQuery ??
+    params.lowBandwidthAllLocationMarkerFilterData;
 
   const filters = filterStore.useBoundStore();
 
@@ -141,7 +148,7 @@ export const FilteredMapResultsProvider = ({
         nearbyLocationCenter,
       }}
     >
-      {children}
+      {params.children}
     </FilteredMapResultsContext.Provider>
   );
 };
