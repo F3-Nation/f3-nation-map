@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import omit from "lodash/omit";
@@ -381,6 +382,8 @@ export const applyDeleteRequest = async (
   } else {
     throw new Error("Nothing to delete");
   }
+
+  revalidatePath("/");
   return {
     status: "approved" as const,
     updateRequest: omit(updateRequest, ["token"]),
@@ -560,6 +563,7 @@ export const applyUpdateRequest = async (
     );
   }
 
+  revalidatePath("/");
   return {
     status: "approved",
     updateRequest: omit(updated, ["token"]),
