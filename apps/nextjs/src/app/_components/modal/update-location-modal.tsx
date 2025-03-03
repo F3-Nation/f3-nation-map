@@ -43,6 +43,7 @@ import { mapStore } from "~/utils/store/map";
 import { closeModal } from "~/utils/store/modal";
 import { DebouncedImage } from "../debounced-image";
 import { VirtualizedCombobox } from "../virtualized-combobox";
+import { CountrySelect } from "./country-select";
 
 export const UpdateLocationModal = ({
   data,
@@ -63,6 +64,9 @@ export const UpdateLocationModal = ({
     schema: RequestInsertSchema.extend({
       badImage: z.boolean().default(false),
     }),
+    defaultValues: {
+      locationCountry: "United States",
+    },
     mode: "onBlur",
   });
 
@@ -472,7 +476,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Country
                 </div>
-                <Input {...form.register("locationCountry")} />
+                <CountrySelect control={form.control} name="locationCountry" />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationCountry?.message}
                 </p>
@@ -664,7 +668,7 @@ export const UpdateLocationModal = ({
                     !values.locationZip &&
                       form.setValue("locationZip", "12345");
                     !values.locationCountry &&
-                      form.setValue("locationCountry", "USA");
+                      form.setValue("locationCountry", "United States");
                     !values.eventTypeIds?.length &&
                       form.setValue("eventTypeIds", [1]);
                     !values.eventStartTime &&

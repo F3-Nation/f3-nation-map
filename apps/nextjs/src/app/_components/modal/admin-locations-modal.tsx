@@ -46,6 +46,7 @@ import { LocationInsertSchema } from "@acme/validators";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { CountrySelect } from "./country-select";
 
 const DynamicImportLeafletMapSimple = dynamicImport(
   () => import("~/app/_components/map/leaflet-map-simple"),
@@ -445,22 +446,9 @@ export default function AdminLocationsModal({
                     />
                   </div>
                   <div className="mb-4 w-1/2 px-2">
-                    <FormField
+                    <CountrySelect
                       control={form.control}
                       name="addressCountry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Country"
-                              {...field}
-                              value={field.value ?? ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
                     />
                   </div>
 

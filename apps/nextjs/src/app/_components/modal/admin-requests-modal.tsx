@@ -40,6 +40,7 @@ import { uploadLogo } from "~/utils/image/upload-logo";
 import { closeModal } from "~/utils/store/modal";
 import { DebouncedImage } from "../debounced-image";
 import { VirtualizedCombobox } from "../virtualized-combobox";
+import { CountrySelect } from "./country-select";
 
 export default function AdminRequestsModal({
   data: requestData,
@@ -424,7 +425,7 @@ export default function AdminRequestsModal({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Country
                 </div>
-                <Input {...form.register("locationCountry")} />
+                <CountrySelect control={form.control} name="locationCountry" />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationCountry?.message}
                 </p>
