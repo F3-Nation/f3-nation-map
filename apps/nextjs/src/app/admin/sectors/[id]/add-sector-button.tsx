@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import { ModalType, openModal } from "~/utils/store/modal";
 

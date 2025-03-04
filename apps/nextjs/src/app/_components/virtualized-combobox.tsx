@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, ChevronDownIcon } from "lucide-react";
 
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,13 +14,13 @@ import {
   CommandInput,
   CommandItem,
   CommandSeparator,
-} from "@f3/ui/command";
-import { Label } from "@f3/ui/label";
+} from "@acme/ui/command";
+import { Label } from "@acme/ui/label";
 import {
   Popover,
   PopoverContentWithoutPortal,
   PopoverTrigger,
-} from "@f3/ui/popover";
+} from "@acme/ui/popover";
 
 const MIN_WIDTH = 300;
 
@@ -138,7 +139,7 @@ const VirtualizedCommand = <T,>({
       </CommandGroup>
       <CommandSeparator />
       <div className="flex justify-end px-4 py-2">
-        <Button onClick={onClear} variant="ghost">
+        <Button type="button" onClick={onClear} variant="ghost">
           Clear
         </Button>
       </div>
@@ -252,7 +253,13 @@ export function VirtualizedCombobox<T>({
         avoidCollisions={false}
         side="bottom"
         className={cn("p-0")}
-        style={{ width: buttonWidth, minWidth: MIN_WIDTH }}
+        style={{
+          width: buttonWidth,
+          minWidth: MIN_WIDTH,
+          // Must have this z-index to avoid issue with it appearing
+          // behind the file input
+          zIndex: Z_INDEX.POPOVER_CONTENT,
+        }}
         align={buttonWidth < MIN_WIDTH ? "start" : "center"}
       >
         <VirtualizedCommand

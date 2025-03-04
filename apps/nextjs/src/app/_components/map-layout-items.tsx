@@ -3,8 +3,8 @@
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { classNames } from "@f3/shared/common/functions";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { classNames } from "@acme/shared/common/functions";
 
 import { latLngToMeters } from "~/utils/lat-lng-to-meters";
 import { mapStore } from "~/utils/store/map";

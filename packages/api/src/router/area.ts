@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { aliasedTable, eq, schema } from "@f3/db";
-import { AreaInsertSchema } from "@f3/validators";
+import { aliasedTable, and, eq, schema } from "@acme/db";
+import { AreaInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -34,7 +34,7 @@ export const areaRouter = createTRPCRouter({
       .from(areaOrg)
       .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
       .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
-      .where(eq(areaOrg.orgType, "area"));
+      .where(and(eq(areaOrg.orgType, "area"), eq(areaOrg.isActive, true)));
 
     return areas;
   }),
@@ -73,6 +73,9 @@ export const areaRouter = createTRPCRouter({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(schema.orgs).where(eq(schema.orgs.id, input.id));
+      await ctx.db
+        .update(schema.orgs)
+        .set({ isActive: false })
+        .where(eq(schema.orgs.id, input.id));
     }),
 });

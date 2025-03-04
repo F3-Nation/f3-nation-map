@@ -1,1 +1,1 @@
-export { GET, POST } from "@f3/auth";
+export { GET, POST } from "@acme/auth";

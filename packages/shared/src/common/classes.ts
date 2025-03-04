@@ -57,6 +57,7 @@ export class ZustandStore<T extends Record<string, unknown>> {
       persistedKeys?: (keyof T)[];
       version: number;
       getStorage: () => StateStorage;
+      onRehydrateStorage?: (state: T | undefined) => void;
     };
   }) {
     this.name = props.persistOptions.name;
@@ -80,6 +81,7 @@ export class ZustandStore<T extends Record<string, unknown>> {
               ZUSTAND_STORE_LOGS &&
                 console.log(`${this.name} store hydration error`, error);
             } else {
+              props.persistOptions.onRehydrateStorage?.(hydratedState);
               const hydratedStateString = JSON.stringify(hydratedState);
               ZUSTAND_STORE_LOGS &&
                 console.log(

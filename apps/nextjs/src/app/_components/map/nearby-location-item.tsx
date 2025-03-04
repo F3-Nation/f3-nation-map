@@ -3,10 +3,10 @@
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { isProduction, RERENDER_LOGS } from "@f3/shared/common/constants";
-import { onlyUnique } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { isProduction, RERENDER_LOGS } from "@acme/shared/common/constants";
+import { onlyUnique } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { isTouchDevice } from "~/utils/is-touch-device";
@@ -44,7 +44,7 @@ export const NearbyLocationItem = (props: {
     <button
       className={cn(
         "text-left text-sm text-foreground",
-        "relative w-full max-w-[450px] cursor-pointer px-2 py-2",
+        "relative w-full cursor-pointer px-2 py-2",
         "bg-background",
         { "bg-muted": isSelected },
       )}
@@ -80,6 +80,7 @@ export const NearbyLocationItem = (props: {
       }}
       onClick={() => {
         console.log("onClick NearbyLocationItem", item);
+        const isMobileDeviceWidth = appStore.get("isMobileDeviceWidth");
         // Open panel first so that the centering to the marker is offset if needed
         openPanel({ locationId: item.id });
         if (item.lat !== null && item.lon !== null) {
@@ -90,6 +91,10 @@ export const NearbyLocationItem = (props: {
           });
           // prevent the next mouse enter from triggering a change
           appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
+        }
+        if (isMobileDeviceWidth) {
+          searchStore.setState({ shouldShowResults: false });
+          searchBarRef.current?.blur();
         }
       }}
     >

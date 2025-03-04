@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { BOONE_CENTER } from "@f3/shared/app/constants";
+import { BOONE_CENTER } from "@acme/shared/app/constants";
 
 import { setView } from "~/utils/set-view";
 import { VersionInfo } from "../version-info";

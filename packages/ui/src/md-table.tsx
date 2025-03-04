@@ -19,8 +19,8 @@ import {
 } from "@tanstack/react-table";
 import { ChevronDownIcon } from "lucide-react";
 
-import type { PartialBy } from "@f3/shared/common/types";
-import { safeParseInt } from "@f3/shared/common/functions";
+import type { PartialBy } from "@acme/shared/common/types";
+import { safeParseInt } from "@acme/shared/common/functions";
 
 import { cn } from ".";
 import { Button } from "./button";

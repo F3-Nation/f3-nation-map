@@ -1,4 +1,4 @@
-import { Skeleton } from "@f3/ui/skeleton";
+import { Skeleton } from "@acme/ui/skeleton";
 
 export const SelectedItemSkeleton = () => {
   return (

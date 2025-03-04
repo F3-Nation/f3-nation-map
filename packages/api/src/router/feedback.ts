@@ -14,7 +14,7 @@ export const feedbackRouter = createTRPCRouter({
   submitFeedback: publicProcedure
     .input(feedbackSchema)
     .mutation(async ({ input }) => {
-      // testing type validation of overridden next-auth Session in @f3/auth package
+      // testing type validation of overridden next-auth Session in @acme/auth package
 
       const mailService = new MailService();
       await mailService.sendTemplateMessages(Templates.feedbackForm, input);

@@ -1,12 +1,13 @@
+import { revalidatePath } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import type { DayOfWeek } from "@f3/shared/app/enums";
-import type { EventMeta, UpdateRequestMeta } from "@f3/shared/app/types";
-import { aliasedTable, desc, eq, schema } from "@f3/db";
-import { RequestInsertSchema } from "@f3/validators";
+import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { EventMeta, UpdateRequestMeta } from "@acme/shared/app/types";
+import { aliasedTable, desc, eq, schema } from "@acme/db";
+import { DeleteRequestSchema, RequestInsertSchema } from "@acme/validators";
 
 import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -63,6 +64,7 @@ export const requestRouter = createTRPCRouter({
         newLocationLng: schema.updateRequests.locationLng,
         created: schema.updateRequests.created,
         status: schema.updateRequests.status,
+        requestType: schema.updateRequests.requestType,
       })
       .from(schema.updateRequests)
       .leftJoin(
@@ -90,7 +92,71 @@ export const requestRouter = createTRPCRouter({
         .where(eq(schema.updateRequests.id, input.id));
       return request;
     }),
+  canEditRegion: publicProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.session) {
+        return {
+          success: false,
+          mode: "public",
+          orgId: input.orgId,
+          roleName: "editor",
+        };
+      }
+      const result = await checkHasRoleOnOrg({
+        orgId: input.orgId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      return result;
+    }),
+  submitDeleteRequest: publicProcedure
+    .input(DeleteRequestSchema)
+    .mutation(async ({ ctx, input }) => {
+      const submittedBy = ctx.session?.user?.email ?? input.submittedBy;
+      if (!submittedBy) {
+        throw new Error("Submitted by is required");
+      }
 
+      const canEditRegion = ctx.session
+        ? await checkHasRoleOnOrg({
+            orgId: input.regionId,
+            session: ctx.session,
+            db: ctx.db,
+            roleName: "editor",
+          })
+        : null;
+
+      // Immediately update if user has permission
+      if (canEditRegion?.success && ctx.session?.user?.email) {
+        const result = await applyDeleteRequest(ctx, {
+          ...input,
+          reviewedBy: ctx.session?.user?.email,
+        });
+        return result;
+      }
+
+      const [request] = await ctx.db
+        .insert(schema.updateRequests)
+        .values({
+          eventId: input.eventId,
+          regionId: input.regionId,
+          requestType: "delete-event",
+          eventName: input.eventName,
+          submittedBy: input.submittedBy,
+        })
+        .returning();
+
+      if (!request) {
+        throw new Error("Unable to create a new request");
+      }
+
+      return {
+        status: "pending",
+        updateRequest: request,
+      };
+    }),
   submitUpdateRequest: publicProcedure
     .input(RequestInsertSchema)
     .mutation(async ({ ctx, input }) => {
@@ -99,12 +165,31 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Submitted by is required");
       }
 
+      const canEditRegion = ctx.session
+        ? await checkHasRoleOnOrg({
+            orgId: input.regionId,
+            session: ctx.session,
+            db: ctx.db,
+            roleName: "editor",
+          })
+        : null;
+
+      // Immediately update if user has permission
+      if (canEditRegion?.success && ctx.session?.user?.email) {
+        const result = await applyUpdateRequest(ctx, {
+          ...input,
+          reviewedBy: ctx.session?.user?.email,
+        });
+        return result;
+      }
+
       const updateRequest: typeof schema.updateRequests.$inferInsert = {
         ...input,
         submittedBy,
         submitterValidated: false,
         reviewedBy: null,
         reviewedAt: null,
+        eventMeta: input.eventMeta as EventMeta,
       };
 
       const [inserted] = await ctx.db
@@ -144,7 +229,10 @@ export const requestRouter = createTRPCRouter({
       //   url: env.NEXT_PUBLIC_URL,
       // });
 
-      return { success: true, inserted: omit(inserted, ["token"]) };
+      return {
+        status: "pending" as const,
+        updateRequest: omit(inserted, ["token"]),
+      };
     }),
   // This can be public because it uses a db token for auth
   validateSubmission: protectedProcedure
@@ -166,29 +254,33 @@ export const requestRouter = createTRPCRouter({
       if (updateRequest.regionId == undefined) {
         throw new Error("Region ID is required");
       }
-
-      const { success } = await checkHasRoleOnOrg({
-        orgId: updateRequest.regionId,
-        session: ctx.session,
-        db: ctx.db,
-        roleName: "editor",
-      });
-
-      if (!success) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: `You do not have permission to edit this region. Please contact the administrator.`,
+      if (updateRequest.requestType === "delete-event") {
+        const result = await applyDeleteRequest(ctx, {
+          ...updateRequest,
+          regionId: updateRequest.regionId,
+          reviewedBy: "email",
+          // Type check
+          eventDayOfWeek: updateRequest.eventDayOfWeek ?? undefined,
+          eventMeta: updateRequest.eventMeta ?? undefined,
         });
+        return result;
+      } else {
+        const result = await applyUpdateRequest(ctx, {
+          ...updateRequest,
+          regionId: updateRequest.regionId,
+          reviewedBy: "email",
+        });
+        return result;
       }
+    }),
 
-      const result = await applyUpdateRequest(ctx, {
-        ...updateRequest,
-        regionId: updateRequest.regionId,
-        reviewedBy: "email",
-        meta: updateRequest.meta,
-        eventMeta: updateRequest.eventMeta,
+  validateDeleteByAdmin: editorProcedure
+    .input(DeleteRequestSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await applyDeleteRequest(ctx, {
+        ...input,
+        reviewedBy: ctx.session?.user?.email,
       });
-
       return result;
     }),
   validateSubmissionByAdmin: editorProcedure
@@ -208,7 +300,6 @@ export const requestRouter = createTRPCRouter({
         db: ctx.db,
         roleName: "editor",
       });
-      console.log("roleCheckResult", roleCheckResult);
 
       if (!roleCheckResult.success) {
         throw new TRPCError({
@@ -217,12 +308,24 @@ export const requestRouter = createTRPCRouter({
         });
       }
 
-      const result = await applyUpdateRequest(ctx, {
-        ...input,
-        reviewedBy,
-      });
-
-      return result;
+      if (input.requestType === "delete-event") {
+        const result = await applyDeleteRequest(ctx, {
+          ...input,
+          regionId: input.regionId,
+          reviewedBy: "email",
+          // Type check
+          eventDayOfWeek: input.eventDayOfWeek ?? undefined,
+          eventMeta: input.eventMeta ?? undefined,
+        });
+        return result;
+      } else {
+        const result = await applyUpdateRequest(ctx, {
+          ...input,
+          regionId: input.regionId,
+          reviewedBy: "email",
+        });
+        return result;
+      }
     }),
   rejectSubmission: editorProcedure
     .input(z.object({ id: z.string() }))
@@ -257,6 +360,36 @@ export const requestRouter = createTRPCRouter({
     }),
 });
 
+export const applyDeleteRequest = async (
+  ctx: Context,
+  updateRequest: Partial<z.infer<typeof RequestInsertSchema>>,
+) => {
+  if (updateRequest.eventId != undefined) {
+    await ctx.db
+      .update(schema.updateRequests)
+      .set({ eventId: null })
+      .where(eq(schema.updateRequests.eventId, updateRequest.eventId));
+    await ctx.db
+      .delete(schema.eventsXEventTypes)
+      .where(eq(schema.eventsXEventTypes.eventId, updateRequest.eventId));
+    await ctx.db
+      .delete(schema.events)
+      .where(eq(schema.events.id, updateRequest.eventId));
+  } else if (updateRequest.locationId != undefined) {
+    await ctx.db
+      .delete(schema.locations)
+      .where(eq(schema.locations.id, updateRequest.locationId));
+  } else {
+    throw new Error("Nothing to delete");
+  }
+
+  revalidatePath("/");
+  return {
+    status: "approved" as const,
+    updateRequest: omit(updateRequest, ["token"]),
+  };
+};
+
 export const applyUpdateRequest = async (
   ctx: Context,
   updateRequest: Omit<
@@ -268,7 +401,10 @@ export const applyUpdateRequest = async (
     eventMeta?: EventMeta | null;
     eventDayOfWeek?: DayOfWeek | null;
   },
-) => {
+): Promise<{
+  status: "approved" | "rejected" | "pending";
+  updateRequest: Omit<typeof schema.updateRequests.$inferSelect, "token">;
+}> => {
   // LOCATION
   if (updateRequest.locationId == undefined) {
     console.log("Getting existing ao");
@@ -427,5 +563,9 @@ export const applyUpdateRequest = async (
     );
   }
 
-  return { success: true, updateRequest: omit(updated, ["token"]) };
+  revalidatePath("/");
+  return {
+    status: "approved",
+    updateRequest: omit(updated, ["token"]),
+  };
 };

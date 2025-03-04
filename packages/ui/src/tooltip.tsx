@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { cn } from ".";
 

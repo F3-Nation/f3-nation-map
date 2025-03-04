@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import { F3Logo } from "../_components/map/f3-logo";
 

@@ -1,4 +1,4 @@
-import type { DayOfWeek } from "@f3/shared/app/enums";
+import type { DayOfWeek } from "@acme/shared/app/enums";
 
 import type { RouterOutputs } from "~/trpc/types";
 
@@ -13,14 +13,14 @@ export interface SparseF3Marker {
   id: number;
   lat: number | null;
   lon: number | null;
-  logo: string | null;
+  logo?: string | null;
   locationDescription: string | null;
   events: {
     id: number;
     name: string;
     dayOfWeek: DayOfWeek | null;
     startTime: string | null;
-    types: { id: number; name: string }[];
+    types: string[];
   }[];
 }
 
@@ -65,7 +65,7 @@ export interface F3LocationMapSearchResult {
       name: string;
       dayOfWeek: DayOfWeek | null;
       startTime: string | null;
-      types: { id: number; name: string }[];
+      types: string[];
     };
     placeId: null;
   };

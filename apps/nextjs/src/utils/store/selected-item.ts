@@ -1,4 +1,4 @@
-import { ZustandStore } from "@f3/shared/common/classes";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 import { isTouchDevice } from "../is-touch-device";
 import { ModalType, openModal } from "./modal";

@@ -6,15 +6,16 @@ import isNumber from "lodash/isNumber";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { dayOfWeekToShortDayOfWeek } from "@f3/shared/app/functions";
-import { safeParseInt } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
+import { safeParseInt } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
-import { api } from "~/trpc/server-side-react-helpers";
+import { api } from "~/trpc/react";
 import { groupMarkerClick } from "~/utils/actions/group-marker-click";
 import { isTouchDevice } from "~/utils/is-touch-device";
+import { mapStore } from "~/utils/store/map";
 import {
   clearSelectedItem,
   selectedItemStore,
@@ -98,18 +99,12 @@ export const MemoGroupMarker = memo(
             utils.location.getLocationMarker.setData({ id }, (prev) =>
               !prev ? undefined : { ...prev, lat, lon },
             );
-            utils.location.getLocationMarkersSparse.setData(
-              undefined,
-              (prev) => {
-                if (!prev) return undefined;
-                return prev.map((location) => {
-                  if (location.id === id) {
-                    return { ...location, lat, lon };
-                  }
-                  return location;
-                });
+            mapStore.setState({
+              modifiedLocationMarkers: {
+                ...mapStore.get("modifiedLocationMarkers"),
+                [id]: { lat, lon },
               },
-            );
+            });
             // Slight delay to allow the marker to be updated
             setTimeout(() => {
               selectedItemStore.setState({

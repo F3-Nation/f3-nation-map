@@ -5,30 +5,29 @@ import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { dayOfWeekToShortDayOfWeek } from "@f3/shared/app/functions";
-import { cn } from "@f3/ui";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
+import { cn } from "@acme/ui";
 
 import type { SparseF3Marker } from "~/utils/types";
 
 export const MemoSelectedGroupMarker = memo(
   ({
     group,
-    isFar,
     selectedEventIdInGroup,
     alwaysShowFillInsteadOfOutline,
     panel,
   }: {
     group: SparseF3Marker;
-    isFar?: boolean;
     selectedEventIdInGroup: number | null;
     alwaysShowFillInsteadOfOutline?: boolean;
     panel?: boolean;
   }) => {
     const { lat, lon, events, id } = group;
     if (lat === null || lon === null) return null;
-    const filteredEvents = events.filter(
-      (event) => !isFar || selectedEventIdInGroup === event.id,
+    const filteredEvents = events;
+    const selectedIndex = filteredEvents.findIndex((event) =>
+      selectedEventIdInGroup === null ? 0 : selectedEventIdInGroup === event.id,
     );
     return (
       <Marker
@@ -60,21 +59,21 @@ export const MemoSelectedGroupMarker = memo(
                       : null;
                     return (
                       <button
-                        key={markerIdx + "-" + id}
+                        key={id + "-" + marker.id}
                         className={cn(
                           "pointer-events-none flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
                           "border-l-2 border-r-2",
                           // Use a class name to find the event id
                           `leaflet-eventid-${marker.id}`,
                           {
-                            "opacity-0": selectedEventIdInGroup !== marker.id,
+                            // "opacity-0": selectedEventIdInGroup !== marker.id,
                             "rounded-r-full": isEnd,
                             "rounded-l-full": isStart,
                             "border-red-600 font-bold dark:bg-red-400":
-                              selectedEventIdInGroup === marker.id,
+                              selectedIndex === markerIdx,
                             "bg-red-600":
                               (!!panel || alwaysShowFillInsteadOfOutline) &&
-                              selectedEventIdInGroup === marker.id,
+                              selectedIndex === markerIdx,
                           },
                         )}
                       >
@@ -121,7 +120,6 @@ export const MemoSelectedGroupMarker = memo(
   },
   (prev, next) =>
     prev.panel === next.panel &&
-    prev.isFar === next.isFar &&
     prev.group.lat === next.group.lat &&
     prev.group.lon === next.group.lon &&
     prev.group.id === next.group.id &&

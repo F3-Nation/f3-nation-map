@@ -1,5 +1,5 @@
 {
-  "name": "@f3/auth",
+  "name": "@acme/auth",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,10 +15,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@acme/db": "workspace:^0.1.0",
+    "@acme/env": "workspace:^0.1.0",
+    "@acme/shared": "workspace:^0.1.0",
     "@auth/drizzle-adapter": "^0.6.3",
-    "@f3/db": "workspace:^0.1.0",
-    "@f3/env": "workspace:^0.1.0",
-    "@f3/shared": "workspace:^0.1.0",
     "next": "^14.2.12",
     "next-auth": "5.0.0-beta.9",
     "nodemailer": "^6.9.13",
@@ -27,9 +27,9 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@f3/eslint-config": "workspace:^0.2.0",
-    "@f3/prettier-config": "workspace:^0.1.0",
-    "@f3/tsconfig": "workspace:^0.1.0",
+    "@acme/eslint-config": "workspace:^0.2.0",
+    "@acme/prettier-config": "workspace:^0.1.0",
+    "@acme/tsconfig": "workspace:^0.1.0",
     "@types/nodemailer": "^6.4.15",
     "@types/nodemailer-smtp-transport": "^2.7.8",
     "eslint": "^8.56.0",
@@ -40,8 +40,8 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@f3/eslint-config/base"
+      "@acme/eslint-config/base"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

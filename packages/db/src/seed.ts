@@ -1,20 +1,19 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
-import { eq } from "@f3/db";
-import { env } from "@f3/env";
-import { PERMISSIONS } from "@f3/shared/app/constants";
+import { eq, inArray, sql } from "@acme/db";
+import { env } from "@acme/env";
 import {
   DayOfWeek,
   EventTags,
   EventTypes,
   RegionRole,
-} from "@f3/shared/app/enums";
+} from "@acme/shared/app/enums";
 import {
   isTruthy,
   onlyUnique,
   safeParseFloat,
-} from "@f3/shared/common/functions";
+} from "@acme/shared/common/functions";
 
 import type { InferInsertModel } from ".";
 import type {
@@ -23,6 +22,13 @@ import type {
 } from "./utils/get-location-data-gravity-forms";
 import { db, schema } from ".";
 import { getLocationDataFromGravityForms } from "./utils/get-location-data-gravity-forms";
+
+const EVENT_TAGS = [
+  { name: EventTags.Open, color: "Green" },
+  { name: EventTags.VQ, color: "Blue" },
+  { name: EventTags.Manniversary, color: "Yellow" },
+  { name: EventTags.Convergence, color: "Orange" },
+];
 
 const GRAVITY_FORMS_TIME_FORMAT = "hh:mm a" as const;
 dayjs.extend(customParseFormat);
@@ -70,8 +76,92 @@ const _reseedFromScratch = async () => {
   SEED_LOGS && console.log("Seed done");
 };
 
+const _reseedJustData = async () => {
+  await db.execute(sql`SET session_replication_role = 'replica';`);
+  try {
+    console.log("deleting data");
+    console.log("getting series events");
+    const seededEvents = await db
+      .select()
+      .from(schema.events)
+      .where(eq(schema.events.isSeries, true));
+    console.log("series events", seededEvents.length);
+
+    console.log("getting seeded orgs");
+    const seededOrgs = await db
+      .select()
+      .from(schema.orgs)
+      .where(sql`${schema.orgs.meta}->>'mapSeed' = 'true'`);
+    console.log("seeded orgs", seededOrgs.length);
+
+    console.log("getting seeded locations");
+    const seededLocations = await db
+      .select()
+      .from(schema.locations)
+      .where(sql`${schema.locations.meta}->>'mapSeed' = 'true'`);
+    console.log("seeded locations", seededLocations.length);
+
+    console.log("deleting update requests");
+    await db.delete(schema.updateRequests);
+
+    console.log("deleting event types");
+    await db.delete(schema.eventsXEventTypes).where(
+      inArray(
+        schema.eventsXEventTypes.eventId,
+        seededEvents.map((e) => e.id),
+      ),
+    );
+    console.log("deleted event types");
+
+    console.log("deleting events");
+    await db.delete(schema.events).where(
+      inArray(
+        schema.events.id,
+        seededEvents.map((e) => e.id),
+      ),
+    );
+    console.log("deleted events");
+
+    console.log("deleting locations");
+    await db.delete(schema.locations).where(
+      inArray(
+        schema.locations.id,
+        seededLocations.map((l) => l.id),
+      ),
+    );
+    console.log("deleted locations");
+
+    console.log("deleting rolesXUsersXOrg");
+    await db.delete(schema.rolesXUsersXOrg).where(
+      inArray(
+        schema.rolesXUsersXOrg.orgId,
+        seededOrgs.map((o) => o.id),
+      ),
+    );
+    console.log("deleted rolesXUsersXOrg");
+
+    console.log("deleting orgs");
+    await db.delete(schema.orgs).where(
+      inArray(
+        schema.orgs.id,
+        seededOrgs.map((o) => o.id),
+      ),
+    );
+    console.log("deleted orgs");
+
+    console.log("inserting data");
+  } finally {
+    await db.execute(sql`SET session_replication_role = 'origin';`);
+  }
+
+  const { regionData, workoutData } = await getLocationDataFromGravityForms();
+  await insertData({ regionData, workoutData });
+  await insertUsers();
+};
+
 export const seed = async () => {
-  await _reseedFromScratch();
+  // await _reseedFromScratch();
+  await _reseedJustData();
   // await _reseedUsers();
 };
 
@@ -147,23 +237,33 @@ export async function insertUsers() {
     },
   ];
 
-  const users = await db.insert(schema.users).values(usersToInsert).returning();
+  await db.insert(schema.users).values(usersToInsert).onConflictDoNothing();
 
-  const _permissions = await db
-    .insert(schema.permissions)
-    .values(
-      Object.values(PERMISSIONS).map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-      })),
-    )
-    .returning();
+  const users = await db.select().from(schema.users);
 
-  const roles = await db
-    .insert(schema.roles)
-    .values(RegionRole.map((r) => ({ name: r })))
-    .returning();
+  // const _permissions = await db
+  //   .insert(schema.permissions)
+  //   .values(
+  //     Object.values(PERMISSIONS).map((p) => ({
+  //       id: p.id,
+  //       name: p.name,
+  //       description: p.description,
+  //     })),
+  //   )
+  //   .returning();
+  const existingRoles = await db.select().from(schema.roles);
+  const rolesToInsert = RegionRole.filter(
+    (r) => !existingRoles.some((existingRole) => existingRole.name === r),
+  );
+
+  if (rolesToInsert.length > 0) {
+    await db
+      .insert(schema.roles)
+      .values(rolesToInsert.map((r) => ({ name: r })))
+      .onConflictDoNothing();
+  }
+
+  const roles = await db.select().from(schema.roles);
 
   const editorRegionRole = roles.find((r) => r.name === "editor");
   if (!editorRegionRole) throw new Error("Editor region role not found");
@@ -191,13 +291,17 @@ export async function insertUsers() {
     },
   ];
 
-  await db.insert(schema.rolesXUsersXOrg).values(rolesXUsersXOrg);
+  await db
+    .insert(schema.rolesXUsersXOrg)
+    .values(rolesXUsersXOrg)
+    .onConflictDoNothing();
 }
 
 export async function insertDatabaseStructure(
   _workoutData?: WorkoutSheetData[],
 ) {
-  const eventTypes = await db
+  console.log("inserting event types");
+  await db
     .insert(schema.eventTypes)
     .values([
       {
@@ -263,17 +367,23 @@ export async function insertDatabaseStructure(
         eventCategory: "first_f",
       },
     ])
-    .returning();
+    .onConflictDoNothing();
 
-  const eventTags = await db
-    .insert(schema.eventTags)
-    .values([
-      { name: EventTags.Open, color: "Green" },
-      { name: EventTags.VQ, color: "Blue" },
-      { name: EventTags.Manniversary, color: "Yellow" },
-      { name: EventTags.Convergence, color: "Orange" },
-    ])
-    .returning();
+  const eventTypes = await db.select().from(schema.eventTypes);
+
+  const existingEventTags = await db.select().from(schema.eventTags);
+  const eventTagsToInsert = EVENT_TAGS.filter(
+    (t) =>
+      !existingEventTags.some(
+        (existingTag) => existingTag.name === t.name.toString(),
+      ),
+  );
+
+  if (eventTagsToInsert.length > 0) {
+    await db.insert(schema.eventTags).values(eventTagsToInsert);
+  }
+
+  const eventTags = await db.select().from(schema.eventTags);
 
   return { eventTypes, eventTags };
 }
@@ -289,6 +399,7 @@ export async function insertData(data: {
       name: "F3 Nation",
       isActive: true,
       orgType: "nation",
+      meta: { mapSeed: true },
     })
     .returning({ id: schema.orgs.id });
 
@@ -306,6 +417,7 @@ export async function insertData(data: {
         isActive: true,
         orgType: "sector" as const,
         parentId: insertedNation[0]?.id,
+        meta: { mapSeed: true },
       })),
     )
     .returning();
@@ -339,6 +451,7 @@ export async function insertData(data: {
         isActive: true,
         orgType: "area" as const,
         parentId: d.sectorId,
+        meta: { mapSeed: true },
       })),
     )
     .returning();
@@ -373,6 +486,7 @@ export async function insertData(data: {
             parentId: areaId,
             created: dayjs(region.Created).format(),
             updated: dayjs(region.Updated).format(),
+            meta: { mapSeed: true },
           };
           return regionData;
         })
@@ -460,6 +574,7 @@ export async function insertData(data: {
             state: events[0]?.State,
             postalCode: events[0]?.["Postal Code"],
             country: events[0]?.Country,
+            mapSeed: true,
           },
           created: dayjs(created).format(),
           updated: dayjs(updated).format(),
@@ -510,6 +625,7 @@ export async function insertData(data: {
             state: events[0]?.State,
             postalCode: events[0]?.["Postal Code"],
             country: events[0]?.Country,
+            mapSeed: true,
           },
         };
         return aoData;
@@ -570,7 +686,7 @@ export async function insertData(data: {
           startTime: startTime?.isValid() ? startTime.format("HHmm") : null,
           endTime: endTime?.isValid() ? endTime.format("HHmm") : null,
           name: workout["Workout Name"].slice(0, 100),
-          meta: { eventTypeId },
+          meta: { eventTypeId, mapSeed: true },
           description: workout.Note,
           recurrencePattern: "weekly",
           orgId,
@@ -593,13 +709,19 @@ export async function insertData(data: {
   await db
     .insert(schema.eventsXEventTypes)
     .values(
-      insertedEvents.map((e) => {
-        return {
-          eventId: e.id,
-          eventTypeId: e.meta?.eventTypeId as number,
-        };
-      }),
+      insertedEvents
+        .map((e) => {
+          return e.meta?.eventTypeId
+            ? {
+                eventId: e.id,
+                eventTypeId: e.meta?.eventTypeId,
+                meta: { mapSeed: true },
+              }
+            : null;
+        })
+        .filter(isTruthy),
     )
+    .onConflictDoNothing()
     .returning();
 }
 
@@ -614,8 +736,8 @@ const getLatLonKey = ({
     typeof latitude === "number" ? latitude : safeParseFloat(latitude);
   const lonNum =
     typeof longitude === "number" ? longitude : safeParseFloat(longitude);
-  const latStr = latNum?.toFixed(4); // 4 digits is 11m
-  const lonStr = lonNum?.toFixed(4); // 4 digits is 11m
+  const latStr = latNum?.toFixed(3); // 4 digits is 11m
+  const lonStr = lonNum?.toFixed(3); // 4 digits is 11m
   if (latStr === undefined || lonStr === undefined) {
     return undefined;
   }

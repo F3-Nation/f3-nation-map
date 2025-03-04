@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-import { useTheme } from "@f3/ui/theme";
+import { useTheme } from "@acme/ui/theme";
 
 export default function BootSvgComponent({
   mode,

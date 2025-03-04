@@ -1,5 +1,5 @@
 {
-  "name": "@f3/tailwind-config",
+  "name": "@acme/tailwind-config",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -21,9 +21,9 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@f3/eslint-config": "workspace:^0.2.0",
-    "@f3/prettier-config": "workspace:^0.1.0",
-    "@f3/tsconfig": "workspace:^0.1.0",
+    "@acme/eslint-config": "workspace:^0.2.0",
+    "@acme/prettier-config": "workspace:^0.1.0",
+    "@acme/tsconfig": "workspace:^0.1.0",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
@@ -31,8 +31,8 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@f3/eslint-config/base"
+      "@acme/eslint-config/base"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

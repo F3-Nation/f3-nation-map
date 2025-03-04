@@ -2,8 +2,8 @@
 
 import { Pencil, PencilOff } from "lucide-react";
 
-import { cn } from "@f3/ui";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@f3/ui/tooltip";
+import { cn } from "@acme/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 
 import { appStore } from "~/utils/store/app";
 

@@ -7,8 +7,8 @@ import debounce from "lodash/debounce";
 import {
   SELECTED_ITEM_DEBOUNCE_TIME_MS,
   Z_INDEX,
-} from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+} from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 
 import { api } from "~/trpc/react";
 import { mapStore } from "~/utils/store/map";

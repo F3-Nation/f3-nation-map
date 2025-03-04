@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useWindowSize } from "@react-hook/window-size";
 import { Minus, Plus } from "lucide-react";
 
-import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+import { SIDEBAR_WIDTH } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 
 import { useMapRef } from "./map-ref-provider";
 

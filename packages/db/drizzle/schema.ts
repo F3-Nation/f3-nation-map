@@ -4,6 +4,7 @@ import {
   date,
   doublePrecision,
   foreignKey,
+  index,
   integer,
   json,
   pgEnum,
@@ -27,17 +28,18 @@ import type {
   SlackUserMeta,
   UpdateRequestMeta,
   UserMeta,
-} from "@f3/shared/app/types";
+} from "@acme/shared/app/types";
 import {
   DayOfWeek,
   EventCadence,
   EventCategory,
   OrgType,
   RegionRole,
+  RequestType,
   UpdateRequestStatus,
   UserRole,
   UserStatus,
-} from "@f3/shared/app/enums";
+} from "@acme/shared/app/enums";
 
 export const userRole = pgEnum("user_role", UserRole);
 export const dayOfWeek = pgEnum("day_of_week", DayOfWeek);
@@ -50,6 +52,7 @@ export const updateRequestStatus = pgEnum(
   UpdateRequestStatus,
 );
 export const userStatus = pgEnum("user_status", UserStatus);
+export const requestType = pgEnum("request_type", RequestType);
 
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
@@ -207,6 +210,9 @@ export const locations = pgTable(
     addressStreet2: varchar("address_street2"),
   },
   (table) => [
+    index("idx_locations_org_id").on(table.orgId),
+    index("idx_locations_name").on(table.name),
+    index("idx_locations_is_active").on(table.isActive),
     foreignKey({
       columns: [table.orgId],
       foreignColumns: [orgs.id],
@@ -361,6 +367,9 @@ export const orgs = pgTable(
     orgType: orgType("org_type").notNull(),
   },
   (table) => [
+    index("idx_orgs_is_active").on(table.isActive),
+    index("idx_orgs_org_type").on(table.orgType),
+    index("idx_orgs_parent_id").on(table.parentId),
     foreignKey({
       columns: [table.parentId],
       foreignColumns: [table.id],
@@ -431,6 +440,9 @@ export const events = pgTable(
     email: varchar(),
   },
   (table) => [
+    index("idx_events_location_id").on(table.locationId),
+    index("idx_events_org_id").on(table.orgId),
+    index("idx_events_is_active").on(table.isActive),
     foreignKey({
       columns: [table.locationId],
       foreignColumns: [locations.id],
@@ -452,7 +464,7 @@ export const events = pgTable(
 export const updateRequests = pgTable(
   "update_requests",
   {
-    id: uuid().primaryKey().notNull(),
+    id: uuid().defaultRandom().primaryKey().notNull(),
     token: uuid().defaultRandom().notNull(),
     regionId: integer("region_id").notNull(),
     eventId: integer("event_id"),
@@ -499,6 +511,7 @@ export const updateRequests = pgTable(
     updated: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
+    requestType: requestType("request_type").notNull(),
   },
   (table) => [
     foreignKey({
@@ -574,6 +587,8 @@ export const eventsXEventTypes = pgTable(
     eventTypeId: integer("event_type_id").notNull(),
   },
   (table) => [
+    index("idx_events_x_event_types_event_id").on(table.eventId),
+    index("idx_events_x_event_types_event_type_id").on(table.eventTypeId),
     foreignKey({
       columns: [table.eventId],
       foreignColumns: [events.id],
@@ -789,7 +804,7 @@ export const authSessions = pgTable(
   {
     sessionToken: text("session_token").primaryKey().notNull(),
     userId: integer("user_id").notNull(),
-    expires: timestamp().notNull(),
+    expires: timestamp({ mode: "string" }).notNull(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
@@ -809,7 +824,7 @@ export const authSessions = pgTable(
 export const authVerificationTokens = pgTable("auth_verification_tokens", {
   identifier: text().notNull(),
   token: text().notNull(),
-  expires: timestamp().notNull(),
+  expires: timestamp({ mode: "string" }).notNull(),
   created: timestamp({ mode: "string" }).defaultNow(),
   updated: timestamp({ mode: "string" }),
 });

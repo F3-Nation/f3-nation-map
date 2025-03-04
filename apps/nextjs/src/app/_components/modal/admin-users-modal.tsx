@@ -7,17 +7,17 @@ import { Plus, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
 
-import type { RoleEntry } from "@f3/shared/app/types";
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { safeParseInt } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
+import type { RoleEntry } from "@acme/shared/app/types";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { safeParseInt } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
+} from "@acme/ui/dialog";
 import {
   Form,
   FormControl,
@@ -27,17 +27,17 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { toast } from "@f3/ui/toast";
-import { CrupdateUserSchema } from "@f3/validators";
+} from "@acme/ui/select";
+import { toast } from "@acme/ui/toast";
+import { CrupdateUserSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
@@ -89,10 +89,9 @@ export default function UserModal({
     onSuccess: async (data) => {
       await utils.user.invalidate();
       const { roles } = data;
-      await update({
-        ...session,
-        roles,
-      });
+      if (session?.id === data.id && data.roles.length > 0) {
+        await update({ ...session, roles });
+      }
       closeModal();
       toast.success("Successfully updated user");
       router.refresh();

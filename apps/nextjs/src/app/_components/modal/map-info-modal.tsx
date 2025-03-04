@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
+} from "@acme/ui/dialog";
 
 import { closeModal } from "~/utils/store/modal";
 

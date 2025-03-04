@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { aliasedTable, eq, schema } from "@f3/db";
-import { EventInsertSchema } from "@f3/validators";
+import { aliasedTable, eq, schema } from "@acme/db";
+import { EventInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -27,7 +27,7 @@ export const eventRouter = createTRPCRouter({
         created: schema.events.created,
       })
       .from(schema.events)
-      .leftJoin(
+      .innerJoin(
         schema.locations,
         eq(schema.locations.id, schema.events.locationId),
       )
@@ -94,6 +94,9 @@ export const eventRouter = createTRPCRouter({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(schema.events).where(eq(schema.events.id, input.id));
+      await ctx.db
+        .update(schema.events)
+        .set({ isActive: false })
+        .where(eq(schema.events.id, input.id));
     }),
 });

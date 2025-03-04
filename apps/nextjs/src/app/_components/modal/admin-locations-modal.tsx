@@ -6,15 +6,15 @@ import { useRouter } from "next/navigation";
 import { CircleHelp } from "lucide-react";
 import { z } from "zod";
 
-import { DEFAULT_CENTER, Z_INDEX } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
+import { DEFAULT_CENTER, Z_INDEX } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
+} from "@acme/ui/dialog";
 import {
   Form,
   FormControl,
@@ -23,29 +23,30 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { Spinner } from "@f3/ui/spinner";
-import { Textarea } from "@f3/ui/textarea";
-import { toast } from "@f3/ui/toast";
+} from "@acme/ui/select";
+import { Spinner } from "@acme/ui/spinner";
+import { Textarea } from "@acme/ui/textarea";
+import { toast } from "@acme/ui/toast";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@f3/ui/tooltip";
-import { LocationInsertSchema } from "@f3/validators";
+} from "@acme/ui/tooltip";
+import { LocationInsertSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { CountrySelect } from "./country-select";
 
 const DynamicImportLeafletMapSimple = dynamicImport(
   () => import("~/app/_components/map/leaflet-map-simple"),
@@ -445,22 +446,9 @@ export default function AdminLocationsModal({
                     />
                   </div>
                   <div className="mb-4 w-1/2 px-2">
-                    <FormField
+                    <CountrySelect
                       control={form.control}
                       name="addressCountry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Country"
-                              {...field}
-                              value={field.value ?? ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
                     />
                   </div>
 

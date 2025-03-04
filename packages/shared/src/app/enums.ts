@@ -33,6 +33,14 @@ export type EventCadence = (typeof EventCadence)[number];
 export const EventCategory = ["first_f", "second_f", "third_f"] as const;
 export type EventCategory = (typeof EventCategory)[number];
 
+export const RequestType = [
+  "create-location",
+  "create-event",
+  "edit",
+  "delete-event",
+] as const;
+export type RequestType = (typeof RequestType)[number];
+
 export enum EventTypes {
   Bootcamp = "Bootcamp",
   Run = "Run",

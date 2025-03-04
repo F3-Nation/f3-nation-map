@@ -4,8 +4,8 @@ import Image from "next/image"; // Next.js Image component for optimized image r
 
 import { CalendarPlus2, Clock, Filter, Sunrise, Sunset } from "lucide-react";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
 
 import type { FiltersType } from "~/utils/store/filter";
 import {

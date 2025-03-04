@@ -2,9 +2,9 @@ import type { Adapter } from "next-auth/adapters";
 import NextAuth from "next-auth";
 import Email from "next-auth/providers/nodemailer";
 
-import type { UserRole } from "@f3/shared/app/enums";
-import { db } from "@f3/db";
-import { env } from "@f3/env";
+import type { UserRole } from "@acme/shared/app/enums";
+import { db } from "@acme/db";
+import { env } from "@acme/env";
 
 import { MDPGDrizzleAdapter } from "./MDPgDrizzleAdapter";
 import { sendVerificationRequest } from "./sendVerificationRequest";

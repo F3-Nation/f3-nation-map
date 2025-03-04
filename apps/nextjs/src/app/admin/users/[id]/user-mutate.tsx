@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
-import type { RoleEntry } from "@f3/shared/app/types";
-import { safeParseInt } from "@f3/shared/common/functions";
-import { Button } from "@f3/ui/button";
+import type { RoleEntry } from "@acme/shared/app/types";
+import { safeParseInt } from "@acme/shared/common/functions";
+import { Button } from "@acme/ui/button";
 import {
   Form,
   FormControl,
@@ -15,17 +15,17 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { toast } from "@f3/ui/toast";
-import { CrupdateUserSchema } from "@f3/validators";
+} from "@acme/ui/select";
+import { toast } from "@acme/ui/toast";
+import { CrupdateUserSchema } from "@acme/validators";
 
 import type { RouterOutputs } from "~/trpc/types";
 import { VirtualizedCombobox } from "~/app/_components/virtualized-combobox";

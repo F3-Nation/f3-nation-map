@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
+} from "@acme/ui/dialog";
 import {
   Form,
   FormControl,
@@ -21,19 +21,19 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { Spinner } from "@f3/ui/spinner";
-import { Textarea } from "@f3/ui/textarea";
-import { toast } from "@f3/ui/toast";
-import { EventInsertSchema } from "@f3/validators";
+} from "@acme/ui/select";
+import { Spinner } from "@acme/ui/spinner";
+import { Textarea } from "@acme/ui/textarea";
+import { toast } from "@acme/ui/toast";
+import { EventInsertSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";

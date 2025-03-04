@@ -3,7 +3,7 @@ import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { cn } from ".";
 

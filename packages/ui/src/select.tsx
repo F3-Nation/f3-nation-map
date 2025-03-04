@@ -7,7 +7,7 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Controller } from "react-hook-form";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { cn } from ".";
 

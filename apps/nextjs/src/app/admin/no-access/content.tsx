@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
-import { routes } from "@f3/shared/app/constants";
+import { routes } from "@acme/shared/app/constants";
 
 export default function NoAccess() {
   const searchParams = useSearchParams();

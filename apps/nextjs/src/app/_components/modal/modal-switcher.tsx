@@ -2,12 +2,14 @@
 
 import { useWindowSize } from "@react-hook/window-size";
 
-import { BreakPoints } from "@f3/shared/app/constants";
+import { BreakPoints } from "@acme/shared/app/constants";
 
 import type { DataType } from "~/utils/store/modal";
 import { ModalType, useOpenModal } from "~/utils/store/modal";
 import AdminAOsModal from "./admin-aos-modal";
 import AdminAreasModal from "./admin-areas-modal";
+import AdminDeleteModal from "./admin-delete-modal";
+import AdminDeleteRequestModal from "./admin-delete-request-modal";
 import AdminLocationsModal from "./admin-locations-modal";
 import AdminNationsModal from "./admin-nations-modal";
 import AdminRegionsModal from "./admin-regions-modal";
@@ -84,8 +86,18 @@ export default function ModalSwitcher() {
       return <AdminAOsModal data={data as DataType[ModalType.ADMIN_AOS]} />;
     case ModalType.ADMIN_DELETE_CONFIRMATION:
       return (
-        <DeleteModal
+        <AdminDeleteModal
           data={data as DataType[ModalType.ADMIN_DELETE_CONFIRMATION]}
+        />
+      );
+    case ModalType.DELETE_CONFIRMATION:
+      return (
+        <DeleteModal data={data as DataType[ModalType.DELETE_CONFIRMATION]} />
+      );
+    case ModalType.ADMIN_DELETE_REQUEST:
+      return (
+        <AdminDeleteRequestModal
+          data={data as DataType[ModalType.ADMIN_DELETE_REQUEST]}
         />
       );
     default:

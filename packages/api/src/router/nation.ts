@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { eq, schema } from "@f3/db";
-import { NationInsertSchema } from "@f3/validators";
+import { and, eq, schema } from "@acme/db";
+import { NationInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -27,7 +27,9 @@ export const nationRouter = createTRPCRouter({
         created: schema.orgs.created,
       })
       .from(schema.orgs)
-      .where(eq(schema.orgs.orgType, "nation"));
+      .where(
+        and(eq(schema.orgs.orgType, "nation"), eq(schema.orgs.isActive, true)),
+      );
 
     return nations;
   }),
@@ -62,10 +64,18 @@ export const nationRouter = createTRPCRouter({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(schema.orgs).where(eq(schema.orgs.id, input.id));
+      await ctx.db
+        .update(schema.orgs)
+        .set({ isActive: false })
+        .where(eq(schema.orgs.id, input.id));
     }),
   allOrgs: publicProcedure.query(async ({ ctx }) => {
-    const orgs = await ctx.db.select().from(schema.orgs);
+    const orgs = await ctx.db
+      .select()
+      .from(schema.orgs)
+      .where(
+        and(eq(schema.orgs.orgType, "nation"), eq(schema.orgs.isActive, true)),
+      );
     return orgs;
   }),
 });

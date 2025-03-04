@@ -7,8 +7,8 @@ import {
   orgs,
   updateRequests,
   users,
-} from "@f3/db/schema/schema";
-import { DayOfWeek } from "@f3/shared/app/enums";
+} from "@acme/db/schema/schema";
+import { DayOfWeek } from "@acme/shared/app/enums";
 
 // USER SCHEMA
 export const UserSelectSchema = createSelectSchema(users);
@@ -116,6 +116,13 @@ export const AOInsertSchema = createInsertSchema(orgs, {
 });
 export const AOSelectSchema = createSelectSchema(orgs);
 
+export const DeleteRequestSchema = z.object({
+  eventId: z.number(),
+  eventName: z.string(),
+  regionId: z.number(),
+  submittedBy: z.string(),
+});
+
 // REQUEST UPDATE SCHEMA
 export const RequestInsertSchema = createInsertSchema(updateRequests, {
   eventTypeIds: (s) =>
@@ -131,14 +138,7 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   locationState: (s) => s.min(1, { message: "Location state is required" }),
   locationZip: (s) => s.min(1, { message: "Location zip is required" }),
   locationCountry: (s) => s.min(1, { message: "Location country is required" }),
-  regionId: z
-    .number({
-      required_error: "Region is required",
-      message: "Region is required",
-      invalid_type_error: "Region is required",
-      description: "Region is required",
-    })
-    .min(0, { message: "Region is required" }),
+  regionId: z.number({ invalid_type_error: "Region is required" }),
   eventStartTime: (s) =>
     s.regex(/^\d{4}$/, {
       message: "Start time must be in 24hr format (HHmm)",
@@ -150,7 +150,42 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   submittedBy: (s) => s.email({ message: "Invalid email address" }),
 }).extend({
   id: z.string(),
-  regionId: z.number(),
+  eventMeta: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const UpdateRequestSelectSchema = createSelectSchema(updateRequests);
+
+export const AllLocationMarkerFilterDataSchema = z
+  .object({
+    id: z.number(),
+    name: z.string().optional(),
+    logo: z.string().nullish(),
+    events: z
+      .object({
+        id: z.number(),
+        dayOfWeek: z.enum(DayOfWeek).nullable(),
+        startTime: z.string().nullable(),
+        endTime: z.string().nullable(),
+        types: z.array(z.object({ id: z.number(), name: z.string() })),
+        name: z.string(),
+      })
+      .array(),
+  })
+  .array();
+
+export const LowBandwidthF3Marker = z.tuple([
+  z.number(),
+  z.string(),
+  z.string().nullable(),
+  z
+    .tuple([
+      z.number(),
+      z.string(),
+      z.enum(DayOfWeek).nullable(),
+      z.string().nullable(),
+      z.array(z.string()),
+    ])
+    .array(),
+]);
+
+export type LowBandwidthF3Marker = z.infer<typeof LowBandwidthF3Marker>;

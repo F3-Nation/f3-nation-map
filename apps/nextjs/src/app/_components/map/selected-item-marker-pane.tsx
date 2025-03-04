@@ -1,9 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { Pane } from "react-leaflet/Pane";
 
-import { CLOSE_ZOOM, Z_INDEX } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { filterData } from "~/utils/filtered-data";
 import { isTouchDevice } from "~/utils/is-touch-device";
@@ -16,7 +17,7 @@ import { MemoSelectedGroupMarker } from "./selected-group-marker";
 // NOT USED
 export const SelectedIconMarkerPane = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
-  const zoom = mapStore.use.zoom();
+  const modifiedLocationMarkers = mapStore.use.modifiedLocationMarkers();
   const isMobile = isTouchDevice();
   const isEditDragging = selectedItemStore.use.isEditDragging();
   const eventId = selectedItemStore.use.eventId();
@@ -35,12 +36,35 @@ export const SelectedIconMarkerPane = () => {
 
   const filters = filterStore.useBoundStore();
 
-  const [filteredSelectedItem] = filterData(
-    selectedItem ? [selectedItem] : [],
-    filters,
-  );
+  const filteredPanelItem = useMemo(() => {
+    const [filteredPanelItem] = filterData(
+      panelItem ? [panelItem] : [],
+      filters,
+    );
 
-  const [filteredPanelItem] = filterData(panelItem ? [panelItem] : [], filters);
+    const modifiedLocationMarker =
+      panelLocationId != undefined
+        ? modifiedLocationMarkers[panelLocationId]
+        : null;
+
+    return filteredPanelItem
+      ? { ...filteredPanelItem, ...modifiedLocationMarker }
+      : null;
+  }, [panelItem, filters, panelLocationId, modifiedLocationMarkers]);
+
+  const filteredSelectedItem = useMemo(() => {
+    const [filteredSelectedItem] = filterData(
+      selectedItem ? [selectedItem] : [],
+      filters,
+    );
+
+    const modifiedLocationMarker =
+      locationId != undefined ? modifiedLocationMarkers[locationId] : null;
+
+    return filteredSelectedItem
+      ? { ...filteredSelectedItem, ...modifiedLocationMarker }
+      : null;
+  }, [selectedItem, filters, locationId, modifiedLocationMarkers]);
 
   return (
     <>
@@ -53,12 +77,9 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             alwaysShowFillInsteadOfOutline={isMobile}
             group={filteredSelectedItem}
-            isFar={zoom < CLOSE_ZOOM}
             selectedEventIdInGroup={
               filteredSelectedItem?.events.find((event) => event.id === eventId)
-                ?.id ??
-              filteredSelectedItem?.events[0]?.id ??
-              null
+                ?.id ?? null
             }
           />
         )}
@@ -72,13 +93,10 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             panel
             group={filteredPanelItem}
-            isFar={zoom < CLOSE_ZOOM}
             selectedEventIdInGroup={
               filteredPanelItem?.events.find(
                 (event) => event.id === panelEventId,
-              )?.id ??
-              filteredPanelItem?.events[0]?.id ??
-              null
+              )?.id ?? null
             }
           />
         )}

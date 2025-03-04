@@ -1,3 +1,3 @@
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 console.log("env", env);

@@ -3,16 +3,16 @@
 import type { TableOptions } from "@tanstack/react-table";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
-import type { RouterOutputs } from "@f3/api";
-import { Button } from "@f3/ui/button";
+import type { RouterOutputs } from "@acme/api";
+import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@f3/ui/dropdown-menu";
-import { MDTable } from "@f3/ui/md-table";
-import { Cell, Header } from "@f3/ui/table";
+} from "@acme/ui/dropdown-menu";
+import { MDTable } from "@acme/ui/md-table";
+import { Cell, Header } from "@acme/ui/table";
 
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 

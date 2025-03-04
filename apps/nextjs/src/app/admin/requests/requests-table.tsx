@@ -3,10 +3,10 @@
 import type { TableOptions } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
-import type { RouterOutputs } from "@f3/api";
-import { cn } from "@f3/ui";
-import { MDTable } from "@f3/ui/md-table";
-import { Cell, Header } from "@f3/ui/table";
+import type { RouterOutputs } from "@acme/api";
+import { cn } from "@acme/ui";
+import { MDTable } from "@acme/ui/md-table";
+import { Cell, Header } from "@acme/ui/table";
 
 import { ModalType, openModal } from "~/utils/store/modal";
 
@@ -22,13 +22,17 @@ export const RequestsTable = ({
       paginationOptions={{ pageSize: 20 }}
       columns={columns}
       onRowClick={(row) => {
-        openModal(ModalType.ADMIN_REQUESTS, { id: row.original.id });
-      }}
-      rowClassName={(row) => {
-        if (row.original.status === "approved") {
-          return "opacity-30";
+        if (row.original.requestType === "delete-event") {
+          openModal(ModalType.ADMIN_DELETE_REQUEST, { id: row.original.id });
+        } else {
+          openModal(ModalType.ADMIN_REQUESTS, { id: row.original.id });
         }
       }}
+      rowClassName={(row) =>
+        `${row.original.status !== "pending" ? "opacity-30" : ""} ${
+          row.original.requestType === "delete-event" ? "bg-red-100" : ""
+        }`
+      }
     />
   );
 };
@@ -36,6 +40,54 @@ export const RequestsTable = ({
 const columns: TableOptions<
   RouterOutputs["request"]["all"][number]
 >["columns"] = [
+  {
+    accessorKey: "status",
+    meta: { name: "Status" },
+    header: Header,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-start gap-1">
+          <span
+            className={cn(
+              `inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium`,
+              {
+                "border-green-200 bg-green-100 text-green-700":
+                  row.original.status === "approved",
+                "border-red-200 bg-red-100 text-red-700":
+                  row.original.status === "rejected",
+                "border-yellow-200 bg-yellow-100 text-yellow-700":
+                  row.original.status === "pending",
+              },
+            )}
+          >
+            {row.original.status}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "requestType",
+    meta: { name: "Request Type" },
+    header: Header,
+    cell: ({ row }) => {
+      const requestTypeText =
+        row.original.requestType === "delete-event"
+          ? "Delete Event"
+          : row.original.requestType === "create-event"
+            ? "Create Event"
+            : row.original.requestType === "create-location"
+              ? "Create Location"
+              : row.original.requestType === "edit"
+                ? "Edit"
+                : row.original.requestType;
+      return (
+        <div className="flex items-center justify-start gap-1">
+          <p>{requestTypeText}</p>
+        </div>
+      );
+    },
+  },
   {
     accessorKey: "regionName",
     meta: { name: "Region" },
@@ -349,32 +401,6 @@ const columns: TableOptions<
             ) : null}
           </div>
           {isAnUpdate ? <CircleBadge /> : null}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "status",
-    meta: { name: "Status" },
-    header: Header,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center justify-start gap-1">
-          <span
-            className={cn(
-              `inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium`,
-              {
-                "border-green-200 bg-green-100 text-green-700":
-                  row.original.status === "approved",
-                "border-red-200 bg-red-100 text-red-700":
-                  row.original.status === "rejected",
-                "border-yellow-200 bg-yellow-100 text-yellow-700":
-                  row.original.status === "pending",
-              },
-            )}
-          >
-            {row.original.status}
-          </span>
         </div>
       );
     },

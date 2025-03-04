@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
-import { Checkbox } from "@f3/ui/checkbox";
-import { Label } from "@f3/ui/label";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
+import { Checkbox } from "@acme/ui/checkbox";
+import { Label } from "@acme/ui/label";
 
 import { searchStore } from "~/utils/store/search";
 import {

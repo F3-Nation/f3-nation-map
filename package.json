@@ -23,7 +23,7 @@
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
-    "lint:ws": "pnpm dlx sherif@latest",
+    "lint:ws": "pnpm dlx sherif@1.1.0",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "with-env": "dotenv -e .env --",
@@ -31,13 +31,13 @@
     "db:update-db": "pnpm -F db update-db"
   },
   "devDependencies": {
-    "@f3/prettier-config": "workspace:^0.1.0",
+    "@acme/prettier-config": "workspace:^0.1.0",
     "@turbo/gen": "^1.12.3",
     "prettier": "^3.2.5",
     "turbo": "^1.12.3",
     "typescript": "^5.3.3"
   },
-  "prettier": "@f3/prettier-config",
+  "prettier": "@acme/prettier-config",
   "pnpm": {
     "patchedDependencies": {
       "trpc-openapi@1.2.0": "patches/trpc-openapi@1.2.0.patch"

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import { filterStore } from "~/utils/store/filter";
 import { DesktopNearbyLocations } from "../map/desktop-nearby-locations";

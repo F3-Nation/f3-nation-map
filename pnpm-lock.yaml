@@ -18,7 +18,7 @@ importers:
 
   .:
     devDependencies:
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:tooling/prettier
       '@turbo/gen':
@@ -36,28 +36,28 @@ importers:
 
   apps/nextjs:
     dependencies:
-      '@f3/api':
+      '@acme/api':
         specifier: workspace:^0.1.0
         version: link:../../packages/api
-      '@f3/auth':
+      '@acme/auth':
         specifier: workspace:^0.1.0
         version: link:../../packages/auth
-      '@f3/db':
+      '@acme/db':
         specifier: workspace:^0.1.0
         version: link:../../packages/db
-      '@f3/env':
+      '@acme/env':
         specifier: workspace:^0.1.0
         version: link:../../packages/env
-      '@f3/shared':
+      '@acme/shared':
         specifier: workspace:^0.1.0
         version: link:../../packages/shared
-      '@f3/tailwind-config':
+      '@acme/tailwind-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/tailwind
-      '@f3/ui':
+      '@acme/ui':
         specifier: workspace:^0.1.0
         version: link:../../packages/ui
-      '@f3/validators':
+      '@acme/validators':
         specifier: workspace:^0.1.0
         version: link:../../packages/validators
       '@formkit/auto-animate':
@@ -73,20 +73,20 @@ importers:
         specifier: ^0.9.2
         version: 0.9.2(typescript@5.3.3)(zod@3.24.1)
       '@tanstack/react-query':
-        specifier: ^5.18.1
-        version: 5.18.1(react@18.2.0)
+        specifier: ^5.59.15
+        version: 5.66.11(react@18.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.17.7
-        version: 5.24.0(@tanstack/react-query@5.18.1)(react@18.2.0)
+        version: 5.24.0(@tanstack/react-query@5.66.11)(react@18.2.0)
       '@trpc/client':
-        specifier: 11.0.0-next-beta.264
-        version: 11.0.0-next-beta.264(@trpc/server@11.0.0-next-beta.264)
+        specifier: ^11.0.0-rc.477
+        version: 11.0.0-rc.819(@trpc/server@11.0.0-rc.819)(typescript@5.3.3)
       '@trpc/react-query':
-        specifier: 11.0.0-next-beta.264
-        version: 11.0.0-next-beta.264(@tanstack/react-query@5.18.1)(@trpc/client@11.0.0-next-beta.264)(@trpc/server@11.0.0-next-beta.264)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^11.0.0-rc.477
+        version: 11.0.0-rc.819(@tanstack/react-query@5.66.11)(@trpc/client@11.0.0-rc.819)(@trpc/server@11.0.0-rc.819)(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3)
       '@trpc/server':
-        specifier: 11.0.0-next-beta.264
-        version: 11.0.0-next-beta.264
+        specifier: ^11.0.0-rc.477
+        version: 11.0.0-rc.819(typescript@5.3.3)
       axios:
         specifier: '>=1.7.4'
         version: 1.7.9
@@ -152,7 +152,7 @@ importers:
         version: 2.2.1
       trpc-openapi:
         specifier: ^1.2.0
-        version: 1.2.0(patch_hash=wblmf2yduhllwovx3dsbhq74ay)(@trpc/server@11.0.0-next-beta.264)(zod@3.24.1)
+        version: 1.2.0(patch_hash=wblmf2yduhllwovx3dsbhq74ay)(@trpc/server@11.0.0-rc.819)(zod@3.24.1)
       uuid:
         specifier: ^11.0.5
         version: 11.0.5
@@ -166,13 +166,13 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(@types/react@18.2.55)(react@18.2.0)
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@testing-library/jest-dom':
@@ -222,7 +222,7 @@ importers:
         version: 2.2.14(typescript@5.3.3)
       msw-trpc:
         specifier: 2.0.0-beta.0
-        version: 2.0.0-beta.0(@trpc/server@11.0.0-next-beta.264)(msw@2.2.14)
+        version: 2.0.0-beta.0(@trpc/server@11.0.0-rc.819)(msw@2.2.14)
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -244,24 +244,24 @@ importers:
 
   packages/api:
     dependencies:
-      '@f3/auth':
+      '@acme/auth':
         specifier: workspace:^0.1.0
         version: link:../auth
-      '@f3/db':
+      '@acme/db':
         specifier: workspace:^0.1.0
         version: link:../db
-      '@f3/env':
+      '@acme/env':
         specifier: workspace:^0.1.0
         version: link:../env
-      '@f3/shared':
+      '@acme/shared':
         specifier: workspace:^0.1.0
         version: link:../shared
-      '@f3/validators':
+      '@acme/validators':
         specifier: workspace:^0.1.0
         version: link:../validators
       '@trpc/server':
-        specifier: 11.0.0-next-beta.264
-        version: 11.0.0-next-beta.264
+        specifier: ^11.0.0-rc.477
+        version: 11.0.0-rc.819(typescript@5.3.3)
       google-spreadsheet:
         specifier: ^3.3.0
         version: 3.3.0
@@ -279,18 +279,18 @@ importers:
         version: 2.2.1
       trpc-openapi:
         specifier: ^1.2.0
-        version: 1.2.0(patch_hash=wblmf2yduhllwovx3dsbhq74ay)(@trpc/server@11.0.0-next-beta.264)(zod@3.24.1)
+        version: 1.2.0(patch_hash=wblmf2yduhllwovx3dsbhq74ay)(@trpc/server@11.0.0-rc.819)(zod@3.24.1)
       zod:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../../tooling/typescript
       '@types/google-spreadsheet':
@@ -311,18 +311,18 @@ importers:
 
   packages/auth:
     dependencies:
+      '@acme/db':
+        specifier: workspace:^0.1.0
+        version: link:../db
+      '@acme/env':
+        specifier: workspace:^0.1.0
+        version: link:../env
+      '@acme/shared':
+        specifier: workspace:^0.1.0
+        version: link:../shared
       '@auth/drizzle-adapter':
         specifier: ^0.6.3
         version: 0.6.3(nodemailer@6.10.0)
-      '@f3/db':
-        specifier: workspace:^0.1.0
-        version: link:../db
-      '@f3/env':
-        specifier: workspace:^0.1.0
-        version: link:../env
-      '@f3/shared':
-        specifier: workspace:^0.1.0
-        version: link:../shared
       next:
         specifier: ^14.2.12
         version: 14.2.12(@babel/core@7.23.9)(react-dom@18.2.0)(react@18.2.0)
@@ -342,13 +342,13 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../../tooling/typescript
       '@types/nodemailer':
@@ -372,10 +372,10 @@ importers:
 
   packages/db:
     dependencies:
-      '@f3/env':
+      '@acme/env':
         specifier: workspace:*
         version: link:../env
-      '@f3/shared':
+      '@acme/shared':
         specifier: workspace:*
         version: link:../shared
       dotenv-cli:
@@ -394,13 +394,13 @@ importers:
         specifier: ^3.4.3
         version: 3.4.4
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:*
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@faker-js/faker':
@@ -431,13 +431,13 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../../tooling/typescript
       eslint:
@@ -455,13 +455,13 @@ importers:
 
   packages/shared:
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../../tooling/typescript
       '@types/node':
@@ -476,7 +476,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@f3/shared':
+      '@acme/shared':
         specifier: workspace:*
         version: link:../shared
       '@hookform/resolvers':
@@ -546,16 +546,16 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(@types/react@18.2.55)(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-query':
-        specifier: ^5.18.1
-        version: 5.18.1(react@18.2.0)
+        specifier: ^5.59.15
+        version: 5.66.11(react@18.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.17.7
-        version: 5.24.0(@tanstack/react-query@5.18.1)(react@18.2.0)
+        version: 5.24.0(@tanstack/react-query@5.66.11)(react@18.2.0)
       '@tanstack/react-table':
-        specifier: ^8.17.3
+        specifier: ^8.20.5
         version: 8.20.6(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-virtual':
-        specifier: ^3.10.7
+        specifier: ^3.11.2
         version: 3.12.0(react-dom@18.2.0)(react@18.2.0)
       class-variance-authority:
         specifier: ^0.7.0
@@ -597,16 +597,16 @@ importers:
         specifier: ^0.9.0
         version: 0.9.1(@types/react-dom@18.2.19)(@types/react@18.2.55)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/prettier
-      '@f3/tailwind-config':
+      '@acme/tailwind-config':
         specifier: workspace:^0.1.0
         version: link:../../tooling/tailwind
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../../tooling/typescript
       '@types/lodash':
@@ -636,10 +636,10 @@ importers:
 
   packages/validators:
     dependencies:
-      '@f3/db':
+      '@acme/db':
         specifier: workspace:*
         version: link:../db
-      '@f3/shared':
+      '@acme/shared':
         specifier: workspace:*
         version: link:../shared
       drizzle-zod:
@@ -649,13 +649,13 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:*
         version: link:../../tooling/prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       eslint:
@@ -695,10 +695,10 @@ importers:
         specifier: ^4.6.0
         version: 4.6.0(eslint@8.56.0)
     devDependencies:
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../typescript
       '@types/eslint':
@@ -728,7 +728,7 @@ importers:
         specifier: ^0.5.11
         version: 0.5.11(@ianvs/prettier-plugin-sort-imports@4.1.1)(prettier@3.2.5)
     devDependencies:
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../typescript
       typescript:
@@ -737,16 +737,16 @@ importers:
 
   tooling/scripts:
     devDependencies:
-      '@f3/env':
+      '@acme/env':
         specifier: workspace:*
         version: link:../../packages/env
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:*
         version: link:../eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:*
         version: link:../prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:*
         version: link:../typescript
       eslint:
@@ -777,13 +777,13 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.1)
     devDependencies:
-      '@f3/eslint-config':
+      '@acme/eslint-config':
         specifier: workspace:^0.2.0
         version: link:../eslint
-      '@f3/prettier-config':
+      '@acme/prettier-config':
         specifier: workspace:^0.1.0
         version: link:../prettier
-      '@f3/tsconfig':
+      '@acme/tsconfig':
         specifier: workspace:^0.1.0
         version: link:../typescript
       eslint:
@@ -3976,31 +3976,31 @@ packages:
       zod: 3.24.1
     dev: false
 
-  /@tanstack/query-core@5.18.1:
-    resolution: {integrity: sha512-fYhrG7bHgSNbnkIJF2R4VUXb4lF7EBiQjKkDc5wOlB7usdQOIN4LxxHpDxyE3qjqIst1WBGvDtL48T0sHJGKCw==}
+  /@tanstack/query-core@5.66.11:
+    resolution: {integrity: sha512-ZEYxgHUcohj3sHkbRaw0gYwFxjY5O6M3IXOYXEun7E1rqNhsP8fOtqjJTKPZpVHcdIdrmX4lzZctT4+pts0OgA==}
     dev: false
 
   /@tanstack/query-devtools@5.24.0:
     resolution: {integrity: sha512-pThim455t69zrZaQKa7IRkEIK8UBTS+gHVAdNfhO72Xh4rWpMc63ovRje5/n6iw63+d6QiJzVadsJVdPoodSeQ==}
     dev: false
 
-  /@tanstack/react-query-devtools@5.24.0(@tanstack/react-query@5.18.1)(react@18.2.0):
+  /@tanstack/react-query-devtools@5.24.0(@tanstack/react-query@5.66.11)(react@18.2.0):
     resolution: {integrity: sha512-ae3TSg9hKSicLP6TZMj4hglLsLBaS8O3ex/mgHZNQ8yKCDLnVoLO1a9EqYWPzw2k+uaK5uMCKBAVbLVBLx93oA==}
     peerDependencies:
       '@tanstack/react-query': ^5.22.2
       react: ^18.0.0
     dependencies:
       '@tanstack/query-devtools': 5.24.0
-      '@tanstack/react-query': 5.18.1(react@18.2.0)
+      '@tanstack/react-query': 5.66.11(react@18.2.0)
       react: 18.2.0
     dev: false
 
-  /@tanstack/react-query@5.18.1(react@18.2.0):
-    resolution: {integrity: sha512-PdI07BbsahZ+04PxSuDQsQvBWe008eWFk/YYWzt8fvzt2sALUM0TpAJa/DFpqa7+SSo7j1EQR6Jx6znXNHyaXw==}
+  /@tanstack/react-query@5.66.11(react@18.2.0):
+    resolution: {integrity: sha512-uPDiQbZScWkAeihmZ9gAm3wOBA1TmLB1KCB1fJ1hIiEKq3dTT+ja/aYM7wGUD+XiEsY4sDSE7p8VIz/21L2Dow==}
     peerDependencies:
-      react: ^18.0.0
+      react: ^18 || ^19
     dependencies:
-      '@tanstack/query-core': 5.18.1
+      '@tanstack/query-core': 5.66.11
       react: 18.2.0
     dev: false
 
@@ -4100,32 +4100,40 @@ packages:
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
     dev: true
 
-  /@trpc/client@11.0.0-next-beta.264(@trpc/server@11.0.0-next-beta.264):
-    resolution: {integrity: sha512-He/kE++/rDq/yZr7xCkQmOC+1S3auulLVjBuo6LvuYuFQL+Slf2ObRftbNVWa92GVd/llxV+eNlbzR9mTVPCPg==}
+  /@trpc/client@11.0.0-rc.819(@trpc/server@11.0.0-rc.819)(typescript@5.3.3):
+    resolution: {integrity: sha512-okJqmsDmn9D+3T73FeE8nER3s9BEn7sg9jk6C2h2Gw+e6uhJCQ5wryIrrDaYgLXyVXf3oPG+jJihlFWlFXH9wg==}
     peerDependencies:
-      '@trpc/server': 11.0.0-next-beta.264+f5f08f35d
+      '@trpc/server': 11.0.0-rc.819+b550ee46a
+      typescript: '>=5.7.2'
     dependencies:
-      '@trpc/server': 11.0.0-next-beta.264
+      '@trpc/server': 11.0.0-rc.819(typescript@5.3.3)
+      typescript: 5.3.3
     dev: false
 
-  /@trpc/react-query@11.0.0-next-beta.264(@tanstack/react-query@5.18.1)(@trpc/client@11.0.0-next-beta.264)(@trpc/server@11.0.0-next-beta.264)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-maIb/L1mtfwdTkLzscVhv6MGFwoRUdQkDU++e+9E7EPCSZD4ZJ12MyoDPQp85Wv44ot7frBFbfyWak/woP1zjQ==}
+  /@trpc/react-query@11.0.0-rc.819(@tanstack/react-query@5.66.11)(@trpc/client@11.0.0-rc.819)(@trpc/server@11.0.0-rc.819)(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3):
+    resolution: {integrity: sha512-cc6ANj156hE9iRIqwQBU8wmmG8TZNGYlP8thw6fjk8lpn+a65ky/08UwMoPn0z/mBvXM0TGO9apbPQ03Dm7Y/Q==}
     peerDependencies:
-      '@tanstack/react-query': ^5.0.0
-      '@trpc/client': 11.0.0-next-beta.264+f5f08f35d
-      '@trpc/server': 11.0.0-next-beta.264+f5f08f35d
+      '@tanstack/react-query': ^5.62.8
+      '@trpc/client': 11.0.0-rc.819+b550ee46a
+      '@trpc/server': 11.0.0-rc.819+b550ee46a
       react: '>=18.2.0'
       react-dom: '>=18.2.0'
+      typescript: '>=5.7.2'
     dependencies:
-      '@tanstack/react-query': 5.18.1(react@18.2.0)
-      '@trpc/client': 11.0.0-next-beta.264(@trpc/server@11.0.0-next-beta.264)
-      '@trpc/server': 11.0.0-next-beta.264
+      '@tanstack/react-query': 5.66.11(react@18.2.0)
+      '@trpc/client': 11.0.0-rc.819(@trpc/server@11.0.0-rc.819)(typescript@5.3.3)
+      '@trpc/server': 11.0.0-rc.819(typescript@5.3.3)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+      typescript: 5.3.3
     dev: false
 
-  /@trpc/server@11.0.0-next-beta.264:
-    resolution: {integrity: sha512-h6RJX+C+VgFQusxGVtw3n1PZPLt27ZG70U8cPR5pwmsnE2E3vREijOgEo5MRKoiUhVrjbw8e6gnGVeKzl7uZXg==}
+  /@trpc/server@11.0.0-rc.819(typescript@5.3.3):
+    resolution: {integrity: sha512-KPkFEdsgXQeJux3bHMA8ahYOnXZBZIDBUeqAtZrQtFoIein/JNQQIuaAlA4UowWYBjEl1+fpWQwLYWCRPhL0OQ==}
+    peerDependencies:
+      typescript: '>=5.7.2'
+    dependencies:
+      typescript: 5.3.3
 
   /@tsconfig/node10@1.0.9:
     resolution: {integrity: sha512-jNsYVVxU8v5g43Erja32laIDHXeoNvFEpX33OK4d6hljo3jDhCBDhx5dhCCTMWUojscpAagGiRkBKxpdl9fxqA==}
@@ -7764,13 +7772,13 @@ packages:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
     dev: false
 
-  /msw-trpc@2.0.0-beta.0(@trpc/server@11.0.0-next-beta.264)(msw@2.2.14):
+  /msw-trpc@2.0.0-beta.0(@trpc/server@11.0.0-rc.819)(msw@2.2.14):
     resolution: {integrity: sha512-RfnDcLavriSajoandwVsXgbowMQJrAzGiuz8jbOV1ylyfe4QhdLHT1WgrQE40AEKnDMpCW2EOtG7oVq60EQnbw==}
     peerDependencies:
       '@trpc/server': '>=10.9.0'
       msw: ^2.0.0
     dependencies:
-      '@trpc/server': 11.0.0-next-beta.264
+      '@trpc/server': 11.0.0-rc.819(typescript@5.3.3)
       msw: 2.2.14(typescript@5.3.3)
     dev: true
 
@@ -9637,13 +9645,13 @@ packages:
       punycode: 2.3.1
     dev: true
 
-  /trpc-openapi@1.2.0(patch_hash=wblmf2yduhllwovx3dsbhq74ay)(@trpc/server@11.0.0-next-beta.264)(zod@3.24.1):
+  /trpc-openapi@1.2.0(patch_hash=wblmf2yduhllwovx3dsbhq74ay)(@trpc/server@11.0.0-rc.819)(zod@3.24.1):
     resolution: {integrity: sha512-pfYoCd/3KYXWXvUPZBKJw455OOwngKN/6SIcj7Yit19OMLJ+8yVZkEvGEeg5wUSwfsiTdRsKuvqkRPXVSwV7ew==}
     peerDependencies:
       '@trpc/server': ^10.0.0
       zod: ^3.14.4
     dependencies:
-      '@trpc/server': 11.0.0-next-beta.264
+      '@trpc/server': 11.0.0-rc.819(typescript@5.3.3)
       co-body: 6.1.0
       h3: 1.10.1
       lodash.clonedeep: 4.5.0

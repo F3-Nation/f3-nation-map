@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import type { PlaceDetails } from "@f3/shared/app/types";
+import type { PlaceDetails } from "@acme/shared/app/types";
 
 import { env } from "~/env";
 

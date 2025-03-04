@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-import { ZustandStore } from "@f3/shared/common/classes";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 export enum TimeSelection {
   none = "none",

@@ -1,10 +1,10 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
 import superjson from "superjson";
 
-import { appRouter, createTRPCContext } from "@f3/api";
+import { appRouter, createTRPCContext } from "@acme/api";
 
-export const serverSideHelpers = createServerSideHelpers({
+export const ssg = createServerSideHelpers({
   router: appRouter,
-  ctx: await createTRPCContext({ session: null, headers: null }),
+  ctx: await createTRPCContext({ session: "none", headers: null }),
   transformer: superjson, // optional - adds superjson serialization
 });

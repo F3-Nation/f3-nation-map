@@ -3,8 +3,9 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
-import { DEFAULT_CENTER } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import type { RouterOutputs } from "@acme/api";
+import { DEFAULT_CENTER } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
 import { api } from "~/trpc/react";
@@ -17,13 +18,11 @@ export type LocationMarkerWithDistance = SparseF3Marker & {
 };
 
 const FilteredMapResultsContext = createContext<{
-  isLoading: boolean;
   nearbyLocationCenter: ReturnType<typeof mapStore.use.nearbyLocationCenter>;
   filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
   allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
-  isLoading: true,
   nearbyLocationCenter: {
     type: "default",
     lat: DEFAULT_CENTER[0],
@@ -35,22 +34,47 @@ const FilteredMapResultsContext = createContext<{
   allLocationMarkersWithLatLngAndFilterData: undefined,
 });
 
-export const FilteredMapResultsProvider = ({
-  children,
-}: {
+export const FilteredMapResultsProvider = (params: {
+  allLocationMarkers: RouterOutputs["location"]["getLocationMarkersSparse"];
+  lowBandwidthAllLocationMarkerFilterData: RouterOutputs["location"]["allLocationMarkerFilterData"];
   children: ReactNode;
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
-
-  const { data: allLocationMarkers, isLoading } =
+  const { data: allLocationMarkersQuery } =
     api.location.getLocationMarkersSparse.useQuery();
-  const { data: allLocationMarkerFilterData } =
+  const { data: lowBandwidthAllLocationMarkerFilterDataQuery } =
     api.location.allLocationMarkerFilterData.useQuery();
+
+  const allLocationMarkers =
+    allLocationMarkersQuery ?? params.allLocationMarkers;
+  const lowBandwidthAllLocationMarkerFilterData =
+    lowBandwidthAllLocationMarkerFilterDataQuery ??
+    params.lowBandwidthAllLocationMarkerFilterData;
+
   const filters = filterStore.useBoundStore();
 
   const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
-    if (!allLocationMarkers || !allLocationMarkerFilterData) return undefined;
+    if (!allLocationMarkers || !lowBandwidthAllLocationMarkerFilterData)
+      return undefined;
+
+    const allLocationMarkerFilterData =
+      lowBandwidthAllLocationMarkerFilterData.map((location) => {
+        return {
+          id: location[0],
+          name: location[1],
+          logo: location[2],
+          events: location[3].map((event) => {
+            return {
+              id: event[0],
+              name: event[1],
+              dayOfWeek: event[2],
+              startTime: event[3],
+              types: event[4],
+            };
+          }),
+        };
+      });
 
     const locationIdToLatLng = allLocationMarkers.reduce(
       (acc, location) => {
@@ -80,7 +104,7 @@ export const FilteredMapResultsProvider = ({
           locationIdToLatLng[location.id]?.locationDescription ?? null,
       };
     });
-  }, [allLocationMarkerFilterData, allLocationMarkers]);
+  }, [allLocationMarkers, lowBandwidthAllLocationMarkerFilterData]);
 
   const filteredLocationMarkers = useMemo(() => {
     if (!allLocationMarkersWithLatLngAndFilterData) return undefined;
@@ -122,10 +146,9 @@ export const FilteredMapResultsProvider = ({
         locationOrderedLocationMarkers,
         allLocationMarkersWithLatLngAndFilterData,
         nearbyLocationCenter,
-        isLoading,
       }}
     >
-      {children}
+      {params.children}
     </FilteredMapResultsContext.Provider>
   );
 };

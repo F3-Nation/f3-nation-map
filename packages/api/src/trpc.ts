@@ -11,9 +11,9 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Session } from "@f3/auth";
-import { auth } from "@f3/auth";
-import { db } from "@f3/db";
+import type { Session } from "@acme/auth";
+import { auth } from "@acme/auth";
+import { db } from "@acme/db";
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
@@ -45,7 +45,7 @@ export const createTRPCContext = async (opts: {
     ">>> tRPC Request from",
     source,
     "by",
-    session?.user ?? "a guest",
+    session?.user?.email ?? "a guest",
     "at",
     ip,
   );

@@ -8,8 +8,9 @@ import {
   useEffect,
   useState,
 } from "react";
+import { DEFAULT_CENTER } from "node_modules/@acme/shared/src/app/constants";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { getRandomLocation } from "~/utils/random-location";
 import { setView } from "~/utils/set-view";
@@ -89,13 +90,18 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
     (params?: { onlyUpdateIfNotHasMovedMap?: boolean }) => {
       // one function to set the view and check if the map has moved
       const setViewIfNotMovedMap = (loc: { lat: number; lng: number }) => {
-        if (params?.onlyUpdateIfNotHasMovedMap && mapStore.get("hasMovedMap")) {
+        const mapStoreValues = mapStore.getState();
+        const hasMovedMap =
+          mapStoreValues.hasMovedMap ||
+          (mapStoreValues.center.lat !== DEFAULT_CENTER[0] &&
+            mapStoreValues.center.lng !== DEFAULT_CENTER[1]);
+
+        if (params?.onlyUpdateIfNotHasMovedMap && hasMovedMap) {
           console.log("Not redirecting because we've moved the map");
           return;
         }
         setView(loc);
       };
-
       if (userGpsLocation) {
         setViewIfNotMovedMap({
           lat: userGpsLocation.latitude,

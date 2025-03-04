@@ -18,8 +18,8 @@ import {
   ADMIN_HEADER_HEIGHT,
   ADMIN_SIDEBAR_WIDTH,
   routes,
-} from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+} from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 
 import { VersionInfo } from "~/app/_components/version-info";
 

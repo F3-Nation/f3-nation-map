@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Maximize2, X } from "lucide-react";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
 
 import type { F3Marker } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";
@@ -97,7 +97,7 @@ export const SelectedItem = (props: {
             ) : null}
             <div>
               <span className="font-semibold">Type: </span>
-              {selectedEvent.types.map((type) => type.name).join(", ")}
+              {selectedEvent.types.join(", ")}
             </div>
             {selectedEvent.description ? (
               <p className="leading-4">

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import debounce from "lodash/debounce";
 
-import { CLOSE_ZOOM } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import { CLOSE_ZOOM } from "@acme/shared/app/constants";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { api } from "~/trpc/react";
 import { mapStore } from "~/utils/store/map";
@@ -45,7 +46,12 @@ export const useSelectedItem = () => {
     ? undefined
     : // check for null or undefined
       eventId === null || eventId === undefined
-      ? selectedLocation.events[0]
+      ? // get the first of the week (monday is first)
+        selectedLocation.events.sort(
+          (a, b) =>
+            DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
+            DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
+        )[0]
       : // use == incase it is a string
         selectedLocation.events.find((event) => event.id == eventId);
 

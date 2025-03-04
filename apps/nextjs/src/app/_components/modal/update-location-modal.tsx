@@ -1,24 +1,25 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import gte from "lodash/gte";
 import { useSession } from "next-auth/react";
 import { Controller } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
-import { DayOfWeek } from "@f3/shared/app/enums";
-import { Case } from "@f3/shared/common/enums";
-import { convertCase } from "@f3/shared/common/functions";
-import { Button } from "@f3/ui/button";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import { DayOfWeek } from "@acme/shared/app/enums";
+import { Case } from "@acme/shared/common/enums";
+import { convertCase, isTruthy } from "@acme/shared/common/functions";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
-import { Form, useForm } from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/dialog";
+import { Form, useForm } from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   ControlledSelect,
   Select,
@@ -26,11 +27,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { Spinner } from "@f3/ui/spinner";
-import { Textarea } from "@f3/ui/textarea";
-import { toast } from "@f3/ui/toast";
-import { RequestInsertSchema } from "@f3/validators";
+} from "@acme/ui/select";
+import { Spinner } from "@acme/ui/spinner";
+import { Textarea } from "@acme/ui/textarea";
+import { toast } from "@acme/ui/toast";
+import { RequestInsertSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
@@ -38,26 +39,34 @@ import { isDevMode } from "~/trpc/util";
 import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
 import { uploadLogo } from "~/utils/image/upload-logo";
 import { appStore } from "~/utils/store/app";
+import { mapStore } from "~/utils/store/map";
 import { closeModal } from "~/utils/store/modal";
 import { DebouncedImage } from "../debounced-image";
 import { VirtualizedCombobox } from "../virtualized-combobox";
+import { CountrySelect } from "./country-select";
 
 export const UpdateLocationModal = ({
   data,
 }: {
   data: DataType[ModalType.UPDATE_LOCATION];
 }) => {
+  const router = useRouter();
+  const { data: canEditRegion } = api.request.canEditRegion.useQuery(
+    { orgId: data.regionId ?? -1 },
+    { enabled: !!data.regionId },
+  );
   const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutateAsync: submitUpdateRequest } =
     api.request.submitUpdateRequest.useMutation();
-  const { mutateAsync: submitUpdateRequestAdmin } =
-    api.request.validateSubmissionByAdmin.useMutation();
 
   const form = useForm({
     schema: RequestInsertSchema.extend({
       badImage: z.boolean().default(false),
     }),
+    defaultValues: {
+      locationCountry: "United States",
+    },
     mode: "onBlur",
   });
 
@@ -72,20 +81,10 @@ export const UpdateLocationModal = ({
     (role) => role.roleName === "admin" && role.orgId === formRegionId,
   );
 
-  const canEditRegion = session?.roles.some(
-    (role) =>
-      (role.roleName === "editor" || role.roleName === "admin") &&
-      role.orgId === formRegionId,
-  );
-
-  const mode = data.mode;
-
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
   const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
-  const { data: possiblyUpdatedLocationMarkers } =
-    api.location.getLocationMarkersSparse.useQuery();
 
   const sortedLocationOptions = useMemo(() => {
     return locations
@@ -120,17 +119,20 @@ export const UpdateLocationModal = ({
           eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
         };
 
-        if (canEditRegion) {
-          await submitUpdateRequestAdmin(updateRequestData);
-          toast.success("Map updated");
-          void utils.location.invalidate();
-          void utils.event.invalidate();
-        } else {
-          await submitUpdateRequest(updateRequestData);
-          toast.success(
-            "Request submitted. Please check your email to validate your submission.",
-          );
-        }
+        await submitUpdateRequest(updateRequestData).then((result) => {
+          if (result.status === "pending") {
+            toast.success(
+              "Request submitted. An admin will review your submission soon.",
+            );
+          } else if (result.status === "rejected") {
+            toast.error("Failed to submit update request");
+          } else if (result.status === "approved") {
+            void utils.location.invalidate();
+            void utils.event.invalidate();
+            toast.success("Update request automatically applied");
+            router.refresh();
+          }
+        });
 
         setIsSubmitting(false);
         closeModal();
@@ -165,16 +167,15 @@ export const UpdateLocationModal = ({
 
   useEffect(() => {
     form.setValue("id", uuid());
+    form.setValue("requestType", data.requestType);
     if (data.regionId != undefined) {
       form.setValue("regionId", data.regionId);
     } else {
       // @ts-expect-error -- must remove regionId from form
       form.setValue("regionId", null);
     }
-    form.setValue("eventId", data.eventId ?? null);
+
     form.setValue("locationId", data.locationId ?? null);
-    form.setValue("eventName", data.workoutName ?? "");
-    form.setValue("aoLogo", data.aoLogo ?? "");
     form.setValue("locationName", data.locationName ?? "");
     form.setValue("locationAddress", data.locationAddress ?? "");
     form.setValue("locationAddress2", data.locationAddress2 ?? "");
@@ -184,48 +185,31 @@ export const UpdateLocationModal = ({
     form.setValue("locationCountry", data.locationCountry ?? "");
     form.setValue("locationLat", data.lat);
     form.setValue("locationLng", data.lng);
+    form.setValue("locationDescription", data.locationDescription ?? "");
+
+    form.setValue("aoLogo", data.aoLogo ?? "");
+
+    form.setValue("eventId", data.eventId ?? null);
+    form.setValue("eventName", data.workoutName ?? "");
     form.setValue("eventStartTime", data.startTime?.slice(0, 5) ?? "0530");
     form.setValue("eventEndTime", data.endTime?.slice(0, 5) ?? "0615");
+    form.setValue("eventDescription", data.eventDescription ?? "");
     if (data.dayOfWeek) {
       form.setValue("eventDayOfWeek", data.dayOfWeek);
     } else {
       // @ts-expect-error -- must remove dayOfWeek from form
       form.setValue("eventDayOfWeek", null);
     }
-    form.setValue("eventTypeIds", data.types?.map((type) => type.id) ?? []);
+    form.setValue(
+      "eventTypeIds",
+      data.types
+        ?.map((type) => eventTypes?.find((t) => t.name === type)?.id)
+        .filter(isTruthy) ?? [],
+    );
     form.setValue("eventDescription", data.eventDescription ?? "");
 
     form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
-  }, [data, form, session?.email]);
-
-  useEffect(() => {
-    const location = locations?.find(({ id }) => id === formLocationId);
-    // If the location is being edited, update the location with the possibly updated location
-    const possiblyUpdatedLocation = possiblyUpdatedLocationMarkers?.find(
-      (location) => location.id === formLocationId,
-    );
-    if (possiblyUpdatedLocation && location) {
-      location.latitude = possiblyUpdatedLocation.lat;
-      location.longitude = possiblyUpdatedLocation.lon;
-    }
-    if (location) {
-      form.setValue("locationName", location.name ?? "");
-      form.setValue("locationAddress", location.addressStreet ?? "");
-      form.setValue("locationAddress2", location.addressStreet2 ?? "");
-      form.setValue("locationCity", location.addressCity ?? "");
-      form.setValue("locationState", location.addressState ?? "");
-      form.setValue("locationZip", location.addressZip ?? "");
-      form.setValue("locationCountry", location.addressCountry ?? "");
-      form.setValue("locationLat", location.latitude ?? null);
-      form.setValue("locationLng", location.longitude ?? null);
-      if (location.regionId == undefined) {
-        // @ts-expect-error -- must remove regionId from form
-        form.setValue("regionId", null);
-      } else {
-        form.setValue("regionId", location.regionId);
-      }
-    }
-  }, [formLocationId, form, locations, possiblyUpdatedLocationMarkers]);
+  }, [data, eventTypes, form, session?.email]);
 
   return (
     <Dialog
@@ -242,9 +226,9 @@ export const UpdateLocationModal = ({
           <form onSubmit={onSubmit}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
-                {mode === "edit-event"
+                {data.requestType === "edit"
                   ? "Edit Event"
-                  : mode === "new-location"
+                  : data.requestType === "create-location"
                     ? "New Location"
                     : "New Event"}
                 <p className="text-sm text-muted-foreground">
@@ -383,6 +367,36 @@ export const UpdateLocationModal = ({
                     ({ id }) => id.toString() === item,
                   );
                   form.setValue("locationId", location?.id ?? null);
+                  if (!location) return;
+                  // We need to keep the lat lng when the marker has been moved
+                  const possiblyUpdatedLocation = mapStore.get(
+                    "modifiedLocationMarkers",
+                  )[location.id];
+                  form.setValue("locationName", location.name);
+                  form.setValue(
+                    "locationDescription",
+                    location.description ?? "",
+                  );
+                  form.setValue("locationAddress", location.addressStreet);
+                  form.setValue("locationAddress2", location.addressStreet2);
+                  form.setValue("locationCity", location.addressCity);
+                  form.setValue("locationState", location.addressState);
+                  form.setValue("locationZip", location.addressZip);
+                  form.setValue("locationCountry", location.addressCountry);
+                  form.setValue(
+                    "locationLat",
+                    possiblyUpdatedLocation?.lat ?? location.latitude,
+                  );
+                  form.setValue(
+                    "locationLng",
+                    possiblyUpdatedLocation?.lon ?? location.longitude,
+                  );
+                  if (location?.regionId == undefined) {
+                    // @ts-expect-error -- must remove regionId from form
+                    form.setValue("regionId", null);
+                  } else {
+                    form.setValue("regionId", location?.regionId);
+                  }
                 }}
                 searchPlaceholder="Select"
               />
@@ -397,11 +411,49 @@ export const UpdateLocationModal = ({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">
+                  Location Region
+                </div>
+                <VirtualizedCombobox
+                  key={formRegionId?.toString()}
+                  options={
+                    regions
+                      ?.map((region) => ({
+                        label: region.name,
+                        value: region.id.toString(),
+                      }))
+                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+                  }
+                  value={formRegionId?.toString()}
+                  onSelect={(item) => {
+                    const region = regions?.find(
+                      (region) => region.id.toString() === item,
+                    );
+                    if (region) {
+                      form.setValue("regionId", region.id);
+                    }
+                  }}
+                  searchPlaceholder="Select"
+                />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.regionId?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
                   Location Name
                 </div>
                 <Input {...form.register("locationName")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationName?.message}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Location Description
+                </div>
+                <Textarea {...form.register("locationDescription")} />
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.locationDescription?.message}
                 </p>
               </div>
               <div className="space-y-2">
@@ -453,7 +505,7 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Country
                 </div>
-                <Input {...form.register("locationCountry")} />
+                <CountrySelect control={form.control} name="locationCountry" />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationCountry?.message}
                 </p>
@@ -474,35 +526,6 @@ export const UpdateLocationModal = ({
                 <Input {...form.register("locationLng")} />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationLng?.message}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Location Region
-                </div>
-                <VirtualizedCombobox
-                  key={formRegionId?.toString()}
-                  options={
-                    regions
-                      ?.map((region) => ({
-                        label: region.name,
-                        value: region.id.toString(),
-                      }))
-                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-                  }
-                  value={formRegionId?.toString()}
-                  onSelect={(item) => {
-                    const region = regions?.find(
-                      (region) => region.id.toString() === item,
-                    );
-                    if (region) {
-                      form.setValue("regionId", region.id);
-                    }
-                  }}
-                  searchPlaceholder="Select"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.regionId?.message}
                 </p>
               </div>
             </div>
@@ -645,7 +668,7 @@ export const UpdateLocationModal = ({
                     !values.locationZip &&
                       form.setValue("locationZip", "12345");
                     !values.locationCountry &&
-                      form.setValue("locationCountry", "USA");
+                      form.setValue("locationCountry", "United States");
                     !values.eventTypeIds?.length &&
                       form.setValue("eventTypeIds", [1]);
                     !values.eventStartTime &&

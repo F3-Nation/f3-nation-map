@@ -1,5 +1,5 @@
-import { cn } from "@f3/ui";
-import { CardDescription, CardHeader, CardTitle } from "@f3/ui/card";
+import { cn } from "@acme/ui";
+import { CardDescription, CardHeader, CardTitle } from "@acme/ui/card";
 
 import type { F3LocationMapSearchResult } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";
