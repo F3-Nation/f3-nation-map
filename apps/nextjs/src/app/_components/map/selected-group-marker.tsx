@@ -5,7 +5,6 @@ import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 import { Marker } from "react-leaflet";
 
-import { DayOfWeek } from "@acme/shared/app/enums";
 import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
 import { cn } from "@acme/ui";
 
@@ -14,21 +13,18 @@ import type { SparseF3Marker } from "~/utils/types";
 export const MemoSelectedGroupMarker = memo(
   ({
     group,
-    selectedEventIdInGroup,
+    selectedIndex,
     alwaysShowFillInsteadOfOutline,
     panel,
   }: {
     group: SparseF3Marker;
-    selectedEventIdInGroup: number | null;
+    selectedIndex: number;
     alwaysShowFillInsteadOfOutline?: boolean;
     panel?: boolean;
   }) => {
     const { lat, lon, events, id } = group;
     if (lat === null || lon === null) return null;
     const filteredEvents = events;
-    const selectedIndex = filteredEvents.findIndex((event) =>
-      selectedEventIdInGroup === null ? 0 : selectedEventIdInGroup === event.id,
-    );
     return (
       <Marker
         // Allow move movements to go to the zoomed marker pane below
@@ -44,43 +40,35 @@ export const MemoSelectedGroupMarker = memo(
                 className="flex flex-row rounded-full ring-[1px] ring-gray-700"
                 style={{ zIndex: 1 }}
               >
-                {filteredEvents
-                  .sort(
-                    (a, b) =>
-                      DayOfWeek.indexOf(a.dayOfWeek ?? "monday") -
-                      DayOfWeek.indexOf(b.dayOfWeek ?? "monday"),
-                  )
-                  .map((marker, markerIdx, markerArray) => {
-                    const dotw = marker.dayOfWeek;
-                    const isStart = markerIdx === 0;
-                    const isEnd = markerIdx === markerArray.length - 1;
-                    const dayText = dotw
-                      ? dayOfWeekToShortDayOfWeek(dotw)
-                      : null;
-                    return (
-                      <button
-                        key={id + "-" + marker.id}
-                        className={cn(
-                          "pointer-events-none flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
-                          "border-l-2 border-r-2",
-                          // Use a class name to find the event id
-                          `leaflet-eventid-${marker.id}`,
-                          {
-                            // "opacity-0": selectedEventIdInGroup !== marker.id,
-                            "rounded-r-full": isEnd,
-                            "rounded-l-full": isStart,
-                            "border-red-600 font-bold dark:bg-red-400":
-                              selectedIndex === markerIdx,
-                            "bg-red-600":
-                              (!!panel || alwaysShowFillInsteadOfOutline) &&
-                              selectedIndex === markerIdx,
-                          },
-                        )}
-                      >
-                        {dayText}
-                      </button>
-                    );
-                  })}
+                {filteredEvents.map((marker, markerIdx, markerArray) => {
+                  const dotw = marker.dayOfWeek;
+                  const isStart = markerIdx === 0;
+                  const isEnd = markerIdx === markerArray.length - 1;
+                  const dayText = dotw ? dayOfWeekToShortDayOfWeek(dotw) : null;
+                  return (
+                    <button
+                      key={id + "-" + marker.id}
+                      className={cn(
+                        "pointer-events-none flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
+                        "border-l-2 border-r-2",
+                        // Use a class name to find the event id
+                        `leaflet-eventid-${marker.id}`,
+                        {
+                          // "opacity-0": selectedEventIdInGroup !== marker.id,
+                          "rounded-r-full": isEnd,
+                          "rounded-l-full": isStart,
+                          "border-red-600 font-bold dark:bg-red-400":
+                            selectedIndex === markerIdx,
+                          "bg-red-600":
+                            (!!panel || alwaysShowFillInsteadOfOutline) &&
+                            selectedIndex === markerIdx,
+                        },
+                      )}
+                    >
+                      {dayText}
+                    </button>
+                  );
+                })}
               </div>
               <svg
                 viewBox="0 0 40 40"
@@ -124,7 +112,7 @@ export const MemoSelectedGroupMarker = memo(
     prev.group.lon === next.group.lon &&
     prev.group.id === next.group.id &&
     prev.group.events.length === next.group.events.length &&
-    prev.selectedEventIdInGroup === next.selectedEventIdInGroup,
+    prev.selectedIndex === next.selectedIndex,
 );
 
 MemoSelectedGroupMarker.displayName = "MemoSelectedGroupMarker";

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
-import { DayOfWeek } from "@acme/shared/app/enums";
 import { isProduction, RERENDER_LOGS } from "@acme/shared/common/constants";
 import { onlyUnique } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
@@ -126,24 +125,18 @@ export const NearbyLocationItem = (props: {
             ) : null}
           </div>
           <div className="flex flex-row flex-wrap gap-x-2 gap-y-1 ">
-            {item.events
-              .sort(
-                (a, b) =>
-                  DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
-                  DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
-              )
-              .map((event) => {
-                return (
-                  <EventChip
-                    event={event}
-                    key={event.id}
-                    location={item}
-                    size="small"
-                    hideName
-                    selected={event.id === eventId && item.id === locationId}
-                  />
-                );
-              })}
+            {item.events.map((event) => {
+              return (
+                <EventChip
+                  event={event}
+                  key={event.id}
+                  location={item}
+                  size="small"
+                  hideName
+                  selected={event.id === eventId && item.id === locationId}
+                />
+              );
+            })}
           </div>
           {item.locationDescription ? (
             <Link
