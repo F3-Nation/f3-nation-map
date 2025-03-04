@@ -367,9 +367,9 @@ export const orgs = pgTable(
     orgType: orgType("org_type").notNull(),
   },
   (table) => [
-    index("idx_orgs_parent_id").on(table.parentId),
-    index("idx_orgs_org_type").on(table.orgType),
     index("idx_orgs_is_active").on(table.isActive),
+    index("idx_orgs_org_type").on(table.orgType),
+    index("idx_orgs_parent_id").on(table.parentId),
     foreignKey({
       columns: [table.parentId],
       foreignColumns: [table.id],
@@ -464,9 +464,8 @@ export const events = pgTable(
 export const updateRequests = pgTable(
   "update_requests",
   {
-    id: uuid().primaryKey().defaultRandom().notNull(),
+    id: uuid().defaultRandom().primaryKey().notNull(),
     token: uuid().defaultRandom().notNull(),
-    requestType: requestType("request_type").notNull(),
     regionId: integer("region_id").notNull(),
     eventId: integer("event_id"),
     eventTypeIds: integer("event_type_ids").array(),
@@ -512,6 +511,7 @@ export const updateRequests = pgTable(
     updated: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
+    requestType: requestType("request_type").notNull(),
   },
   (table) => [
     foreignKey({
@@ -804,7 +804,7 @@ export const authSessions = pgTable(
   {
     sessionToken: text("session_token").primaryKey().notNull(),
     userId: integer("user_id").notNull(),
-    expires: timestamp().notNull(),
+    expires: timestamp({ mode: "string" }).notNull(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
@@ -824,7 +824,7 @@ export const authSessions = pgTable(
 export const authVerificationTokens = pgTable("auth_verification_tokens", {
   identifier: text().notNull(),
   token: text().notNull(),
-  expires: timestamp().notNull(),
+  expires: timestamp({ mode: "string" }).notNull(),
   created: timestamp({ mode: "string" }).defaultNow(),
   updated: timestamp({ mode: "string" }),
 });

@@ -99,15 +99,18 @@ export function MDPGDrizzleAdapter(
     },
     async createSession(data) {
       if (LOG) console.log("createSession", data);
-      return await client
+      const [session] = await client
         .insert(sessions)
-        .values(data)
-        .returning()
-        .then((res) => res[0]!);
+        .values({ ...data, expires: data.expires.toISOString() })
+        .returning();
+
+      if (!session) throw new Error("Unable to create session");
+
+      return { ...session, expires: new Date(session.expires) };
     },
     async getSessionAndUser(data) {
       if (LOG) console.log("getSessionAndUser", data);
-      const session = await client
+      const [session] = await client
         .select({
           session: sessions,
           user: {
@@ -137,12 +140,14 @@ export function MDPGDrizzleAdapter(
         .leftJoin(rolesXUsersXOrg, eq(users.id, rolesXUsersXOrg.userId))
         .leftJoin(orgs, eq(orgs.id, rolesXUsersXOrg.orgId))
         .leftJoin(roles, eq(rolesXUsersXOrg.roleId, roles.id))
-        .groupBy(users.id)
-        .then((res) => res[0] ?? null);
+        .groupBy(users.id);
 
       return session
         ? {
-            ...session,
+            session: {
+              ...session.session,
+              expires: new Date(session.session.expires),
+            },
             user: {
               ...session.user,
             },
@@ -171,12 +176,18 @@ export function MDPGDrizzleAdapter(
     },
     async updateSession(data) {
       if (LOG) console.log("updateSession", data);
-      return await client
+      const [session] = await client
         .update(sessions)
-        .set(data)
+        .set({ ...data, expires: data.expires?.toISOString() })
         .where(eq(sessions.sessionToken, data.sessionToken))
-        .returning()
-        .then((res) => res[0]);
+        .returning();
+
+      if (!session) throw new Error("Unable to update session");
+
+      return {
+        ...session,
+        expires: new Date(session.expires),
+      };
     },
     async linkAccount(rawAccount) {
       if (LOG) console.log("linkAccount", rawAccount);
@@ -208,35 +219,41 @@ export function MDPGDrizzleAdapter(
     },
     async deleteSession(sessionToken) {
       if (LOG) console.log("deleteSession", sessionToken);
-      const session = await client
+      const [session] = await client
         .delete(sessions)
         .where(eq(sessions.sessionToken, sessionToken))
-        .returning()
-        .then((res) => res[0] ?? null);
+        .returning();
 
-      return session;
+      return session
+        ? { ...session, expires: new Date(session.expires) }
+        : null;
     },
-    async createVerificationToken(token) {
-      if (LOG) console.log("createVerificationToken", token);
-      return await client
+    async createVerificationToken(data) {
+      if (LOG) console.log("createVerificationToken", data);
+      const [token] = await client
         .insert(verificationTokens)
-        .values(token)
-        .returning()
-        .then((res) => res[0]);
+        .values({ ...data, expires: data.expires.toISOString() })
+        .returning();
+
+      if (!token) throw new Error("Unable to create token");
+      return { ...token, expires: new Date(token.expires) };
     },
-    async useVerificationToken(token) {
+    async useVerificationToken(data) {
       try {
-        if (LOG) console.log("useVerificationToken", token);
-        return await client
+        if (LOG) console.log("useVerificationToken", data);
+        const [token] = await client
           .select()
           .from(verificationTokens)
           .where(
             and(
-              eq(verificationTokens.identifier, token.identifier),
-              eq(verificationTokens.token, token.token),
+              eq(verificationTokens.identifier, data.identifier),
+              eq(verificationTokens.token, data.token),
             ),
-          )
-          .then((res) => res[0] ?? null);
+          );
+
+        if (!token) throw new Error("No verification token found.");
+
+        return { ...token, expires: new Date(token.expires) };
       } catch (err) {
         throw new Error("No verification token found.");
       }
