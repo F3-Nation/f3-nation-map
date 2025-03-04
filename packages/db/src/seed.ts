@@ -77,7 +77,7 @@ const _reseedFromScratch = async () => {
 };
 
 const _reseedJustData = async () => {
-  await db.execute(sql`SET session_replication_role = 'replica';`);
+  // await db.execute(sql`SET session_replication_role = 'replica';`);
   try {
     console.log("deleting data");
     console.log("getting series events");
@@ -151,7 +151,7 @@ const _reseedJustData = async () => {
 
     console.log("inserting data");
   } finally {
-    await db.execute(sql`SET session_replication_role = 'origin';`);
+    // await db.execute(sql`SET session_replication_role = 'origin';`);
   }
 
   const { regionData, workoutData } = await getLocationDataFromGravityForms();
@@ -367,7 +367,14 @@ export async function insertDatabaseStructure(
         eventCategory: "first_f",
       },
     ])
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: [schema.eventTypes.id],
+      set: {
+        name: sql`excluded.name`,
+        acronym: sql`excluded.acronym`,
+        eventCategory: sql`excluded.eventCategory`,
+      },
+    });
 
   const eventTypes = await db.select().from(schema.eventTypes);
 
