@@ -73,9 +73,7 @@ export const nationRouter = createTRPCRouter({
     const orgs = await ctx.db
       .select()
       .from(schema.orgs)
-      .where(
-        and(eq(schema.orgs.orgType, "nation"), eq(schema.orgs.isActive, true)),
-      );
+      .where(eq(schema.orgs.isActive, true));
     return orgs;
   }),
 });
