@@ -17,17 +17,14 @@ const DynamicImportLeafletMap = dynamicImport(
 export default async function MapPage() {
   const locationMarkersSparse =
     await ssg.location.getLocationMarkersSparse.fetch();
-
   const filteredMapResultsData =
     await ssg.location.allLocationMarkerFilterData.fetch();
-  const allLocationMarkers =
-    await ssg.location.getLocationMarkersSparse.fetch();
 
   RERENDER_LOGS && console.log("MapPage rerender");
 
   return (
     <FilteredMapResultsProvider
-      allLocationMarkers={allLocationMarkers}
+      allLocationMarkers={locationMarkersSparse}
       lowBandwidthAllLocationMarkerFilterData={filteredMapResultsData}
     >
       {/* Textsearch results provider must be inside FilteredMapResultsProvider */}

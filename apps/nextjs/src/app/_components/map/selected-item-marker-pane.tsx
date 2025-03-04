@@ -77,10 +77,9 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             alwaysShowFillInsteadOfOutline={isMobile}
             group={filteredSelectedItem}
-            selectedEventIdInGroup={
-              filteredSelectedItem?.events.find((event) => event.id === eventId)
-                ?.id ?? null
-            }
+            selectedIndex={filteredSelectedItem?.events.findIndex(
+              (event) => event.id === eventId,
+            )}
           />
         )}
       </Pane>
@@ -93,11 +92,9 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             panel
             group={filteredPanelItem}
-            selectedEventIdInGroup={
-              filteredPanelItem?.events.find(
-                (event) => event.id === panelEventId,
-              )?.id ?? null
-            }
+            selectedIndex={filteredPanelItem?.events.findIndex(
+              (event) => event.id === panelEventId,
+            )}
           />
         )}
       </Pane>

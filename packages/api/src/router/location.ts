@@ -1,7 +1,6 @@
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
 import type { LowBandwidthF3Marker } from "@acme/validators";
 import {
   aliasedTable,
@@ -12,6 +11,7 @@ import {
   schema,
   sql,
 } from "@acme/db";
+import { DayOfWeek } from "@acme/shared/app/enums";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema } from "@acme/validators";
 
@@ -173,13 +173,19 @@ export const locationRouter = createTRPCRouter({
       locationEvent.id,
       locationEvent.name,
       locationEvent.logo,
-      locationEvent.events.map((event) => [
-        event.id,
-        event.name,
-        event.dayOfWeek,
-        event.startTime,
-        event.types,
-      ]),
+      locationEvent.events
+        .sort(
+          (a, b) =>
+            DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
+            DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
+        )
+        .map((event) => [
+          event.id,
+          event.name,
+          event.dayOfWeek,
+          event.startTime,
+          event.types,
+        ]),
     ]);
 
     return lowBandwidthLocationEvents;
