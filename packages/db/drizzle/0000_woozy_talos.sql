@@ -3,6 +3,7 @@ CREATE TYPE "public"."event_cadence" AS ENUM('weekly', 'monthly');--> statement-
 CREATE TYPE "public"."event_category" AS ENUM('first_f', 'second_f', 'third_f');--> statement-breakpoint
 CREATE TYPE "public"."org_type" AS ENUM('ao', 'region', 'area', 'sector', 'nation');--> statement-breakpoint
 CREATE TYPE "public"."region_role" AS ENUM('user', 'editor', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."request_type" AS ENUM('create_location', 'create_event', 'edit', 'delete_event');--> statement-breakpoint
 CREATE TYPE "public"."update_request_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('user', 'editor', 'admin');--> statement-breakpoint
 CREATE TYPE "public"."user_status" AS ENUM('active', 'inactive');--> statement-breakpoint
@@ -295,7 +296,7 @@ CREATE TABLE "slack_users" (
 );
 --> statement-breakpoint
 CREATE TABLE "update_requests" (
-	"id" uuid PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"token" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"region_id" integer NOT NULL,
 	"event_id" integer,
@@ -337,7 +338,8 @@ CREATE TABLE "update_requests" (
 	"status" "update_request_status" DEFAULT 'pending' NOT NULL,
 	"meta" json,
 	"created" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
-	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL
+	"updated" timestamp DEFAULT timezone('utc'::text, now()) NOT NULL,
+	"request_type" "request_type" NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
@@ -397,4 +399,15 @@ ALTER TABLE "slack_users" ADD CONSTRAINT "slack_users_user_id_fkey" FOREIGN KEY 
 ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_location_id_fkey" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "update_requests" ADD CONSTRAINT "update_requests_region_id_fkey" FOREIGN KEY ("region_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_home_region_id_fkey" FOREIGN KEY ("home_region_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "users" ADD CONSTRAINT "users_home_region_id_fkey" FOREIGN KEY ("home_region_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "idx_events_location_id" ON "events" USING btree ("location_id");--> statement-breakpoint
+CREATE INDEX "idx_events_org_id" ON "events" USING btree ("org_id");--> statement-breakpoint
+CREATE INDEX "idx_events_is_active" ON "events" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX "idx_events_x_event_types_event_id" ON "events_x_event_types" USING btree ("event_id");--> statement-breakpoint
+CREATE INDEX "idx_events_x_event_types_event_type_id" ON "events_x_event_types" USING btree ("event_type_id");--> statement-breakpoint
+CREATE INDEX "idx_locations_org_id" ON "locations" USING btree ("org_id");--> statement-breakpoint
+CREATE INDEX "idx_locations_name" ON "locations" USING btree ("name");--> statement-breakpoint
+CREATE INDEX "idx_locations_is_active" ON "locations" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX "idx_orgs_is_active" ON "orgs" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX "idx_orgs_org_type" ON "orgs" USING btree ("org_type");--> statement-breakpoint
+CREATE INDEX "idx_orgs_parent_id" ON "orgs" USING btree ("parent_id");

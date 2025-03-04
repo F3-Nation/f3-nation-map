@@ -79,9 +79,7 @@ export const requestRouter = createTRPCRouter({
       .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, oldAoOrg.parentId))
       .leftJoin(oldLocation, eq(oldLocation.id, schema.events.locationId))
       .orderBy(desc(schema.updateRequests.created));
-    return requests.map((request) => ({
-      ...request,
-    }));
+    return requests;
   }),
   byId: editorProcedure
     .input(z.object({ id: z.string() }))
@@ -142,7 +140,7 @@ export const requestRouter = createTRPCRouter({
         .values({
           eventId: input.eventId,
           regionId: input.regionId,
-          requestType: "delete-event",
+          requestType: "delete_event",
           eventName: input.eventName,
           submittedBy: input.submittedBy,
         })
@@ -254,7 +252,7 @@ export const requestRouter = createTRPCRouter({
       if (updateRequest.regionId == undefined) {
         throw new Error("Region ID is required");
       }
-      if (updateRequest.requestType === "delete-event") {
+      if (updateRequest.requestType === "delete_event") {
         const result = await applyDeleteRequest(ctx, {
           ...updateRequest,
           regionId: updateRequest.regionId,
@@ -308,7 +306,7 @@ export const requestRouter = createTRPCRouter({
         });
       }
 
-      if (input.requestType === "delete-event") {
+      if (input.requestType === "delete_event") {
         const result = await applyDeleteRequest(ctx, {
           ...input,
           regionId: input.regionId,

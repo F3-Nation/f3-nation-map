@@ -1,5 +1,5 @@
 {
-  "id": "63570900-59d0-471b-8960-74945703df8b",
+  "id": "0338736e-f813-40cd-abcc-6da032949943",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -65,8 +65,12 @@
           "name": "achievements_specific_org_id_fkey",
           "tableFrom": "achievements",
           "tableTo": "orgs",
-          "columnsFrom": ["specific_org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "specific_org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -107,8 +111,12 @@
           "name": "achievements_x_users_achievement_id_fkey",
           "tableFrom": "achievements_x_users",
           "tableTo": "achievements",
-          "columnsFrom": ["achievement_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "achievement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -116,8 +124,12 @@
           "name": "achievements_x_users_user_id_fkey",
           "tableFrom": "achievements_x_users",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -125,7 +137,10 @@
       "compositePrimaryKeys": {
         "achievements_x_users_pkey": {
           "name": "achievements_x_users_pkey",
-          "columns": ["achievement_id", "user_id"]
+          "columns": [
+            "achievement_id",
+            "user_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -207,8 +222,12 @@
           "name": "attendance_event_id_fkey",
           "tableFrom": "attendance",
           "tableTo": "events",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -216,8 +235,12 @@
           "name": "attendance_user_id_fkey",
           "tableFrom": "attendance",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -227,7 +250,11 @@
         "attendance_event_id_user_id_is_planned_key": {
           "name": "attendance_event_id_user_id_is_planned_key",
           "nullsNotDistinct": false,
-          "columns": ["event_id", "user_id", "is_planned"]
+          "columns": [
+            "event_id",
+            "user_id",
+            "is_planned"
+          ]
         }
       },
       "policies": {},
@@ -302,8 +329,12 @@
           "name": "attendance_x_attendance_types_attendance_id_fkey",
           "tableFrom": "attendance_x_attendance_types",
           "tableTo": "attendance",
-          "columnsFrom": ["attendance_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attendance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -311,8 +342,12 @@
           "name": "attendance_x_attendance_types_attendance_type_id_fkey",
           "tableFrom": "attendance_x_attendance_types",
           "tableTo": "attendance_types",
-          "columnsFrom": ["attendance_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attendance_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -320,7 +355,10 @@
       "compositePrimaryKeys": {
         "attendance_x_attendance_types_pkey": {
           "name": "attendance_x_attendance_types_pkey",
-          "columns": ["attendance_id", "attendance_type_id"]
+          "columns": [
+            "attendance_id",
+            "attendance_type_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -419,8 +457,12 @@
           "name": "auth_accounts_userId_users_id_fk",
           "tableFrom": "auth_accounts",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -474,8 +516,12 @@
           "name": "auth_sessions_userId_users_id_fk",
           "tableFrom": "auth_sessions",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -585,8 +631,12 @@
           "name": "event_tags_specific_org_id_fkey",
           "tableFrom": "event_tags",
           "tableTo": "orgs",
-          "columnsFrom": ["specific_org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "specific_org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -620,8 +670,12 @@
           "name": "event_tags_x_events_event_id_fkey",
           "tableFrom": "event_tags_x_events",
           "tableTo": "events",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -629,8 +683,12 @@
           "name": "event_tags_x_events_event_tag_id_fkey",
           "tableFrom": "event_tags_x_events",
           "tableTo": "event_tags",
-          "columnsFrom": ["event_tag_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -638,7 +696,10 @@
       "compositePrimaryKeys": {
         "event_tags_x_events_pkey": {
           "name": "event_tags_x_events_pkey",
-          "columns": ["event_id", "event_tag_id"]
+          "columns": [
+            "event_id",
+            "event_tag_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -708,8 +769,12 @@
           "name": "event_types_specific_org_id_fkey",
           "tableFrom": "event_types",
           "tableTo": "orgs",
-          "columnsFrom": ["specific_org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "specific_org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -903,14 +968,64 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_events_location_id": {
+          "name": "idx_events_location_id",
+          "columns": [
+            {
+              "expression": "location_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_events_org_id": {
+          "name": "idx_events_org_id",
+          "columns": [
+            {
+              "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_events_is_active": {
+          "name": "idx_events_is_active",
+          "columns": [
+            {
+              "expression": "is_active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "events_location_id_fkey": {
           "name": "events_location_id_fkey",
           "tableFrom": "events",
           "tableTo": "locations",
-          "columnsFrom": ["location_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "location_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -918,8 +1033,12 @@
           "name": "events_org_id_fkey",
           "tableFrom": "events",
           "tableTo": "orgs",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -927,8 +1046,12 @@
           "name": "events_series_id_fkey",
           "tableFrom": "events",
           "tableTo": "events",
-          "columnsFrom": ["series_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "series_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -956,14 +1079,49 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_events_x_event_types_event_id": {
+          "name": "idx_events_x_event_types_event_id",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_events_x_event_types_event_type_id": {
+          "name": "idx_events_x_event_types_event_type_id",
+          "columns": [
+            {
+              "expression": "event_type_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "events_x_event_types_event_id_fkey": {
           "name": "events_x_event_types_event_id_fkey",
           "tableFrom": "events_x_event_types",
           "tableTo": "events",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -971,8 +1129,12 @@
           "name": "events_x_event_types_event_type_id_fkey",
           "tableFrom": "events_x_event_types",
           "tableTo": "event_types",
-          "columnsFrom": ["event_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -980,7 +1142,10 @@
       "compositePrimaryKeys": {
         "events_x_event_types_pkey": {
           "name": "events_x_event_types_pkey",
-          "columns": ["event_id", "event_type_id"]
+          "columns": [
+            "event_id",
+            "event_type_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1093,8 +1258,12 @@
           "name": "expansions_x_users_expansion_id_fkey",
           "tableFrom": "expansions_x_users",
           "tableTo": "expansions",
-          "columnsFrom": ["expansion_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "expansion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1102,8 +1271,12 @@
           "name": "expansions_x_users_user_id_fkey",
           "tableFrom": "expansions_x_users",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1111,7 +1284,10 @@
       "compositePrimaryKeys": {
         "expansions_x_users_pkey": {
           "name": "expansions_x_users_pkey",
-          "columns": ["expansion_id", "user_id"]
+          "columns": [
+            "expansion_id",
+            "user_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1228,14 +1404,64 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_locations_org_id": {
+          "name": "idx_locations_org_id",
+          "columns": [
+            {
+              "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_locations_name": {
+          "name": "idx_locations_name",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_locations_is_active": {
+          "name": "idx_locations_is_active",
+          "columns": [
+            {
+              "expression": "is_active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "locations_org_id_fkey": {
           "name": "locations_org_id_fkey",
           "tableFrom": "locations",
           "tableTo": "orgs",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1356,14 +1582,64 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_orgs_is_active": {
+          "name": "idx_orgs_is_active",
+          "columns": [
+            {
+              "expression": "is_active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_orgs_org_type": {
+          "name": "idx_orgs_org_type",
+          "columns": [
+            {
+              "expression": "org_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_orgs_parent_id": {
+          "name": "idx_orgs_parent_id",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "orgs_parent_id_fkey": {
           "name": "orgs_parent_id_fkey",
           "tableFrom": "orgs",
           "tableTo": "orgs",
-          "columnsFrom": ["parent_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1397,8 +1673,12 @@
           "name": "orgs_x_slack_spaces_org_id_fkey",
           "tableFrom": "orgs_x_slack_spaces",
           "tableTo": "orgs",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1406,8 +1686,12 @@
           "name": "orgs_x_slack_spaces_slack_space_id_fkey",
           "tableFrom": "orgs_x_slack_spaces",
           "tableTo": "slack_spaces",
-          "columnsFrom": ["slack_space_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "slack_space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1415,7 +1699,10 @@
       "compositePrimaryKeys": {
         "orgs_x_slack_spaces_pkey": {
           "name": "orgs_x_slack_spaces_pkey",
-          "columns": ["org_id", "slack_space_id"]
+          "columns": [
+            "org_id",
+            "slack_space_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1524,8 +1811,12 @@
           "name": "positions_org_id_fkey",
           "tableFrom": "positions",
           "tableTo": "orgs",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1565,8 +1856,12 @@
           "name": "positions_x_orgs_x_users_org_id_fkey",
           "tableFrom": "positions_x_orgs_x_users",
           "tableTo": "orgs",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1574,8 +1869,12 @@
           "name": "positions_x_orgs_x_users_position_id_fkey",
           "tableFrom": "positions_x_orgs_x_users",
           "tableTo": "positions",
-          "columnsFrom": ["position_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "position_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1583,8 +1882,12 @@
           "name": "positions_x_orgs_x_users_user_id_fkey",
           "tableFrom": "positions_x_orgs_x_users",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1592,7 +1895,11 @@
       "compositePrimaryKeys": {
         "positions_x_orgs_x_users_pkey": {
           "name": "positions_x_orgs_x_users_pkey",
-          "columns": ["position_id", "org_id", "user_id"]
+          "columns": [
+            "position_id",
+            "org_id",
+            "user_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1669,8 +1976,12 @@
           "name": "roles_x_permissions_permission_id_fkey",
           "tableFrom": "roles_x_permissions",
           "tableTo": "permissions",
-          "columnsFrom": ["permission_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "permission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1678,8 +1989,12 @@
           "name": "roles_x_permissions_role_id_fkey",
           "tableFrom": "roles_x_permissions",
           "tableTo": "roles",
-          "columnsFrom": ["role_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1687,7 +2002,10 @@
       "compositePrimaryKeys": {
         "roles_x_permissions_pkey": {
           "name": "roles_x_permissions_pkey",
-          "columns": ["role_id", "permission_id"]
+          "columns": [
+            "role_id",
+            "permission_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1724,8 +2042,12 @@
           "name": "roles_x_users_x_org_org_id_fkey",
           "tableFrom": "roles_x_users_x_org",
           "tableTo": "orgs",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1733,8 +2055,12 @@
           "name": "roles_x_users_x_org_role_id_fkey",
           "tableFrom": "roles_x_users_x_org",
           "tableTo": "roles",
-          "columnsFrom": ["role_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1742,8 +2068,12 @@
           "name": "roles_x_users_x_org_user_id_fkey",
           "tableFrom": "roles_x_users_x_org",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1751,7 +2081,11 @@
       "compositePrimaryKeys": {
         "roles_x_users_x_org_pkey": {
           "name": "roles_x_users_x_org_pkey",
-          "columns": ["role_id", "user_id", "org_id"]
+          "columns": [
+            "role_id",
+            "user_id",
+            "org_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1815,7 +2149,9 @@
         "slack_spaces_team_id_key": {
           "name": "slack_spaces_team_id_key",
           "nullsNotDistinct": false,
-          "columns": ["team_id"]
+          "columns": [
+            "team_id"
+          ]
         }
       },
       "policies": {},
@@ -1943,8 +2279,12 @@
           "name": "slack_users_user_id_fkey",
           "tableFrom": "slack_users",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1963,7 +2303,8 @@
           "name": "id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "token": {
           "name": "token",
@@ -2223,6 +2564,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "timezone('utc'::text, now())"
+        },
+        "request_type": {
+          "name": "request_type",
+          "type": "request_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
@@ -2231,8 +2579,12 @@
           "name": "update_requests_event_id_fkey",
           "tableFrom": "update_requests",
           "tableTo": "events",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2240,8 +2592,12 @@
           "name": "update_requests_location_id_fkey",
           "tableFrom": "update_requests",
           "tableTo": "locations",
-          "columnsFrom": ["location_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "location_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2249,8 +2605,12 @@
           "name": "update_requests_region_id_fkey",
           "tableFrom": "update_requests",
           "tableTo": "orgs",
-          "columnsFrom": ["region_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "region_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2372,8 +2732,12 @@
           "name": "users_home_region_id_fkey",
           "tableFrom": "users",
           "tableTo": "orgs",
-          "columnsFrom": ["home_region_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "home_region_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2383,7 +2747,9 @@
         "users_email_key": {
           "name": "users_email_key",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -2408,37 +2774,75 @@
     "public.event_cadence": {
       "name": "event_cadence",
       "schema": "public",
-      "values": ["weekly", "monthly"]
+      "values": [
+        "weekly",
+        "monthly"
+      ]
     },
     "public.event_category": {
       "name": "event_category",
       "schema": "public",
-      "values": ["first_f", "second_f", "third_f"]
+      "values": [
+        "first_f",
+        "second_f",
+        "third_f"
+      ]
     },
     "public.org_type": {
       "name": "org_type",
       "schema": "public",
-      "values": ["ao", "region", "area", "sector", "nation"]
+      "values": [
+        "ao",
+        "region",
+        "area",
+        "sector",
+        "nation"
+      ]
     },
     "public.region_role": {
       "name": "region_role",
       "schema": "public",
-      "values": ["user", "editor", "admin"]
+      "values": [
+        "user",
+        "editor",
+        "admin"
+      ]
+    },
+    "public.request_type": {
+      "name": "request_type",
+      "schema": "public",
+      "values": [
+        "create_location",
+        "create_event",
+        "edit",
+        "delete_event"
+      ]
     },
     "public.update_request_status": {
       "name": "update_request_status",
       "schema": "public",
-      "values": ["pending", "approved", "rejected"]
+      "values": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": ["user", "editor", "admin"]
+      "values": [
+        "user",
+        "editor",
+        "admin"
+      ]
     },
     "public.user_status": {
       "name": "user_status",
       "schema": "public",
-      "values": ["active", "inactive"]
+      "values": [
+        "active",
+        "inactive"
+      ]
     }
   },
   "schemas": {},

@@ -22,7 +22,7 @@ export const RequestsTable = ({
       paginationOptions={{ pageSize: 20 }}
       columns={columns}
       onRowClick={(row) => {
-        if (row.original.requestType === "delete-event") {
+        if (row.original.requestType === "delete_event") {
           openModal(ModalType.ADMIN_DELETE_REQUEST, { id: row.original.id });
         } else {
           openModal(ModalType.ADMIN_REQUESTS, { id: row.original.id });
@@ -30,7 +30,7 @@ export const RequestsTable = ({
       }}
       rowClassName={(row) =>
         `${row.original.status !== "pending" ? "opacity-30" : ""} ${
-          row.original.requestType === "delete-event" ? "bg-red-100" : ""
+          row.original.requestType === "delete_event" ? "bg-red-100" : ""
         }`
       }
     />
@@ -72,11 +72,11 @@ const columns: TableOptions<
     header: Header,
     cell: ({ row }) => {
       const requestTypeText =
-        row.original.requestType === "delete-event"
+        row.original.requestType === "delete_event"
           ? "Delete Event"
-          : row.original.requestType === "create-event"
+          : row.original.requestType === "create_event"
             ? "Create Event"
-            : row.original.requestType === "create-location"
+            : row.original.requestType === "create_location"
               ? "Create Location"
               : row.original.requestType === "edit"
                 ? "Edit"

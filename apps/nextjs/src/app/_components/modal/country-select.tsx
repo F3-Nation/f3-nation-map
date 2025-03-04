@@ -46,6 +46,7 @@ export const CountrySelect = <T extends FieldValues>({
           <Select
             value={field.value || ""}
             onValueChange={field.onChange}
+            key={field.value}
             disabled={disabled}
           >
             <SelectTrigger id={name} aria-label={label}>

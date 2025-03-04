@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { and, eq, schema } from "@acme/db";
+import { and, eq, ne, schema } from "@acme/db";
 import { NationInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -73,7 +73,9 @@ export const nationRouter = createTRPCRouter({
     const orgs = await ctx.db
       .select()
       .from(schema.orgs)
-      .where(eq(schema.orgs.isActive, true));
+      .where(
+        and(eq(schema.orgs.isActive, true), ne(schema.orgs.orgType, "ao")),
+      );
     return orgs;
   }),
 });

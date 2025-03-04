@@ -25,7 +25,7 @@ export const UpdatePane = () => {
             eventHandlers={{
               click: () => {
                 openModal(ModalType.UPDATE_LOCATION, {
-                  requestType: "create-location",
+                  requestType: "create_location",
                   ...eventDefaults,
                   ...locationDefaults,
                   lat: updateLocation.lat,
