@@ -228,7 +228,7 @@ export const UpdateLocationModal = ({
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
                 {data.requestType === "edit"
                   ? "Edit Event"
-                  : data.requestType === "create-location"
+                  : data.requestType === "create_location"
                     ? "New Location"
                     : "New Event"}
                 <p className="text-sm text-muted-foreground">

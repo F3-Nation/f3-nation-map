@@ -34,10 +34,10 @@ export const EventCategory = ["first_f", "second_f", "third_f"] as const;
 export type EventCategory = (typeof EventCategory)[number];
 
 export const RequestType = [
-  "create-location",
-  "create-event",
+  "create_location",
+  "create_event",
   "edit",
-  "delete-event",
+  "delete_event",
 ] as const;
 export type RequestType = (typeof RequestType)[number];
 
