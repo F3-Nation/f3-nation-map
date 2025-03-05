@@ -186,7 +186,7 @@ export const DesktopLocationPanelContent = () => {
                   )}
                   onClick={() => {
                     openModal(ModalType.UPDATE_LOCATION, {
-                      requestType: "create-event",
+                      requestType: "create_event",
                       ...eventAndLocationToUpdateRequest({
                         event: undefined,
                         location,

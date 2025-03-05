@@ -205,7 +205,7 @@ export const WorkoutDetailsModal = ({
                     )}
                     onClick={() => {
                       openModal(ModalType.UPDATE_LOCATION, {
-                        requestType: "create-event",
+                        requestType: "create_event",
                         ...eventDefaults,
                         ...eventAndLocationToUpdateRequest({
                           event: undefined,
