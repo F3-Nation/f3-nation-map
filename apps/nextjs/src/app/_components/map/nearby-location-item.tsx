@@ -35,10 +35,13 @@ export const NearbyLocationItem = (props: {
   const { item } = props;
   const isSelected = item.id === locationId;
 
-  const name = item.events
-    .map((event) => event.name)
-    .filter(onlyUnique)
-    .join(", ");
+  const name =
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- bypass ""
+    item.locationName ||
+    item.events
+      .map((event) => event.name)
+      .filter(onlyUnique)
+      .join(", ");
   return (
     <button
       className={cn(
@@ -74,7 +77,7 @@ export const NearbyLocationItem = (props: {
         console.log("onMouseEnter NearbyLocationItem", item);
         setSelectedItem({
           locationId: item.id,
-          eventId: item.events[0]?.id,
+          eventId: null,
         });
       }}
       onClick={() => {
@@ -85,7 +88,7 @@ export const NearbyLocationItem = (props: {
         if (item.lat !== null && item.lon !== null) {
           setView({ lat: item.lat, lng: item.lon });
           setSelectedItem({
-            locationId: null,
+            locationId: item.id,
             eventId: null,
           });
           // prevent the next mouse enter from triggering a change
@@ -124,7 +127,7 @@ export const NearbyLocationItem = (props: {
               </div>
             ) : null}
           </div>
-          <div className="flex flex-row flex-wrap gap-x-2 gap-y-1 ">
+          <div className="flex flex-col flex-wrap items-start gap-x-2 gap-y-1 py-[2px]">
             {item.events.map((event) => {
               return (
                 <EventChip

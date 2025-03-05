@@ -14,7 +14,6 @@ import { selectedItemStore } from "~/utils/store/selected-item";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { MemoSelectedGroupMarker } from "./selected-group-marker";
 
-// NOT USED
 export const SelectedIconMarkerPane = () => {
   RERENDER_LOGS && console.log("SelectedIconMarker rerender");
   const modifiedLocationMarkers = mapStore.use.modifiedLocationMarkers();
@@ -77,7 +76,7 @@ export const SelectedIconMarkerPane = () => {
           <MemoSelectedGroupMarker
             alwaysShowFillInsteadOfOutline={isMobile}
             group={filteredSelectedItem}
-            selectedIndex={filteredSelectedItem?.events.findIndex(
+            selectedIndex={filteredSelectedItem.events.findIndex(
               (event) => event.id === eventId,
             )}
           />

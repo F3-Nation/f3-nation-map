@@ -98,6 +98,7 @@ export const FilteredMapResultsProvider = (params: {
     return allLocationMarkerFilterData.map((location) => {
       return {
         ...location,
+        locationName: location.name,
         lat: locationIdToLatLng[location.id]?.lat ?? null,
         lon: locationIdToLatLng[location.id]?.lon ?? null,
         locationDescription:

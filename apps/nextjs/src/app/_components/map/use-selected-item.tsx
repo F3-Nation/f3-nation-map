@@ -63,13 +63,13 @@ export const useSelectedItem = () => {
     debouncedSetSelectedItem(locationId);
   }, [debouncedLocationId, locationId, debouncedSetSelectedItem]);
 
-  useEffect(() => {
-    if (selectedLocation && eventId === null) {
-      setSelectedItem({
-        eventId: selectedLocation.events[0]?.id,
-      });
-    }
-  }, [eventId, selectedLocation]);
+  // useEffect(() => {
+  //   if (selectedLocation && eventId === null) {
+  //     setSelectedItem({
+  //       eventId: selectedLocation.events[0]?.id,
+  //     });
+  //   }
+  // }, [eventId, selectedLocation]);
 
   // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
   return {

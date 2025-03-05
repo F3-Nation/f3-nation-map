@@ -62,6 +62,8 @@ export const MemoSelectedGroupMarker = memo(
                           "bg-red-600":
                             (!!panel || alwaysShowFillInsteadOfOutline) &&
                             selectedIndex === markerIdx,
+                          "border-l-2 border-red-600": isStart && selectedIndex === -1,
+                          "border-r-2": isEnd && selectedIndex === -1,
                         },
                       )}
                     >
