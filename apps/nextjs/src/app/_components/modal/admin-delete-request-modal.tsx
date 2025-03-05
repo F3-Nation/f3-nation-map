@@ -65,7 +65,7 @@ export default function AdminDeleteRequestModal({
       toast.error("Request is missing eventId or regionId");
       setIsSubmitting(false);
       return;
-    } else if (request.requestType !== "delete-event") {
+    } else if (request.requestType !== "delete_event") {
       toast.error("Request is not a delete event request");
       setIsSubmitting(false);
       return;
