@@ -134,11 +134,12 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
     message: "Day of the week is required",
   }),
   locationName: (s) => s.min(1, { message: "Location name is required" }),
-  locationAddress: (s) => s.min(1, { message: "Location address is required" }),
-  locationCity: (s) => s.min(1, { message: "Location city is required" }),
-  locationState: (s) => s.min(1, { message: "Location state is required" }),
-  locationZip: (s) => s.min(1, { message: "Location zip is required" }),
-  locationCountry: (s) => s.min(1, { message: "Location country is required" }),
+  // Location fields are optional
+  // locationAddress: (s) => s.min(1, { message: "Location address is required" }),
+  // locationCity: (s) => s.min(1, { message: "Location city is required" }),
+  // locationState: (s) => s.min(1, { message: "Location state is required" }),
+  // locationZip: (s) => s.min(1, { message: "Location zip is required" }),
+  // locationCountry: (s) => s.min(1, { message: "Location country is required" }),
   regionId: z.number({ invalid_type_error: "Region is required" }),
   eventStartTime: (s) =>
     s.regex(/^\d{4}$/, {
