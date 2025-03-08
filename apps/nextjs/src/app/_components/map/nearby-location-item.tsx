@@ -35,10 +35,12 @@ export const NearbyLocationItem = (props: {
   const { item } = props;
   const isSelected = item.id === locationId;
 
-  const name = item.events
-    .map((event) => event.name)
-    .filter(onlyUnique)
-    .join(", ");
+  const name = // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- bypass ""
+    item.locationName ||
+    item.events
+      .map((event) => event.name)
+      .filter(onlyUnique)
+      .join(", ");
   return (
     <button
       className={cn(
