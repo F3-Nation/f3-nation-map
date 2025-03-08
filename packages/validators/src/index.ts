@@ -128,7 +128,8 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   eventTypeIds: (s) =>
     s.min(1, { message: "Please select at least one event type" }),
   eventName: (s) => s.min(1, { message: "Workout name is required" }),
-  eventDescription: (s) => s.min(1, { message: "Description is required" }),
+  // We don't want to require an event description
+  // eventDescription: (s) => s.min(1, { message: "Description is required" }),
   eventDayOfWeek: z.enum(DayOfWeek, {
     message: "Day of the week is required",
   }),

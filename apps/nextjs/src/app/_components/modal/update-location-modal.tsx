@@ -348,7 +348,10 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Event Description
                 </div>
-                <Textarea {...form.register("eventDescription")} />
+                <Textarea
+                  {...form.register("eventDescription")}
+                  placeholder="Tell people if there's anything they need to know prior to showing up to the workout"
+                />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.eventDescription?.message}
                 </p>
@@ -451,7 +454,10 @@ export const UpdateLocationModal = ({
                 <div className="text-sm font-medium text-muted-foreground">
                   Location Description
                 </div>
-                <Textarea {...form.register("locationDescription")} />
+                <Textarea
+                  {...form.register("locationDescription")}
+                  placeholder="Help people unfamiliar with the area find you"
+                />
                 <p className="text-xs text-destructive">
                   {form.formState.errors.locationDescription?.message}
                 </p>
