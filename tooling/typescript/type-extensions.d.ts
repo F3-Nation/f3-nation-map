@@ -63,7 +63,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     id: number;
     email: string | undefined;
-    roles: OrgRole[];
+    roles?: OrgRole[];
   }
 
   interface JWT extends DefaultJWT {

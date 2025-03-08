@@ -77,7 +77,7 @@ export const UpdateLocationModal = ({
   const formId = form.watch("id");
 
   const { data: session } = useSession();
-  const isAdmin = session?.roles.some(
+  const isAdmin = session?.roles?.some(
     (role) => role.roleName === "admin" && role.orgId === formRegionId,
   );
 

@@ -127,7 +127,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
-  const isEditorOrAdmin = ctx.session?.roles.some((r) =>
+  const isEditorOrAdmin = ctx.session?.roles?.some((r) =>
     ["editor", "admin"].includes(r.roleName),
   );
   if (!isEditorOrAdmin) {

@@ -43,7 +43,7 @@ export const checkHasRoleOnOrg = async ({
     };
   }
 
-  const hasDirectAccessForThisOrg = session.roles.some(
+  const hasDirectAccessForThisOrg = session.roles?.some(
     (r) =>
       (r.roleName === "admin" || r.roleName === roleName) && r.orgId === orgId,
   );
@@ -86,7 +86,7 @@ export const checkHasRoleOnOrg = async ({
     o.level5Id,
   ]) as number[];
 
-  const matchingPermission = session.roles.find(
+  const matchingPermission = session.roles?.find(
     (r) =>
       (r.roleName === "admin" || r.roleName === roleName) &&
       allAncestorOrgIds.includes(r.orgId),
