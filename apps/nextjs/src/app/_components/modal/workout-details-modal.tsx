@@ -81,7 +81,7 @@ export const WorkoutDetailsModal = ({
     Name: workout?.eventName,
     What: workout?.types.join(", "),
     Where: [
-      location?.locationName ? <p>{location.locationName}</p> : null,
+      location?.aoName ? <p>{location.aoName}</p> : null,
       location?.fullAddress ? (
         <Link
           href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}

@@ -31,16 +31,14 @@ export const EmailAuthSchema = UserInsertSchema.pick({
 });
 
 // LOCATION SCHEMA
-export const LocationInsertSchema = createInsertSchema(locations);
+export const LocationInsertSchema = createInsertSchema(locations).extend({
+  aoName: z.string().min(1, { message: "Location / AO name is required" }),
+});
 export const LocationSelectSchema = createSelectSchema(locations);
 
 // EVENT SCHEMA
 export const EventInsertSchema = createInsertSchema(events, {
   name: (s) => s.min(1, { message: "Name is required" }),
-  orgId: (s) =>
-    s
-      .min(1, { message: "Please select an region" })
-      .refine((value) => value !== -1, { message: "Invalid selection" }),
   locationId: (s) =>
     s
       .min(1, { message: "Please select an location" })
@@ -56,6 +54,7 @@ export const EventInsertSchema = createInsertSchema(events, {
     }),
 }).extend({
   regionId: z.number(),
+  aoId: z.number(),
 });
 export const EventSelectSchema = createSelectSchema(events);
 
@@ -133,7 +132,7 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   eventDayOfWeek: z.enum(DayOfWeek, {
     message: "Day of the week is required",
   }),
-  locationName: (s) => s.min(1, { message: "Location name is required" }),
+  aoName: (s) => s.min(1, { message: "Location / AO name is required" }),
   // Location fields are optional
   // locationAddress: (s) => s.min(1, { message: "Location address is required" }),
   // locationCity: (s) => s.min(1, { message: "Location city is required" }),

@@ -33,7 +33,7 @@ export const MobileFilterButtons = () => {
   });
 
   return (
-    <>
+    <div className="flex flex-row gap-2">
       {/* All filters */}
       <button
         className={cn(filterButtonClassName, {
@@ -104,6 +104,6 @@ export const MobileFilterButtons = () => {
         <Sunset strokeWidth={2} className={cn("size-4")} />
         PM
       </button>
-    </>
+    </div>
   );
 };

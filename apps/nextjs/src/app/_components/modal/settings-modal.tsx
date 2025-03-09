@@ -1,5 +1,14 @@
+import { useCallback } from "react";
 import Link from "next/link";
-import { CircleHelp, Eye, Moon, Pencil, Sun, SunMoon } from "lucide-react";
+import {
+  CircleHelp,
+  Eye,
+  Moon,
+  Pencil,
+  QrCode,
+  Sun,
+  SunMoon,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
@@ -11,16 +20,36 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@acme/ui/dialog";
+import { toast } from "@acme/ui/toast";
 
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
-import { closeModal } from "~/utils/store/modal";
+import { closeModal, ModalType, openModal } from "~/utils/store/modal";
 
 export default function SettingsModal() {
   const mode = appStore.use.mode();
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
+  const center = mapStore.use.center();
+  const zoom = mapStore.use.zoom();
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/?lat=${center.lat}&lng=${center.lng}&zoom=${zoom}`;
+
+    await navigator.clipboard.writeText(url);
+
+    toast.success("Link copied to clipboard");
+  };
+
+  const handleQRModal = useCallback(() => {
+    openModal(ModalType.QR_CODE, {
+      title: "Link to current map location",
+      url: `${window.location.origin}/?lat=${center.lat}&lng=${center.lng}&zoom=${zoom}`,
+      fileName: "Link to current map location",
+    });
+  }, [center, zoom]);
+
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
@@ -31,54 +60,31 @@ export default function SettingsModal() {
           <DialogTitle className="text-center">Settings</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col justify-start space-y-4 px-4 text-left">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-muted-foreground">Theme</p>
-            <div className="grid grid-cols-3 gap-2">
+          <div>
+            <p className="text-sm font-bold text-muted-foreground">
+              Current location
+            </p>
+            <div className="flex flex-row items-center gap-2">
               <button
-                onClick={() => setTheme("light")}
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
-                  {
-                    "bg-primary text-white hover:bg-primary/90":
-                      theme === "light",
-                  },
-                )}
+                className="flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
+                onClick={handleQRModal}
               >
-                <Sun className="size-5" />
-                <span className="text-xs">Light</span>
+                <QrCode />
               </button>
-              <button
-                onClick={() => setTheme("dark")}
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
-                  {
-                    "bg-primary text-white hover:bg-primary/90":
-                      theme === "dark",
-                  },
-                )}
-              >
-                <Moon className="size-5" />
-                <span className="text-xs">Dark</span>
-              </button>
-              <button
-                onClick={() => setTheme("system")}
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
-                  {
-                    "bg-primary text-white hover:bg-primary/90":
-                      theme === "system",
-                  },
-                )}
-              >
-                <SunMoon className="size-5" />
-                <span className="text-xs">System</span>
-              </button>
+              <div className="flex flex-col items-start rounded-md text-sm text-gray-500">
+                {center.lat.toFixed(3)}, {center.lng.toFixed(3)} (
+                {zoom.toFixed(1)})
+                <button
+                  className="text-sm font-medium text-gray-500 underline"
+                  onClick={handleCopyLink}
+                >
+                  Copy link
+                </button>
+              </div>
             </div>
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Map tiles
-            </p>
+            <p className="text-sm font-bold text-muted-foreground">Map tiles</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => mapStore.setState({ tiles: "street" })}
@@ -121,7 +127,7 @@ export default function SettingsModal() {
             </div>
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Mode</p>
+            <p className="text-sm font-bold text-muted-foreground">Mode</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => appStore.setState({ mode: "view" })}
@@ -158,6 +164,50 @@ export default function SettingsModal() {
                 : "Edit mode - Submit requests to add or edit workouts"}
             </p>
           </div>
+          <div className="flex flex-col">
+            <p className="text-sm font-bold text-muted-foreground">Theme</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setTheme("light")}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
+                  {
+                    "bg-primary text-white hover:bg-primary/90":
+                      theme === "light",
+                  },
+                )}
+              >
+                <Sun className="size-5" />
+                <span className="text-xs">Light</span>
+              </button>
+              <button
+                onClick={() => setTheme("dark")}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
+                  {
+                    "bg-primary text-white hover:bg-primary/90":
+                      theme === "dark",
+                  },
+                )}
+              >
+                <Moon className="size-5" />
+                <span className="text-xs">Dark</span>
+              </button>
+              <button
+                onClick={() => setTheme("system")}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
+                  {
+                    "bg-primary text-white hover:bg-primary/90":
+                      theme === "system",
+                  },
+                )}
+              >
+                <SunMoon className="size-5" />
+                <span className="text-xs">System</span>
+              </button>
+            </div>
+          </div>
           {!session ? (
             <Link href={"/api/auth/signin"}>
               <button
@@ -171,9 +221,9 @@ export default function SettingsModal() {
               </button>
             </Link>
           ) : (
-            <div className="space-y-4">
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-900">
+            <div className="flex flex-col gap-2">
+              <div>
+                <p className="text-sm font-bold text-muted-foreground">
                   Signed in as
                   <span className="ml-1 font-semibold text-primary">
                     {session.email}
@@ -212,7 +262,7 @@ export default function SettingsModal() {
               <span className="text-xs">Help / Feedback</span>
             </Link>
             <Link
-              className="text-sm text-primary hover:text-primary/80"
+              className="text-sm text-primary underline hover:text-primary/80"
               target="_blank"
               href={"https://f3nation.com/about-f3"}
             >

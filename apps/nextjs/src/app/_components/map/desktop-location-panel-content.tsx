@@ -75,7 +75,7 @@ export const DesktopLocationPanelContent = () => {
       Name: event?.eventName,
       What: event?.types.join(", "),
       Where: [
-        location?.locationName ? <p>{location.locationName}</p> : null,
+        location?.aoName ? <p>{location.aoName}</p> : null,
         location?.fullAddress ? (
           <Link
             href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}

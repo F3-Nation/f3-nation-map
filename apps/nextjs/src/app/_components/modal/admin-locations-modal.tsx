@@ -82,7 +82,7 @@ export default function AdminLocationsModal({
     }),
     defaultValues: {
       id: location?.id ?? undefined,
-      name: location?.name ?? "",
+      aoName: location?.aoName ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
       orgId: location?.orgId ?? -1,
@@ -101,7 +101,7 @@ export default function AdminLocationsModal({
   useEffect(() => {
     form.reset({
       id: location?.id ?? undefined,
-      name: location?.name ?? "",
+      aoName: location?.aoName ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
       orgId: location?.orgId ?? -1,
@@ -197,7 +197,7 @@ export default function AdminLocationsModal({
                   <div className="mb-4 w-1/2 px-2">
                     <FormField
                       control={form.control}
-                      name="name"
+                      name="aoName"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Name</FormLabel>

@@ -372,7 +372,7 @@ export async function insertDatabaseStructure(
       set: {
         name: sql`excluded.name`,
         acronym: sql`excluded.acronym`,
-        eventCategory: sql`excluded.eventCategory`,
+        eventCategory: sql`excluded.event_category`,
       },
     });
 
@@ -566,7 +566,7 @@ export async function insertData(data: {
           name: events
             .map((e) => e["Workout Name"])
             .filter(onlyUnique)
-            .join(", "), // AO locations do not have names yet (should be "Walgreens" etc)
+            .join(", "),
           isActive: true,
           orgType: "ao" as const,
           logoUrl: events[0]?.Logo,
@@ -612,7 +612,7 @@ export async function insertData(data: {
         const orgId = aoOrg?.id;
         if (orgId == undefined) throw new Error("AO org id not found");
         const aoData: InferInsertModel<typeof schema.locations> = {
-          name: "", // AO locations do not have names yet (should be "Walgreens" etc)
+          // name: "", // AO locations do not have names yet (should be "Walgreens" etc)
           isActive: true,
           addressStreet: events[0]?.["Address 1"],
           addressStreet2: events[0]?.["Address 2"],

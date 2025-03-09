@@ -58,15 +58,15 @@ export default function AdminWorkoutsModal({
       name: event?.name ?? "",
       isActive: event?.isActive ?? true,
       description: event?.description ?? "",
-      orgId: event?.orgId ?? -1,
+      aoId: event?.aos[0]?.aoId,
       highlight: event?.highlight ?? true,
       isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId ?? -1,
+      locationId: event?.locationId,
       dayOfWeek: event?.dayOfWeek,
-      startTime: event?.startTime?.slice(0, 5) ?? "05:30",
-      endTime: event?.endTime?.slice(0, 5) ?? "06:15",
+      startTime: event?.startTime?.slice(0, 5) ?? "0530",
+      endTime: event?.endTime?.slice(0, 5) ?? "0615",
       email: event?.email ?? null,
-      regionId: event?.regionId ?? 0,
+      regionId: event?.regions[0]?.regionId,
     },
   });
 
@@ -76,15 +76,15 @@ export default function AdminWorkoutsModal({
       name: event?.name ?? "",
       isActive: event?.isActive ?? true,
       description: event?.description ?? "",
-      orgId: event?.orgId ?? -1,
+      aoId: event?.aos[0]?.aoId,
       highlight: event?.highlight ?? true,
       isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId ?? -1,
+      locationId: event?.locationId,
       dayOfWeek: event?.dayOfWeek,
-      startTime: event?.startTime?.slice(0, 5) ?? "05:30",
-      endTime: event?.endTime?.slice(0, 5) ?? "06:15",
+      startTime: event?.startTime?.slice(0, 5) ?? "0530",
+      endTime: event?.endTime?.slice(0, 5) ?? "0615",
       email: event?.email ?? null,
-      regionId: event?.regionId ?? 0,
+      regionId: event?.regions[0]?.regionId,
     });
   }, [form, event]);
 
@@ -247,7 +247,10 @@ export default function AdminWorkoutsModal({
                           <SelectContent>
                             {filteredLocations
                               ?.slice()
-                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .sort(
+                                (a, b) =>
+                                  a.aoName?.localeCompare(b.aoName ?? "") ?? 0,
+                              )
                               .map((location) => (
                                 <SelectItem
                                   key={`location-${location.id}`}

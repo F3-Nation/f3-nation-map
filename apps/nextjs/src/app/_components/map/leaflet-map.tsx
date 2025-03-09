@@ -37,15 +37,18 @@ export const LeafletMap = ({
 }: {
   sparseLocations: F3MarkerLocation[];
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const center = mapStore.use.center();
   const zoom = mapStore.use.zoom();
+
   const searchParams = useSearchParams();
   const queryLat = safeParseFloat(searchParams?.get("lat"));
   const queryLon = safeParseFloat(searchParams?.get("lon"));
   const queryZoom = safeParseFloat(searchParams?.get("zoom"));
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParamsRef = useRef(searchParams?.get("error"));
+
   const { userLocation } = useUserLocation();
   RERENDER_LOGS && console.log("LeafletMap rerender");
   const [width, height] = useWindowSize();

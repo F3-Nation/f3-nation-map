@@ -32,12 +32,10 @@ export const requestRouter = createTRPCRouter({
         submitterValidated: schema.updateRequests.submitterValidated,
         oldWorkoutName: schema.events.name,
         newWorkoutName: schema.updateRequests.eventName,
-        // regionName: newRegionOrg.name,
-        // locationName: schema.updateRequests.locationName,
         oldRegionName: oldRegionOrg.name,
         newRegionName: newRegionOrg.name,
-        oldLocationName: oldLocation.name,
-        newLocationName: schema.updateRequests.locationName,
+        oldAoName: oldAoOrg.name,
+        newAoName: schema.updateRequests.aoName,
         oldDayOfWeek: schema.events.dayOfWeek,
         newDayOfWeek: schema.updateRequests.eventDayOfWeek,
         oldStartTime: schema.events.startTime,
@@ -415,7 +413,7 @@ export const applyUpdateRequest = async (
         parentId: updateRequest.regionId,
         orgType: "ao",
         defaultLocationId: updateRequest.locationId,
-        name: updateRequest.eventName ?? "",
+        name: updateRequest.aoName ?? "",
         isActive: true,
         logoUrl: updateRequest.aoLogo,
       })
@@ -426,7 +424,6 @@ export const applyUpdateRequest = async (
     // INSERT LOCATION
     console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
-      name: updateRequest.locationName ?? "",
       description: updateRequest.locationDescription ?? "",
       addressStreet: updateRequest.locationAddress ?? "",
       addressStreet2: updateRequest.locationAddress2 ?? "",
@@ -451,10 +448,9 @@ export const applyUpdateRequest = async (
     updateRequest.locationId = location.id;
   } else {
     console.log("updating location", updateRequest);
-    await ctx.db
+    const [location] = await ctx.db
       .update(schema.locations)
       .set({
-        name: updateRequest.locationName ?? "",
         description: updateRequest.locationDescription,
         addressStreet: updateRequest.locationAddress,
         addressStreet2: updateRequest.locationAddress2,
@@ -466,7 +462,33 @@ export const applyUpdateRequest = async (
         longitude: updateRequest.locationLng,
         email: updateRequest.locationContactEmail,
       })
-      .where(eq(schema.locations.id, updateRequest.locationId));
+      .where(eq(schema.locations.id, updateRequest.locationId))
+      .returning();
+
+    if (!location) {
+      throw new Error("Failed to find location to update");
+    }
+
+    const [ao] = await ctx.db
+      .select()
+      .from(schema.orgs)
+      .where(eq(schema.orgs.id, location.orgId));
+
+    if (ao?.orgType !== "ao") {
+      throw new Error(
+        "Failed to find ao to update. Is the location associated to an AO?",
+      );
+    }
+
+    // UPDATE AO
+    await ctx.db
+      .update(schema.orgs)
+      .set({
+        name: updateRequest.aoName ?? ao.name,
+        logoUrl: updateRequest.aoLogo,
+        parentId: updateRequest.regionId,
+      })
+      .where(eq(schema.orgs.id, location.orgId));
   }
 
   const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {

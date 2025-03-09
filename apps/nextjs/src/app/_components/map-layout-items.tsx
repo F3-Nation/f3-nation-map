@@ -48,8 +48,8 @@ export const MapLayoutItems = () => {
     <>
       {loaded && (
         <DesktopTopLeftButtons>
-          <HelpButton />
           <DesktopFilterButtons />
+          <HelpButton />
         </DesktopTopLeftButtons>
       )}
       <DesktopTopRightButtons></DesktopTopRightButtons>
@@ -97,9 +97,9 @@ export const MapLayoutItems = () => {
           {/* <TileButton className="size-9" /> */}
           <UserLocationIcon />
         </div>
-        <div className="mb-[2px] flex flex-row gap-2 overflow-auto px-2 pb-[6px]">
-          <HelpButton />
+        <div className="mb-[2px] flex flex-row justify-between gap-2 overflow-auto px-2 pb-[6px]">
           <MobileFilterButtons />
+          <HelpButton />
         </div>
         <MobileSelectedItem />
       </MobileAboveSearchBox>

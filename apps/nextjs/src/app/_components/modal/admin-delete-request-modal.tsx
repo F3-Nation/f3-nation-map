@@ -126,8 +126,7 @@ export default function AdminDeleteRequestModal({
               <div className="mt-2 rounded-md bg-muted p-3">
                 <p>
                   <span className="font-medium">Location:</span>{" "}
-                  {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
-                  {request.locationName || "Unknown"}
+                  {request.aoName}
                 </p>
                 <p>
                   <span className="font-medium">Region:</span>{" "}

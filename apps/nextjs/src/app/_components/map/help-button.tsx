@@ -8,7 +8,10 @@ export const HelpButton = () => {
   return (
     <Link
       href="/help?back=%2Fmap"
-      className={cn(filterButtonClassName, "w-full whitespace-nowrap")}
+      className={cn(
+        filterButtonClassName,
+        "w-min whitespace-nowrap bg-foreground text-background",
+      )}
     >
       <HelpCircle strokeWidth={2} className={cn("size-4")} />
       <div className="whitespace-nowrap">Help / feedback</div>

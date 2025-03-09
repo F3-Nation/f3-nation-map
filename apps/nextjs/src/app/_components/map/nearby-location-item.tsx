@@ -4,7 +4,6 @@ import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
 import { isProduction, RERENDER_LOGS } from "@acme/shared/common/constants";
-import { onlyUnique } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
@@ -35,12 +34,7 @@ export const NearbyLocationItem = (props: {
   const { item } = props;
   const isSelected = item.id === locationId;
 
-  const name = // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- bypass ""
-    item.locationName ||
-    item.events
-      .map((event) => event.name)
-      .filter(onlyUnique)
-      .join(", ");
+  const name = item.aoName;
   return (
     <button
       className={cn(

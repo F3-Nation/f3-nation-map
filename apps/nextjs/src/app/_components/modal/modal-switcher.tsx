@@ -20,6 +20,7 @@ import AdminWorkoutsModal from "./admin-workouts-modal";
 import DeleteModal from "./delete-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
+import { QRCodeModal } from "./qr-code-modal";
 import SettingsModal from "./settings-modal";
 import { UpdateLocationModal } from "./update-location-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
@@ -100,6 +101,8 @@ export default function ModalSwitcher() {
           data={data as DataType[ModalType.ADMIN_DELETE_REQUEST]}
         />
       );
+    case ModalType.QR_CODE:
+      return <QRCodeModal data={data as DataType[ModalType.QR_CODE]} />;
     default:
       return null;
   }

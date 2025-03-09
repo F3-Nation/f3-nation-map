@@ -63,7 +63,7 @@ export const FilteredMapResultsProvider = (params: {
         return {
           id: location[0],
           logo: location[2],
-          locationName: location[1],
+          aoName: location[1],
           events: location[3].map((event) => {
             return {
               id: event[0],

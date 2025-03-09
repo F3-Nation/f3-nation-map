@@ -110,19 +110,19 @@ const columns: TableOptions<
     },
   },
   {
-    accessorKey: "locationName",
-    meta: { name: "Location" },
+    accessorKey: "aoName",
+    meta: { name: "Location / AO Name" },
     header: Header,
     cell: ({ row }) => {
       const isAnUpdate =
-        row.original.oldLocationName !== row.original.newLocationName &&
+        row.original.oldAoName !== row.original.newAoName &&
         row.original.status === "pending";
       return (
         <div className="flex items-center justify-start gap-1">
           <div className="flex flex-col gap-1">
-            <p>{row.original.newLocationName}</p>
+            <p>{row.original.newAoName}</p>
             {isAnUpdate ? (
-              <p className="line-through">{row.original.oldLocationName}</p>
+              <p className="line-through">{row.original.oldAoName}</p>
             ) : null}
           </div>
           {isAnUpdate ? <CircleBadge /> : null}
