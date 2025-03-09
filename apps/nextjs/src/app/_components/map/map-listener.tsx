@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useWindowWidth } from "@react-hook/window-size";
 import { useMapEvents } from "react-leaflet";
 
@@ -21,6 +22,8 @@ import { selectedItemStore } from "~/utils/store/selected-item";
 export const MapListener = () => {
   RERENDER_LOGS && console.log("MapListener rerender");
   const width = useWindowWidth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     appStore.setState({ isMobileDeviceWidth: width < Number(BreakPoints.LG) });
@@ -30,7 +33,6 @@ export const MapListener = () => {
     // This is a hack to get the map ref to update
     click: (e) => {
       console.log("mapEvents click");
-      // setSelectedItem({ locationId: null, eventId: null });
       selectedItemStore.setState({
         locationId: null,
         eventId: null,
@@ -74,6 +76,8 @@ export const MapListener = () => {
             type: "manual-update",
           },
         });
+
+      updateParams();
     },
     moveend: () => {
       // console.log("mapEvents moveend");
@@ -84,7 +88,7 @@ export const MapListener = () => {
         center,
         hasMovedMap: true,
       });
-      if (isMobile)
+      if (isMobile) {
         mapStore.setState({
           nearbyLocationCenter: {
             ...center,
@@ -92,6 +96,7 @@ export const MapListener = () => {
             type: "manual-update",
           },
         });
+      }
     },
     // zoomlevelschange fires when the map first loads
     zoomlevelschange: () => {
@@ -125,9 +130,8 @@ export const MapListener = () => {
     // Need this for zoom events
     zoomend: () => {
       console.log("mapEvents zoomend");
-      mapStore.setState({
-        zoom: mapEvents.getZoom(),
-      });
+      mapStore.setState({ zoom: mapEvents.getZoom() });
+      updateParams();
     },
     //Remnants of troubleshooting zoom issue on change station
     // baselayerchange: () => console.log("baselayerchange"),
@@ -177,5 +181,23 @@ export const MapListener = () => {
     // tileabort: () => console.log("tileabort"),
     // tileerror: () => console.log("tileerror"),
   });
+
+  const updateParams = useCallback(() => {
+    const params = new URLSearchParams(searchParams?.toString());
+    const center = mapEvents.getCenter();
+    const zoom = mapEvents.getZoom();
+
+    // Set the map position parameters
+    params.set("lat", center.lat.toFixed(6));
+    params.set("lng", center.lng.toFixed(6));
+    params.set("zoom", zoom.toString());
+
+    // Remove eventId and locationId parameters if they exist
+    params.delete("eventId");
+    params.delete("locationId");
+
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [mapEvents, router, searchParams]);
+
   return null;
 };

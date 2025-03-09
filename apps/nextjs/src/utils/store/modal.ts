@@ -227,11 +227,17 @@ export const modalStore = new ZustandStore<{
 });
 
 export const openModal = <T extends ModalType>(type: T, data?: DataType[T]) => {
+  const existingModals = modalStore.get("modals");
   if (type === ModalType.WORKOUT_DETAILS) {
     hideSelectedItem();
   }
+
   modalStore.setState({
-    modals: [...modalStore.get("modals"), { open: true, type, data }],
+    modals: [
+      // Prevent duplicate modals
+      ...existingModals.filter((m) => m.type !== type),
+      { open: true, type, data },
+    ],
   });
 };
 

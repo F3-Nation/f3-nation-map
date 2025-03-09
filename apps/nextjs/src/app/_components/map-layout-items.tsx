@@ -97,9 +97,9 @@ export const MapLayoutItems = () => {
           {/* <TileButton className="size-9" /> */}
           <UserLocationIcon />
         </div>
-        <div className="mb-[2px] flex flex-row justify-between gap-2 overflow-auto px-2 pb-[6px]">
-          <MobileFilterButtons />
+        <div className="mb-[2px] flex flex-row justify-start gap-2 overflow-auto px-2 pb-[6px]">
           <HelpButton />
+          <MobileFilterButtons />
         </div>
         <MobileSelectedItem />
       </MobileAboveSearchBox>
