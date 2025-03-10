@@ -11,7 +11,6 @@ import { mapStore } from "~/utils/store/map";
 import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 import { NearbyLocationItem } from "./nearby-location-item";
-import { useUserLocation } from "./user-location-provider";
 import WithLove from "./with-love";
 
 export const DesktopNearbyLocations = ({
@@ -19,8 +18,6 @@ export const DesktopNearbyLocations = ({
   ...rest
 }: ComponentProps<"div">) => {
   RERENDER_LOGS && console.log("DrawerSearchResults rerender");
-  const { status: userLocationStatus, permissions: userLocationPermissions } =
-    useUserLocation();
   const { locationOrderedLocationMarkers, nearbyLocationCenter } =
     useFilteredMapResults();
   const center = mapStore.use.center();
@@ -62,9 +59,7 @@ export const DesktopNearbyLocations = ({
         {...rest}
       >
         <div className="flex flex-col justify-center divide-y divide-solid">
-          {userLocationStatus === "loading" ||
-          userLocationPermissions === "prompt" ||
-          !locationOrderedLocationMarkers?.length
+          {!locationOrderedLocationMarkers?.length
             ? Array.from({ length: 6 }).map((_, index) => (
                 <DesktopNearbyLocationItemSkeleton key={index} />
               ))
