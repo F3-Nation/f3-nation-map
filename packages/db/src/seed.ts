@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import isNumber from "lodash/isNumber";
 
-import { eq, inArray, sql } from "@acme/db";
+import { and, eq, inArray, sql } from "@acme/db";
 import { env } from "@acme/env";
 import {
   DayOfWeek,
@@ -267,28 +267,46 @@ export async function insertUsers() {
   const roles = await db.select().from(schema.roles);
 
   const editorRegionRole = roles.find((r) => r.name === "editor");
+  const adminRegionRole = roles.find((r) => r.name === "admin");
   if (!editorRegionRole) throw new Error("Editor region role not found");
+  if (!adminRegionRole) throw new Error("Admin region role not found");
 
+  const [f3nation] = await db
+    .select()
+    .from(schema.orgs)
+    .where(
+      and(eq(schema.orgs.name, "F3 Nation"), eq(schema.orgs.orgType, "nation")),
+    );
+  if (!f3nation) throw new Error("F3 Nation not found");
   const regions = await db
     .select()
     .from(schema.orgs)
     .where(eq(schema.orgs.orgType, "region"));
 
+  const boone = regions.find((r) => r.name === "Boone");
+  if (!boone) throw new Error("Boone not found");
+
   const rolesXUsersXOrg: InferInsertModel<typeof schema.rolesXUsersXOrg>[] = [
     {
       userId: users.find((u) => u.email === "declan@mountaindev.com")?.id ?? -1,
-      roleId: editorRegionRole.id,
-      orgId: regions.find((r) => r.name === "Boone")?.id ?? -1,
+      roleId: adminRegionRole.id,
+      orgId: f3nation.id,
     },
     {
       userId: users.find((u) => u.email === "patrick@pstaylor.net")?.id ?? -1,
       roleId: editorRegionRole.id,
-      orgId: regions.find((r) => r.name === "Boone")?.id ?? -1,
+      orgId: boone.id,
     },
     {
       userId: users.find((u) => u.email === "jimsheldon@icloud.com")?.id ?? -1,
       roleId: editorRegionRole.id,
-      orgId: regions.find((r) => r.name === "Boone")?.id ?? -1,
+      orgId: boone.id,
+    },
+    {
+      userId:
+        users.find((u) => u.email === "damon.vinciguerra@gmail.com")?.id ?? -1,
+      roleId: adminRegionRole.id,
+      orgId: f3nation.id,
     },
   ];
 
