@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import isNumber from "lodash/isNumber";
@@ -791,19 +790,4 @@ const getCleanedEventType = (eventTypeRaw: string) => {
   )
     return "Run";
   return eventTypeRaw;
-};
-
-const _insertRandomUsers = async () => {
-  const getUser = (): InferInsertModel<typeof schema.users> => ({
-    email: faker.internet.email(),
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    created: dayjs().format(),
-    updated: dayjs().format(),
-  });
-
-  for (let i = 0; i < 100; i++) {
-    const user = getUser();
-    await db.insert(schema.users).values(user);
-  }
 };
