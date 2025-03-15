@@ -424,6 +424,7 @@ export const applyUpdateRequest = async (
     // INSERT LOCATION
     console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
+      name: updateRequest.locationName ?? "",
       description: updateRequest.locationDescription ?? "",
       addressStreet: updateRequest.locationAddress ?? "",
       addressStreet2: updateRequest.locationAddress2 ?? "",

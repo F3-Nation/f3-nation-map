@@ -5,6 +5,7 @@ import type {
   Row,
   SortingState,
   TableOptions,
+  Updater,
   VisibilityState,
 } from "@tanstack/react-table";
 import type { Table as TableType } from "@tanstack/table-core";
@@ -68,18 +69,27 @@ export interface MDTableProps<T> {
   filterComponent?: React.ReactNode;
   cellClassName?: string;
   paginationOptions?: PaginationOptions;
+  pagination?: PaginationState;
+  setPagination?: (val: Updater<PaginationState>) => void;
   defaultSortingState?: SortingState;
   rowClassName?: (row: Row<T>) => string | undefined;
+  searchTerm?: string;
+  setSearchTerm?: (searchTerm: string) => void;
+  totalCount?: number;
 }
 
 export const MDTable = <T,>(params: MDTableProps<T>) => {
   const {
+    paginationOptions,
+    pagination,
+    setPagination,
+    searchTerm,
+    setSearchTerm,
     onRowClick,
     isLoading,
     tableRef,
     filterComponent,
     cellClassName,
-    paginationOptions,
     data,
     columns,
     tableName = "table",
@@ -87,19 +97,19 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     downloadCSV,
     defaultSortingState,
     rowClassName,
+    totalCount: totalCountParam,
   } = params;
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [_searchTerm, _setSearchTerm] = React.useState("");
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortingState ?? [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const { pagination, setPagination, pageSizeOptions } =
-    usePagination(paginationOptions);
 
   const table = useReactTable<T>({
     data,
     columns,
+    manualPagination: !!pagination,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -107,15 +117,21 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     onColumnVisibilityChange: setColumnVisibility,
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
+    rowCount: totalCountParam,
     state: {
       pagination,
       sorting,
       columnVisibility,
-      globalFilter: searchTerm,
+      globalFilter: searchTerm ? undefined : _searchTerm,
     },
   });
 
   useImperativeHandle(tableRef, () => table);
+
+  const totalCount = totalCountParam ?? table.getRowCount();
+  const pageCount = totalCount
+    ? Math.ceil(totalCount / (pagination?.pageSize ?? 10))
+    : 0;
 
   return (
     <>
@@ -123,15 +139,29 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
         <div className="flex flex-1 items-center gap-4">
           <Input
             placeholder={`Search ${rowsName}...`}
-            value={searchTerm}
+            value={searchTerm ?? _searchTerm}
             onChange={(event) => {
-              setSearchTerm(event.target.value);
+              setSearchTerm?.(event.target.value);
+              _setSearchTerm(event.target.value);
             }}
             className="max-w-60"
           />
           <div>
-            Showing {table.getRowModel().rows?.length ?? 0} /{" "}
-            {table.getRowCount().toLocaleString()} {rowsName}
+            {pagination ? (
+              <>
+                Showing {pagination.pageIndex * pagination.pageSize + 1}-
+                {Math.min(
+                  (pagination.pageIndex + 1) * pagination.pageSize,
+                  totalCount,
+                )}{" "}
+                of {totalCount.toLocaleString()} {rowsName}
+              </>
+            ) : (
+              <>
+                Showing {table.getRowModel().rows?.length ?? 0} of{" "}
+                {table.getRowCount().toLocaleString()} {rowsName}
+              </>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -196,7 +226,7 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from(Array(pagination.pageSize)).map((_, index) => (
+              Array.from(Array(pagination?.pageSize ?? 10)).map((_, index) => (
                 <TableRow
                   key={index}
                   className={cn(`hover:bg-gray-300`, {
@@ -268,8 +298,7 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
                 <span className="flex items-center gap-1">
                   <div>Page</div>
                   <strong>
-                    {table.getState().pagination.pageIndex + 1} of{" "}
-                    {table.getPageCount()}
+                    {table.getState().pagination.pageIndex + 1} of {pageCount}
                   </strong>
                 </span>
                 <Button
@@ -313,15 +342,17 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="z-10" position="popper">
-                    {pageSizeOptions.map((size) => (
-                      <SelectItem
-                        key={size}
-                        className="flex cursor-pointer justify-center rounded-md px-4 py-1 text-lg font-semibold hover:bg-emerald-100"
-                        value={size.toString()}
-                      >
-                        {size}
-                      </SelectItem>
-                    ))}
+                    {(paginationOptions?.pageSizeOptions ?? [10, 20, 50])?.map(
+                      (size) => (
+                        <SelectItem
+                          key={size}
+                          className="flex cursor-pointer justify-center rounded-md px-4 py-1 text-lg font-semibold hover:bg-emerald-100"
+                          value={size.toString()}
+                        >
+                          {size}
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -331,25 +362,6 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
       </div>
     </>
   );
-};
-
-const usePagination = (params?: PaginationOptions) => {
-  const pageSizeOptions = params?.pageSizeOptions ?? [10, 20, 50, 100];
-  const [{ pageIndex, pageSize }, setPagination] =
-    React.useState<PaginationState>({
-      pageIndex: 0,
-      pageSize: params?.pageSize ?? 10,
-    });
-
-  const pagination = React.useMemo(
-    () => ({
-      pageIndex,
-      pageSize,
-    }),
-    [pageIndex, pageSize],
-  );
-
-  return { pagination, setPagination, pageSizeOptions };
 };
 
 export type MdTableOptions<T> = Pick<TableOptions<T>, "data" | "columns"> &
