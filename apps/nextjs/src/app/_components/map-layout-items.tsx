@@ -5,6 +5,7 @@ import { useMemo } from "react";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { classNames } from "@acme/shared/common/functions";
+import { Spinner } from "@acme/ui/spinner";
 
 import { latLngToMeters } from "~/utils/lat-lng-to-meters";
 import { mapStore } from "~/utils/store/map";
@@ -20,10 +21,12 @@ import { MobileSearchResultsAndNearbyLocations } from "./map/mobile-search-resul
 import { MobileSelectedItem } from "./map/mobile-selected-item";
 import { SettingsButton } from "./map/settings-button";
 import { UserLocationIcon } from "./map/user-location-icon";
+import { useUserLocation } from "./map/user-location-provider";
 import { ZoomButtons } from "./map/zoom-buttons";
 
 const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
+  const { status } = useUserLocation();
   const showDebugStore = mapStore.use.showDebug();
   const loaded = mapStore.use.loaded();
   const center = mapStore.use.center();
@@ -68,7 +71,14 @@ export const MapLayoutItems = () => {
         <DesktopLocationPanelContent />
       </DesktopLocationPanel>
 
-      {hasMovedAwayFromLocation && (
+      {status === "loading" ? (
+        <div className="absolute left-2/4 top-14 -translate-x-2/4">
+          <div className="flex flex-row items-center gap-2">
+            <Spinner />
+            <p>Loading your location...</p>
+          </div>
+        </div>
+      ) : hasMovedAwayFromLocation ? (
         <button
           className={classNames(
             "rounded-xl bg-background px-4 py-1 text-sm text-foreground shadow",
@@ -89,7 +99,7 @@ export const MapLayoutItems = () => {
         >
           Show nearby areas
         </button>
-      )}
+      ) : null}
 
       {/* Mobile */}
       <MobileAboveSearchBox>
