@@ -4,7 +4,7 @@ import "~/utils/leaflet-canvas-markers"; // with modifications
 import "~/utils/smooth-zoom-wheel"; // with modifications
 
 import type { TileLayerProps } from "react-leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useWindowSize } from "@react-hook/window-size";
 import { MapContainer, TileLayer } from "react-leaflet";
@@ -19,6 +19,7 @@ import type { F3MarkerLocation } from "~/utils/types";
 import { queryClientUtils } from "~/trpc/react";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
+import { openPanel, setSelectedItem } from "~/utils/store/selected-item";
 import { CanvasIconLayer } from "./canvas-layer";
 import { GeoJsonPane } from "./geo-json-pane";
 import { MapListener } from "./map-listener";
@@ -37,15 +38,24 @@ export const LeafletMap = ({
 }: {
   sparseLocations: F3MarkerLocation[];
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const center = mapStore.use.center();
   const zoom = mapStore.use.zoom();
+  const loaded = mapStore.use.loaded();
+
   const searchParams = useSearchParams();
   const queryLat = safeParseFloat(searchParams?.get("lat"));
   const queryLon = safeParseFloat(searchParams?.get("lon"));
   const queryZoom = safeParseFloat(searchParams?.get("zoom"));
-  const router = useRouter();
-  const pathname = usePathname();
+  const queryLocationId = searchParams?.get("locationId");
+  const queryEventId = searchParams?.get("eventId");
   const searchParamsRef = useRef(searchParams?.get("error"));
+
+  // Add this ref to track if we've already initialized from URL params
+  const initializedFromUrlRef = useRef(false);
+
   const { userLocation } = useUserLocation();
   RERENDER_LOGS && console.log("LeafletMap rerender");
   const [width, height] = useWindowSize();
@@ -59,6 +69,39 @@ export const LeafletMap = ({
       sparseLocations,
     );
   }
+
+  const queryLocation = useMemo(() => {
+    if (queryLocationId) {
+      return sparseLocations.find(
+        (location) => location.id === Number(queryLocationId),
+      );
+    }
+  }, [queryLocationId, sparseLocations]);
+
+  // Add this effect to initialize selected item from URL params
+  useEffect(() => {
+    // Only run once when the component mounts and map is loaded
+    if (
+      !initializedFromUrlRef.current &&
+      loaded &&
+      queryLocationId &&
+      queryEventId
+    ) {
+      initializedFromUrlRef.current = true;
+
+      // Set the selected item based on URL params
+      setSelectedItem({
+        locationId: Number(queryLocationId),
+        eventId: Number(queryEventId),
+      });
+
+      // Optionally open the panel if you want to show details immediately
+      openPanel({
+        locationId: Number(queryLocationId),
+        eventId: Number(queryEventId),
+      });
+    }
+  }, [queryLocationId, queryEventId, loaded]);
 
   useEffect(() => {
     const error = searchParamsRef.current;
@@ -84,13 +127,15 @@ export const LeafletMap = ({
           mapStore.setState({ loaded: true });
         }}
         center={
-          queryLat != null && queryLon != null
-            ? { lat: queryLat, lng: queryLon }
-            : userLocation
-              ? { lat: userLocation.latitude, lng: userLocation.longitude }
-              : center
-                ? center
-                : DEFAULT_CENTER
+          queryLocation?.lat != null && queryLocation?.lon != null
+            ? { lat: queryLocation.lat, lng: queryLocation.lon }
+            : queryLat != null && queryLon != null
+              ? { lat: queryLat, lng: queryLon }
+              : userLocation
+                ? { lat: userLocation.latitude, lng: userLocation.longitude }
+                : center
+                  ? center
+                  : DEFAULT_CENTER
         }
         // https://stackoverflow.com/questions/13851888/how-can-i-change-the-default-loading-tile-color-in-leafletjs
         // tile loading background color is here:
@@ -129,8 +174,8 @@ const MapContent = ({
 
   // https://github.com/CartoDB/basemap-styles
   const lightStreetProps: TileLayerProps = {
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    subdomains: "abcd",
+    url: "http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+    subdomains: ["mt0", "mt1", "mt2", "mt3"],
   };
 
   // https://github.com/CartoDB/basemap-styles

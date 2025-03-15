@@ -189,7 +189,9 @@ export const locations = pgTable(
   {
     id: serial().primaryKey().notNull(),
     orgId: integer("org_id").notNull(),
-    name: varchar().notNull(),
+    // This is not used in general. Keeping in case we change our plans
+    // Use AO name instead
+    // name: varchar().notNull(),
     description: varchar(),
     isActive: boolean("is_active").notNull(),
     latitude: doublePrecision(),
@@ -211,7 +213,7 @@ export const locations = pgTable(
   },
   (table) => [
     index("idx_locations_org_id").on(table.orgId),
-    index("idx_locations_name").on(table.name),
+    // index("idx_locations_name").on(table.name),
     index("idx_locations_is_active").on(table.isActive),
     foreignKey({
       columns: [table.orgId],
@@ -498,6 +500,7 @@ export const updateRequests = pgTable(
     locationLng: real("location_lng"),
     locationId: integer("location_id"),
     locationContactEmail: varchar("location_contact_email"),
+    aoName: varchar("ao_name"),
     aoLogo: varchar("ao_logo"),
     submittedBy: varchar("submitted_by").notNull(),
     submitterValidated: boolean("submitter_validated"),

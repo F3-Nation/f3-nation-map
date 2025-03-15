@@ -17,7 +17,6 @@ export const groupMarkerClick = ({
   if (!isMobile || isAlreadySelected) {
     openPanel({ locationId, eventId });
   } else {
-    // setSelectedItem({ locationId, eventId });
     selectedItemStore.setState({
       ...(locationId !== undefined ? { locationId: locationId } : {}),
       ...(eventId !== undefined ? { eventId: eventId } : {}),

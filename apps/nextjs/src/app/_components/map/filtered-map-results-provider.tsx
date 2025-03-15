@@ -62,8 +62,8 @@ export const FilteredMapResultsProvider = (params: {
       lowBandwidthAllLocationMarkerFilterData.map((location) => {
         return {
           id: location[0],
-          name: location[1],
           logo: location[2],
+          aoName: location[1],
           events: location[3].map((event) => {
             return {
               id: event[0],

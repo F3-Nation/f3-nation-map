@@ -25,6 +25,7 @@ export enum ModalType {
   ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
   DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
   ADMIN_DELETE_REQUEST = "ADMIN_DELETE_REQUEST",
+  QR_CODE = "QR_CODE",
 }
 export enum DeleteType {
   AREA = "AREA",
@@ -47,7 +48,6 @@ export const eventDefaults = {
 
 export const locationDefaults = {
   locationId: null,
-  locationName: "",
   locationAddress: "",
   locationAddress2: "",
   locationCity: "",
@@ -55,6 +55,7 @@ export const locationDefaults = {
   locationZip: "",
   locationCountry: "",
   locationDescription: "",
+  aoName: "",
   aoLogo: "",
   workoutWebsite: "",
   regionId: null,
@@ -79,7 +80,6 @@ export const eventAndLocationToUpdateRequest = ({
     lat: number;
     lon: number;
     locationId: number;
-    locationName: string;
     locationAddress: string | null;
     locationAddress2: string | null;
     locationCity: string | null;
@@ -87,6 +87,7 @@ export const eventAndLocationToUpdateRequest = ({
     locationZip: string | null;
     locationCountry: string | null;
     locationDescription: string | null;
+    aoName: string | null;
     aoWebsite: string | null;
     aoLogo: string | null;
     regionId: number | null;
@@ -110,7 +111,7 @@ export const eventAndLocationToUpdateRequest = ({
     types: event?.types ?? [],
     eventDescription: event?.description ?? null,
     locationId: location.locationId,
-    locationName: location.locationName,
+    aoName: location.aoName,
     locationAddress: location.locationAddress,
     locationAddress2: location.locationAddress2,
     locationCity: location.locationCity,
@@ -136,6 +137,7 @@ export interface DataType {
     workoutName: string | null;
     workoutWebsite: string | null;
     aoLogo: string | null;
+    aoName: string | null;
     lat: number;
     lng: number;
     startTime: string | null;
@@ -143,7 +145,6 @@ export interface DataType {
     dayOfWeek: DayOfWeek | null;
     types: string[];
     eventDescription: string | null;
-    locationName: string | null;
     locationAddress: string | null;
     locationAddress2: string | null;
     locationCity: string | null;
@@ -197,6 +198,11 @@ export interface DataType {
   [ModalType.ADMIN_DELETE_REQUEST]: {
     id: string;
   };
+  [ModalType.QR_CODE]: {
+    url: string;
+    fileName: string;
+    title: string;
+  };
 }
 
 export interface Modal<T extends ModalType> {
@@ -221,11 +227,17 @@ export const modalStore = new ZustandStore<{
 });
 
 export const openModal = <T extends ModalType>(type: T, data?: DataType[T]) => {
+  const existingModals = modalStore.get("modals");
   if (type === ModalType.WORKOUT_DETAILS) {
     hideSelectedItem();
   }
+
   modalStore.setState({
-    modals: [...modalStore.get("modals"), { open: true, type, data }],
+    modals: [
+      // Prevent duplicate modals
+      ...existingModals.filter((m) => m.type !== type),
+      { open: true, type, data },
+    ],
   });
 };
 

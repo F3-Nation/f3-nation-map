@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { aliasedTable, eq, schema } from "@acme/db";
+import { aliasedTable, and, eq, or, schema, sql } from "@acme/db";
 import { EventInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -8,16 +8,14 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 export const eventRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
     const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const locationOrg = aliasedTable(schema.orgs, "location_org");
+    const aoOrg = aliasedTable(schema.orgs, "ao_org");
     const workouts = await ctx.db
       .select({
         id: schema.events.id,
         name: schema.events.name,
         description: schema.events.description,
         isActive: schema.events.isActive,
-        location: schema.locations.name,
-        regionName: regionOrg.name,
-        regionId: regionOrg.id,
+        location: aoOrg.name,
         locationId: schema.events.locationId,
         startDate: schema.events.startDate,
         dayOfWeek: schema.events.dayOfWeek,
@@ -25,31 +23,72 @@ export const eventRouter = createTRPCRouter({
         endTime: schema.events.endTime,
         email: schema.events.email,
         created: schema.events.created,
+        aos: sql<{ aoId: number; aoName: string }[]>`COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'aoId', ${aoOrg.id}, 
+            'aoName', ${aoOrg.name}
+          )
+        ) 
+        FILTER (
+          WHERE ${aoOrg.id} IS NOT NULL
+        ), 
+        '[]'
+      )`,
+        regions: sql<{ regionId: number; regionName: string }[]>`COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'regionId', ${regionOrg.id}, 
+              'regionName', ${regionOrg.name}
+            )
+          ) 
+          FILTER (
+            WHERE ${regionOrg.id} IS NOT NULL
+          ), 
+          '[]'
+        )`,
       })
       .from(schema.events)
       .innerJoin(
         schema.locations,
         eq(schema.locations.id, schema.events.locationId),
       )
-      .leftJoin(locationOrg, eq(locationOrg.id, schema.locations.orgId))
-      .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId));
+      .leftJoin(
+        aoOrg,
+        and(
+          eq(aoOrg.orgType, "ao"),
+          or(
+            eq(aoOrg.id, schema.locations.orgId),
+            eq(aoOrg.id, schema.events.orgId),
+          ),
+        ),
+      )
+      .leftJoin(
+        regionOrg,
+        and(
+          eq(regionOrg.orgType, "region"),
+          or(
+            eq(regionOrg.id, schema.locations.orgId),
+            eq(regionOrg.id, schema.events.orgId),
+            eq(regionOrg.id, aoOrg.parentId),
+          ),
+        ),
+      )
+      .groupBy(schema.events.id);
     return workouts;
   }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const regionOrg = aliasedTable(schema.orgs, "region_org");
-      const locationOrg = aliasedTable(schema.orgs, "location_org");
+      const aoOrg = aliasedTable(schema.orgs, "ao_org");
       const [event] = await ctx.db
         .select({
           id: schema.events.id,
           name: schema.events.name,
           description: schema.events.description,
           isActive: schema.events.isActive,
-          location: schema.locations.name,
-          regionName: regionOrg.name,
-          regionId: regionOrg.id,
-          orgId: schema.events.orgId,
+          location: aoOrg.name,
           locationId: schema.events.locationId,
           startDate: schema.events.startDate,
           dayOfWeek: schema.events.dayOfWeek,
@@ -59,15 +98,59 @@ export const eventRouter = createTRPCRouter({
           highlight: schema.events.highlight,
           isSeries: schema.events.isSeries,
           created: schema.events.created,
+          aos: sql<{ aoId: number; aoName: string }[]>`COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'aoId', ${aoOrg.id}, 
+                'aoName', ${aoOrg.name}
+              )
+            ) 
+            FILTER (
+              WHERE ${aoOrg.id} IS NOT NULL
+            ), 
+            '[]'
+          )`,
+          regions: sql<{ regionId: number; regionName: string }[]>`COALESCE(
+              json_agg(
+                DISTINCT jsonb_build_object(
+                  'regionId', ${regionOrg.id}, 
+                  'regionName', ${regionOrg.name}
+                )
+              ) 
+              FILTER (
+                WHERE ${regionOrg.id} IS NOT NULL
+              ), 
+              '[]'
+            )`,
         })
         .from(schema.events)
         .leftJoin(
           schema.locations,
           eq(schema.locations.id, schema.events.locationId),
         )
-        .leftJoin(locationOrg, eq(locationOrg.id, schema.locations.orgId))
-        .leftJoin(regionOrg, eq(regionOrg.id, locationOrg.parentId))
-        .where(eq(schema.events.id, input.id));
+        .leftJoin(
+          aoOrg,
+          and(
+            eq(aoOrg.orgType, "ao"),
+            or(
+              eq(aoOrg.id, schema.locations.orgId),
+              eq(aoOrg.id, schema.events.orgId),
+            ),
+          ),
+        )
+        .leftJoin(
+          regionOrg,
+          and(
+            eq(regionOrg.orgType, "region"),
+            or(
+              eq(regionOrg.id, schema.locations.orgId),
+              eq(regionOrg.id, schema.events.orgId),
+              eq(regionOrg.id, aoOrg.parentId),
+            ),
+          ),
+        )
+        .where(eq(schema.events.id, input.id))
+        .groupBy(schema.events.id);
 
       return event;
     }),

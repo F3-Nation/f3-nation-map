@@ -1,4 +1,3 @@
-import { DialogTitle } from "@acme/ui/dialog";
 import { Skeleton } from "@acme/ui/skeleton";
 
 export const WorkoutDetailsSkeleton = () => {
@@ -43,10 +42,8 @@ export const WorkoutDetailsSkeleton = () => {
           </div>
         </dl>
       </div>
-      <DialogTitle className="mt-4 px-4 sm:px-6 lg:px-8">
-        Region Information
-      </DialogTitle>
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="mt-4">Region Information</div>
+      <div className="w-full">
         <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
           {Object.keys(regionFields)
             .filter(

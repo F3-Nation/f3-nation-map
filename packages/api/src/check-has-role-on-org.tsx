@@ -19,7 +19,7 @@ export const checkHasRoleOnOrg = async ({
   success: boolean;
   orgId: number | null;
   roleName: UserRole | null;
-  mode: "direct-permission" | "org-admin" | "no-permission";
+  mode: "mtndev-override" | "direct-permission" | "org-admin" | "no-permission";
 }> => {
   console.log(
     "Checking if user has role on org",
@@ -31,19 +31,22 @@ export const checkHasRoleOnOrg = async ({
   );
 
   // F3 Nation
-  if (
-    orgId === 1 &&
-    (session.email === "declan@mountaindev.com" || isDevMode)
-  ) {
-    return {
-      success: true,
-      orgId,
-      roleName,
-      mode: "direct-permission",
-    };
+  if (session.email === "declan@mountaindev.com" || isDevMode) {
+    const nations = await db
+      .select()
+      .from(schema.orgs)
+      .where(eq(schema.orgs.orgType, "nation"));
+    if (nations.find((n) => n.id === orgId)) {
+      return {
+        success: true,
+        orgId,
+        roleName,
+        mode: "mtndev-override",
+      };
+    }
   }
 
-  const hasDirectAccessForThisOrg = session.roles.some(
+  const hasDirectAccessForThisOrg = session.roles?.some(
     (r) =>
       (r.roleName === "admin" || r.roleName === roleName) && r.orgId === orgId,
   );
@@ -86,7 +89,7 @@ export const checkHasRoleOnOrg = async ({
     o.level5Id,
   ]) as number[];
 
-  const matchingPermission = session.roles.find(
+  const matchingPermission = session.roles?.find(
     (r) =>
       (r.roleName === "admin" || r.roleName === roleName) &&
       allAncestorOrgIds.includes(r.orgId),

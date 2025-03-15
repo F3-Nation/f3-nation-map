@@ -50,10 +50,7 @@ export const UserLocationIcon = () => {
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent
-        side="bottom"
-        className="mr-4 flex max-w-40 flex-col gap-2"
-      >
+      <TooltipContent side="top" className="mr-4 flex max-w-40 flex-col gap-2">
         <UserLocationContent />
       </TooltipContent>
     </Tooltip>
