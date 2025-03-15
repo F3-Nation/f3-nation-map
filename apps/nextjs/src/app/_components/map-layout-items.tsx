@@ -20,6 +20,7 @@ import { MobileFilterButtons } from "./map/mobile-filter-buttons";
 import { MobileSearchResultsAndNearbyLocations } from "./map/mobile-search-results-and-nearby-locations";
 import { MobileSelectedItem } from "./map/mobile-selected-item";
 import { SettingsButton } from "./map/settings-button";
+import { StagingWatermark } from "./map/staging-watermark";
 import { UserLocationIcon } from "./map/user-location-icon";
 import { useUserLocation } from "./map/user-location-provider";
 import { ZoomButtons } from "./map/zoom-buttons";
@@ -53,6 +54,7 @@ export const MapLayoutItems = () => {
         <DesktopTopLeftButtons>
           <DesktopFilterButtons />
           <HelpButton />
+          {/* <StagingWatermark /> */}
         </DesktopTopLeftButtons>
       )}
       <DesktopTopRightButtons></DesktopTopRightButtons>
@@ -66,6 +68,9 @@ export const MapLayoutItems = () => {
         <UserLocationIcon />
         <ZoomButtons />
       </DesktopBottomRightButtons>
+      <DesktopButtonCenter>
+        <StagingWatermark />
+      </DesktopButtonCenter>
       <DesktopSelectedItem />
       <DesktopLocationPanel>
         <DesktopLocationPanelContent />
@@ -102,6 +107,9 @@ export const MapLayoutItems = () => {
       ) : null}
 
       {/* Mobile */}
+      <MobileTopCenter>
+        <StagingWatermark />
+      </MobileTopCenter>
       <MobileAboveSearchBox>
         <div className="mb-1 flex w-full flex-row items-end justify-end px-1">
           {/* <TileButton className="size-9" /> */}
@@ -166,6 +174,14 @@ const DesktopLocationPanel = (props: ComponentProps<"div">) => (
   />
 );
 
+const DesktopButtonCenter = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute bottom-4 left-2/4 hidden -translate-x-2/4 lg:flex"
+    {...props}
+  />
+);
+
 const MobileAboveSearchBox = (props: ComponentProps<"div">) => (
   <div
     style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
@@ -179,6 +195,14 @@ const MobileTopRightButtons = (props: ComponentProps<"div">) => (
   <div
     style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
     className="absolute right-2 top-2 flex flex-col gap-1 lg:hidden"
+    {...props}
+  />
+);
+
+const MobileTopCenter = (props: ComponentProps<"div">) => (
+  <div
+    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
+    className="absolute left-2/4 top-2 flex -translate-x-2/4 lg:hidden"
     {...props}
   />
 );
