@@ -23,24 +23,27 @@ export default async function MapPage() {
   RERENDER_LOGS && console.log("MapPage rerender");
 
   return (
-    <FilteredMapResultsProvider
-      allLocationMarkers={locationMarkersSparse}
-      lowBandwidthAllLocationMarkerFilterData={filteredMapResultsData}
-    >
-      {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
-      <TextSearchResultsProvider>
-        <MapPageWrapper>
-          {/* Must have relative so that absolute things show up on the map */}
-          <main className="pointer-events-auto relative">
-            <Suspense fallback={<div>Loading...</div>}>
-              <DynamicImportLeafletMap
-                sparseLocations={locationMarkersSparse}
-              />
-            </Suspense>
-            <MapLayoutItems />
-          </main>
-        </MapPageWrapper>
-      </TextSearchResultsProvider>
-    </FilteredMapResultsProvider>
+    // Top level suspense is needed to resolve useSearchParams issue on build
+    <Suspense fallback={<div>Loading...</div>}>
+      <FilteredMapResultsProvider
+        allLocationMarkers={locationMarkersSparse}
+        lowBandwidthAllLocationMarkerFilterData={filteredMapResultsData}
+      >
+        {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
+        <TextSearchResultsProvider>
+          <MapPageWrapper>
+            {/* Must have relative so that absolute things show up on the map */}
+            <main className="pointer-events-auto relative">
+              <Suspense fallback={<div>Loading...</div>}>
+                <DynamicImportLeafletMap
+                  sparseLocations={locationMarkersSparse}
+                />
+              </Suspense>
+              <MapLayoutItems />
+            </main>
+          </MapPageWrapper>
+        </TextSearchResultsProvider>
+      </FilteredMapResultsProvider>
+    </Suspense>
   );
 }
