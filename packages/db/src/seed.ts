@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import isNumber from "lodash/isNumber";
 
 import { eq, inArray, sql } from "@acme/db";
 import { env } from "@acme/env";
@@ -601,7 +602,10 @@ export async function insertData(data: {
       acc[latLonKey] = aoOrg;
       return acc;
     },
-    {} as Record<string, { id: number; description: string | null }>,
+    {} as Record<
+      string,
+      { id: number; description: string | null; name: string }
+    >,
   );
 
   const aoLocs = await db
@@ -609,10 +613,10 @@ export async function insertData(data: {
     .values(
       Object.values(uniqueAOsWithWorkouts).map(({ ao, events }) => {
         const aoOrg = aoOrgKeyDict[ao.key];
-        const orgId = aoOrg?.id;
-        if (orgId == undefined) throw new Error("AO org id not found");
+        if (aoOrg == undefined) throw new Error("AO org not found");
+        if (!isNumber(aoOrg.id)) throw new Error("AO org id is not a number");
         const aoData: InferInsertModel<typeof schema.locations> = {
-          // name: "", // AO locations do not have names yet (should be "Walgreens" etc)
+          name: aoOrg.name,
           isActive: true,
           addressStreet: events[0]?.["Address 1"],
           addressStreet2: events[0]?.["Address 2"],
@@ -623,7 +627,7 @@ export async function insertData(data: {
           description: aoOrg?.description, // AOs description is the address
           latitude: safeParseFloat(ao.latitude),
           longitude: safeParseFloat(ao.longitude),
-          orgId,
+          orgId: aoOrg.id,
           meta: {
             latLonKey: ao.key,
             address1: events[0]?.["Address 1"],
@@ -640,7 +644,7 @@ export async function insertData(data: {
     )
     .returning();
 
-  console.log("inserted aos", aoLocs.length, aoLocs[0]);
+  console.log("inserted locations", aoLocs.length, aoLocs[0]);
 
   const eventsToInsert: InferInsertModel<typeof schema.events>[] =
     Object.values(uniqueAOsWithWorkouts).flatMap(({ ao, events }) => {

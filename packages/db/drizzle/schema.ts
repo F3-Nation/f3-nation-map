@@ -191,7 +191,7 @@ export const locations = pgTable(
     orgId: integer("org_id").notNull(),
     // This is not used in general. Keeping in case we change our plans
     // Use AO name instead
-    // name: varchar().notNull(),
+    name: varchar().notNull(),
     description: varchar(),
     isActive: boolean("is_active").notNull(),
     latitude: doublePrecision(),
@@ -213,7 +213,7 @@ export const locations = pgTable(
   },
   (table) => [
     index("idx_locations_org_id").on(table.orgId),
-    // index("idx_locations_name").on(table.name),
+    index("idx_locations_name").on(table.name),
     index("idx_locations_is_active").on(table.isActive),
     foreignKey({
       columns: [table.orgId],

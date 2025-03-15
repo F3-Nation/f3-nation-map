@@ -1,5 +1,5 @@
 {
-  "id": "30e3aa84-2f50-4b5d-ab94-374319f9a5d4",
+  "id": "1aeb5e3a-bec2-4bd2-b64e-e6da51773841",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1311,6 +1311,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "description": {
           "name": "description",
           "type": "varchar",
@@ -1404,6 +1410,21 @@
           "columns": [
             {
               "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_locations_name": {
+          "name": "idx_locations_name",
+          "columns": [
+            {
+              "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
