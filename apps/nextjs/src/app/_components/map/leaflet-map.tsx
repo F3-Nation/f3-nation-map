@@ -174,8 +174,8 @@ const MapContent = ({
 
   // https://github.com/CartoDB/basemap-styles
   const lightStreetProps: TileLayerProps = {
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    subdomains: "abcd",
+    url: "http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+    subdomains: ["mt0", "mt1", "mt2", "mt3"],
   };
 
   // https://github.com/CartoDB/basemap-styles
