@@ -16,7 +16,7 @@ export const Sidebar = () => {
       </div>
       {/* <div className="flex w-full flex-row justify-center">
         <FiltersSome />
-      </div> */}
+        </div> */}
       <FiltersAll className={cn({ hidden: !allFilters })} />
       <DesktopNearbyLocations className={cn({ hidden: allFilters })} />
     </>
