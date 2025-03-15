@@ -11,12 +11,7 @@ import { sendVerificationRequest } from "./sendVerificationRequest";
 
 export type { Session } from "next-auth";
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   // Must cast since we use number for user ids
   // And next-auth expects string for user ids
   // And it is a nightmare (impossible?) to overwrite the type

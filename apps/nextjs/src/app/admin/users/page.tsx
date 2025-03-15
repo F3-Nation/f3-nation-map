@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 
-import { api } from "~/trpc/server";
 import Layout from "../admin-layout";
 import { AddUserButton } from "./[id]/add-user-button";
 import { UserTable } from "./user-table";
 
 const UsersPage = async () => {
-  const users = await api.user.all();
-
   return (
     <Layout>
       <div className="flex w-full flex-col">
@@ -19,7 +16,7 @@ const UsersPage = async () => {
         </div>
         <Suspense fallback={<div>Loading...</div>}>
           <div className="flex  w-full  flex-col overflow-auto">
-            <UserTable users={users} />
+            <UserTable />
           </div>
         </Suspense>
       </div>

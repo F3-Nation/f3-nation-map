@@ -1,8 +1,19 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { UserRole } from "@acme/shared/app/enums";
-import { and, eq, schema as schemaRaw, sql } from "@acme/db";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  schema as schemaRaw,
+  sql,
+} from "@acme/db";
+import { UserRole } from "@acme/shared/app/enums";
 import { CrupdateUserSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -11,28 +22,79 @@ import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 const schema = { ...schemaRaw, users: schemaRaw.users };
 
 export const userRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
-    const users = await ctx.db
-      .select({
-        id: schema.users.id,
-        f3Name: schema.users.f3Name,
-        firstName: schema.users.firstName,
-        lastName: schema.users.lastName,
-        email: schema.users.email,
-        emailVerified: schema.users.emailVerified,
-        phone: schema.users.phone,
-        homeRegionId: schema.users.homeRegionId,
-        avatarUrl: schema.users.avatarUrl,
-        emergencyContact: schema.users.emergencyContact,
-        emergencyPhone: schema.users.emergencyPhone,
-        emergencyNotes: schema.users.emergencyNotes,
-        status: schema.users.status,
-        meta: schema.users.meta,
-        created: schema.users.created,
-        updated: schema.users.updated,
-        roles: sql<
-          { orgId: number; orgName: string; roleName: UserRole }[]
-        >`COALESCE(
+  all: publicProcedure
+    .input(
+      z
+        .object({
+          roles: z.array(z.enum(UserRole)).optional(),
+          searchTerm: z.string().optional(),
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const pageSize = input?.pageSize ?? 10;
+      const pageIndex = (input?.pageIndex ?? 0) * pageSize;
+      const where = and(
+        eq(schema.users.status, "active"),
+        !input?.roles?.length || input.roles.length === UserRole.length
+          ? undefined
+          : input.roles.includes("user")
+            ? isNull(schema.roles.name)
+            : inArray(schema.roles.name, input.roles),
+        input?.searchTerm
+          ? or(
+              ilike(schema.users.f3Name, `%${input?.searchTerm}%`),
+              ilike(schema.users.firstName, `%${input?.searchTerm}%`),
+              ilike(schema.users.lastName, `%${input?.searchTerm}%`),
+              ilike(schema.users.email, `%${input?.searchTerm}%`),
+            )
+          : undefined,
+      );
+
+      const userIdsQuery = ctx.db
+        .selectDistinct({ id: schema.users.id })
+        .from(schema.users)
+        .leftJoin(
+          schema.rolesXUsersXOrg,
+          eq(schema.users.id, schema.rolesXUsersXOrg.userId),
+        )
+        .leftJoin(schema.orgs, eq(schema.orgs.id, schema.rolesXUsersXOrg.orgId))
+        .leftJoin(
+          schema.roles,
+          eq(schema.roles.id, schema.rolesXUsersXOrg.roleId),
+        )
+        .where(where);
+
+      const countResult = await ctx.db
+        .select({ count: count() })
+        .from(userIdsQuery.as("distinct_users"));
+
+      const userCount = countResult[0];
+      console.log("User count", userCount);
+
+      const users = await ctx.db
+        .select({
+          id: schema.users.id,
+          f3Name: schema.users.f3Name,
+          firstName: schema.users.firstName,
+          lastName: schema.users.lastName,
+          email: schema.users.email,
+          emailVerified: schema.users.emailVerified,
+          phone: schema.users.phone,
+          homeRegionId: schema.users.homeRegionId,
+          avatarUrl: schema.users.avatarUrl,
+          emergencyContact: schema.users.emergencyContact,
+          emergencyPhone: schema.users.emergencyPhone,
+          emergencyNotes: schema.users.emergencyNotes,
+          status: schema.users.status,
+          meta: schema.users.meta,
+          created: schema.users.created,
+          updated: schema.users.updated,
+          roles: sql<
+            { orgId: number; orgName: string; roleName: UserRole }[]
+          >`COALESCE(
           json_agg(
             json_build_object(
               'orgId', ${schema.orgs.id}, 
@@ -45,23 +107,31 @@ export const userRouter = createTRPCRouter({
           ), 
           '[]'
         )`,
-      })
-      .from(schema.users)
-      .leftJoin(
-        schema.rolesXUsersXOrg,
-        eq(schema.users.id, schema.rolesXUsersXOrg.userId),
-      )
-      .leftJoin(schema.orgs, eq(schema.orgs.id, schema.rolesXUsersXOrg.orgId))
-      .leftJoin(
-        schema.roles,
-        eq(schema.roles.id, schema.rolesXUsersXOrg.roleId),
-      )
-      .groupBy(schema.users.id);
-    return users.map((user) => ({
-      ...user,
-      name: `${user.firstName} ${user.lastName}`,
-    }));
-  }),
+        })
+        .from(schema.users)
+        .leftJoin(
+          schema.rolesXUsersXOrg,
+          eq(schema.users.id, schema.rolesXUsersXOrg.userId),
+        )
+        .leftJoin(schema.orgs, eq(schema.orgs.id, schema.rolesXUsersXOrg.orgId))
+        .leftJoin(
+          schema.roles,
+          eq(schema.roles.id, schema.rolesXUsersXOrg.roleId),
+        )
+        .where(where)
+        .groupBy(schema.users.id)
+        .orderBy(desc(schema.users.id))
+        .limit(pageSize)
+        .offset(pageIndex);
+
+      return {
+        users: users.map((user) => ({
+          ...user,
+          name: `${user.firstName} ${user.lastName}`,
+        })),
+        count: userCount?.count ?? 0,
+      };
+    }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
