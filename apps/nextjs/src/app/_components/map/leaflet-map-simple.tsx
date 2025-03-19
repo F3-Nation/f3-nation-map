@@ -1,35 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 
 import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 
-const MapUpdater = ({
-  lat,
-  lng,
-  setZoom,
-}: {
-  lat: number;
-  lng: number;
-  setZoom: (zoom: number) => void;
-}) => {
+const MapUpdater = ({ lat, lng }: { lat: number; lng: number }) => {
   const map = useMap();
 
   useEffect(() => {
     if (lat && lng) {
       map.setView([lat, lng]);
     }
-
-    const handleZoom = () => {
-      setZoom(map.getZoom());
-    };
-
-    map.on("zoomend", handleZoom);
-    return () => {
-      map.off("zoomend", handleZoom);
-    };
-  }, [lat, lng, map, setZoom]);
+  }, [lat, lng, map]);
 
   return null;
 };
@@ -47,12 +30,10 @@ export const LeafletMapSimple = ({
   longitude,
   dragEventHandler,
 }: LeafletMapSimpleProps) => {
-  const [zoom, setZoom] = useState(14);
-
   return (
     <MapContainer
       center={[latitude ?? DEFAULT_CENTER[0], longitude ?? DEFAULT_CENTER[1]]}
-      zoom={zoom}
+      zoom={14}
       style={{ height: "100%", width: "100%" }}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
@@ -67,8 +48,8 @@ export const LeafletMapSimple = ({
           className: "bg-transparent",
           html: ReactDOMServer.renderToString(
             <div className="bg-transparent">
-              <div className="flex h-6 w-6  items-center justify-center rounded-full bg-blue-500/30">
-                <div className="h-3 w-3 rounded-full border-[1px] border-white bg-blue-500" />
+              <div className="flex h-6 w-6  items-center justify-center rounded-full bg-red-500/30">
+                <div className="h-3 w-3 rounded-full border-[1px] border-white bg-red-500" />
               </div>
             </div>,
           ),
@@ -79,7 +60,6 @@ export const LeafletMapSimple = ({
       <MapUpdater
         lat={latitude ?? DEFAULT_CENTER[0]}
         lng={longitude ?? DEFAULT_CENTER[1]}
-        setZoom={setZoom}
       />
     </MapContainer>
   );

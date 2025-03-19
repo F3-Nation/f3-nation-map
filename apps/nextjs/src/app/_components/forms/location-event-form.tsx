@@ -51,12 +51,10 @@ export const LocationEventForm = ({
   const { data: eventTypes } = api.event.types.useQuery();
 
   const sortedLocationOptions = useMemo(() => {
-    return locations
-      ?.map(({ name, aoName, id, events, regionName, regionId }) => ({
+    return locations?.locations
+      ?.map(({ name, aoName, id, regionName, regionId }) => ({
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        label: `${name || aoName || events?.map((e) => e.name).join(", ")} ${
-          regionName ? `(${regionName})` : ""
-        }`,
+        label: `${name || aoName} ${regionName ? `(${regionName})` : ""}`,
         value: id.toString(),
         regionId,
       }))
@@ -195,14 +193,15 @@ export const LocationEventForm = ({
           options={sortedLocationOptions ?? []}
           value={formLocationId?.toString()}
           onSelect={(item) => {
-            const location = locations?.find(
+            const location = locations?.locations.find(
               ({ id }) => id.toString() === item,
             );
             form.setValue("locationId", location?.id ?? null);
             if (!location) return;
 
             // Handle different property names between components
-            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+
+            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- avoid ""
             form.setValue("aoName", location.aoName || location.name || "");
             form.setValue("locationDescription", location.description ?? "");
             form.setValue("locationAddress", location.addressStreet);

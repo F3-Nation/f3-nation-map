@@ -72,7 +72,7 @@ export default function AdminLocationsModal({
   const utils = api.useUtils();
   const { data: location } = api.location.byId.useQuery({ id: data.id ?? -1 });
   const { data: regions } = api.region.all.useQuery();
-  const { data: aos } = api.ao.all.useQuery();
+  const { data: aoData } = api.ao.all.useQuery();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -267,7 +267,7 @@ export default function AdminLocationsModal({
                       control={form.control}
                       name="orgId"
                       render={({ field }) => {
-                        const filteredAOs = aos?.filter(
+                        const filteredAOs = aoData?.aos.filter(
                           (ao) => ao.parentId === form.watch("regionId"),
                         );
                         return (
@@ -278,7 +278,7 @@ export default function AdminLocationsModal({
                               onValueChange={(value) => {
                                 field.onChange(Number(value));
 
-                                const selectedAO = aos?.find(
+                                const selectedAO = aoData?.aos.find(
                                   (ao) => ao.id === Number(value),
                                 );
                                 if (selectedAO) {

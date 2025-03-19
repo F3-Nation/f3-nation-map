@@ -49,28 +49,11 @@ export default function AdminAOsModal({
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const form = useForm({
-    schema: AOInsertSchema,
-    defaultValues: {
-      id: ao?.id ?? undefined,
-      name: ao?.name ?? "",
-      parentId: ao?.parentId ?? -1,
-      defaultLocationId: ao?.defaultLocationId ?? null,
-      isActive: ao?.isActive ?? true,
-      description: ao?.description ?? "",
-      logoUrl: ao?.logoUrl ?? null,
-      website: ao?.website ?? null,
-      email: ao?.email ?? null,
-      twitter: ao?.twitter ?? null,
-      facebook: ao?.facebook ?? null,
-      instagram: ao?.instagram ?? null,
-      lastAnnualReview: ao?.lastAnnualReview ?? null,
-      meta: ao?.meta ?? {},
-    },
-  });
+  const form = useForm({ schema: AOInsertSchema });
 
   useEffect(() => {
     form.reset({
+      ...ao,
       id: ao?.id ?? undefined,
       name: ao?.name ?? "",
       parentId: ao?.parentId ?? -1,
@@ -88,21 +71,7 @@ export default function AdminAOsModal({
     });
   }, [form, ao]);
 
-  const crupdateAO = api.ao.crupdate.useMutation({
-    onSuccess: async () => {
-      await utils.ao.invalidate();
-      closeModal();
-      toast.success("Successfully updated ao");
-      router.refresh();
-    },
-    onError: (err) => {
-      toast.error(
-        err?.data?.code === "UNAUTHORIZED"
-          ? "You must be logged in to update aos"
-          : "Failed to update ao",
-      );
-    },
-  });
+  const crupdateAO = api.ao.crupdate.useMutation();
 
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
@@ -119,14 +88,24 @@ export default function AdminAOsModal({
             onSubmit={form.handleSubmit(
               async (data) => {
                 setIsSubmitting(true);
-                try {
-                  await crupdateAO.mutateAsync(data);
-                } catch (error) {
-                  toast.error("Failed to update ao");
-                  console.error(error);
-                } finally {
-                  setIsSubmitting(false);
-                }
+                await crupdateAO
+                  .mutateAsync(data)
+                  .then(() => {
+                    void utils.ao.invalidate();
+                    closeModal();
+                    toast.success("Successfully updated ao");
+                    router.refresh();
+                  })
+                  .catch((error) => {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Failed to update ao",
+                    );
+                  })
+                  .finally(() => {
+                    setIsSubmitting(false);
+                  });
               },
               (error) => {
                 toast.error("Failed to update ao");

@@ -48,12 +48,6 @@ const columns: TableOptions<RouterOutputs["sector"]["all"][number]>["columns"] =
       cell: (cell) => <Cell {...cell} />,
     },
     {
-      accessorKey: "nation",
-      meta: { name: "Nation" },
-      header: Header,
-      cell: (cell) => <Cell {...cell} />,
-    },
-    {
       accessorKey: "isActive",
       meta: { name: "Status" },
       header: Header,

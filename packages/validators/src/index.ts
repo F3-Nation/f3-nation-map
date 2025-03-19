@@ -190,3 +190,12 @@ export const LowBandwidthF3Marker = z.tuple([
 ]);
 
 export type LowBandwidthF3Marker = z.infer<typeof LowBandwidthF3Marker>;
+
+export const SortingSchema = z
+  .object({
+    id: z.string(),
+    desc: z.boolean(),
+  })
+  .array();
+
+export type SortingSchema = z.infer<typeof SortingSchema>;

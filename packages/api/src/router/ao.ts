@@ -1,22 +1,73 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { aliasedTable, and, eq, schema } from "@acme/db";
-import { AOInsertSchema } from "@acme/validators";
+import {
+  aliasedTable,
+  and,
+  countDistinct,
+  eq,
+  ilike,
+  or,
+  schema,
+} from "@acme/db";
+import { AOInsertSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { getSortingColumns } from "../get-sorting-columns";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import { withPagination } from "../with-pagination";
 
 export const aoRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
-    const sectorOrg = aliasedTable(schema.orgs, "sector_org");
-    const areaOrg = aliasedTable(schema.orgs, "area_org");
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const nationOrg = aliasedTable(schema.orgs, "nation_org");
-    const aoOrg = aliasedTable(schema.orgs, "ao_org");
+  all: publicProcedure
+    .input(
+      z
+        .object({
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+          searchTerm: z.string().optional(),
+          sorting: SortingSchema.optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const aoOrg = aliasedTable(schema.orgs, "ao_org");
+      const regionOrg = aliasedTable(schema.orgs, "region_org");
+      const pageSize = input?.pageSize ?? 10;
+      const pageIndex = (input?.pageIndex ?? 0) * pageSize;
+      const usePagination =
+        input?.pageIndex !== undefined && input?.pageSize !== undefined;
 
-    const aos = await ctx.db
-      .select({
+      const where = and(
+        eq(aoOrg.orgType, "ao"),
+        eq(aoOrg.isActive, true),
+        input?.searchTerm
+          ? or(
+              ilike(aoOrg.name, `%${input?.searchTerm}%`),
+              ilike(aoOrg.description, `%${input?.searchTerm}%`),
+            )
+          : undefined,
+      );
+
+      const sortedColumns = getSortingColumns(
+        input?.sorting,
+        {
+          id: aoOrg.id,
+          regions: regionOrg.name,
+          location: aoOrg.name,
+          status: schema.events.isActive,
+          dayOfWeek: schema.events.dayOfWeek,
+          created: schema.events.created,
+        },
+        "id",
+      );
+
+      const [aoCount] = await ctx.db
+        .select({ count: countDistinct(aoOrg.id) })
+        .from(aoOrg)
+        .innerJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id))
+        .where(where);
+
+      const select = {
         id: aoOrg.id,
         parentId: aoOrg.parentId,
         name: aoOrg.name,
@@ -33,20 +84,25 @@ export const aoRouter = createTRPCRouter({
         lastAnnualReview: aoOrg.lastAnnualReview,
         meta: aoOrg.meta,
         created: aoOrg.created,
-        sector: sectorOrg.name,
-        area: areaOrg.name,
         region: regionOrg.name,
-        nation: nationOrg.name,
-      })
-      .from(aoOrg)
-      .innerJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id))
-      .innerJoin(areaOrg, eq(regionOrg.parentId, areaOrg.id))
-      .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
-      .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
-      .where(and(eq(aoOrg.orgType, "ao"), eq(aoOrg.isActive, true)));
+      };
+      const query = ctx.db
+        .select(select)
+        .from(aoOrg)
+        .innerJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id))
+        .where(where);
 
-    return aos;
-  }),
+      const aos = usePagination
+        ? await withPagination(
+            query.$dynamic(),
+            sortedColumns,
+            pageIndex,
+            pageSize,
+          )
+        : await query;
+
+      return { aos, total: aoCount?.count ?? 0 };
+    }),
 
   byId: publicProcedure
     .input(z.object({ id: z.number() }))

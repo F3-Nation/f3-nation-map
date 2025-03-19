@@ -1,13 +1,12 @@
 import { z } from "zod";
 
-import { aliasedTable, and, eq, schema } from "@acme/db";
+import { and, eq, schema } from "@acme/db";
 import { SectorInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const sectorRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
-    const nationOrg = aliasedTable(schema.orgs, "nation_org");
     const sectors = await ctx.db
       .select({
         id: schema.orgs.id,
@@ -26,10 +25,8 @@ export const sectorRouter = createTRPCRouter({
         lastAnnualReview: schema.orgs.lastAnnualReview,
         meta: schema.orgs.meta,
         created: schema.orgs.created,
-        nation: nationOrg.name,
       })
       .from(schema.orgs)
-      .innerJoin(nationOrg, eq(schema.orgs.parentId, nationOrg.id))
       .where(
         and(eq(schema.orgs.orgType, "sector"), eq(schema.orgs.isActive, true)),
       );
