@@ -12,7 +12,7 @@ import {
   schema as schemaRaw,
   sql,
 } from "@acme/db";
-import { UserRole } from "@acme/shared/app/enums";
+import { UserRole, UserStatus } from "@acme/shared/app/enums";
 import { CrupdateUserSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -32,6 +32,7 @@ export const userRouter = createTRPCRouter({
           pageIndex: z.number().optional(),
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
+          statuses: z.array(z.enum(UserStatus)).optional(),
         })
         .optional(),
     )
@@ -41,7 +42,11 @@ export const userRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        eq(schema.users.status, "active"),
+        !input?.statuses?.length || input.statuses.length === UserStatus.length
+          ? undefined
+          : input.statuses.includes("active")
+            ? eq(schema.users.status, "active")
+            : eq(schema.users.status, "inactive"),
         !input?.roles?.length || input.roles.length === UserRole.length
           ? undefined
           : input.roles.includes("user")
