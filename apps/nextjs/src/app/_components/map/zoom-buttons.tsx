@@ -7,12 +7,14 @@ import { Minus, Plus } from "lucide-react";
 import { SIDEBAR_WIDTH } from "@acme/shared/app/constants";
 import { cn } from "@acme/ui";
 
+import { useIsSafari } from "~/utils/hooks/use-is-safari";
 import { useMapRef } from "./map-ref-provider";
 
 export const ZoomButtons = () => {
   const { mapRef } = useMapRef();
   const [width] = useWindowSize();
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const isSafari = useIsSafari();
 
   useEffect(() => {
     setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
@@ -22,38 +24,38 @@ export const ZoomButtons = () => {
     (direction: "in" | "out") => {
       if (mapRef.current) {
         const map = mapRef.current;
-        const center = map.getCenter();
-        const containerPoint = map.latLngToContainerPoint(center);
-        const x =
-          width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x;
-        const y = containerPoint.y;
 
-        if (isTouchDevice) {
-          const map = mapRef.current;
-          const overlayPane = map.getPane("overlayPane");
+        if (isSafari || isTouchDevice) {
           const currentZoom = map.getZoom();
           const zoomChange = direction === "in" ? 1 : -1;
           const newZoom = currentZoom + zoomChange;
 
+          const overlayPane = map.getPane("overlayPane");
           overlayPane && (overlayPane.style.display = "none");
           map.setZoom(newZoom, {
             animate: true,
-            duration: 0.25, // Adjust this value to control the animation speed
+            duration: 0.25,
           });
           setTimeout(() => {
             overlayPane && (overlayPane.style.display = "block");
-          }, 300); // Slightly longer than the animation duration to ensure it completes
+          }, 300);
         } else {
+          const center = map.getCenter();
+          const containerPoint = map.latLngToContainerPoint(center);
+          const x =
+            width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x;
+          const y = containerPoint.y;
+
           const wheelEvent = new WheelEvent("wheel", {
             deltaY: direction === "in" ? -333 : 333,
             clientX: x,
             clientY: y,
           });
-          mapRef.current?.getContainer().dispatchEvent(wheelEvent);
+          map.getContainer().dispatchEvent(wheelEvent);
         }
       }
     },
-    [mapRef, width, isTouchDevice],
+    [mapRef, isSafari, isTouchDevice, width],
   );
 
   return (
