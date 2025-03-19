@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import type { RouterOutputs } from "@acme/api";
-import type { UserRole } from "@acme/shared/app/enums";
+import { UserRole, UserStatus } from "@acme/shared/app/enums";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -23,9 +23,7 @@ import { api } from "~/trpc/react";
 import { useDebounce } from "~/utils/hooks/use-debounce";
 import { ModalType, openModal } from "~/utils/store/modal";
 
-const roles: UserRole[] = ["admin", "editor", "user"];
-
-const UserFilter = ({
+const UserRoleFilter = ({
   onRoleSelect,
   selectedRoles,
 }: {
@@ -55,7 +53,7 @@ const UserFilter = ({
             <CommandInput placeholder="Search roles..." />
             <CommandEmpty>No roles found.</CommandEmpty>
             <CommandGroup>
-              {roles.map((role) => (
+              {UserRole.map((role) => (
                 <CommandItem
                   key={role}
                   value={role}
@@ -82,7 +80,67 @@ const UserFilter = ({
   );
 };
 
+const UserStatusFilter = ({
+  onStatusSelect,
+  selectedStatuses,
+}: {
+  onStatusSelect: (status: UserStatus) => void;
+  selectedStatuses: UserStatus[];
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="max-w-80">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {selectedStatuses.length > 0
+              ? `${selectedStatuses.length} status${selectedStatuses.length > 1 ? "es" : ""} selected`
+              : "Filter by status"}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder="Search statuses..." />
+            <CommandEmpty>No statuses found.</CommandEmpty>
+            <CommandGroup>
+              {UserStatus.map((status) => (
+                <CommandItem
+                  key={status}
+                  value={status}
+                  onSelect={() => {
+                    onStatusSelect(status as UserStatus);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedStatuses.includes(status as UserStatus)
+                        ? "opacity-100"
+                        : "opacity-0",
+                    )}
+                  />
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 export const UserTable = () => {
+  const [selectedStatuses, setSelectedStatuses] = useState<UserStatus[]>([
+    "active",
+  ]);
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([
     "admin",
     "editor",
@@ -104,8 +162,19 @@ export const UserTable = () => {
     });
   }, []);
 
+  const handleStatusSelect = useCallback((status: UserStatus) => {
+    setSelectedStatuses((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      } else {
+        return [...prev, status];
+      }
+    });
+  }, []);
+
   const { data } = api.user.all.useQuery({
     roles: selectedRoles,
+    statuses: selectedStatuses,
     searchTerm: debouncedSearchTerm,
     pageSize: pagination.pageSize,
     pageIndex: pagination.pageIndex,
@@ -118,10 +187,16 @@ export const UserTable = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         filterComponent={
-          <UserFilter
-            onRoleSelect={handleRoleSelect}
-            selectedRoles={selectedRoles}
-          />
+          <>
+            <UserStatusFilter
+              onStatusSelect={handleStatusSelect}
+              selectedStatuses={selectedStatuses}
+            />
+            <UserRoleFilter
+              onRoleSelect={handleRoleSelect}
+              selectedRoles={selectedRoles}
+            />
+          </>
         }
         cellClassName="p-1"
         columns={columns}
