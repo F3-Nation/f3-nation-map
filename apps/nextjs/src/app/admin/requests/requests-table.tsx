@@ -1,25 +1,34 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
+import { useState } from "react";
 import dayjs from "dayjs";
 
 import type { RouterOutputs } from "@acme/api";
+import type { SortingSchema } from "@acme/validators";
 import { cn } from "@acme/ui";
-import { MDTable } from "@acme/ui/md-table";
+import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
+import { api } from "~/trpc/react";
 import { ModalType, openModal } from "~/utils/store/modal";
 
-export const RequestsTable = ({
-  requests,
-}: {
-  requests: RouterOutputs["request"]["all"];
-}) => {
+export const RequestsTable = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingSchema>([]);
+  const { pagination, setPagination } = usePagination();
+  const { data: requests } = api.request.all.useQuery({
+    pageIndex: pagination.pageIndex,
+    pageSize: pagination.pageSize,
+    searchTerm: searchTerm,
+    sorting: sorting,
+  });
   return (
     <MDTable
-      data={requests}
+      data={requests?.requests}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
+      totalCount={requests?.totalCount}
       columns={columns}
       onRowClick={(row) => {
         if (row.original.requestType === "delete_event") {
@@ -33,12 +42,18 @@ export const RequestsTable = ({
           row.original.requestType === "delete_event" ? "bg-red-100" : ""
         }`
       }
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      pagination={pagination}
+      setPagination={setPagination}
+      sorting={sorting}
+      setSorting={setSorting}
     />
   );
 };
 
 const columns: TableOptions<
-  RouterOutputs["request"]["all"][number]
+  RouterOutputs["request"]["all"]["requests"][number]
 >["columns"] = [
   {
     accessorKey: "status",

@@ -1,7 +1,7 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import type { RouterOutputs } from "@acme/api";
@@ -15,12 +15,12 @@ import {
   CommandInput,
   CommandItem,
 } from "@acme/ui/command";
-import { MDTable } from "@acme/ui/md-table";
+import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
-import usePagination from "~/utils/hooks/use-pagination";
+import { useDebounce } from "~/utils/hooks/use-debounce";
 import { ModalType, openModal } from "~/utils/store/modal";
 
 const roles: UserRole[] = ["admin", "editor", "user"];
@@ -93,16 +93,6 @@ export const UserTable = () => {
     pageSize: 20,
   });
 
-  // Use a ref to track if this is the initial render
-  const isInitialRender = useRef(true);
-
-  const selectedRolesRef = useRef(selectedRoles);
-
-  // Update the ref when selectedRoles changes
-  useEffect(() => {
-    selectedRolesRef.current = selectedRoles;
-  }, [selectedRoles]);
-
   // Separate the role selection handler to have better control
   const handleRoleSelect = useCallback((role: UserRole) => {
     setSelectedRoles((prev) => {
@@ -114,54 +104,40 @@ export const UserTable = () => {
     });
   }, []);
 
-  const { data: { users, count } = {} } = api.user.all.useQuery(
-    {
-      roles: selectedRoles,
-      searchTerm: debouncedSearchTerm,
-      pageSize: pagination.pageSize,
-      pageIndex: pagination.pageIndex,
-    },
-    {
-      // Only refetch when these dependencies actually change
-      // Prevent unnecessary refetches
-      staleTime: 30000,
-      // keepPreviousData: true,
-    },
-  );
-
-  useEffect(() => {
-    if (!isInitialRender.current) {
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    } else {
-      isInitialRender.current = false;
-    }
-  }, [selectedRoles, debouncedSearchTerm, setPagination]);
+  const { data } = api.user.all.useQuery({
+    roles: selectedRoles,
+    searchTerm: debouncedSearchTerm,
+    pageSize: pagination.pageSize,
+    pageIndex: pagination.pageIndex,
+  });
 
   return (
-    <MDTable
-      data={users ?? []}
-      searchTerm={searchTerm}
-      setSearchTerm={setSearchTerm}
-      filterComponent={
-        <UserFilter
-          onRoleSelect={handleRoleSelect}
-          selectedRoles={selectedRoles}
-        />
-      }
-      cellClassName="p-1"
-      columns={columns}
-      pagination={pagination}
-      totalCount={count}
-      setPagination={setPagination}
-      onRowClick={(row) => {
-        openModal(ModalType.ADMIN_USERS, { id: row.original.id });
-      }}
-      rowClassName={(row) => {
-        if (row.original.status === "inactive") {
-          return "opacity-30";
+    <div className="relative">
+      <MDTable
+        data={data?.users}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterComponent={
+          <UserFilter
+            onRoleSelect={handleRoleSelect}
+            selectedRoles={selectedRoles}
+          />
         }
-      }}
-    />
+        cellClassName="p-1"
+        columns={columns}
+        pagination={pagination}
+        totalCount={data?.count}
+        setPagination={setPagination}
+        onRowClick={(row) => {
+          openModal(ModalType.ADMIN_USERS, { id: row.original.id });
+        }}
+        rowClassName={(row) => {
+          if (row.original.status === "inactive") {
+            return "opacity-30";
+          }
+        }}
+      />
+    </div>
   );
 };
 
@@ -291,17 +267,3 @@ const columns: TableOptions<
     cell: Cell,
   },
 ];
-
-const useDebounce = <T,>(value: T, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => clearTimeout(timeout);
-  }, [value, delay]);
-
-  return debouncedValue;
-};

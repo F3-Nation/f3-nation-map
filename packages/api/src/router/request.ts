@@ -6,27 +6,108 @@ import { z } from "zod";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
 import type { EventMeta, UpdateRequestMeta } from "@acme/shared/app/types";
-import { aliasedTable, desc, eq, schema } from "@acme/db";
-import { DeleteRequestSchema, RequestInsertSchema } from "@acme/validators";
+import {
+  aliasedTable,
+  and,
+  countDistinct,
+  eq,
+  ilike,
+  or,
+  schema,
+} from "@acme/db";
+import {
+  DeleteRequestSchema,
+  RequestInsertSchema,
+  SortingSchema,
+} from "@acme/validators";
 
 import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { getSortingColumns } from "../get-sorting-columns";
 import {
   createTRPCRouter,
   editorProcedure,
   protectedProcedure,
   publicProcedure,
 } from "../trpc";
+import { withPagination } from "../with-pagination";
 
 export const requestRouter = createTRPCRouter({
-  all: editorProcedure.query(async ({ ctx }) => {
-    const oldAoOrg = aliasedTable(schema.orgs, "old_ao_org");
-    const oldRegionOrg = aliasedTable(schema.orgs, "old_region_org");
-    const oldLocation = aliasedTable(schema.locations, "old_location");
-    const newRegionOrg = aliasedTable(schema.orgs, "new_region_org");
+  all: editorProcedure
+    .input(
+      z
+        .object({
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+          sorting: SortingSchema.optional(),
+          searchTerm: z.string().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const oldAoOrg = aliasedTable(schema.orgs, "old_ao_org");
+      const oldRegionOrg = aliasedTable(schema.orgs, "old_region_org");
+      const oldLocation = aliasedTable(schema.locations, "old_location");
+      const newRegionOrg = aliasedTable(schema.orgs, "new_region_org");
 
-    const requests = await ctx.db
-      .select({
+      const limit = input?.pageSize ?? 10;
+      const offset = (input?.pageIndex ?? 0) * limit;
+      const usePagination =
+        input?.pageIndex !== undefined && input?.pageSize !== undefined;
+
+      const where = and(
+        input?.searchTerm
+          ? or(
+              ilike(
+                schema.updateRequests.submittedBy,
+                `%${input?.searchTerm}%`,
+              ),
+              ilike(schema.updateRequests.eventName, `%${input?.searchTerm}%`),
+              ilike(
+                schema.updateRequests.eventDescription,
+                `%${input?.searchTerm}%`,
+              ),
+              ilike(schema.updateRequests.aoName, `%${input?.searchTerm}%`),
+              ilike(
+                schema.updateRequests.locationName,
+                `%${input?.searchTerm}%`,
+              ),
+              ilike(
+                schema.updateRequests.locationDescription,
+                `%${input?.searchTerm}%`,
+              ),
+            )
+          : undefined,
+      );
+
+      const sortedColumns = getSortingColumns(
+        input?.sorting,
+        {
+          id: schema.updateRequests.id,
+          status: schema.updateRequests.status,
+          requestType: schema.updateRequests.requestType,
+          regionName: newRegionOrg.name,
+          aoName: schema.updateRequests.aoName,
+          workoutName: schema.updateRequests.eventName,
+          dayOfWeek: schema.updateRequests.eventDayOfWeek,
+          startTime: schema.updateRequests.eventStartTime,
+          endTime: schema.updateRequests.eventEndTime,
+          description: schema.updateRequests.eventDescription,
+          locationAddress: schema.updateRequests.locationAddress,
+          locationAddress2: schema.updateRequests.locationAddress2,
+          locationCity: schema.updateRequests.locationCity,
+          locationState: schema.updateRequests.locationState,
+          locationZip: schema.updateRequests.locationZip,
+          locationCountry: schema.updateRequests.locationCountry,
+          latitude: schema.updateRequests.locationLat,
+          longitude: schema.updateRequests.locationLng,
+          submittedBy: schema.updateRequests.submittedBy,
+          created: schema.updateRequests.created,
+        },
+        "id",
+      );
+
+      const select = {
         id: schema.updateRequests.id,
         submittedBy: schema.updateRequests.submittedBy,
         submitterValidated: schema.updateRequests.submitterValidated,
@@ -63,22 +144,35 @@ export const requestRouter = createTRPCRouter({
         created: schema.updateRequests.created,
         status: schema.updateRequests.status,
         requestType: schema.updateRequests.requestType,
-      })
-      .from(schema.updateRequests)
-      .leftJoin(
-        newRegionOrg,
-        eq(schema.updateRequests.regionId, newRegionOrg.id),
-      )
-      .leftJoin(
-        schema.events,
-        eq(schema.updateRequests.eventId, schema.events.id),
-      )
-      .leftJoin(oldAoOrg, eq(oldAoOrg.id, schema.events.orgId))
-      .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, oldAoOrg.parentId))
-      .leftJoin(oldLocation, eq(oldLocation.id, schema.events.locationId))
-      .orderBy(desc(schema.updateRequests.created));
-    return requests;
-  }),
+      };
+
+      const [totalCount] = await ctx.db
+        .select({ count: countDistinct(schema.updateRequests.id) })
+        .from(schema.updateRequests)
+        .where(where);
+
+      const query = ctx.db
+        .select(select)
+        .from(schema.updateRequests)
+        .leftJoin(
+          newRegionOrg,
+          eq(schema.updateRequests.regionId, newRegionOrg.id),
+        )
+        .leftJoin(
+          schema.events,
+          eq(schema.updateRequests.eventId, schema.events.id),
+        )
+        .leftJoin(oldAoOrg, eq(oldAoOrg.id, schema.events.orgId))
+        .leftJoin(oldRegionOrg, eq(oldRegionOrg.id, oldAoOrg.parentId))
+        .leftJoin(oldLocation, eq(oldLocation.id, schema.events.locationId))
+        .where(where);
+
+      const requests = usePagination
+        ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
+        : await query;
+
+      return { requests, totalCount: totalCount?.count ?? 0 };
+    }),
   byId: editorProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {

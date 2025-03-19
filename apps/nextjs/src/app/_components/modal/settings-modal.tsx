@@ -239,6 +239,24 @@ export default function SettingsModal() {
                   </p>
                 ))}
               </div>
+              {session.roles?.some((role) =>
+                ["admin", "editor"].includes(role.roleName),
+              ) && (
+                <Link href={"/admin"}>
+                  <button
+                    className={cn(
+                      "flex flex-col items-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
+                      "text-center text-sm",
+                      "w-full",
+                    )}
+                    onClick={() => {
+                      closeModal();
+                    }}
+                  >
+                    Admin Portal
+                  </button>
+                </Link>
+              )}
               <Link href={"/api/auth/signout"}>
                 <button
                   className={cn(

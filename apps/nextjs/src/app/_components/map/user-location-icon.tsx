@@ -14,7 +14,7 @@ export const UserLocationIcon = () => {
   const { updateUserLocation, status, permissions } = useUserLocation();
 
   return (
-    <Tooltip>
+    <Tooltip disableHoverableContent>
       <TooltipTrigger
         onClick={() => {
           const isMobile = isTouchDevice();

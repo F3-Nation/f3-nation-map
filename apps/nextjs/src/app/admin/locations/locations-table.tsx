@@ -1,29 +1,42 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
+import { useState } from "react";
 
 import type { RouterOutputs } from "@acme/api";
-import { MDTable } from "@acme/ui/md-table";
+import type { SortingSchema } from "@acme/validators";
+import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 
+import { api } from "~/trpc/react";
 import { ModalType, openModal } from "~/utils/store/modal";
 
-export const LocationsTable = ({
-  locations,
-}: {
-  locations: RouterOutputs["location"]["all"];
-}) => {
-  console.log("locationsTable", locations);
+export const LocationsTable = () => {
+  const { pagination, setPagination } = usePagination();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingSchema>([]);
+  const { data: locations } = api.location.all.useQuery({
+    pageIndex: pagination.pageIndex,
+    pageSize: pagination.pageSize,
+    searchTerm: searchTerm,
+    sorting: sorting,
+  });
   return (
     <MDTable
-      data={locations}
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      data={locations?.locations}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
+      totalCount={locations?.total}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_LOCATIONS, { id: row.original.id });
       }}
+      pagination={pagination}
+      setPagination={setPagination}
+      sorting={sorting}
+      setSorting={setSorting}
       // rowClassName={(row) => {
       //   if (row.original.submitterValidated === true) {
       //     return "opacity-30";
@@ -34,7 +47,7 @@ export const LocationsTable = ({
 };
 
 const columns: TableOptions<
-  RouterOutputs["location"]["all"][number]
+  RouterOutputs["location"]["all"]["locations"][number]
 >["columns"] = [
   {
     accessorKey: "regionName",
@@ -54,23 +67,23 @@ const columns: TableOptions<
     header: Header,
     cell: (cell) => <Cell {...cell} />,
   },
-  {
-    accessorKey: "events",
-    meta: { name: "Events" },
-    header: Header,
-    cell: (cell) => (
-      <Cell {...cell}>
-        <Tooltip>
-          <TooltipTrigger>{cell.row.original.events.length}</TooltipTrigger>
-          <TooltipContent>
-            {cell.row.original.events.length > 0
-              ? cell.row.original.events.map((event) => event.name).join(", ")
-              : "No events"}
-          </TooltipContent>
-        </Tooltip>
-      </Cell>
-    ),
-  },
+  // {
+  //   accessorKey: "events",
+  //   meta: { name: "Events" },
+  //   header: Header,
+  //   cell: (cell) => (
+  //     <Cell {...cell}>
+  //       <Tooltip>
+  //         <TooltipTrigger>{cell.row.original.events.length}</TooltipTrigger>
+  //         <TooltipContent>
+  //           {cell.row.original.events.length > 0
+  //             ? cell.row.original.events.map((event) => event.name).join(", ")
+  //             : "No events"}
+  //         </TooltipContent>
+  //       </Tooltip>
+  //     </Cell>
+  //   ),
+  // },
   {
     accessorKey: "isActive",
     meta: { name: "Status" },

@@ -4,85 +4,114 @@ import { z } from "zod";
 import type { LowBandwidthF3Marker } from "@acme/validators";
 import {
   aliasedTable,
+  and,
   count,
   desc,
   eq,
+  ilike,
   isNotNull,
+  or,
   schema,
   sql,
 } from "@acme/db";
 import { DayOfWeek } from "@acme/shared/app/enums";
 import { isTruthy } from "@acme/shared/common/functions";
-import { LocationInsertSchema } from "@acme/validators";
+import { LocationInsertSchema, SortingSchema } from "@acme/validators";
 
+import { getSortingColumns } from "../get-sorting-columns";
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { withPagination } from "../with-pagination";
 
 export const locationRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const aoOrg = aliasedTable(schema.orgs, "ao_org");
+  all: publicProcedure
+    .input(
+      z
+        .object({
+          searchTerm: z.string().optional(),
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+          sorting: SortingSchema.optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const regionOrg = aliasedTable(schema.orgs, "region_org");
+      const aoOrg = aliasedTable(schema.orgs, "ao_org");
+      const limit = input?.pageSize ?? 10;
+      const offset = (input?.pageIndex ?? 0) * limit;
+      const usePagination =
+        input?.pageIndex !== undefined && input?.pageSize !== undefined;
+      const where = and(
+        eq(schema.locations.isActive, true),
+        input?.searchTerm
+          ? or(
+              ilike(schema.locations.name, `%${input?.searchTerm}%`),
+              ilike(schema.locations.description, `%${input?.searchTerm}%`),
+            )
+          : undefined,
+      );
 
-    const [locations, events] = await Promise.all([
-      ctx.db
-        .select({
+      const sortedColumns = getSortingColumns(
+        input?.sorting,
+        {
           id: schema.locations.id,
-          name: aoOrg.name,
-          orgId: schema.locations.orgId,
+          name: schema.locations.name,
           regionName: regionOrg.name,
           aoName: aoOrg.name,
-          description: schema.locations.description,
           isActive: schema.locations.isActive,
           latitude: schema.locations.latitude,
           longitude: schema.locations.longitude,
-          email: schema.locations.email,
           addressStreet: schema.locations.addressStreet,
           addressStreet2: schema.locations.addressStreet2,
           addressCity: schema.locations.addressCity,
           addressState: schema.locations.addressState,
           addressZip: schema.locations.addressZip,
           addressCountry: schema.locations.addressCountry,
-          meta: schema.locations.meta,
           created: schema.locations.created,
-          regionId: regionOrg.id,
-        })
+        },
+        "id",
+      );
+
+      const select = {
+        id: schema.locations.id,
+        name: aoOrg.name,
+        orgId: schema.locations.orgId,
+        regionName: regionOrg.name,
+        aoName: aoOrg.name,
+        description: schema.locations.description,
+        isActive: schema.locations.isActive,
+        latitude: schema.locations.latitude,
+        longitude: schema.locations.longitude,
+        email: schema.locations.email,
+        addressStreet: schema.locations.addressStreet,
+        addressStreet2: schema.locations.addressStreet2,
+        addressCity: schema.locations.addressCity,
+        addressState: schema.locations.addressState,
+        addressZip: schema.locations.addressZip,
+        addressCountry: schema.locations.addressCountry,
+        meta: schema.locations.meta,
+        created: schema.locations.created,
+        regionId: regionOrg.id,
+      };
+
+      const [locationCount] = await ctx.db
+        .select({ count: count() })
+        .from(schema.locations)
+        .where(where);
+
+      const query = ctx.db
+        .select(select)
         .from(schema.locations)
         .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id))
-        .leftJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id)),
-      ctx.db
-        .select({
-          id: schema.events.id,
-          locationId: schema.events.locationId,
-          dayOfWeek: schema.events.dayOfWeek,
-          startTime: schema.events.startTime,
-          type: schema.eventTypes.name,
-          name: schema.events.name,
-        })
-        .from(schema.events)
-        .innerJoin(
-          schema.locations,
-          eq(schema.events.locationId, schema.locations.id),
-        )
-        .leftJoin(
-          schema.eventsXEventTypes,
-          eq(schema.eventsXEventTypes.eventId, schema.events.id),
-        )
-        .leftJoin(
-          schema.eventTypes,
-          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
-        ),
-    ]);
-    const locationEvents = locations.map((location) => {
-      const eventsForThisLocation = events.filter(
-        (event) => event.locationId === location.id,
-      );
-      return {
-        ...location,
-        events: eventsForThisLocation,
-      };
-    });
+        .leftJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id))
+        .where(where);
 
-    return locationEvents;
-  }),
+      const locations = usePagination
+        ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
+        : await query;
+
+      return { locations, total: locationCount?.count ?? 0 };
+    }),
   getLocationMarkersSparse: publicProcedure.query(({ ctx }) => {
     return ctx.db
       .select({

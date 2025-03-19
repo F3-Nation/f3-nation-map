@@ -1,12 +1,9 @@
 import { Suspense } from "react";
 
-import { api } from "~/trpc/server";
 import Layout from "../admin-layout";
 import { RequestsTable } from "./requests-table";
 
 const RequestsPage = async () => {
-  const requests = await api.request.all();
-
   return (
     <Layout>
       <div className="flex h-full w-full flex-col">
@@ -14,7 +11,7 @@ const RequestsPage = async () => {
           <h1 className="text-2xl font-bold">Requests</h1>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <RequestsTable requests={requests} />
+          <RequestsTable />
         </Suspense>
       </div>
     </Layout>

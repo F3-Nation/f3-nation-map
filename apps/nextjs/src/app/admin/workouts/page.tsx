@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 
-import { api } from "~/trpc/server";
 import Layout from "../admin-layout";
 import { AddWorkoutButton } from "./[id]/add-workout-button";
 import { WorkoutsTable } from "./workouts-table";
 
 const WorkoutsPage = async () => {
-  const workouts = await api.event.all();
-
   return (
     <Layout>
       <div className="flex w-full  flex-col">
@@ -19,7 +16,7 @@ const WorkoutsPage = async () => {
         </div>
         <Suspense fallback={<div>Loading...</div>}>
           <div className="flex  w-full  flex-col overflow-auto">
-            <WorkoutsTable workouts={workouts} />
+            <WorkoutsTable />
           </div>
         </Suspense>
       </div>

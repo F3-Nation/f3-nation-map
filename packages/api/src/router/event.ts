@@ -1,16 +1,71 @@
 import { z } from "zod";
 
-import { aliasedTable, and, eq, or, schema, sql } from "@acme/db";
+import {
+  aliasedTable,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  or,
+  schema,
+  sql,
+} from "@acme/db";
 import { EventInsertSchema } from "@acme/validators";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { withPagination } from "../with-pagination";
 
 export const eventRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
-    const regionOrg = aliasedTable(schema.orgs, "region_org");
-    const aoOrg = aliasedTable(schema.orgs, "ao_org");
-    const workouts = await ctx.db
-      .select({
+  all: publicProcedure
+    .input(
+      z
+        .object({
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+          searchTerm: z.string().optional(),
+          sorting: z
+            .array(z.object({ id: z.string(), desc: z.boolean() }))
+            .optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const regionOrg = aliasedTable(schema.orgs, "region_org");
+      const aoOrg = aliasedTable(schema.orgs, "ao_org");
+      const limit = input?.pageSize ?? 10;
+      const offset = (input?.pageIndex ?? 0) * limit;
+      const usePagination =
+        input?.pageIndex !== undefined && input?.pageSize !== undefined;
+      const where = and(
+        eq(schema.events.isActive, true),
+        input?.searchTerm
+          ? or(
+              ilike(schema.events.name, `%${input?.searchTerm}%`),
+              ilike(schema.events.description, `%${input?.searchTerm}%`),
+            )
+          : undefined,
+      );
+      const sortedColumns = input?.sorting?.map((sorting) => {
+        const direction = sorting.desc ? desc : asc;
+        switch (sorting.id) {
+          case "regions":
+            return direction(regionOrg.name);
+          case "location":
+            return direction(aoOrg.name);
+          case "status":
+            return direction(schema.events.isActive);
+          case "dayOfWeek":
+            return direction(schema.events.dayOfWeek);
+          case "created":
+            return direction(schema.events.created);
+          default:
+            return direction(schema.events.id);
+        }
+      }) ?? [desc(schema.events.id)];
+
+      const select = {
         id: schema.events.id,
         name: schema.events.name,
         description: schema.events.description,
@@ -47,36 +102,54 @@ export const eventRouter = createTRPCRouter({
           ), 
           '[]'
         )`,
-      })
-      .from(schema.events)
-      .innerJoin(
-        schema.locations,
-        eq(schema.locations.id, schema.events.locationId),
-      )
-      .leftJoin(
-        aoOrg,
-        and(
-          eq(aoOrg.orgType, "ao"),
-          or(
-            eq(aoOrg.id, schema.locations.orgId),
-            eq(aoOrg.id, schema.events.orgId),
+      };
+
+      const [eventCount] = await ctx.db
+        .select({ count: count() })
+        .from(schema.events)
+        .innerJoin(
+          schema.locations,
+          eq(schema.locations.id, schema.events.locationId),
+        )
+        .where(where);
+
+      const query = ctx.db
+        .select(select)
+        .from(schema.events)
+        .innerJoin(
+          schema.locations,
+          eq(schema.locations.id, schema.events.locationId),
+        )
+        .leftJoin(
+          aoOrg,
+          and(
+            eq(aoOrg.orgType, "ao"),
+            or(
+              eq(aoOrg.id, schema.locations.orgId),
+              eq(aoOrg.id, schema.events.orgId),
+            ),
           ),
-        ),
-      )
-      .leftJoin(
-        regionOrg,
-        and(
-          eq(regionOrg.orgType, "region"),
-          or(
-            eq(regionOrg.id, schema.locations.orgId),
-            eq(regionOrg.id, schema.events.orgId),
-            eq(regionOrg.id, aoOrg.parentId),
+        )
+        .leftJoin(
+          regionOrg,
+          and(
+            eq(regionOrg.orgType, "region"),
+            or(
+              eq(regionOrg.id, schema.locations.orgId),
+              eq(regionOrg.id, schema.events.orgId),
+              eq(regionOrg.id, aoOrg.parentId),
+            ),
           ),
-        ),
-      )
-      .groupBy(schema.events.id);
-    return workouts;
-  }),
+        )
+        .groupBy(schema.events.id, aoOrg.id, regionOrg.id)
+        .where(where);
+
+      const events = usePagination
+        ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
+        : await query;
+
+      return { events, total: eventCount?.count ?? 0 };
+    }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {

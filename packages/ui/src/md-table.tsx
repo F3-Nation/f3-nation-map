@@ -9,7 +9,13 @@ import type {
   VisibilityState,
 } from "@tanstack/react-table";
 import type { Table as TableType } from "@tanstack/table-core";
-import React, { useImperativeHandle } from "react";
+import React, {
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -18,7 +24,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, Loader2 } from "lucide-react";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import { safeParseInt } from "@acme/shared/common/functions";
@@ -57,8 +63,14 @@ export interface PaginationOptions {
 export interface MDTableProps<T> {
   onRowClick?: (row: Row<T>) => void;
   rowHref?: (row: Row<T>) => string;
-  isLoading?: boolean;
-  data: TableOptions<T>["data"];
+  /**
+   * The data to display in the table.
+   * If the data is undefined, we show a loading state.
+   * If the data is an empty array, we show a no results state.
+   * If the data is an array, we show the data in the table.
+   *
+   */
+  data: TableOptions<T>["data"] | undefined;
   columns: TableOptions<T>["columns"];
   tableOptions?: Partial<TableOptions<T>>;
   tableName?: string;
@@ -76,17 +88,18 @@ export interface MDTableProps<T> {
   searchTerm?: string;
   setSearchTerm?: (searchTerm: string) => void;
   totalCount?: number;
+  sorting?: SortingState;
+  setSorting?: (updaterOrValue: Updater<SortingState>) => void;
 }
 
 export const MDTable = <T,>(params: MDTableProps<T>) => {
   const {
     paginationOptions,
-    pagination,
-    setPagination,
+    pagination: paginationParam,
+    setPagination: setPaginationParam,
     searchTerm,
     setSearchTerm,
     onRowClick,
-    isLoading,
     tableRef,
     filterComponent,
     cellClassName,
@@ -98,18 +111,64 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     defaultSortingState,
     rowClassName,
     totalCount: totalCountParam,
+    sorting: sortingParam,
+    setSorting: setSortingParam,
   } = params;
+  // Data state management: if data is undefined, we show a loading state
+  const cachedData = useRef(data);
+  if (data !== undefined) {
+    cachedData.current = data;
+  }
+  const isReloading = data === undefined && cachedData.current !== undefined;
+  const isInitialLoading = cachedData.current === undefined; // If the data is undefined, we show a loading state (skeleton)
+
+  const cachedCount = useRef<number | undefined>(undefined);
+  if (totalCountParam !== undefined) {
+    cachedCount.current = totalCountParam;
+  }
+
+  // We can't have an undefined pagination state, (or app breaks) so we default to 0 pageIndex and 10 pageSize
+  const { pagination: _pagination, setPagination: _setPagination } =
+    usePagination(paginationOptions);
+
+  const pagination = useMemo(
+    () => paginationParam ?? _pagination,
+    [paginationParam, _pagination],
+  );
+
+  const setPagination = useCallback(
+    (val: Updater<PaginationState>) => {
+      _setPagination?.(val);
+      setPaginationParam?.(val);
+    },
+    [_setPagination, setPaginationParam],
+  );
+
   const [_searchTerm, _setSearchTerm] = React.useState("");
-  const [sorting, setSorting] = React.useState<SortingState>(
+
+  const [_sorting, _setSorting] = React.useState<SortingState>(
     defaultSortingState ?? [],
+  );
+
+  const sorting = useMemo(
+    () => sortingParam ?? _sorting,
+    [sortingParam, _sorting],
+  );
+  const setSorting = useCallback(
+    (updaterOrValue: Updater<SortingState>) => {
+      _setSorting(updaterOrValue);
+      setSortingParam?.(updaterOrValue);
+    },
+    [_setSorting, setSortingParam],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
   const table = useReactTable<T>({
-    data,
+    data: cachedData.current ?? [],
     columns,
-    manualPagination: !!pagination,
+    manualPagination: !!setPaginationParam,
+    manualSorting: !!setSortingParam,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -117,8 +176,11 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     onColumnVisibilityChange: setColumnVisibility,
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
-    rowCount: totalCountParam,
+    ...(cachedCount.current !== undefined && {
+      rowCount: cachedCount.current,
+    }),
     state: {
+      // pagination cannot be undefined
       pagination,
       sorting,
       columnVisibility,
@@ -128,15 +190,14 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
 
   useImperativeHandle(tableRef, () => table);
 
-  const totalCount = totalCountParam ?? table.getRowCount();
-  const pageCount = totalCount
-    ? Math.ceil(totalCount / (pagination?.pageSize ?? 10))
+  const pageCount = table.getRowCount()
+    ? Math.ceil(table.getRowCount() / pagination.pageSize)
     : 0;
 
   return (
-    <>
+    <div className="relative">
       <div className="mt-4 flex flex-row items-center justify-between py-4">
-        <div className="flex flex-1 items-center gap-4">
+        <div className="flex flex-1 items-center gap-4 pl-[1px]">
           <Input
             placeholder={`Search ${rowsName}...`}
             value={searchTerm ?? _searchTerm}
@@ -152,9 +213,9 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
                 Showing {pagination.pageIndex * pagination.pageSize + 1}-
                 {Math.min(
                   (pagination.pageIndex + 1) * pagination.pageSize,
-                  totalCount,
+                  table.getRowCount(),
                 )}{" "}
-                of {totalCount.toLocaleString()} {rowsName}
+                of {table.getRowCount().toLocaleString()} {rowsName}
               </>
             ) : (
               <>
@@ -225,8 +286,8 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array.from(Array(pagination?.pageSize ?? 10)).map((_, index) => (
+            {isInitialLoading ? (
+              Array.from(Array(pagination.pageSize)).map((_, index) => (
                 <TableRow
                   key={index}
                   className={cn(`hover:bg-gray-300`, {
@@ -234,8 +295,8 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
                   })}
                 >
                   {table.getAllColumns().map((column) => (
-                    <TableCell key={column.id}>
-                      <Skeleton className="h-6" />
+                    <TableCell key={column.id} className="p-2">
+                      <Skeleton className="h-4" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -277,50 +338,46 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
         </Table>
         {pagination ? (
           <div className="flex items-center justify-between px-5 py-5">
-            {table.getRowCount() > pagination.pageSize ? (
-              <div className="flex flex-row items-center gap-2">
-                <Button
-                  variant="ghost"
-                  className="w-8 rounded border p-1"
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  {"<<"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-8 rounded border p-1"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  {"<"}
-                </Button>
-                <span className="flex items-center gap-1">
-                  <div>Page</div>
-                  <strong>
-                    {table.getState().pagination.pageIndex + 1} of {pageCount}
-                  </strong>
-                </span>
-                <Button
-                  variant="ghost"
-                  className="w-8 rounded border p-1"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  {">"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-8 rounded border p-1"
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                >
-                  {">>"}
-                </Button>
-              </div>
-            ) : (
-              <div />
-            )}
+            <div className="flex flex-row items-center gap-2">
+              <Button
+                variant="ghost"
+                className="w-8 rounded border p-1"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+              >
+                {"<<"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-8 rounded border p-1"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                {"<"}
+              </Button>
+              <span className="flex items-center gap-1">
+                <div>Page</div>
+                <strong>
+                  {table.getState().pagination.pageIndex + 1} of {pageCount}
+                </strong>
+              </span>
+              <Button
+                variant="ghost"
+                className="w-8 rounded border p-1"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                {">"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-8 rounded border p-1"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+              >
+                {">>"}
+              </Button>
+            </div>
             {/* ability to select the size of the page */}
             {table.getRowCount() > pagination.pageSize ? (
               <div className="flex flex-row items-center gap-2">
@@ -359,8 +416,15 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
             ) : null}
           </div>
         ) : null}
+        {isReloading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex h-24 w-32 items-center justify-center rounded-lg bg-white/80">
+              <Loader2 className="size-8 animate-spin" />
+            </div>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
@@ -382,4 +446,25 @@ export const createTableOptions = <T,>(
     rowsName: params.rowsName ?? "rows",
     downloadCSV: params.downloadCSV,
   };
+};
+
+export const usePagination = (params?: {
+  pageSize?: number;
+  pageSizeOptions?: number[];
+}) => {
+  const pageSizeOptions = params?.pageSizeOptions ?? [10, 20, 50, 100];
+  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: params?.pageSize ?? 10,
+  });
+
+  const pagination = useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize],
+  );
+
+  return { pagination, setPagination, pageSizeOptions };
 };

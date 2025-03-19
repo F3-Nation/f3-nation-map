@@ -9,7 +9,6 @@ export const areaRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
     const areaOrg = aliasedTable(schema.orgs, "area_org");
     const sectorOrg = aliasedTable(schema.orgs, "sector_org");
-    const nationOrg = aliasedTable(schema.orgs, "nation_org");
 
     const areas = await ctx.db
       .select({
@@ -29,11 +28,9 @@ export const areaRouter = createTRPCRouter({
         meta: areaOrg.meta,
         created: areaOrg.created,
         sector: sectorOrg.name,
-        nation: nationOrg.name,
       })
       .from(areaOrg)
       .innerJoin(sectorOrg, eq(areaOrg.parentId, sectorOrg.id))
-      .innerJoin(nationOrg, eq(sectorOrg.parentId, nationOrg.id))
       .where(and(eq(areaOrg.orgType, "area"), eq(areaOrg.isActive, true)));
 
     return areas;

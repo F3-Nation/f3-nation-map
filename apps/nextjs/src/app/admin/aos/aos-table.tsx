@@ -1,6 +1,7 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
+import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
@@ -11,21 +12,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
-import { MDTable } from "@acme/ui/md-table";
+import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
+import { api } from "~/trpc/react";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 
-export const AOsTable = ({ aos }: { aos: RouterOutputs["ao"]["all"] }) => {
+export const AOsTable = () => {
+  const { pagination, setPagination } = usePagination();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data: aos } = api.ao.all.useQuery({
+    pageIndex: pagination.pageIndex,
+    pageSize: pagination.pageSize,
+    searchTerm: searchTerm,
+  });
   return (
     <MDTable
-      data={aos}
+      data={aos?.aos}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_AOS, { id: row.original.id });
       }}
+      totalCount={aos?.total}
+      pagination={pagination}
+      setPagination={setPagination}
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
       // rowClassName={(row) => {
       //   if (row.original.submitterValidated === true) {
       //     return "opacity-30";
@@ -35,7 +49,9 @@ export const AOsTable = ({ aos }: { aos: RouterOutputs["ao"]["all"] }) => {
   );
 };
 
-const columns: TableOptions<RouterOutputs["ao"]["all"][number]>["columns"] = [
+const columns: TableOptions<
+  RouterOutputs["ao"]["all"]["aos"][number]
+>["columns"] = [
   {
     accessorKey: "name",
     meta: { name: "AO" },
@@ -45,24 +61,6 @@ const columns: TableOptions<RouterOutputs["ao"]["all"][number]>["columns"] = [
   {
     accessorKey: "region",
     meta: { name: "Region" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
-  {
-    accessorKey: "area",
-    meta: { name: "Area" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
-  {
-    accessorKey: "sector",
-    meta: { name: "Sector" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
-  {
-    accessorKey: "nation",
-    meta: { name: "Nation" },
     header: Header,
     cell: (cell) => <Cell {...cell} />,
   },

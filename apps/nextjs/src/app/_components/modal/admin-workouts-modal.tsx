@@ -217,7 +217,7 @@ export default function AdminWorkoutsModal({
                   control={form.control}
                   name="locationId"
                   render={({ field }) => {
-                    const filteredLocations = locations?.filter(
+                    const filteredLocations = locations?.locations.filter(
                       (location) =>
                         location.regionId === form.watch("regionId"),
                     );
@@ -229,7 +229,7 @@ export default function AdminWorkoutsModal({
                           onValueChange={(value) => {
                             field.onChange(Number(value));
 
-                            const selectedLocation = locations?.find(
+                            const selectedLocation = locations?.locations.find(
                               (location) => location.id === Number(value),
                             );
                             if (selectedLocation) {

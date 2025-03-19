@@ -4,7 +4,6 @@ import { z } from "zod";
 import {
   and,
   count,
-  desc,
   eq,
   ilike,
   inArray,
@@ -14,10 +13,12 @@ import {
   sql,
 } from "@acme/db";
 import { UserRole } from "@acme/shared/app/enums";
-import { CrupdateUserSchema } from "@acme/validators";
+import { CrupdateUserSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { getSortingColumns } from "../get-sorting-columns";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import { withPagination } from "../with-pagination";
 
 const schema = { ...schemaRaw, users: schemaRaw.users };
 
@@ -30,12 +31,15 @@ export const userRouter = createTRPCRouter({
           searchTerm: z.string().optional(),
           pageIndex: z.number().optional(),
           pageSize: z.number().optional(),
+          sorting: SortingSchema.optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const pageSize = input?.pageSize ?? 10;
-      const pageIndex = (input?.pageIndex ?? 0) * pageSize;
+      const limit = input?.pageSize ?? 10;
+      const offset = (input?.pageIndex ?? 0) * limit;
+      const usePagination =
+        input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
         eq(schema.users.status, "active"),
         !input?.roles?.length || input.roles.length === UserRole.length
@@ -52,6 +56,56 @@ export const userRouter = createTRPCRouter({
             )
           : undefined,
       );
+
+      const sortedColumns = getSortingColumns(
+        input?.sorting,
+        {
+          id: schema.users.id,
+          name: schema.users.firstName,
+          f3Name: schema.users.f3Name,
+          roles: schema.roles.name,
+          status: schema.users.status,
+          email: schema.users.email,
+          phone: schema.users.phone,
+          regions: schema.orgs.name,
+          created: schema.users.created,
+        },
+        "id",
+      );
+
+      const select = {
+        id: schema.users.id,
+        f3Name: schema.users.f3Name,
+        firstName: schema.users.firstName,
+        lastName: schema.users.lastName,
+        email: schema.users.email,
+        emailVerified: schema.users.emailVerified,
+        phone: schema.users.phone,
+        homeRegionId: schema.users.homeRegionId,
+        avatarUrl: schema.users.avatarUrl,
+        emergencyContact: schema.users.emergencyContact,
+        emergencyPhone: schema.users.emergencyPhone,
+        emergencyNotes: schema.users.emergencyNotes,
+        status: schema.users.status,
+        meta: schema.users.meta,
+        created: schema.users.created,
+        updated: schema.users.updated,
+        roles: sql<
+          { orgId: number; orgName: string; roleName: UserRole }[]
+        >`COALESCE(
+          json_agg(
+            json_build_object(
+              'orgId', ${schema.orgs.id}, 
+              'orgName', ${schema.orgs.name}, 
+              'roleName', ${schema.roles.name}
+            )
+          ) 
+          FILTER (
+            WHERE ${schema.orgs.id} IS NOT NULL
+          ), 
+          '[]'
+        )`,
+      };
 
       const userIdsQuery = ctx.db
         .selectDistinct({ id: schema.users.id })
@@ -72,42 +126,9 @@ export const userRouter = createTRPCRouter({
         .from(userIdsQuery.as("distinct_users"));
 
       const userCount = countResult[0];
-      console.log("User count", userCount);
 
-      const users = await ctx.db
-        .select({
-          id: schema.users.id,
-          f3Name: schema.users.f3Name,
-          firstName: schema.users.firstName,
-          lastName: schema.users.lastName,
-          email: schema.users.email,
-          emailVerified: schema.users.emailVerified,
-          phone: schema.users.phone,
-          homeRegionId: schema.users.homeRegionId,
-          avatarUrl: schema.users.avatarUrl,
-          emergencyContact: schema.users.emergencyContact,
-          emergencyPhone: schema.users.emergencyPhone,
-          emergencyNotes: schema.users.emergencyNotes,
-          status: schema.users.status,
-          meta: schema.users.meta,
-          created: schema.users.created,
-          updated: schema.users.updated,
-          roles: sql<
-            { orgId: number; orgName: string; roleName: UserRole }[]
-          >`COALESCE(
-          json_agg(
-            json_build_object(
-              'orgId', ${schema.orgs.id}, 
-              'orgName', ${schema.orgs.name}, 
-              'roleName', ${schema.roles.name}
-            )
-          ) 
-          FILTER (
-            WHERE ${schema.orgs.id} IS NOT NULL
-          ), 
-          '[]'
-        )`,
-        })
+      const query = ctx.db
+        .select(select)
         .from(schema.users)
         .leftJoin(
           schema.rolesXUsersXOrg,
@@ -119,10 +140,11 @@ export const userRouter = createTRPCRouter({
           eq(schema.roles.id, schema.rolesXUsersXOrg.roleId),
         )
         .where(where)
-        .groupBy(schema.users.id)
-        .orderBy(desc(schema.users.id))
-        .limit(pageSize)
-        .offset(pageIndex);
+        .groupBy(schema.users.id);
+
+      const users = usePagination
+        ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
+        : await query;
 
       return {
         users: users.map((user) => ({

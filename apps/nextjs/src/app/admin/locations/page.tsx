@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 
-import { api } from "~/trpc/server";
 import Layout from "../admin-layout";
 import { AddLocationButton } from "./[id]/add-location-button";
 import { LocationsTable } from "./locations-table";
 
 const LocationsPage = async () => {
-  const locations = await api.location.all();
-
   return (
     <Layout>
       <div className="flex w-full  flex-col">
@@ -19,7 +16,7 @@ const LocationsPage = async () => {
         </div>
         <Suspense fallback={<div>Loading...</div>}>
           <div className="flex  w-full  flex-col overflow-auto">
-            <LocationsTable locations={locations} />
+            <LocationsTable />
           </div>
         </Suspense>
       </div>

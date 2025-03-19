@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 
-import { api } from "~/trpc/server";
 import Layout from "../admin-layout";
 import { AddAOButton } from "./[id]/add-ao-button";
 import { AOsTable } from "./aos-table";
 
 const AOPage = async () => {
-  const aos = await api.ao.all();
-
   return (
     <Layout>
       <div className="flex w-full  flex-col">
@@ -19,7 +16,7 @@ const AOPage = async () => {
         </div>
         <Suspense fallback={<div>Loading...</div>}>
           <div className="flex  w-full  flex-col overflow-auto">
-            <AOsTable aos={aos} />
+            <AOsTable />
           </div>
         </Suspense>
       </div>
