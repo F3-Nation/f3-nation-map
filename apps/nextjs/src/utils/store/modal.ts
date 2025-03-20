@@ -161,7 +161,7 @@ export interface DataType {
   [ModalType.USER_LOCATION_INFO]: null;
   [ModalType.SETTINGS]: null;
   [ModalType.ADMIN_USERS]: {
-    id: number;
+    id?: number | null;
   };
   [ModalType.ADMIN_REQUESTS]: {
     id: string;

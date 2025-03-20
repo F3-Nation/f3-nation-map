@@ -15,13 +15,16 @@ export const UserSelectSchema = createSelectSchema(users);
 export const UserInsertSchema = createInsertSchema(users);
 
 export const CrupdateUserSchema = UserInsertSchema.extend({
-  id: z.number(),
+  id: z.number().optional(),
+
   roles: z
     .object({
       orgId: z.number(),
       roleName: z.enum(["user", "editor", "admin"]),
     })
     .array(),
+  f3Name: z.string().min(1, { message: "F3 Name is required" }),
+  email: z.string().email({ message: "Invalid email format" }),
 });
 // AUTH SCHEMA
 export const EmailAuthSchema = UserInsertSchema.pick({
