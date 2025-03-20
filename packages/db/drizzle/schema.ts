@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  customType,
   date,
   doublePrecision,
   foreignKey,
@@ -15,6 +16,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -53,6 +55,18 @@ export const updateRequestStatus = pgEnum(
 );
 export const userStatus = pgEnum("user_status", UserStatus);
 export const requestType = pgEnum("request_type", RequestType);
+
+export const citext = customType<{ data: string }>({
+  fromDriver(value) {
+    return value as string;
+  },
+  toDriver(value) {
+    return value;
+  },
+  dataType() {
+    return "citext";
+  },
+});
 
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
@@ -266,7 +280,7 @@ export const users = pgTable(
     f3Name: varchar("f3_name"),
     firstName: varchar("first_name"),
     lastName: varchar("last_name"),
-    email: varchar().notNull(),
+    email: citext("email").notNull(),
     phone: varchar(),
     homeRegionId: integer("home_region_id"),
     avatarUrl: varchar("avatar_url"),
@@ -284,12 +298,15 @@ export const users = pgTable(
     status: userStatus().default("active").notNull(),
   },
   (table) => [
+    uniqueIndex("users_email_key").using(
+      "btree",
+      table.email.asc().nullsLast().op("citext_ops"),
+    ),
     foreignKey({
       columns: [table.homeRegionId],
       foreignColumns: [orgs.id],
       name: "users_home_region_id_fkey",
     }),
-    unique("users_email_key").on(table.email),
   ],
 );
 

@@ -161,8 +161,9 @@ const _reseedJustData = async () => {
 };
 
 export const seed = async () => {
+  // await insertUsers();
   // await _reseedFromScratch();
-  // await _reseedJustData();
+  await _reseedJustData();
   // await _reseedUsers();
   // await insertRandomUsers();
 };
@@ -242,6 +243,7 @@ export async function insertUsers() {
   await db.insert(schema.users).values(usersToInsert).onConflictDoNothing();
 
   const users = await db.select().from(schema.users);
+  console.log("users", users.length);
 
   // const _permissions = await db
   //   .insert(schema.permissions)
@@ -287,25 +289,39 @@ export async function insertUsers() {
   const boone = regions.find((r) => r.name === "Boone");
   if (!boone) throw new Error("Boone not found");
 
+  const user1 = users.find((u) => u.email === "declan@mountaindev.com");
+  if (!user1) throw new Error("Declan not found");
+  const user2 = users.find((u) => u.email === "patrick@pstaylor.net");
+  if (!user2) throw new Error("Patrick not found");
+  const user3 = users.find((u) => u.email === "jimsheldon@icloud.com");
+  if (!user3) throw new Error("Jim not found");
+  const user4 = users.find((u) => u.email === "damon.vinciguerra@gmail.com");
+  if (!user4) throw new Error("Damon not found");
+  const user5 = users.find((u) => u.email === "taylor.matt777@gmail.com");
+  if (!user5) throw new Error("Matt not found");
+  const user6 = users.find((u) => u.email === "pjarchambeault@gmail.com");
+  if (!user6) throw new Error("PJ not found");
+  const user7 = users.find((u) => u.email === "johnanthonyreynolds@gmail.com");
+  if (!user7) throw new Error("John not found");
+
   const rolesXUsersXOrg: InferInsertModel<typeof schema.rolesXUsersXOrg>[] = [
     {
-      userId: users.find((u) => u.email === "declan@mountaindev.com")?.id ?? -1,
+      userId: user1.id,
       roleId: adminRegionRole.id,
       orgId: f3nation.id,
     },
     {
-      userId: users.find((u) => u.email === "patrick@pstaylor.net")?.id ?? -1,
+      userId: user2.id,
       roleId: editorRegionRole.id,
       orgId: boone.id,
     },
     {
-      userId: users.find((u) => u.email === "jimsheldon@icloud.com")?.id ?? -1,
+      userId: user3.id,
       roleId: editorRegionRole.id,
       orgId: boone.id,
     },
     {
-      userId:
-        users.find((u) => u.email === "damon.vinciguerra@gmail.com")?.id ?? -1,
+      userId: user4.id,
       roleId: adminRegionRole.id,
       orgId: f3nation.id,
     },

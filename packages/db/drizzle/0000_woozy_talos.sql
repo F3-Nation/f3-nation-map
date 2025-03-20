@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "citext";
+
 CREATE TYPE "public"."day_of_week" AS ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');--> statement-breakpoint
 CREATE TYPE "public"."event_cadence" AS ENUM('weekly', 'monthly');--> statement-breakpoint
 CREATE TYPE "public"."event_category" AS ENUM('first_f', 'second_f', 'third_f');--> statement-breakpoint
@@ -348,7 +350,7 @@ CREATE TABLE "users" (
 	"f3_name" varchar,
 	"first_name" varchar,
 	"last_name" varchar,
-	"email" varchar NOT NULL,
+	"email" "citext" NOT NULL,
 	"phone" varchar,
 	"home_region_id" integer,
 	"avatar_url" varchar,
@@ -359,8 +361,7 @@ CREATE TABLE "users" (
 	"emergency_phone" varchar,
 	"emergency_notes" varchar,
 	"email_verified" timestamp,
-	"status" "user_status" DEFAULT 'active' NOT NULL,
-	CONSTRAINT "users_email_key" UNIQUE("email")
+	"status" "user_status" DEFAULT 'active' NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "achievements" ADD CONSTRAINT "achievements_specific_org_id_fkey" FOREIGN KEY ("specific_org_id") REFERENCES "public"."orgs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -411,4 +412,5 @@ CREATE INDEX "idx_locations_name" ON "locations" USING btree ("name");--> statem
 CREATE INDEX "idx_locations_is_active" ON "locations" USING btree ("is_active");--> statement-breakpoint
 CREATE INDEX "idx_orgs_is_active" ON "orgs" USING btree ("is_active");--> statement-breakpoint
 CREATE INDEX "idx_orgs_org_type" ON "orgs" USING btree ("org_type");--> statement-breakpoint
-CREATE INDEX "idx_orgs_parent_id" ON "orgs" USING btree ("parent_id");
+CREATE INDEX "idx_orgs_parent_id" ON "orgs" USING btree ("parent_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "users_email_key" ON "users" USING btree ("email" citext_ops);
