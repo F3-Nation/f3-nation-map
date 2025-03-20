@@ -25,6 +25,7 @@ import { toast } from "@acme/ui/toast";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { closeModal, ModalType, openModal } from "~/utils/store/modal";
+import { VersionInfo } from "../version-info";
 
 export default function SettingsModal() {
   const mode = appStore.use.mode();
@@ -287,6 +288,7 @@ export default function SettingsModal() {
               FAQs
             </Link>
           </div>
+          <VersionInfo className="text-center text-xs text-foreground/60" />
         </div>
       </DialogContent>
     </Dialog>

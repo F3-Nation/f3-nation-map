@@ -51,7 +51,7 @@ export default function UserModal({
 }) {
   const { data: session, update } = useSession();
   const utils = api.useUtils();
-  const { data: user } = api.user.byId.useQuery({ id: data.id });
+  const { data: user } = api.user.byId.useQuery({ id: data.id ?? -1 });
   const { data: orgs } = api.nation.allOrgs.useQuery();
   const router = useRouter();
 
@@ -60,7 +60,7 @@ export default function UserModal({
       badImage: z.boolean().default(false),
     }),
     defaultValues: {
-      id: user?.id ?? -1,
+      id: user?.id ?? undefined,
       f3Name: user?.f3Name ?? "",
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
@@ -73,7 +73,7 @@ export default function UserModal({
   useEffect(() => {
     if (user) {
       form.reset({
-        id: user.id ?? -1,
+        id: user.id ?? undefined,
         //name: user?.name ?? "",
         f3Name: user?.f3Name ?? "",
         firstName: user?.firstName ?? "",
