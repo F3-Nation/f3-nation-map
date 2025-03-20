@@ -1,13 +1,10 @@
-import Layout from "./admin-layout";
+import { redirect } from "next/navigation";
+
+import { routes } from "@acme/shared/app/constants";
 
 const AdminHome = async () => {
-  return (
-    <Layout>
-      <div>
-        <h1 className="text-4xl font-bold">Dashboard</h1>
-      </div>
-    </Layout>
-  );
+  redirect(routes.admin.users.__path);
+  return null;
 };
 
 export default AdminHome;
