@@ -32,7 +32,7 @@ export default async function MapPage() {
         <MapPageWrapper>
           {/* Must have relative so that absolute things show up on the map */}
           <main className="pointer-events-auto relative">
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div />}>
               <DynamicImportLeafletMap
                 sparseLocations={locationMarkersSparse}
               />
