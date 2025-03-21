@@ -76,7 +76,7 @@ export const filterData = <
         const period = filters.beforeAfterTime.slice(-2);
         let filterTime = parseInt(hour ?? "0", 10);
         const stationStartTime = parseInt(
-          event.startTime?.split(":")?.[0] ?? "0",
+          event.startTime?.slice(0, 2) ?? "0",
           10,
         );
 
