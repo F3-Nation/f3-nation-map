@@ -23,8 +23,9 @@ const SelectedItemWrapper = () => {
   // const previousSelectedLocationId = useRef(selectedItem.selectedLocation?.id);
   const utils = api.useUtils();
 
-  const [debouncedSelectedItem1, setDebouncedSelectedItem] =
-    useState(selectedItem);
+  const [debouncedSelectedItem, setDebouncedSelectedItem] = useState<
+    typeof selectedItem | undefined
+  >(selectedItem);
 
   // Create memoized debounced function
   const debouncedSetSelectedItem = useMemo(
@@ -37,7 +38,9 @@ const SelectedItemWrapper = () => {
 
   // // Update debounced position when pagePosition changes
   useEffect(() => {
-    if (typeof selectedItem.selectedLocation?.id === "number") {
+    if (selectedItem.selectedLocation?.id == null) {
+      setDebouncedSelectedItem(undefined);
+    } else if (typeof selectedItem.selectedLocation?.id === "number") {
       void utils.location.getLocationMarker.prefetch({
         id: selectedItem.selectedLocation?.id,
       });
@@ -61,15 +64,16 @@ const SelectedItemWrapper = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedItem object doesn't change but the properties do
   }, [
-    selectedItem.pagePosition,
+    selectedItem.pagePosition?.x,
+    selectedItem.pagePosition?.y,
     selectedItem.selectedLocation,
     selectedItem.selectedEvent,
     debouncedSetSelectedItem,
   ]);
 
   if (
-    !debouncedSelectedItem1.selectedLocation ||
-    !debouncedSelectedItem1.selectedEvent ||
+    !debouncedSelectedItem?.selectedLocation ||
+    !debouncedSelectedItem?.selectedEvent ||
     dragging
   ) {
     return null;
@@ -82,14 +86,14 @@ const SelectedItemWrapper = () => {
       })}
       style={{
         zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP,
-        top: debouncedSelectedItem1.pagePosition?.y,
-        left: debouncedSelectedItem1.pagePosition?.x,
+        top: debouncedSelectedItem.pagePosition?.y,
+        left: debouncedSelectedItem.pagePosition?.x,
         transform: "translate(-50%, 5px)",
       }}
     >
       <SelectedItem
-        selectedLocation={debouncedSelectedItem1.selectedLocation}
-        selectedEvent={debouncedSelectedItem1.selectedEvent}
+        selectedLocation={debouncedSelectedItem.selectedLocation}
+        selectedEvent={debouncedSelectedItem.selectedEvent}
         hideCloseButton
       />
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 import { cn } from "@acme/ui";
@@ -20,6 +20,7 @@ export const DesktopNearbyLocations = ({
   RERENDER_LOGS && console.log("DrawerSearchResults rerender");
   const { locationOrderedLocationMarkers, nearbyLocationCenter } =
     useFilteredMapResults();
+  const nearbyLocationScrollRef = useRef<HTMLDivElement>(null);
   const center = mapStore.use.center();
 
   const hasMovedAwayFromLocation = useMemo(() => {
@@ -32,6 +33,13 @@ export const DesktopNearbyLocations = ({
       ) > 1000
     ); // one km
   }, [center, nearbyLocationCenter]);
+
+  // Scroll to the top of the nearby locations when the nearby location center changes
+  useEffect(() => {
+    if (nearbyLocationScrollRef.current) {
+      nearbyLocationScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [nearbyLocationCenter]);
 
   return (
     <>
@@ -56,6 +64,7 @@ export const DesktopNearbyLocations = ({
       </div>
       <div
         className={cn("flex flex-1 flex-col overflow-y-scroll", className)}
+        ref={nearbyLocationScrollRef}
         {...rest}
       >
         <div className="flex flex-col justify-center divide-y divide-solid">

@@ -11,7 +11,6 @@ import { toast } from "@acme/ui/toast";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { vanillaApi } from "~/trpc/vanilla";
-import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { closeModal, modalStore } from "~/utils/store/modal";
 import { WorkoutDetailsContent } from "../workout/workout-details-content";
 
@@ -39,9 +38,6 @@ export const WorkoutDetailsModal = ({
       setSelectedEventId(resultsEventId);
     }
   }, [results]);
-
-  // Update the search params when the modal is open
-  useUpdateEventSearchParams(locationId, selectedEventId);
 
   return (
     <Dialog open={true} onOpenChange={closeModal}>

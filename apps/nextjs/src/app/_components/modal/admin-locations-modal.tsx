@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import dynamicImport from "next/dynamic";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleHelp } from "lucide-react";
 import { z } from "zod";
@@ -47,22 +46,6 @@ import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
 import { CountrySelect } from "./country-select";
-
-const DynamicImportLeafletMapSimple = dynamicImport(
-  () => import("~/app/_components/map/leaflet-map-simple"),
-  { ssr: false },
-);
-
-interface LeafletMapSimpleProps {
-  latitude: number;
-  longitude: number;
-  dragEventHandler?: {
-    dragend?: (e: { target: L.Marker }) => void;
-  };
-}
-
-const LeafletMapWithProps =
-  DynamicImportLeafletMapSimple as unknown as React.FC<LeafletMapSimpleProps>;
 
 export default function AdminLocationsModal({
   data,
@@ -133,16 +116,16 @@ export default function AdminLocationsModal({
     },
   });
 
-  const dragEventHandler = useMemo(
-    () => ({
-      dragend(e: { target: L.Marker }) {
-        const { lat, lng } = e.target.getLatLng();
-        form.setValue("latitude", lat);
-        form.setValue("longitude", lng);
-      },
-    }),
-    [form],
-  );
+  // const dragEventHandler = useMemo(
+  //   () => ({
+  //     dragend(e: { target: L.Marker }) {
+  //       const { lat, lng } = e.target.getLatLng();
+  //       form.setValue("latitude", lat);
+  //       form.setValue("longitude", lng);
+  //     },
+  //   }),
+  //   [form],
+  // );
 
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
@@ -496,13 +479,13 @@ export default function AdminLocationsModal({
               </form>
             </Form>
           </div>
-          <div className="w-1/2">
-            <LeafletMapWithProps
+          {/* <div className="w-1/2">
+            <GoogleMap
               latitude={form.getValues("latitude") ?? DEFAULT_CENTER[0]}
               longitude={form.getValues("longitude") ?? DEFAULT_CENTER[1]}
               dragEventHandler={dragEventHandler}
             />
-          </div>
+          </div> */}
         </div>
       </DialogContent>
     </Dialog>

@@ -9,7 +9,6 @@ import { toast } from "@acme/ui/toast";
 
 import { api } from "~/trpc/react";
 import { vanillaApi } from "~/trpc/vanilla";
-import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { modalStore } from "~/utils/store/modal";
 import { closePanel, selectedItemStore } from "~/utils/store/selected-item";
 import { WorkoutDetailsContent } from "../workout/workout-details-content";
@@ -45,9 +44,6 @@ export const DesktopLocationPanelContent = () => {
   useEffect(() => {
     setSelectedEventId(panelEventId);
   }, [panelEventId]);
-
-  // Update the search params when the panel is open
-  useUpdateEventSearchParams(panelLocationId, panelEventId);
 
   if (!open) return null;
 

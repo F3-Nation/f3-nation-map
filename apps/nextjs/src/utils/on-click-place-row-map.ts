@@ -8,7 +8,7 @@ import { setSelectedItem } from "./store/selected-item";
 
 export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
   searchStore.setState({ shouldShowResults: false });
-  setSelectedItem({ locationId: null, eventId: null });
+  setSelectedItem({ locationId: null, eventId: null, showPanel: false });
   void placesDetails(result.destination.placeId).then((place) => {
     const latitude = place.location.latitude;
     const longitude = place.location.longitude;
@@ -23,9 +23,6 @@ export const onClickPlaceRowMap = (result: GeoMapSearchResult) => {
       },
     });
     setView({ lat: latitude, lng: longitude });
-    setTimeout(() => {
-      mapStore.get("ref").current?.invalidateSize();
-    }, 0);
     filterStore.setState({ position: { latitude, longitude } });
   });
 };

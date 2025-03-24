@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useMap } from "@vis.gl/react-google-maps";
 import debounce from "lodash/debounce";
 
 import { CLOSE_ZOOM } from "@acme/shared/app/constants";
@@ -6,14 +7,12 @@ import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { api } from "~/trpc/react";
 import { mapStore } from "~/utils/store/map";
-import {
-  selectedItemStore,
-  setSelectedItem,
-} from "~/utils/store/selected-item";
-import { useMapRef } from "./map-ref-provider";
+import { selectedItemStore } from "~/utils/store/selected-item";
 
 export const useSelectedItem = () => {
   RERENDER_LOGS && console.log("useSelectedItem rerender");
+  const map = useMap();
+  const bounds = map?.getBounds();
   const zoom = mapStore.use.zoom();
   const isClose = zoom >= CLOSE_ZOOM;
   const debounceAmount = isClose ? 0 : 300;
@@ -27,19 +26,32 @@ export const useSelectedItem = () => {
 
   const selectedLocation =
     debouncedLocationId === locationId ? data : undefined;
-  const { mapRef } = useMapRef();
+
   const position = useMemo(() => {
+    const ne = bounds?.getNorthEast();
+    const sw = bounds?.getSouthWest();
     if (
       typeof selectedLocation?.lat !== "number" ||
-      typeof selectedLocation?.lon !== "number"
-    )
+      typeof selectedLocation?.lon !== "number" ||
+      !ne ||
+      !sw ||
+      // Outside of the bounds
+      selectedLocation.lat > ne?.lat() ||
+      selectedLocation.lon > ne?.lng() ||
+      selectedLocation.lat < sw?.lat() ||
+      selectedLocation.lon < sw?.lng()
+    ) {
       return undefined;
-    return mapRef.current?.latLngToContainerPoint({
+    }
+    const projection = mapStore.get("projection");
+
+    const point = projection?.fromLatLngToContainerPixel({
       lat: selectedLocation.lat,
       lng: selectedLocation.lon,
     });
+    return { x: point?.x, y: point?.y ?? 0 };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoom is not a dependency but we need to monitor its changes
-  }, [selectedLocation?.lat, selectedLocation?.lon, mapRef, zoom]);
+  }, [selectedLocation?.lat, selectedLocation?.lon, map, zoom, bounds]);
 
   const selectedEvent = !selectedLocation
     ? undefined
@@ -63,14 +75,14 @@ export const useSelectedItem = () => {
     debouncedSetSelectedItem(locationId);
   }, [debouncedLocationId, locationId, debouncedSetSelectedItem]);
 
-  useEffect(() => {
-    if (!selectedLocation || eventId !== null) return;
+  // useEffect(() => {
+  //   if (!selectedLocation || eventId !== null) return;
 
-    const firstEvent = selectedLocation.events[0];
-    if (!firstEvent) return;
+  //   const firstEvent = selectedLocation.events[0];
+  //   if (!firstEvent) return;
 
-    setSelectedItem({ eventId: firstEvent.id });
-  }, [eventId, selectedLocation]);
+  //   setSelectedItem({ eventId: firstEvent.id });
+  // }, [eventId, selectedLocation]);
 
   // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
   return {

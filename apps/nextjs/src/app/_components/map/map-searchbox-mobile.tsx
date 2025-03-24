@@ -15,6 +15,7 @@ import { placesAutocomplete } from "~/utils/place-autocomplete";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
+import { setSelectedItem } from "~/utils/store/selected-item";
 import { isGeoMapSearchResult } from "~/utils/types";
 import { useTextSearchResults } from "./search-results-provider";
 
@@ -117,6 +118,11 @@ export function MapSearchBoxMobile({
                 searchStore.setState({
                   searchBarFocused: true,
                   shouldShowResults: true,
+                });
+                setSelectedItem({
+                  locationId: null,
+                  eventId: null,
+                  showPanel: false,
                 });
               }}
               onBlur={() => {

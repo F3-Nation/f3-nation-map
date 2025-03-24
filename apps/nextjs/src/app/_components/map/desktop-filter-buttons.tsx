@@ -31,7 +31,7 @@ export const DesktopFilterButtons = () => {
   });
 
   return (
-    <>
+    <div className="m-2 flex flex-row gap-2">
       {/* All filters */}
       <button
         className={cn(filterButtonClassName, {
@@ -102,6 +102,6 @@ export const DesktopFilterButtons = () => {
         <Sunset strokeWidth={2} className={cn("size-4")} />
         PM
       </button>
-    </>
+    </div>
   );
 };

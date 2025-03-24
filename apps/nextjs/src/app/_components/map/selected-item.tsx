@@ -10,7 +10,6 @@ import type { F3Marker } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import {
   clearSelectedItem,
-  openPanel,
   setSelectedItem,
 } from "~/utils/store/selected-item";
 import textLink from "~/utils/text-link";
@@ -23,6 +22,7 @@ export const SelectedItem = (props: {
   hideCloseButton?: boolean;
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");
+  const touchDevice = isTouchDevice();
 
   const { hideCloseButton, selectedLocation, selectedEvent } = props;
 
@@ -39,23 +39,34 @@ export const SelectedItem = (props: {
           "dark:border-[1px] dark:border-muted",
         )}
         onMouseEnter={() => {
-          const isMobile = isTouchDevice();
-          if (!isMobile) {
-            setSelectedItem({
-              locationId: selectedLocation.id,
-              eventId: selectedEvent.id,
-            });
-          }
+          if (touchDevice) return;
+          setSelectedItem({
+            locationId: selectedLocation.id,
+            eventId: selectedEvent.id,
+            showPanel: false,
+          });
+
           // Needed to handle the mouse enter from the marker on desktop
           // Doesn't work on mobile
         }}
         onMouseLeave={() => {
-          const isMobile = isTouchDevice();
-          if (!isMobile) {
-            clearSelectedItem();
-          }
+          if (touchDevice) return;
+          clearSelectedItem();
         }}
-        onClick={() => openPanel({ locationId: selectedLocation.id })}
+        onClick={() => {
+          // There is a problem here where the selected item is clicked through
+          // the search results when they are open
+          console.log(
+            "selected-item on click",
+            selectedEvent,
+            selectedLocation,
+          );
+          setSelectedItem({
+            locationId: selectedLocation.id,
+            eventId: selectedEvent.id,
+            showPanel: true,
+          });
+        }}
       >
         <div className="text-lg font-bold">{selectedEvent.name}</div>
         <div className="mt-2 flex flex-row items-start gap-2">
@@ -118,6 +129,7 @@ export const SelectedItem = (props: {
             setSelectedItem({
               locationId: null,
               eventId: null,
+              showPanel: false,
             })
           }
         >

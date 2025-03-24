@@ -12,7 +12,6 @@ import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
 import { setView } from "~/utils/set-view";
 import { searchStore } from "~/utils/store/search";
 import {
-  openPanel,
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
@@ -54,6 +53,7 @@ export const MobileNearbyLocationsItem = (props: {
         setSelectedItem({
           locationId: searchResult.id,
           eventId: searchResult.events[0]?.id,
+          showPanel: true,
         });
         if (searchResult.lat !== null && searchResult.lon !== null) {
           setView({ lat: searchResult.lat, lng: searchResult.lon });
@@ -71,7 +71,9 @@ export const MobileNearbyLocationsItem = (props: {
       <div className="flex flex-row items-start gap-2">
         <button
           className="flex flex-shrink-0 flex-col items-center"
-          onClick={() => openPanel({ locationId: searchResult.id })}
+          onClick={() => {
+            setSelectedItem({ locationId: searchResult.id, showPanel: true });
+          }}
         >
           <ImageWithFallback
             src={searchResult.logo ? searchResult.logo : "/f3_logo.png"}

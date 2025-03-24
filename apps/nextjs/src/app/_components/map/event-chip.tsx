@@ -10,7 +10,7 @@ import { cn } from "@acme/ui";
 import { dayjs } from "~/utils/frontendDayjs";
 import { isTouchDevice } from "~/utils/is-touch-device";
 import { setView } from "~/utils/set-view";
-import { openPanel, setSelectedItem } from "~/utils/store/selected-item";
+import { setSelectedItem } from "~/utils/store/selected-item";
 import BootSvgComponent from "../SVGs/boot-camp";
 import RuckSvgComponent from "../SVGs/ruck";
 import RunSvgComponent from "../SVGs/run";
@@ -20,7 +20,7 @@ export const EventChip = (props: {
   variant?: "interactive" | "non-interactive";
   size?: "small" | "medium" | "large";
   selected?: boolean;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   event: {
     name?: string;
     dayOfWeek: DayOfWeek | null;
@@ -77,6 +77,7 @@ export const EventChip = (props: {
         "rounded-sm",
         "text-xs text-white",
         "px-2 shadow",
+        "cursor-pointer",
         { "pointer-events-none bg-muted": !isInteractive },
         { "bg-red-600": selected && isInteractive },
         { "bg-muted": !selected && isInteractive },
@@ -85,39 +86,49 @@ export const EventChip = (props: {
         { "gap-2 py-[3px]": size === "large" },
       )}
       onMouseOver={(e) => {
-        const isMobile = isTouchDevice();
-        if (!isMobile) {
+        console.log("event-chip onMouseOver", event.id);
+        const touchDevice = isTouchDevice();
+        if (!touchDevice) {
           setSelectedItem({
             locationId: event.locationId,
             eventId: event.id,
+            showPanel: false,
           });
         } else {
+          if (!props.onClick) {
+            // Skip stopPropagation if there is no onClick handler
+            return;
+          }
           props.onClick?.();
         }
         e.stopPropagation();
       }}
       onFocus={(e) => {
+        console.log("event-chip onFocus", event.id);
         setSelectedItem({
           locationId: event.locationId,
           eventId: event.id,
+          showPanel: false,
         });
         e.stopPropagation();
       }}
-      onClick={
-        props.onClick ??
-        ((e) => {
-          openPanel({ locationId: event.locationId, eventId: event.id });
-          // TODO: Do we need this?
-          // setSelectedItem({
-          //   locationId: event.locationId,
-          //   eventId: event.id,
-          // });
+      onClick={(e) => {
+        console.log("event-chip onClick", event.id);
+        if (props.onClick) {
+          props.onClick();
+          e.stopPropagation();
+        } else {
+          setSelectedItem({
+            locationId: event.locationId,
+            eventId: event.id,
+            showPanel: true,
+          });
           if (location.lat !== null && location.lon !== null) {
             setView({ lat: location.lat, lng: location.lon });
           }
           e.stopPropagation();
-        })
-      }
+        }
+      }}
     >
       <div
         className={cn("flex flex-1 gap-2 text-foreground", {

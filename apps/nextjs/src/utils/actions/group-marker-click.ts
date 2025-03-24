@@ -1,32 +1,34 @@
 import { queryClientUtils } from "~/trpc/react";
+import {
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
 import { isTouchDevice } from "../is-touch-device";
 import { setView } from "../set-view";
-import { openPanel, selectedItemStore } from "../store/selected-item";
 
-export const groupMarkerClick = ({
+export const groupMarkerClick = async ({
   locationId,
   eventId,
 }: {
-  locationId?: number | null;
-  eventId?: number | null;
+  locationId: number;
+  eventId?: number;
 }) => {
-  const isMobile = isTouchDevice();
+  const touchDevice = isTouchDevice();
   const isAlreadySelected =
     selectedItemStore.get("locationId") === locationId &&
     selectedItemStore.get("eventId") === eventId;
-  if (!isMobile || isAlreadySelected) {
-    openPanel({ locationId, eventId });
-  } else {
-    selectedItemStore.setState({
-      ...(locationId !== undefined ? { locationId: locationId } : {}),
-      ...(eventId !== undefined ? { eventId: eventId } : {}),
-      hideSelectedItem: false,
-    });
-  }
-  const location = queryClientUtils.location.getLocationMarkersSparse
-    .getData()
-    ?.find((marker) => marker.id === locationId);
-  if (typeof location?.lat === "number" && typeof location?.lon === "number") {
-    setView({ lat: location.lat, lng: location.lon });
-  }
+  const location = await queryClientUtils.location.getLocationMarker.fetch({
+    id: locationId,
+  });
+  if (!location) return;
+
+  const { lat, lon } = location;
+  if (lat === null || lon === null) return;
+
+  setSelectedItem({
+    locationId,
+    eventId,
+    showPanel: !touchDevice || isAlreadySelected,
+  });
+  setView({ lat, lng: lon, zoom: 15 });
 };

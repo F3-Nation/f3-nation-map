@@ -1,24 +1,23 @@
-import { Suspense } from "react";
-import dynamicImport from "next/dynamic";
+import dynamic from "next/dynamic";
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
-import { MapLayoutItems } from "~/app/_components/map-layout-items";
 import { MapPageWrapper } from "~/app/_components/map-page-wrapper";
 import { ssg } from "~/trpc/ssg";
 import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
 import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
 
-const DynamicImportLeafletMap = dynamicImport(
-  () => import("~/app/_components/map/leaflet-map"),
-  { ssr: false },
-);
+const Map = dynamic(() => import("~/app/_components/map/google-map"), {
+  ssr: false,
+});
 
 export default async function MapPage() {
   const locationMarkersSparse =
     await ssg.location.getLocationMarkersSparse.fetch();
   const filteredMapResultsData =
     await ssg.location.allLocationMarkerFilterData.fetch();
+  const regionsWithLocationData =
+    await ssg.location.getRegionsWithLocation.fetch();
 
   RERENDER_LOGS && console.log("MapPage rerender");
 
@@ -28,16 +27,13 @@ export default async function MapPage() {
       lowBandwidthAllLocationMarkerFilterData={filteredMapResultsData}
     >
       {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
-      <TextSearchResultsProvider>
+      <TextSearchResultsProvider
+        regionsWithLocationData={regionsWithLocationData}
+      >
         <MapPageWrapper>
-          {/* Must have relative so that absolute things show up on the map */}
-          <main className="pointer-events-auto relative">
-            <Suspense fallback={<div />}>
-              <DynamicImportLeafletMap
-                sparseLocations={locationMarkersSparse}
-              />
-              <MapLayoutItems />
-            </Suspense>
+          <main className="pointer-events-auto relative h-dvh w-full">
+            {/* Must have relative so that absolute things show up on the map */}
+            <Map />
           </main>
         </MapPageWrapper>
       </TextSearchResultsProvider>

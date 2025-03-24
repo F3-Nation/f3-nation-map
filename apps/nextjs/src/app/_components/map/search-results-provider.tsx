@@ -5,12 +5,14 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
+import type { RouterOutputs } from "~/trpc/types";
 import type {
   F3LocationMapSearchResult,
   F3RegionMapSearchResult,
   GeoMapSearchResult,
 } from "~/utils/types";
 import { api } from "~/trpc/react";
+import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { placesAutocomplete } from "~/utils/place-autocomplete";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
@@ -34,11 +36,17 @@ const TextSearchResultsContext = createContext<{
 
 export const TextSearchResultsProvider = ({
   children,
+  regionsWithLocationData,
 }: {
   children: React.ReactNode;
+  regionsWithLocationData: RouterOutputs["location"]["getRegionsWithLocation"];
 }) => {
+  const isMobileWidth = useIsMobileWidth();
   RERENDER_LOGS && console.log("TextSearchResultsProvider rerender");
-  const { data: regions } = api.location.getRegionsWithLocation.useQuery();
+  const { data: regions } = api.location.getRegionsWithLocation.useQuery(
+    undefined,
+    { initialData: regionsWithLocationData },
+  );
   const text = searchStore.use.text();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
@@ -140,12 +148,19 @@ export const TextSearchResultsProvider = ({
   }, [filteredLocationMarkers, regions, text]);
 
   const combinedResults = useMemo(
-    () => [
-      ...geoResults.slice(0, 10),
-      ...f3LocationResults.slice(0, 10),
-      ...f3RegionResults.slice(0, 10),
-    ],
-    [f3LocationResults, f3RegionResults, geoResults],
+    () =>
+      isMobileWidth
+        ? [
+            ...f3LocationResults.slice(0, 10),
+            ...f3RegionResults.slice(0, 10),
+            ...geoResults.slice(0, 10),
+          ]
+        : [
+            ...geoResults.slice(0, 10),
+            ...f3LocationResults.slice(0, 10),
+            ...f3RegionResults.slice(0, 10),
+          ],
+    [f3LocationResults, f3RegionResults, geoResults, isMobileWidth],
   );
 
   return (

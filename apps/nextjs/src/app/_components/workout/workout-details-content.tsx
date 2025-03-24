@@ -15,6 +15,7 @@ import { toast } from "@acme/ui/toast";
 
 import { isDevMode } from "~/trpc/util";
 import { dayjs } from "~/utils/frontendDayjs";
+import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { appStore } from "~/utils/store/app";
 import {
   DeleteType,
@@ -114,6 +115,9 @@ export const WorkoutDetailsContent = ({
     [selectedEventId, results],
   );
   const location = useMemo(() => results?.location, [results]);
+
+  // Update the search params when the panel is open
+  useUpdateEventSearchParams(location?.locationId ?? null, selectedEventId);
 
   const isLongNotes = useMemo(() => {
     return gte(event?.description?.length, 300);
