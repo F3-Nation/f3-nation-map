@@ -41,16 +41,14 @@ export const FilteredMapResultsProvider = (params: {
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
-  const { data: allLocationMarkersQuery } =
-    api.location.getLocationMarkersSparse.useQuery();
-  const { data: lowBandwidthAllLocationMarkerFilterDataQuery } =
-    api.location.allLocationMarkerFilterData.useQuery();
-
-  const allLocationMarkers =
-    allLocationMarkersQuery ?? params.allLocationMarkers;
-  const lowBandwidthAllLocationMarkerFilterData =
-    lowBandwidthAllLocationMarkerFilterDataQuery ??
-    params.lowBandwidthAllLocationMarkerFilterData;
+  const { data: allLocationMarkers } =
+    api.location.getLocationMarkersSparse.useQuery(undefined, {
+      initialData: params.allLocationMarkers,
+    });
+  const { data: lowBandwidthAllLocationMarkerFilterData } =
+    api.location.allLocationMarkerFilterData.useQuery(undefined, {
+      initialData: params.lowBandwidthAllLocationMarkerFilterData,
+    });
 
   const filters = filterStore.useBoundStore();
 
