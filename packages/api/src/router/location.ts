@@ -460,6 +460,11 @@ export const locationRouter = createTRPCRouter({
 
       const location = {
         ...locationResult,
+        events: events.sort(
+          (a, b) =>
+            DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
+            DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
+        ),
         lat: locationResult.lat,
         lon: locationResult.lon,
         fullAddress: [
