@@ -28,6 +28,7 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
   const { filteredLocationMarkers } = useFilteredMapResults();
   const selectedLocationId = selectedItemStore.use.locationId();
   const selectedEventId = selectedItemStore.use.eventId();
+  const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
   const touchDevice = isTouchDevice();
   const [markerRef] = useAdvancedMarkerRef();
@@ -37,7 +38,9 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
     (marker) => marker.id === id,
   )?.events;
   const isCurrentSelectedLocation = selectedLocationId === id;
+  const isCurrentPanelLocation = panelLocationId === id;
   const noSelectedEvent = selectedEventId == null;
+  const noSelectedPanelEvent = panelEventId == null;
 
   return !events?.length ? null : (
     <AdvancedMarker
@@ -45,6 +48,13 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
       position={position}
       anchorPoint={AdvancedMarkerAnchorPoint.BOTTOM}
       className={"marker feature"}
+      onClick={(e) => {
+        // Must call stop to prevent the map from being clicked
+        e.stop();
+      }}
+      zIndex={
+        isCurrentSelectedLocation ? 1002 : isCurrentPanelLocation ? 1001 : 1000
+      }
     >
       <div className="relative flex flex-col">
         <div
@@ -52,6 +62,7 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
           style={{ zIndex: 1, width: `${events.length * 30 + 4}px` }}
         >
           {events.map((event, eventIdx, eventArray) => {
+            const isCurrentPanelLocation = panelLocationId === id;
             const isCurrentPanelEvent = panelEventId === event.id;
             const isCurrentSelectedEvent = selectedEventId === event.id;
             const dotw = event.dayOfWeek;
@@ -68,14 +79,14 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
                     ...(isNaN(event.id) ? {} : { eventId: event.id }),
                   });
                 }}
-                onMouseEnter={() => {
+                onMouseEnter={(e) => {
+                  e.preventDefault();
                   if (touchDevice) return;
                   const eventId = event.id;
-                  const isAlreadySelected = isCurrentSelectedEvent;
                   setSelectedItem({
                     locationId: id,
                     ...(isNaN(eventId) ? {} : { eventId }),
-                    showPanel: !!isAlreadySelected,
+                    showPanel: false,
                   });
                 }}
                 className={cn(
@@ -91,7 +102,8 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
                     "border-red-600 bg-red-600 font-bold dark:bg-red-400":
                       // On mobile we always use the background
                       (touchDevice && isCurrentSelectedEvent) ||
-                      isCurrentPanelEvent,
+                      isCurrentPanelEvent ||
+                      (isCurrentPanelLocation && noSelectedPanelEvent),
                   },
                 )}
               >

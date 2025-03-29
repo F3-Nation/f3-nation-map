@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import {
   AdvancedMarker,
   AdvancedMarkerAnchorPoint,
@@ -26,10 +25,6 @@ export const FeaturesClusterMarker = ({
   clusterId,
 }: TreeClusterMarkerProps) => {
   const [markerRef, marker] = useAdvancedMarkerRef();
-  const handleClick = useCallback(() => {
-    closePanel();
-    return onMarkerClick && onMarkerClick(marker!, clusterId);
-  }, [onMarkerClick, marker, clusterId]);
   const markerSize = Math.floor(36 + Math.sqrt(size) * 2);
 
   return (
@@ -37,7 +32,12 @@ export const FeaturesClusterMarker = ({
       ref={markerRef}
       position={position}
       zIndex={size}
-      onClick={handleClick}
+      onClick={(e) => {
+        // Must call stop to prevent the map from being clicked
+        e.stop();
+        closePanel();
+        return onMarkerClick?.(marker!, clusterId);
+      }}
       className={
         "marker cluster flex items-center justify-center rounded-full bg-foreground/30"
       }

@@ -4,6 +4,6 @@ export const useIsMobileWidth = () => {
   const [width] = useWindowSize();
   return {
     isMobileWidth: width < 1024,
-    isDesktopWidth: width > 1024,
+    isDesktopWidth: width >= 1024,
   };
 };

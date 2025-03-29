@@ -36,10 +36,10 @@ const initialState = {
   },
   modifiedLocationMarkers: {} as Record<number, { lat: number; lon: number }>,
   tiles: "street" as "street" | "hybrid",
+  event: "idle" as "idle" | "drag" | "zoom",
   tilesLoaded: false,
   showDebug: false,
   loaded: false,
-  dragging: false,
   hasMovedMap: false,
 };
 

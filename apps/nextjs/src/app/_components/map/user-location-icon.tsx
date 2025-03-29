@@ -1,5 +1,6 @@
 "use client";
 
+import type { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
 import { LocateFixed } from "lucide-react";
 
 import { cn } from "@acme/ui";
@@ -10,7 +11,13 @@ import { ModalType, openModal } from "~/utils/store/modal";
 import { UserLocationContent } from "../modal/user-location-content";
 import { useUserLocation } from "./user-location-provider";
 
-export const UserLocationIcon = () => {
+export const UserLocationIcon = ({
+  className,
+  ...rest
+}: DetailedHTMLProps<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  HTMLButtonElement
+>) => {
   const { updateUserLocation, status, permissions } = useUserLocation();
 
   return (
@@ -40,7 +47,9 @@ export const UserLocationIcon = () => {
               "user-select-none",
               "shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]", // Google Maps shadow
               "flex items-center justify-center",
+              className,
             )}
+            {...rest}
           >
             <div
               className={cn({

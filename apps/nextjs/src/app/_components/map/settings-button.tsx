@@ -6,7 +6,7 @@ import { cn } from "@acme/ui";
 
 import { ModalType, openModal } from "~/utils/store/modal";
 
-export const SettingsButton = () => {
+export const SettingsButton = ({ className }: { className?: string }) => {
   return (
     <div className={"flex flex-col lg:mx-2.5"}>
       <button
@@ -24,6 +24,7 @@ export const SettingsButton = () => {
           "shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]", // Google Maps shadow
           "flex items-center justify-center",
           // "rounded-sm", // Slight border radius (2px)
+          className,
         )}
         onClick={() => {
           openModal(ModalType.SETTINGS);

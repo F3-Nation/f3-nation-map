@@ -9,7 +9,7 @@ export default async function HelpPage() {
   RERENDER_LOGS && console.log("MapPage rerender");
 
   return (
-    <main className="pointer-events-auto relative max-h-screen gap-4 overflow-y-auto">
+    <main className="pointer-events-auto relative max-h-dvh gap-4 overflow-y-auto">
       <div className="mx-auto flex max-w-2xl flex-col gap-4 px-[3%] py-8">
         <Suspense fallback={<div>Loading...</div>}>
           <Header />

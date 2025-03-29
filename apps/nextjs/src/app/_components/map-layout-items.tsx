@@ -2,11 +2,11 @@
 
 import type { ComponentProps } from "react";
 import { Suspense } from "react";
-import { useWindowSize } from "@react-hook/window-size";
 import { ControlPosition, MapControl } from "@vis.gl/react-google-maps";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 
+import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { mapStore } from "~/utils/store/map";
 import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
@@ -26,13 +26,11 @@ import { Projection } from "./map/projection";
 import { SettingsButton } from "./map/settings-button";
 import { StagingWatermark } from "./map/staging-watermark";
 import { UserLocationIcon } from "./map/user-location-icon";
-import { ZoomButtons } from "./map/zoom-buttons";
 
 const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
   console.log("MapLayoutItems rerender");
-  const [width] = useWindowSize();
-  const isMobile = width < 1024;
+  const { isDesktopWidth, isMobileWidth } = useIsMobileWidth();
   const showDebugStore = mapStore.use.showDebug();
 
   const showDebug =
@@ -52,17 +50,17 @@ export const MapLayoutItems = () => {
       <DesktopSelectedItem />
 
       <MapControl
-        position={isMobile ? ControlPosition.TOP : ControlPosition.BOTTOM}
+        position={isMobileWidth ? ControlPosition.TOP : ControlPosition.BOTTOM}
       >
         <StagingWatermark />
       </MapControl>
-      {isMobile ? null : (
+      {isDesktopWidth ? (
         <>
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-            <UserLocationIcon />
+            <SettingsButton className="mt-2" />
           </MapControl>
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-            <SettingsButton />
+            <UserLocationIcon />
           </MapControl>
           <MapControl position={ControlPosition.TOP_LEFT}>
             <DesktopFilterButtons />
@@ -71,16 +69,17 @@ export const MapLayoutItems = () => {
             <HelpButton />
           </MapControl>
         </>
+      ) : (
+        <>
+          <MapControl position={ControlPosition.RIGHT_TOP}>
+            <SettingsButton className="-mt-[2px] mr-[10px]" />
+          </MapControl>
+          <MapControl position={ControlPosition.RIGHT_TOP}>
+            <UserLocationIcon className="mr-[10px] mt-2" />
+          </MapControl>
+        </>
       )}
       <NearbyLocationUpdateButton />
-
-      <MobileBottomRightButtons>
-        <div className="flex w-full flex-col items-end justify-end gap-2 px-1">
-          <UserLocationIcon />
-          <SettingsButton />
-          <ZoomButtons />
-        </div>
-      </MobileBottomRightButtons>
 
       <MobileAboveSearchBox>
         <div className="mb-[0px] flex flex-row items-center justify-start gap-2 overflow-auto px-2">
@@ -111,14 +110,6 @@ const MobileAboveSearchBox = (props: ComponentProps<"div">) => (
     style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
     // 46px and 6px to keep the slider in the middle between them
     className="absolute bottom-[44px] left-0 right-0 block lg:hidden"
-    {...props}
-  />
-);
-
-const MobileBottomRightButtons = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute bottom-[88px] right-1 flex flex-col gap-1 lg:hidden"
     {...props}
   />
 );

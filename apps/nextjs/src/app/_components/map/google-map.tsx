@@ -1,19 +1,15 @@
 "use client";
 
-import type { MapCameraChangedEvent } from "@vis.gl/react-google-maps";
-import { memo, Suspense, useEffect, useMemo, useRef } from "react";
+import { memo, Suspense, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-// import { ClusteredMarkers } from "./clustered-markers";
 import { useWindowSize } from "@react-hook/window-size";
-import { APIProvider, Map } from "@vis.gl/react-google-maps";
-import debounce from "lodash/debounce";
+import { APIProvider, ControlPosition, Map } from "@vis.gl/react-google-maps";
 
 import { DEFAULT_CENTER, SIDEBAR_WIDTH } from "@acme/shared/app/constants";
 import { safeParseFloat } from "@acme/shared/common/functions";
 import { useTheme } from "@acme/ui/theme";
 import { toast } from "@acme/ui/toast";
 
-import type { MapStoreState } from "~/utils/store/map";
 import { env } from "~/env";
 import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { useUpdateLocSearchParams } from "~/utils/hooks/use-update-loc-search-params";
@@ -21,6 +17,7 @@ import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { queryParamStore } from "~/utils/store/query-param";
 import { closePanel, setSelectedItem } from "~/utils/store/selected-item";
+import { MapEventListener } from "../map-event-listener";
 import { MapLayoutItems } from "../map-layout-items";
 import { ClusteredMarkers } from "../marker-clusters/clustered-markers";
 import { PlaceResultIconPane } from "./place-result-icon-pane";
@@ -140,25 +137,6 @@ const ProvidedGoogleMapComponent = memo(() => {
 
   // Initialize selected item from URL params
 
-  const debouncedUpdateMap = useMemo(
-    () =>
-      debounce((e: MapCameraChangedEvent) => {
-        const newState: Partial<MapStoreState> = {};
-        const currentCenter = mapStore.get("center");
-        if (mapStore.get("zoom") !== e.detail.zoom)
-          newState.zoom = e.detail.zoom;
-        if (
-          currentCenter.lat !== e.detail.center.lat &&
-          currentCenter.lng !== e.detail.center.lng
-        ) {
-          newState.center = e.detail.center;
-          newState.hasMovedMap = true;
-        }
-        mapStore.setState(newState);
-      }, 100),
-    [],
-  );
-
   return (
     <div
       style={{
@@ -176,12 +154,17 @@ const ProvidedGoogleMapComponent = memo(() => {
         streetViewControl={false}
         mapTypeControl={false}
         fullscreenControl={false}
-        zoomControl={isMobileWidth ? false : true}
+        zoomControl={true}
+        zoomControlOptions={{
+          position: isMobileWidth
+            ? ControlPosition.RIGHT_TOP
+            : ControlPosition.RIGHT_BOTTOM,
+        }}
         cameraControl={false}
-        // clickableIcons={false}
         disableDoubleClickZoom
         // styles={[ { featureType: "all", elementType: "all", stylers: [{ visibility: "off" }], }, ]}
         onClick={(e) => {
+          console.log("map on click", e);
           if (appStore.get("mode") === "edit" && e.detail.latLng) {
             const latLng = e.detail.latLng;
             mapStore.setState({ updateLocation: latLng });
@@ -194,9 +177,6 @@ const ProvidedGoogleMapComponent = memo(() => {
             closePanel();
           }
         }}
-        onZoomChanged={debouncedUpdateMap}
-        onCenterChanged={debouncedUpdateMap}
-        onBoundsChanged={debouncedUpdateMap}
         clickableIcons={false}
       >
         <UrlUpdater />
@@ -204,6 +184,7 @@ const ProvidedGoogleMapComponent = memo(() => {
         <MapLayoutItems />
         <UpdatePane />
         <PlaceResultIconPane />
+        <MapEventListener />
       </Map>
     </div>
   );

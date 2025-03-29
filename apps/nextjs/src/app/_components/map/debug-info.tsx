@@ -1,16 +1,14 @@
 "use client";
 
-import { useMap } from "@vis.gl/react-google-maps";
-
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { cn } from "@acme/ui";
 
+import { mapStore } from "~/utils/store/map";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 
 export const DebugInfo = () => {
-  const map = useMap();
-  const zoom = map?.getZoom();
-  const bounds = map?.getBounds();
+  const zoom = mapStore.use.zoom();
+  const center = mapStore.use.center();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
   return (
@@ -22,16 +20,7 @@ export const DebugInfo = () => {
     >
       <div className="m-0 p-0">Zoom: {zoom?.toFixed(1)}</div>
       <div className="m-0 p-0">
-        North: {bounds?.getNorthEast().lat().toFixed(5)}
-      </div>
-      <div className="m-0 p-0">
-        East: {bounds?.getNorthEast().lng().toFixed(5)}
-      </div>
-      <div className="m-0 p-0">
-        South: {bounds?.getSouthWest().lat().toFixed(5)}
-      </div>
-      <div className="m-0 p-0">
-        West: {bounds?.getSouthWest().lng().toFixed(5)}
+        Center: {center?.lat.toFixed(5)}, {center?.lng.toFixed(5)}
       </div>
       <div className="m-0 p-0">Workouts: {filteredLocationMarkers?.length}</div>
     </div>
