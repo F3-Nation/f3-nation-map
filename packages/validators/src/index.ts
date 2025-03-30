@@ -55,10 +55,14 @@ export const EventInsertSchema = createInsertSchema(events, {
     s.regex(/^\d{4}$/, {
       message: "End time must be in 24hr format (HHmm)",
     }),
-}).extend({
-  regionId: z.number(),
-  aoId: z.number(),
-});
+})
+  .extend({
+    regionId: z.number(),
+    aoId: z.number(),
+  })
+  .omit({
+    orgId: true,
+  });
 export const EventSelectSchema = createSelectSchema(events);
 
 export const CreateEventSchema = EventInsertSchema.omit({
@@ -71,7 +75,7 @@ export const CreateEventSchema = EventInsertSchema.omit({
 export const NationInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-});
+}).omit({ orgType: true });
 export const NationSelectSchema = createSelectSchema(orgs);
 
 // SECTOR SCHEMA
@@ -82,7 +86,7 @@ export const SectorInsertSchema = createInsertSchema(orgs, {
       .min(1, { message: "Please select a nation" })
       .refine((value) => value !== -1, { message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-});
+}).omit({ orgType: true });
 export const SectorSelectSchema = createSelectSchema(orgs);
 
 // AREA SCHEMA
@@ -93,7 +97,7 @@ export const AreaInsertSchema = createInsertSchema(orgs, {
       .min(1, { message: "Please select a sector" })
       .refine((value) => value !== -1, { message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-});
+}).omit({ orgType: true });
 export const AreaSelectSchema = createSelectSchema(orgs);
 
 // REGION SCHEMA
@@ -104,7 +108,7 @@ export const RegionInsertSchema = createInsertSchema(orgs, {
       .min(1, { message: "Please select an area" })
       .refine((value) => value !== -1, { message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-});
+}).omit({ orgType: true });
 export const RegionSelectSchema = createSelectSchema(orgs);
 
 // AO SCHEMA
@@ -115,7 +119,7 @@ export const AOInsertSchema = createInsertSchema(orgs, {
       .min(1, { message: "Please select a region" })
       .refine((value) => value !== -1, { message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-});
+}).omit({ orgType: true });
 export const AOSelectSchema = createSelectSchema(orgs);
 
 export const DeleteRequestSchema = z.object({

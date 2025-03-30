@@ -74,10 +74,11 @@ export const locationRouter = createTRPCRouter({
 
       const select = {
         id: schema.locations.id,
-        name: aoOrg.name,
-        orgId: schema.locations.orgId,
-        regionName: regionOrg.name,
+        locationName: schema.locations.name,
+        aoId: aoOrg.id,
         aoName: aoOrg.name,
+        regionId: regionOrg.id,
+        regionName: regionOrg.name,
         description: schema.locations.description,
         isActive: schema.locations.isActive,
         latitude: schema.locations.latitude,
@@ -91,7 +92,6 @@ export const locationRouter = createTRPCRouter({
         addressCountry: schema.locations.addressCountry,
         meta: schema.locations.meta,
         created: schema.locations.created,
-        regionId: regionOrg.id,
       };
 
       const [locationCount] = await ctx.db
@@ -613,6 +613,7 @@ export const locationRouter = createTRPCRouter({
       const [location] = await ctx.db
         .select({
           id: schema.locations.id,
+          locationName: schema.locations.name,
           aoName: aoOrg.name,
           description: schema.locations.description,
           isActive: schema.locations.isActive,
@@ -624,6 +625,7 @@ export const locationRouter = createTRPCRouter({
           latitude: schema.locations.latitude,
           longitude: schema.locations.longitude,
           addressStreet: schema.locations.addressStreet,
+          addressStreet2: schema.locations.addressStreet2,
           addressCity: schema.locations.addressCity,
           addressState: schema.locations.addressState,
           addressZip: schema.locations.addressZip,

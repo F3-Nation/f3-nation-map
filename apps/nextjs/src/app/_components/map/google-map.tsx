@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, Suspense, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useWindowSize } from "@react-hook/window-size";
 import { APIProvider, ControlPosition, Map } from "@vis.gl/react-google-maps";
@@ -107,21 +107,17 @@ export const GoogleMapComponent = () => {
   }, [queryLocationId, queryEventId]);
 
   return (
-    <Suspense>
-      <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_API_KEY}>
-        <ProvidedGoogleMapComponent
-          defaultZoom={getDefaultZoom({
-            queryZoom: queryZoom,
-          })}
-          defaultCenter={getDefaultCenter({
-            locationData: utils.location.getLocationMarkersSparse.getData(),
-            queryLat,
-            queryLon,
-            queryLocationId,
-          })}
-        />
-      </APIProvider>
-    </Suspense>
+    <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_API_KEY}>
+      <ProvidedGoogleMapComponent
+        defaultZoom={getDefaultZoom({ queryZoom: queryZoom })}
+        defaultCenter={getDefaultCenter({
+          locationData: utils.location.getLocationMarkersSparse.getData(),
+          queryLat,
+          queryLon,
+          queryLocationId,
+        })}
+      />
+    </APIProvider>
   );
 };
 
@@ -149,12 +145,20 @@ const ProvidedGoogleMapComponent = memo(
 
     const [width, height] = useWindowSize();
 
-    // Initialize selected item from URL params
+    // We have to manage mounting the map otherwise there is a mismatch in rendered size
+    // Causing it to render as a blank screen. Not sure why "use client" isn't working
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
+    if (!isMounted) {
+      return <div style={{ height: "100vh", width: "100%" }} />;
+    }
 
     return (
       <div
         style={{
-          height,
+          height: height,
           width:
             width >= Number(BreakPoints.LG) ? width - SIDEBAR_WIDTH : width,
         }}
@@ -210,8 +214,6 @@ const ProvidedGoogleMapComponent = memo(
 );
 
 ProvidedGoogleMapComponent.displayName = "ProvidedGoogleMapComponent";
-
-export default GoogleMapComponent;
 
 const getDefaultCenter = ({
   queryLat,

@@ -89,6 +89,8 @@ export const checkHasRoleOnOrg = async ({
     o.level5Id,
   ]) as number[];
 
+  console.log("allAncestorOrgIds", allAncestorOrgIds);
+
   const matchingPermission = session.roles?.find(
     (r) =>
       (r.roleName === "admin" || r.roleName === roleName) &&

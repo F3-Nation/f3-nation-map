@@ -50,6 +50,12 @@ const columns: TableOptions<
   RouterOutputs["location"]["all"]["locations"][number]
 >["columns"] = [
   {
+    accessorKey: "locationName",
+    meta: { name: "Location Name" },
+    header: Header,
+    cell: (cell) => <Cell {...cell} />,
+  },
+  {
     accessorKey: "regionName",
     meta: { name: "Region" },
     header: Header,
@@ -61,29 +67,6 @@ const columns: TableOptions<
     header: Header,
     cell: (cell) => <Cell {...cell} />,
   },
-  {
-    accessorKey: "name",
-    meta: { name: "Location" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
-  // {
-  //   accessorKey: "events",
-  //   meta: { name: "Events" },
-  //   header: Header,
-  //   cell: (cell) => (
-  //     <Cell {...cell}>
-  //       <Tooltip>
-  //         <TooltipTrigger>{cell.row.original.events.length}</TooltipTrigger>
-  //         <TooltipContent>
-  //           {cell.row.original.events.length > 0
-  //             ? cell.row.original.events.map((event) => event.name).join(", ")
-  //             : "No events"}
-  //         </TooltipContent>
-  //       </Tooltip>
-  //     </Cell>
-  //   ),
-  // },
   {
     accessorKey: "isActive",
     meta: { name: "Status" },
@@ -104,18 +87,6 @@ const columns: TableOptions<
       );
     },
   },
-  // {
-  //   accessorKey: "description",
-  //   meta: { name: "Description" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "email",
-  //   meta: { name: "Email" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
   {
     accessorKey: "latitude",
     meta: { name: "Latitude" },

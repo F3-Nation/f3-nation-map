@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { env } from "process";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleHelp } from "lucide-react";
 import { z } from "zod";
 
-import { DEFAULT_CENTER, Z_INDEX } from "@acme/shared/app/constants";
+import { COUNTRIES, DEFAULT_CENTER, Z_INDEX } from "@acme/shared/app/constants";
+import { safeParseFloat, safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -24,13 +26,6 @@ import {
   useForm,
 } from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/select";
 import { Spinner } from "@acme/ui/spinner";
 import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
@@ -45,7 +40,8 @@ import { LocationInsertSchema } from "@acme/validators";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
-import { CountrySelect } from "./country-select";
+import { GoogleMapSimple } from "../map/google-map-simple";
+import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminLocationsModal({
   data,
@@ -62,36 +58,31 @@ export default function AdminLocationsModal({
   const form = useForm({
     schema: LocationInsertSchema.extend({
       regionId: z.number(),
+      longitude: z.string(),
+      latitude: z.string(),
     }),
-    defaultValues: {
-      id: location?.id ?? undefined,
-      aoName: location?.aoName ?? "",
-      description: location?.description ?? "",
-      isActive: location?.isActive ?? true,
-      orgId: location?.orgId ?? -1,
-      regionId: location?.regionId ?? -1,
-      latitude: location?.latitude ? location.latitude : DEFAULT_CENTER[0],
-      longitude: location?.longitude ? location.longitude : DEFAULT_CENTER[1],
-      addressStreet: location?.addressStreet ?? null,
-      addressCity: location?.addressCity ?? null,
-      addressState: location?.addressState ?? null,
-      addressZip: location?.addressZip ?? null,
-      addressCountry: location?.addressCountry ?? null,
-      //meta: location?.meta ?? null,
-    },
   });
+  const formLatitude = form.watch("latitude");
+  const formLongitude = form.watch("longitude");
 
   useEffect(() => {
     form.reset({
       id: location?.id ?? undefined,
+      name: location?.locationName ?? "",
       aoName: location?.aoName ?? "",
+      email: location?.email ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
       orgId: location?.orgId ?? -1,
       regionId: location?.regionId ?? -1,
-      latitude: location?.latitude ? location.latitude : DEFAULT_CENTER[0],
-      longitude: location?.longitude ? location.longitude : DEFAULT_CENTER[1],
+      latitude: location?.latitude
+        ? location.latitude.toString()
+        : DEFAULT_CENTER[0].toString(),
+      longitude: location?.longitude
+        ? location.longitude.toString()
+        : DEFAULT_CENTER[1].toString(),
       addressStreet: location?.addressStreet ?? null,
+      addressStreet2: location?.addressStreet2 ?? null,
       addressCity: location?.addressCity ?? null,
       addressState: location?.addressState ?? null,
       addressZip: location?.addressZip ?? null,
@@ -116,16 +107,9 @@ export default function AdminLocationsModal({
     },
   });
 
-  // const dragEventHandler = useMemo(
-  //   () => ({
-  //     dragend(e: { target: L.Marker }) {
-  //       const { lat, lng } = e.target.getLatLng();
-  //       form.setValue("latitude", lat);
-  //       form.setValue("longitude", lng);
-  //     },
-  //   }),
-  //   [form],
-  // );
+  const sortedCountries = useMemo(() => {
+    return [...COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
 
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
@@ -138,6 +122,9 @@ export default function AdminLocationsModal({
         </DialogHeader>
 
         <div className="flex flex-wrap">
+          Locations are the the placements of workouts. They are usually
+          associated with AOs. If you are creating a new location, you must
+          associate it with an AO or create an AO first.
           <div className="w-1/2">
             <Form {...form}>
               <form
@@ -145,7 +132,11 @@ export default function AdminLocationsModal({
                   async (data) => {
                     setIsSubmitting(true);
                     try {
-                      await crupdateLocation.mutateAsync(data);
+                      await crupdateLocation.mutateAsync({
+                        ...data,
+                        latitude: safeParseFloat(data.latitude),
+                        longitude: safeParseFloat(data.longitude),
+                      });
                     } catch (error) {
                       toast.error("Failed to update location");
                       console.error(error);
@@ -180,19 +171,21 @@ export default function AdminLocationsModal({
                   <div className="mb-4 w-1/2 px-2">
                     <FormField
                       control={form.control}
-                      name="aoName"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Name</FormLabel>
                           <TooltipProvider>
                             <Tooltip>
-                              <TooltipTrigger>
+                              <TooltipTrigger type="button">
                                 <CircleHelp
                                   size={14}
                                   className="display-inline ml-2"
                                 />
                               </TooltipTrigger>
-                              <TooltipContent>Lorem Ipsum</TooltipContent>
+                              <TooltipContent>
+                                The name of the location (not the AO)
+                              </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                           <FormControl>
@@ -214,32 +207,25 @@ export default function AdminLocationsModal({
                       render={({ field }) => (
                         <FormItem key={`region-${field.value}`}>
                           <FormLabel>Region</FormLabel>
-                          <Select
+                          <VirtualizedCombobox
                             value={field.value?.toString()}
-                            onValueChange={(value) => {
-                              const selectedValue = Number(value);
-                              field.onChange(selectedValue);
-                              form.setValue("orgId", -1); // Reset ao selection
+                            options={
+                              regions?.map((region) => ({
+                                value: region.id.toString(),
+                                label: region.name,
+                              })) ?? []
+                            }
+                            searchPlaceholder="Select a region"
+                            onSelect={(value) => {
+                              const orgId = safeParseInt(value as string);
+                              if (orgId == null) {
+                                toast.error("Invalid orgId");
+                                return;
+                              }
+                              field.onChange(orgId);
                             }}
-                            defaultValue={field.value?.toString()}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a region" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {regions
-                                ?.slice()
-                                .sort((a, b) => a.name.localeCompare(b.name))
-                                .map((region) => (
-                                  <SelectItem
-                                    key={`region-${region.id}`}
-                                    value={region.id.toString()}
-                                  >
-                                    {region.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
+                            isMulti={false}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -255,38 +241,26 @@ export default function AdminLocationsModal({
                         );
                         return (
                           <FormItem key={`ao-${field.value}`}>
-                            <FormLabel>Location</FormLabel>
-                            <Select
+                            <FormLabel>AO</FormLabel>
+                            <VirtualizedCombobox
                               value={field.value?.toString()}
-                              onValueChange={(value) => {
-                                field.onChange(Number(value));
-
-                                const selectedAO = aoData?.aos.find(
-                                  (ao) => ao.id === Number(value),
-                                );
-                                if (selectedAO) {
-                                  form.setValue("orgId", Number(selectedAO.id));
+                              options={
+                                filteredAOs?.map((ao) => ({
+                                  value: ao.id.toString(),
+                                  label: ao.name,
+                                })) ?? []
+                              }
+                              searchPlaceholder="Select an AO in this region"
+                              onSelect={(value) => {
+                                const aoId = safeParseInt(value as string);
+                                if (aoId == null) {
+                                  toast.error("Invalid aoId");
+                                  return;
                                 }
+                                field.onChange(aoId);
                               }}
-                              defaultValue={field.value?.toString()}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an AO" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {filteredAOs
-                                  ?.slice()
-                                  .sort((a, b) => a.name.localeCompare(b.name))
-                                  .map((location) => (
-                                    <SelectItem
-                                      key={`ao-${location.id}`}
-                                      value={location.id.toString()}
-                                    >
-                                      {location.name}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                              isMulti={false}
+                            />
                             <FormMessage />
                           </FormItem>
                         );
@@ -326,6 +300,7 @@ export default function AdminLocationsModal({
                               placeholder="Latitude"
                               {...field}
                               value={field.value ?? ""}
+                              type="number"
                             />
                           </FormControl>
                           <FormMessage />
@@ -345,6 +320,7 @@ export default function AdminLocationsModal({
                               placeholder="Longitude"
                               {...field}
                               value={field.value ?? ""}
+                              type="number"
                             />
                           </FormControl>
                           <FormMessage />
@@ -362,6 +338,25 @@ export default function AdminLocationsModal({
                           <FormControl>
                             <Input
                               placeholder="Street"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="mb-4 w-1/2 px-2">
+                    <FormField
+                      control={form.control}
+                      name="addressStreet2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Street 2</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Street 2"
                               {...field}
                               value={field.value ?? ""}
                             />
@@ -429,9 +424,36 @@ export default function AdminLocationsModal({
                     />
                   </div>
                   <div className="mb-4 w-1/2 px-2">
-                    <CountrySelect
+                    <FormField
                       control={form.control}
                       name="addressCountry"
+                      render={({ field }) => {
+                        return (
+                          <FormItem key={`country-${field.value}`}>
+                            <FormLabel>Country</FormLabel>
+                            <VirtualizedCombobox
+                              value={field.value?.toString()}
+                              options={
+                                sortedCountries?.map((country) => ({
+                                  value: country.code,
+                                  label: country.name,
+                                })) ?? []
+                              }
+                              searchPlaceholder="Select a country"
+                              onSelect={(value) => {
+                                const countryCode = value as string;
+                                if (countryCode == null) {
+                                  toast.error("Invalid country code");
+                                  return;
+                                }
+                                field.onChange(countryCode);
+                              }}
+                              isMulti={false}
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
 
@@ -475,17 +497,41 @@ export default function AdminLocationsModal({
                       </Button>
                     </div>
                   </div>
+                  {env.NEXT_PUBLIC_CHANNEL !== "prod" && (
+                    <div className="mb-4 w-full px-2">
+                      <div className="flex space-x-4 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            form.setValue("name", "Fake Location");
+                            form.setValue("regionId", 1);
+                            form.setValue("orgId", 1);
+                            form.setValue("email", "fake@example.com");
+                            form.setValue("latitude", "37.7749");
+                            form.setValue("longitude", "-122.4194");
+                          }}
+                          className="w-full"
+                        >
+                          (DEV) Fake data
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </form>
             </Form>
           </div>
-          {/* <div className="w-1/2">
-            <GoogleMap
-              latitude={form.getValues("latitude") ?? DEFAULT_CENTER[0]}
-              longitude={form.getValues("longitude") ?? DEFAULT_CENTER[1]}
-              dragEventHandler={dragEventHandler}
+          <div className="w-1/2">
+            <GoogleMapSimple
+              onCenterChanged={(center) => {
+                form.setValue("latitude", center.lat.toString());
+                form.setValue("longitude", center.lng.toString());
+              }}
+              latitude={safeParseFloat(formLatitude)}
+              longitude={safeParseFloat(formLongitude)}
             />
-          </div> */}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

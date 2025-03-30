@@ -1,72 +1,70 @@
-import { useEffect, useState } from "react";
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import { useEffect } from "react";
+import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
 
 import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 
-const mapContainerStyle = {
-  width: "100%",
-  height: "100%",
-};
-
-const defaultOptions = {
-  disableDefaultUI: true,
-  zoomControl: true,
-};
+import { env } from "~/env";
 
 interface GoogleMapSimpleProps {
-  latitude: number;
-  longitude: number;
-  onMarkerDragEnd?: (position: google.maps.LatLngLiteral) => void;
+  latitude: number | undefined;
+  longitude: number | undefined;
+  onCenterChanged?: (position: google.maps.LatLngLiteral) => void;
 }
 
 export const GoogleMapSimple = ({
   latitude,
   longitude,
-  onMarkerDragEnd,
+  onCenterChanged,
 }: GoogleMapSimpleProps) => {
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
-  });
-
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-
-  useEffect(() => {
-    if (map && latitude && longitude) {
-      map.panTo({ lat: latitude, lng: longitude });
-    }
-  }, [map, latitude, longitude]);
-
-  if (loadError) return <div>Error loading maps</div>;
-  if (!isLoaded) return <div>Loading maps</div>;
-
   return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      zoom={14}
-      center={{
-        lat: latitude ?? DEFAULT_CENTER[0],
-        lng: longitude ?? DEFAULT_CENTER[1],
-      }}
-      options={defaultOptions}
-      onLoad={setMap}
-    >
-      <Marker
-        position={{
-          lat: latitude ?? DEFAULT_CENTER[0],
-          lng: longitude ?? DEFAULT_CENTER[1],
-        }}
-        draggable={true}
-        onDragEnd={(e) => {
-          if (onMarkerDragEnd && e.latLng) {
-            onMarkerDragEnd({
-              lat: e.latLng.lat(),
-              lng: e.latLng.lng(),
-            });
-          }
-        }}
+    <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_API_KEY}>
+      <ProvidedGoogleMapSimple
+        latitude={latitude}
+        longitude={longitude}
+        onCenterChanged={onCenterChanged}
       />
-    </GoogleMap>
+    </APIProvider>
   );
 };
 
-export default GoogleMapSimple;
+const ProvidedGoogleMapSimple = ({
+  latitude,
+  longitude,
+  onCenterChanged,
+}: GoogleMapSimpleProps) => {
+  const map = useMap();
+  useEffect(() => {
+    if (latitude != null && longitude != null) {
+      map?.setCenter({
+        lat: latitude,
+        lng: longitude,
+      });
+    }
+  }, [latitude, longitude, map]);
+  return (
+    <Map
+      center={
+        !onCenterChanged && latitude != null && longitude != null
+          ? { lat: latitude, lng: longitude }
+          : undefined
+      }
+      defaultZoom={14}
+      defaultCenter={{
+        lat: latitude ?? DEFAULT_CENTER[0],
+        lng: longitude ?? DEFAULT_CENTER[1],
+      }}
+      onIdle={(e) => {
+        const center = e.map.getCenter();
+        const lat = center?.lat();
+        const lng = center?.lng();
+        if (onCenterChanged && lat != null && lng != null) {
+          onCenterChanged({ lat, lng });
+        }
+      }}
+    >
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl">
+        📍
+      </div>
+    </Map>
+  );
+};

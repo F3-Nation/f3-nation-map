@@ -1,15 +1,12 @@
-import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { MapPageWrapper } from "~/app/_components/map-page-wrapper";
+import { GoogleMapComponent } from "~/app/_components/map/google-map";
 import { ssg } from "~/trpc/ssg";
 import { FilteredMapResultsProvider } from "./_components/map/filtered-map-results-provider";
 import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
-
-const Map = dynamic(() => import("~/app/_components/map/google-map"), {
-  ssr: false,
-});
 
 export default async function MapPage() {
   const locationMarkersSparse =
@@ -33,7 +30,9 @@ export default async function MapPage() {
         <MapPageWrapper>
           <main className="pointer-events-auto relative h-dvh w-full">
             {/* Must have relative so that absolute things show up on the map */}
-            <Map />
+            <Suspense>
+              <GoogleMapComponent />
+            </Suspense>
           </main>
         </MapPageWrapper>
       </TextSearchResultsProvider>
