@@ -29,6 +29,7 @@ export const AOsTable = () => {
   return (
     <MDTable
       data={aos?.aos}
+      containerClassName="max-w-full"
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
       columns={columns}
@@ -54,6 +55,9 @@ const columns: TableOptions<
 >["columns"] = [
   {
     accessorKey: "name",
+    size: 20,
+    maxSize: 20,
+    minSize: 20,
     meta: { name: "AO" },
     header: Header,
     cell: (cell) => <Cell {...cell} />,

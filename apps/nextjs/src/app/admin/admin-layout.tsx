@@ -119,7 +119,9 @@ const Layout = ({
           className="block w-full flex-shrink-0 lg:hidden"
           style={{ height: ADMIN_HEADER_HEIGHT }}
         />
-        <div className={cn("flex-1 p-10", className)}>{children}</div>
+        <div className={cn("w-full overflow-hidden p-10", className)}>
+          {children}
+        </div>
       </div>
     </div>
   );

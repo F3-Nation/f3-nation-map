@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -37,6 +38,7 @@ import { AOInsertSchema } from "@acme/validators";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminAOsModal({
   data,
@@ -157,28 +159,25 @@ export default function AdminAOsModal({
                   render={({ field }) => (
                     <FormItem key={`region-${field.value}`}>
                       <FormLabel>Region</FormLabel>
-                      <Select
+                      <VirtualizedCombobox
                         value={field.value?.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value?.toString()}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions
-                            ?.slice()
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((region) => (
-                              <SelectItem
-                                key={`region-${region.id}`}
-                                value={region.id.toString()}
-                              >
-                                {region.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                        options={
+                          regions?.map((region) => ({
+                            value: region.id.toString(),
+                            label: region.name,
+                          })) ?? []
+                        }
+                        searchPlaceholder="Select a region"
+                        onSelect={(value) => {
+                          const orgId = safeParseInt(value as string);
+                          if (orgId == null) {
+                            toast.error("Invalid orgId");
+                            return;
+                          }
+                          field.onChange(orgId);
+                        }}
+                        isMulti={false}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}

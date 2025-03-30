@@ -11,6 +11,7 @@ import type {
 import type { Table as TableType } from "@tanstack/table-core";
 import React, {
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -79,6 +80,7 @@ export interface MDTableProps<T> {
   // https://fettblog.eu/typescript-react-generic-forward-refs/
   tableRef?: React.Ref<TableType<T>> | null;
   filterComponent?: React.ReactNode;
+  containerClassName?: string;
   cellClassName?: string;
   paginationOptions?: PaginationOptions;
   pagination?: PaginationState;
@@ -97,11 +99,12 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     paginationOptions,
     pagination: paginationParam,
     setPagination: setPaginationParam,
-    searchTerm,
-    setSearchTerm,
+    searchTerm: searchTermParam,
+    setSearchTerm: setSearchTermParam,
     onRowClick,
     tableRef,
     filterComponent,
+    containerClassName,
     cellClassName,
     data,
     columns,
@@ -184,7 +187,7 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
       pagination,
       sorting,
       columnVisibility,
-      globalFilter: searchTerm ? undefined : _searchTerm,
+      globalFilter: searchTermParam ? undefined : _searchTerm,
     },
   });
 
@@ -192,17 +195,21 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
 
   const pageCount = table.getRowCount()
     ? Math.ceil(table.getRowCount() / pagination.pageSize)
-    : 0;
+    : 1;
+
+  useEffect(() => {
+    table.resetPageIndex();
+  }, [searchTermParam, table]);
 
   return (
-    <div className="relative">
+    <div className={cn("relative", containerClassName)}>
       <div className="mt-4 flex flex-row items-center justify-between py-4">
         <div className="flex flex-1 items-center gap-4 pl-[1px]">
           <Input
             placeholder={`Search ${rowsName}...`}
-            value={searchTerm ?? _searchTerm}
+            value={searchTermParam ?? _searchTerm}
             onChange={(event) => {
-              setSearchTerm?.(event.target.value);
+              setSearchTermParam?.(event.target.value);
               _setSearchTerm(event.target.value);
             }}
             className="max-w-60"
