@@ -4,7 +4,7 @@ import { useWindowWidth } from "@react-hook/window-size";
 import { isNumber } from "lodash";
 import { useSession } from "next-auth/react";
 
-import { Z_INDEX } from "@acme/shared/app/constants";
+import { BreakPoints, Z_INDEX } from "@acme/shared/app/constants";
 import { Dialog, DialogContent, DialogHeader } from "@acme/ui/dialog";
 import { toast } from "@acme/ui/toast";
 
@@ -29,8 +29,8 @@ export const WorkoutDetailsModal = ({
   );
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const width = useWindowWidth();
-  const isLarge = width > 1024;
-  const isMedium = width > 640;
+  const isLarge = width > Number(BreakPoints.LG);
+  const isMedium = width > Number(BreakPoints.MD);
 
   useEffect(() => {
     const resultsEventId = results?.events[0]?.eventId;

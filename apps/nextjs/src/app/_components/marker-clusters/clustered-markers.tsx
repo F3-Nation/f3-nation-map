@@ -7,12 +7,13 @@ import type {
 import type Supercluster from "supercluster";
 import type { ClusterProperties } from "supercluster";
 import { useCallback, useMemo } from "react";
+import { useWindowSize } from "@react-hook/window-size";
 import { useMap } from "@vis.gl/react-google-maps";
 
+import { BreakPoints } from "@acme/shared/app/constants";
+
 import type { SparseF3Marker } from "~/utils/types";
-import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { useSupercluster } from "~/utils/hooks/use-supercluster";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import { useFilteredMapResults } from "../map/filtered-map-results-provider";
 import { FeatureMarker } from "../map/group-marker";
 import { FeaturesClusterMarker } from "./features-cluster-marker";
@@ -41,21 +42,19 @@ export const ClusteredMarkers = () => {
 };
 
 const DataProvidedClusteredMarkers = ({ geojson }: ClusteredMarkersProps) => {
-  // console.log("ClusteredMarkers re-render");
+  const [width] = useWindowSize();
 
-  const isMobileWidth = useIsMobileWidth();
-  const touchDevice = isTouchDevice();
-  const isMobile = isMobileWidth || touchDevice;
   const map = useMap();
   const { clusters, getLeaves } = useSupercluster(geojson, superclusterOptions);
-
   const handleClusterClick = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement, clusterId: number) => {
+      // negative padding - https://github.com/visgl/react-google-maps/discussions/591
+      const negativePadding = -1 * Math.max(0, (BreakPoints.LG - width) / 6); // about 100 at 480px
       const leaves = getLeaves(clusterId);
       const boundsOfLeaves = getBoundsOfLeaves(leaves);
-      map?.fitBounds(boundsOfLeaves, isMobile ? 0 : 200);
+      map?.fitBounds(boundsOfLeaves, negativePadding);
     },
-    [getLeaves, isMobile, map],
+    [getLeaves, map, width],
   );
 
   return (
@@ -93,7 +92,6 @@ const DataProvidedClusteredMarkers = ({ geojson }: ClusteredMarkersProps) => {
 const getBoundsOfLeaves = (leaves: Feature<Point>[]) => {
   const bounds = new google.maps.LatLngBounds();
   leaves.forEach((leaf) => {
-    console.log("leaf", leaf.geometry.coordinates);
     const [lng, lat] = leaf.geometry.coordinates;
     if (typeof lng !== "number" || typeof lat !== "number") return;
     bounds.extend({ lat, lng });

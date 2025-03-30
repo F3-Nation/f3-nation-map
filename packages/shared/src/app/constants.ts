@@ -27,6 +27,7 @@ export const FAR_ZOOM = 4;
 export const COUNTRY_ZOOM = 5; // below 5 it is red
 
 export enum BreakPoints {
+  MD = 640,
   LG = 1024,
 }
 

@@ -5,7 +5,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useWindowSize } from "@react-hook/window-size";
 import { APIProvider, ControlPosition, Map } from "@vis.gl/react-google-maps";
 
-import { DEFAULT_CENTER, SIDEBAR_WIDTH } from "@acme/shared/app/constants";
+import {
+  BreakPoints,
+  DEFAULT_CENTER,
+  SIDEBAR_WIDTH,
+} from "@acme/shared/app/constants";
 import { safeParseFloat, safeParseInt } from "@acme/shared/common/functions";
 import { useTheme } from "@acme/ui/theme";
 import { toast } from "@acme/ui/toast";
@@ -151,7 +155,8 @@ const ProvidedGoogleMapComponent = memo(
       <div
         style={{
           height,
-          width: width >= 1024 ? width - SIDEBAR_WIDTH : width,
+          width:
+            width >= Number(BreakPoints.LG) ? width - SIDEBAR_WIDTH : width,
         }}
       >
         <Map

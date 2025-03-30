@@ -35,8 +35,11 @@ export const FeaturesClusterMarker = ({
       onClick={(e) => {
         // Must call stop to prevent the map from being clicked
         e.stop();
+        if (marker == null) {
+          throw new Error("Marker is null");
+        }
         closePanel();
-        return onMarkerClick?.(marker!, clusterId);
+        return onMarkerClick?.(marker, clusterId);
       }}
       className={
         "marker cluster flex items-center justify-center rounded-full bg-foreground/30"
