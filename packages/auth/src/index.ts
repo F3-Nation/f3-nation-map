@@ -3,7 +3,7 @@ import NextAuth from "next-auth";
 import Email from "next-auth/providers/nodemailer";
 
 import type { UserRole } from "@acme/shared/app/enums";
-import { db } from "@acme/db";
+import { db } from "@acme/db/client";
 import { env } from "@acme/env";
 
 import { MDPGDrizzleAdapter } from "./MDPgDrizzleAdapter";

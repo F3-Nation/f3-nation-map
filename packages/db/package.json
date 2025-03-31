@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./client": "./src/client.ts",
     "./schema/schema": "./drizzle/schema.ts",
     "./schema/relations": "./drizzle/relations.ts"
   },
@@ -21,6 +22,7 @@
     "seed": "pnpm with-env node -r esbuild-register src/seed.ts",
     "studio": "pnpm with-env drizzle-kit studio",
     "drop": "pnpm with-env drizzle-kit drop",
+    "reset-test-db": "NODE_ENV=test pnpm with-env tsx src/utils/reset-test-db.ts",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --",
     "update-db": "pnpm with-env node -r esbuild-register src/update-db.ts"

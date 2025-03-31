@@ -25,6 +25,7 @@ export const env = createEnv({
    */
   server: {
     DATABASE_URL: z.string(),
+    TEST_DATABASE_URL: z.string(),
   },
   /**
    * Specify your client-side environment variables schema here.

@@ -2,7 +2,8 @@ import { migrate as migrator } from "drizzle-orm/postgres-js/migrator";
 
 import { env } from "@acme/env";
 
-import { db, sql } from ".";
+import { sql } from ".";
+import { db } from "./client";
 import { alembicVersionValue, reset } from "./reset";
 import { seed } from "./seed";
 

@@ -1,24 +1,13 @@
 import type { Config } from "drizzle-kit";
 
-import { env } from "@acme/env";
+import { getDbUrl } from "./src/utils/functions";
 
-const url = env.DATABASE_URL;
-if (!url) throw new Error("DATABASE_URL is not defined");
-
-const getDatabaseNameFromUri = (uri: string) => {
-  const databaseNameRegex = /\/([^/?]+)(\?|$)/;
-  const databaseNameMatch = databaseNameRegex.exec(uri);
-  return databaseNameMatch ? databaseNameMatch[1] : undefined;
-};
-
-const databaseName = getDatabaseNameFromUri(url);
+const { databaseUrl: url, databaseName } = getDbUrl();
 
 export default {
   schema: "./drizzle/schema.ts",
   dialect: "postgresql",
-  dbCredentials: {
-    url,
-  },
+  dbCredentials: { url },
   migrations: {
     schema: "drizzle",
     table: `__drizzle_migrations_${databaseName}`,

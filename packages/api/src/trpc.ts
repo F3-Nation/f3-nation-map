@@ -13,7 +13,7 @@ import { ZodError } from "zod";
 
 import type { Session } from "@acme/auth";
 import { auth } from "@acme/auth";
-import { db } from "@acme/db";
+import { db } from "@acme/db/client";
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
