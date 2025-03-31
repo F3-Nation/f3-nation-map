@@ -1,7 +1,5 @@
+import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { MapPinIcon } from "lucide-react";
-import ReactDOMServer from "react-dom/server";
-import { Marker } from "react-leaflet/Marker";
-import { Pane } from "react-leaflet/Pane";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 
@@ -11,25 +9,12 @@ export const PlaceResultIconPane = () => {
   const placeResultLocation = mapStore.use.placeResultLocation();
 
   return (
-    <Pane
-      name="place-result-icon-pane"
-      style={{ zIndex: Z_INDEX.PLACE_RESULTS_ICON_PANE }}
-    >
+    <div style={{ zIndex: Z_INDEX.PLACE_RESULTS_ICON_PANE }}>
       {placeResultLocation ? (
-        <>
-          <Marker
-            position={placeResultLocation}
-            icon={L.divIcon({
-              iconSize: [31, 31],
-              iconAnchor: [16, 16],
-              className: "",
-              html: ReactDOMServer.renderToString(
-                <MapPinIcon className="fill-red-600 text-foreground" />,
-              ),
-            })}
-          ></Marker>
-        </>
+        <AdvancedMarker position={placeResultLocation}>
+          <MapPinIcon className="size-8 fill-red-600 text-foreground" />
+        </AdvancedMarker>
       ) : null}
-    </Pane>
+    </div>
   );
 };

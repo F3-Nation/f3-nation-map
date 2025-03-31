@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -35,8 +36,10 @@ import { toast } from "@acme/ui/toast";
 import { AOInsertSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
+import { env } from "~/env";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminAOsModal({
   data,
@@ -58,7 +61,7 @@ export default function AdminAOsModal({
       name: ao?.name ?? "",
       parentId: ao?.parentId ?? -1,
       defaultLocationId: ao?.defaultLocationId ?? null,
-      isActive: ao?.isActive ?? true,
+      isActive: ao?.isActive,
       description: ao?.description ?? "",
       logoUrl: ao?.logoUrl ?? null,
       website: ao?.website ?? null,
@@ -157,28 +160,25 @@ export default function AdminAOsModal({
                   render={({ field }) => (
                     <FormItem key={`region-${field.value}`}>
                       <FormLabel>Region</FormLabel>
-                      <Select
+                      <VirtualizedCombobox
                         value={field.value?.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value?.toString()}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions
-                            ?.slice()
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((region) => (
-                              <SelectItem
-                                key={`region-${region.id}`}
-                                value={region.id.toString()}
-                              >
-                                {region.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                        options={
+                          regions?.map((region) => ({
+                            value: region.id.toString(),
+                            label: region.name,
+                          })) ?? []
+                        }
+                        searchPlaceholder="Select a region"
+                        onSelect={(value) => {
+                          const orgId = safeParseInt(value as string);
+                          if (orgId == null) {
+                            toast.error("Invalid orgId");
+                            return;
+                          }
+                          field.onChange(orgId);
+                        }}
+                        isMulti={false}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -308,9 +308,10 @@ export default function AdminAOsModal({
                       <FormLabel>Status</FormLabel>
                       <Select
                         onValueChange={(value) =>
-                          field.onChange(value === "true")
+                          value &&
+                          field.onChange(value === "true" ? true : false)
                         }
-                        value={field.value ? "true" : "false"}
+                        value={field.value === true ? "true" : "false"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -365,6 +366,37 @@ export default function AdminAOsModal({
                       "Save Changes"
                     )}
                   </Button>
+                  {/* in dev mode, show a button to preload values */}
+                  {env.NEXT_PUBLIC_CHANNEL !== "prod" ? (
+                    <Button
+                      type="button"
+                      className="w-full bg-black hover:bg-black/80"
+                      onClick={() => {
+                        form.setValue("name", "Fake AO");
+                        form.setValue(
+                          "parentId",
+                          regions?.[Math.floor(Math.random() * regions.length)]
+                            ?.id ?? -1,
+                        );
+                        form.setValue("website", "https://fakeao.com");
+                        form.setValue("email", "fakeao@example.com");
+                        form.setValue("twitter", "@fakeao");
+                        form.setValue(
+                          "facebook",
+                          "https://facebook.com/fakeao",
+                        );
+                        form.setValue(
+                          "instagram",
+                          "https://instagram.com/fakeao",
+                        );
+                        form.setValue("lastAnnualReview", "2024-01-01");
+                        form.setValue("isActive", true);
+                        form.setValue("description", "Fake AO description");
+                      }}
+                    >
+                      (DEV) Fake data
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </div>

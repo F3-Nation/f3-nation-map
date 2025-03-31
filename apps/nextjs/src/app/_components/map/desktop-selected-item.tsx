@@ -18,13 +18,13 @@ import { useSelectedItem } from "./use-selected-item";
 
 const SelectedItemWrapper = () => {
   const hideSelectedItem = selectedItemStore.use.hideSelectedItem();
-  const dragging = mapStore.use.dragging();
+  const mapEvent = mapStore.use.event();
   const selectedItem = useSelectedItem();
-  // const previousSelectedLocationId = useRef(selectedItem.selectedLocation?.id);
   const utils = api.useUtils();
 
-  const [debouncedSelectedItem1, setDebouncedSelectedItem] =
-    useState(selectedItem);
+  const [debouncedSelectedItem, setDebouncedSelectedItem] = useState<
+    typeof selectedItem | undefined
+  >(selectedItem);
 
   // Create memoized debounced function
   const debouncedSetSelectedItem = useMemo(
@@ -37,20 +37,13 @@ const SelectedItemWrapper = () => {
 
   // // Update debounced position when pagePosition changes
   useEffect(() => {
-    if (typeof selectedItem.selectedLocation?.id === "number") {
+    if (mapEvent !== "idle" || selectedItem.selectedLocation?.id == null) {
+      setDebouncedSelectedItem(undefined);
+      return;
+    } else if (typeof selectedItem.selectedLocation?.id === "number") {
       void utils.location.getLocationMarker.prefetch({
         id: selectedItem.selectedLocation?.id,
       });
-
-      // Cancel the previous location marker if it's different from the current one
-      // if (
-      //   typeof previousSelectedLocationId.current === "number" &&
-      //   previousSelectedLocationId.current !== selectedItem.selectedLocation?.id
-      // ) {
-      //   void utils.location.getLocationMarker.cancel({
-      //     id: previousSelectedLocationId.current,
-      //   });
-      // }
     }
 
     debouncedSetSelectedItem(selectedItem);
@@ -61,16 +54,16 @@ const SelectedItemWrapper = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedItem object doesn't change but the properties do
   }, [
-    selectedItem.pagePosition,
     selectedItem.selectedLocation,
     selectedItem.selectedEvent,
     debouncedSetSelectedItem,
+    mapEvent,
   ]);
 
   if (
-    !debouncedSelectedItem1.selectedLocation ||
-    !debouncedSelectedItem1.selectedEvent ||
-    dragging
+    !debouncedSelectedItem?.selectedLocation ||
+    !debouncedSelectedItem?.selectedEvent ||
+    mapEvent !== "idle"
   ) {
     return null;
   }
@@ -82,14 +75,14 @@ const SelectedItemWrapper = () => {
       })}
       style={{
         zIndex: Z_INDEX.SELECTED_ITEM_CONTAINER_DESKTOP,
-        top: debouncedSelectedItem1.pagePosition?.y,
-        left: debouncedSelectedItem1.pagePosition?.x,
+        top: debouncedSelectedItem.pagePosition?.y,
+        left: debouncedSelectedItem.pagePosition?.x,
         transform: "translate(-50%, 5px)",
       }}
     >
       <SelectedItem
-        selectedLocation={debouncedSelectedItem1.selectedLocation}
-        selectedEvent={debouncedSelectedItem1.selectedEvent}
+        selectedLocation={debouncedSelectedItem.selectedLocation}
+        selectedEvent={debouncedSelectedItem.selectedEvent}
         hideCloseButton
       />
     </div>

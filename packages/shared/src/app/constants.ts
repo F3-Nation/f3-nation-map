@@ -23,10 +23,11 @@ export const BOONE_CENTER = [36.2, -81.66] as [number, number];
 export const DEFAULT_CENTER = BOONE_CENTER;
 
 export const CLOSE_ZOOM = 13;
-export const FAR_ZOOM = 3;
+export const FAR_ZOOM = 4;
 export const COUNTRY_ZOOM = 5; // below 5 it is red
 
 export enum BreakPoints {
+  MD = 640,
   LG = 1024,
 }
 

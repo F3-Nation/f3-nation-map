@@ -616,7 +616,10 @@ export async function insertData(data: {
             city: events[0]?.City,
             state: events[0]?.State,
             postalCode: events[0]?.["Postal Code"],
-            country: events[0]?.Country,
+            country:
+              events[0]?.Country.toLowerCase() === "united states"
+                ? "US"
+                : events[0]?.Country,
             mapSeed: true,
           },
           created: dayjs(created).format(),

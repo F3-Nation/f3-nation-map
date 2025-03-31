@@ -7,12 +7,13 @@ import { setView } from "~/utils/set-view";
 import { filterStore } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
-import { setSelectedItem } from "~/utils/store/selected-item";
+import { closePanel, setSelectedItem } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 
 export const onClickF3RegionRow = (result: F3RegionMapSearchResult) => {
   searchStore.setState({ shouldShowResults: false });
-  setSelectedItem({ locationId: null, eventId: null });
+  setSelectedItem({ locationId: null, eventId: null, showPanel: false });
+  closePanel();
   mapStore.setState({
     placeResultArea: result.header,
     placeResultLocation: {
@@ -27,9 +28,6 @@ export const onClickF3RegionRow = (result: F3RegionMapSearchResult) => {
     },
   });
   setView({ lat: result.destination.lat, lng: result.destination.lng });
-  setTimeout(() => {
-    mapStore.get("ref").current?.invalidateSize();
-  }, 0);
   filterStore.setState({
     position: {
       latitude: result.destination.lat,
@@ -49,13 +47,14 @@ export const PlaceRowF3Region = ({
     <button
       className="w-full"
       onMouseOver={() => {
-        const isMobile = isTouchDevice();
-        if (isMobile) {
+        const touchDevice = isTouchDevice();
+        if (touchDevice) {
           onClickF3RegionRow(result);
         } else {
           setSelectedItem({
             locationId: result.destination.locationId,
             eventId: null,
+            showPanel: false,
           });
         }
       }}
@@ -63,6 +62,7 @@ export const PlaceRowF3Region = ({
         setSelectedItem({
           locationId: result.destination.locationId,
           eventId: null,
+          showPanel: false,
         });
       }}
       onClick={() => {

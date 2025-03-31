@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { DayOfWeek } from "@acme/shared/app/enums";
+import { safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -38,6 +39,7 @@ import { EventInsertSchema } from "@acme/validators";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminWorkoutsModal({
   data,
@@ -47,28 +49,12 @@ export default function AdminWorkoutsModal({
   const utils = api.useUtils();
   const { data: regions } = api.region.all.useQuery();
   const { data: locations } = api.location.all.useQuery();
+  const { data: aos } = api.ao.all.useQuery();
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const form = useForm({
-    schema: EventInsertSchema,
-    defaultValues: {
-      id: event?.id ?? undefined,
-      name: event?.name ?? "",
-      isActive: event?.isActive ?? true,
-      description: event?.description ?? "",
-      aoId: event?.aos[0]?.aoId,
-      highlight: event?.highlight ?? true,
-      isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId,
-      dayOfWeek: event?.dayOfWeek,
-      startTime: event?.startTime?.slice(0, 5) ?? "0530",
-      endTime: event?.endTime?.slice(0, 5) ?? "0615",
-      email: event?.email ?? null,
-      regionId: event?.regions[0]?.regionId,
-    },
-  });
+  const form = useForm({ schema: EventInsertSchema });
 
   useEffect(() => {
     form.reset({
@@ -85,6 +71,7 @@ export default function AdminWorkoutsModal({
       endTime: event?.endTime?.slice(0, 5) ?? "0615",
       email: event?.email ?? null,
       regionId: event?.regions[0]?.regionId,
+      startDate: event?.startDate,
     });
   }, [form, event]);
 
@@ -178,35 +165,25 @@ export default function AdminWorkoutsModal({
                   render={({ field }) => (
                     <FormItem key={`region-${field.value}`}>
                       <FormLabel>Region</FormLabel>
-                      <Select
+                      <VirtualizedCombobox
                         value={field.value?.toString()}
-                        onValueChange={(value) => {
-                          const selectedValue = Number(value);
-                          field.onChange(selectedValue);
-                          form.setValue("locationId", -1); // Reset location selection
+                        options={
+                          regions?.map((region) => ({
+                            value: region.id.toString(),
+                            label: region.name,
+                          })) ?? []
+                        }
+                        searchPlaceholder="Select a region"
+                        onSelect={(value) => {
+                          const orgId = safeParseInt(value as string);
+                          if (orgId == null) {
+                            toast.error("Invalid orgId");
+                            return;
+                          }
+                          field.onChange(orgId);
                         }}
-                        defaultValue={field.value?.toString()}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions
-                            ?.slice()
-                            .sort(
-                              (a, b) =>
-                                a.name?.localeCompare(b.name ?? "") ?? 0,
-                            )
-                            .map((region) => (
-                              <SelectItem
-                                key={`region-${region.id}`}
-                                value={region.id?.toString() ?? ""}
-                              >
-                                {region.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                        isMulti={false}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -215,11 +192,85 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
+                  name="aoId"
+                  render={({ field }) => {
+                    const filteredAOs = aos?.aos.filter(
+                      (ao) => ao.parentId === form.watch("regionId"),
+                    );
+                    return (
+                      <FormItem key={`ao-${field.value}`}>
+                        <FormLabel>AO</FormLabel>
+                        <Select
+                          value={field.value?.toString()}
+                          onValueChange={(value) => {
+                            const aoId = safeParseInt(value);
+                            field.onChange(aoId);
+
+                            const selectedAO = aos?.aos.find(
+                              (ao) => ao.id === aoId,
+                            );
+                            if (!selectedAO) {
+                              toast.error("Invalid AO");
+                              return;
+                            }
+                            if (selectedAO.parentId != null) {
+                              form.setValue("regionId", selectedAO.parentId);
+                            }
+
+                            const aoLocations = locations?.locations.filter(
+                              (l) => l.aoId === aoId,
+                            );
+
+                            // If the current location's parentId is not the selected AO, then we need to update the location
+                            const locationId = form.getValues("locationId");
+                            if (
+                              !aoLocations?.find((l) => l.id === locationId)
+                            ) {
+                              form.setValue(
+                                "locationId",
+                                aoLocations?.[0]?.id ?? null,
+                              );
+                            }
+                          }}
+                          defaultValue={field.value?.toString()}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredAOs
+                              ?.slice()
+                              .sort(
+                                (a, b) =>
+                                  a.name?.localeCompare(b.name ?? "") ?? 0,
+                              )
+                              .map((ao) => (
+                                <SelectItem
+                                  key={`ao-${ao.id}`}
+                                  value={ao.id.toString()}
+                                >
+                                  {ao.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
                   name="locationId"
                   render={({ field }) => {
+                    const regionId = form.getValues("regionId");
+                    const aoId = form.getValues("aoId");
                     const filteredLocations = locations?.locations.filter(
                       (location) =>
-                        location.regionId === form.watch("regionId"),
+                        location.regionId === regionId &&
+                        location.aoId === aoId,
                     );
                     return (
                       <FormItem key={`location-${field.value}`}>
@@ -227,15 +278,19 @@ export default function AdminWorkoutsModal({
                         <Select
                           value={field.value?.toString()}
                           onValueChange={(value) => {
+                            console.log("locationId onValueChange", value);
                             field.onChange(Number(value));
 
                             const selectedLocation = locations?.locations.find(
                               (location) => location.id === Number(value),
                             );
-                            if (selectedLocation) {
+                            if (selectedLocation?.aoId != null) {
+                              form.setValue("aoId", selectedLocation.aoId);
+                            }
+                            if (selectedLocation?.regionId != null) {
                               form.setValue(
-                                "orgId",
-                                Number(selectedLocation.orgId),
+                                "regionId",
+                                selectedLocation.regionId,
                               );
                             }
                           }}
@@ -256,7 +311,7 @@ export default function AdminWorkoutsModal({
                                   key={`location-${location.id}`}
                                   value={location.id.toString()}
                                 >
-                                  {location.name}
+                                  {location.locationName}
                                 </SelectItem>
                               ))}
                           </SelectContent>
@@ -357,15 +412,36 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Start Date"
+                          type="date"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
                   name="isActive"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
                       <Select
                         onValueChange={(value) =>
-                          field.onChange(value === "true")
+                          value &&
+                          field.onChange(value === "true" ? true : false)
                         }
-                        value={field.value ? "true" : "false"}
+                        value={field.value === true ? "true" : "false"}
                       >
                         <FormControl>
                           <SelectTrigger>

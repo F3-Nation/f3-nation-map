@@ -291,9 +291,10 @@ export default function AdminNationsModal({
                       <FormLabel>Status</FormLabel>
                       <Select
                         onValueChange={(value) =>
-                          field.onChange(value === "true")
+                          value &&
+                          field.onChange(value === "true" ? true : false)
                         }
-                        value={field.value ? "true" : "false"}
+                        value={field.value === true ? "true" : "false"}
                       >
                         <FormControl>
                           <SelectTrigger>

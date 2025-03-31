@@ -8,8 +8,8 @@ import {
   useEffect,
   useState,
 } from "react";
-import { DEFAULT_CENTER } from "node_modules/@acme/shared/src/app/constants";
 
+import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { getRandomLocation } from "~/utils/random-location";
@@ -88,6 +88,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUserLocation = useCallback(
     (params?: { onlyUpdateIfNotHasMovedMap?: boolean }) => {
+      console.log("updateUserLocation", params);
       // one function to set the view and check if the map has moved
       const setViewIfNotMovedMap = (loc: { lat: number; lng: number }) => {
         const mapStoreValues = mapStore.getState();
@@ -102,6 +103,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         }
         setView(loc);
       };
+      console.log("userGpsLocation", userGpsLocation);
       if (userGpsLocation) {
         setViewIfNotMovedMap({
           lat: userGpsLocation.latitude,
@@ -170,7 +172,6 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Not in use
 export const useUserLocation = () => {
   return useContext(UserLocationContext);
 };

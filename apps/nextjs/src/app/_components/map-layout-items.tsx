@@ -1,169 +1,100 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useMemo } from "react";
+import { Suspense } from "react";
+import { ControlPosition, MapControl } from "@vis.gl/react-google-maps";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
-import { classNames } from "@acme/shared/common/functions";
-import { Spinner } from "@acme/ui/spinner";
 
-import { latLngToMeters } from "~/utils/lat-lng-to-meters";
+import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { mapStore } from "~/utils/store/map";
 import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
 import { DesktopLocationPanelContent } from "./map/desktop-location-panel-content";
 import DesktopSelectedItem from "./map/desktop-selected-item";
+import { GeoJsonPane } from "./map/geo-json-pane";
+import { GeolocationMarker } from "./map/geolocation-marker";
 import { HelpButton } from "./map/help-button";
+import { MapProvider } from "./map/map-provider";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
 import { MobileFilterButtons } from "./map/mobile-filter-buttons";
 import { MobileSearchResultsAndNearbyLocations } from "./map/mobile-search-results-and-nearby-locations";
 import { MobileSelectedItem } from "./map/mobile-selected-item";
+import { NearbyLocationUpdateButton } from "./map/nearby-location-update-button";
+import { Projection } from "./map/projection";
 import { SettingsButton } from "./map/settings-button";
 import { StagingWatermark } from "./map/staging-watermark";
 import { UserLocationIcon } from "./map/user-location-icon";
-import { useUserLocation } from "./map/user-location-provider";
-import { ZoomButtons } from "./map/zoom-buttons";
 
 const SHOW_DEBUG = false;
 export const MapLayoutItems = () => {
-  const { status } = useUserLocation();
+  console.log("MapLayoutItems rerender");
+  const { isDesktopWidth, isMobileWidth } = useIsMobileWidth();
   const showDebugStore = mapStore.use.showDebug();
-  const loaded = mapStore.use.loaded();
-  const center = mapStore.use.center();
-  const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
-  // If the center is more than 100 meters away from the nearbyLocationCenter, then we have moved away from the location
-  const hasMovedAwayFromLocation = useMemo(() => {
-    return (
-      latLngToMeters(
-        center?.lat,
-        center?.lng,
-        nearbyLocationCenter.lat,
-        nearbyLocationCenter.lng,
-      ) > 1000
-    ); // one km
-  }, [center, nearbyLocationCenter]);
 
   const showDebug =
     showDebugStore || (process.env.NODE_ENV === "development" && SHOW_DEBUG)
       ? true
       : false;
+
   return (
-    <>
-      {loaded && (
-        <DesktopTopLeftButtons>
-          <DesktopFilterButtons />
-          <HelpButton />
-          {/* <StagingWatermark /> */}
-        </DesktopTopLeftButtons>
-      )}
-      <DesktopTopRightButtons></DesktopTopRightButtons>
-      {loaded && (
-        <DesktopBottomLeftButtons>
-          {/* <TileButton /> */}
-        </DesktopBottomLeftButtons>
-      )}
-      <DesktopBottomRightButtons>
-        <SettingsButton />
-        <UserLocationIcon />
-        <ZoomButtons />
-      </DesktopBottomRightButtons>
-      <DesktopButtonCenter>
-        <StagingWatermark />
-      </DesktopButtonCenter>
-      <DesktopSelectedItem />
+    <Suspense>
+      <GeoJsonPane />
+      <Projection />
+      <MapProvider />
+      <GeolocationMarker />
       <DesktopLocationPanel>
         <DesktopLocationPanelContent />
       </DesktopLocationPanel>
+      <DesktopSelectedItem />
 
-      {status === "loading" ? (
-        <div className="absolute left-2/4 top-14 -translate-x-2/4">
-          <div className="flex flex-row items-center gap-2">
-            <Spinner />
-            <p>Loading your location...</p>
-          </div>
-        </div>
-      ) : hasMovedAwayFromLocation ? (
-        <button
-          className={classNames(
-            "rounded-xl bg-background px-4 py-1 text-sm text-foreground shadow",
-            "absolute left-2/4 top-14 -translate-x-2/4",
-          )}
-          style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-          onClick={() => {
-            const center = mapStore.get("center");
-            if (!center) return;
-            mapStore.setState({
-              nearbyLocationCenter: {
-                ...center,
-                name: null,
-                type: "manual-update",
-              },
-            });
-          }}
-        >
-          Show nearby areas
-        </button>
-      ) : null}
-
-      {/* Mobile */}
-      <MobileTopCenter>
+      <MapControl
+        position={isMobileWidth ? ControlPosition.TOP : ControlPosition.BOTTOM}
+      >
         <StagingWatermark />
-      </MobileTopCenter>
+      </MapControl>
+      {isDesktopWidth ? (
+        <>
+          <MapControl position={ControlPosition.RIGHT_BOTTOM}>
+            <SettingsButton className="mt-2" />
+          </MapControl>
+          <MapControl position={ControlPosition.RIGHT_BOTTOM}>
+            <UserLocationIcon />
+          </MapControl>
+          <MapControl position={ControlPosition.TOP_LEFT}>
+            <DesktopFilterButtons />
+          </MapControl>
+          <MapControl position={ControlPosition.TOP_LEFT}>
+            <HelpButton />
+          </MapControl>
+        </>
+      ) : (
+        <>
+          <MapControl position={ControlPosition.RIGHT_TOP}>
+            <SettingsButton className="-mt-[2px] mr-[10px]" />
+          </MapControl>
+          <MapControl position={ControlPosition.RIGHT_TOP}>
+            <UserLocationIcon className="mr-[10px] mt-2" />
+          </MapControl>
+        </>
+      )}
+      <NearbyLocationUpdateButton />
+
       <MobileAboveSearchBox>
-        <div className="mb-1 flex w-full flex-row items-end justify-end px-1">
-          {/* <TileButton className="size-9" /> */}
-          <UserLocationIcon />
-        </div>
-        <div className="mb-[2px] flex flex-row justify-start gap-2 overflow-auto px-2 pb-[6px]">
+        <div className="mb-[0px] flex flex-row items-center justify-start gap-2 overflow-auto px-2">
           <HelpButton />
           <MobileFilterButtons />
         </div>
         <MobileSelectedItem />
       </MobileAboveSearchBox>
-      <MobileTopRightButtons>
-        <SettingsButton />
-        <ZoomButtons />
-      </MobileTopRightButtons>
       <MobileAllFilters />
       <MobileSearchResultsAndNearbyLocations />
       <MapSearchBoxMobile />
       {showDebug ? <DebugInfo /> : null}
-    </>
+    </Suspense>
   );
 };
-
-const DesktopTopLeftButtons = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute left-2 top-2 hidden flex-row gap-1 lg:flex"
-    {...props}
-  />
-);
-
-const DesktopTopRightButtons = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute right-2 top-2 hidden flex-col gap-1 lg:flex"
-    {...props}
-  />
-);
-
-const DesktopBottomLeftButtons = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute bottom-2 left-2 hidden flex-col gap-1 lg:flex"
-    {...props}
-  />
-);
-
-const DesktopBottomRightButtons = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute bottom-2 right-2 hidden flex-col gap-1 lg:flex"
-    {...props}
-  />
-);
 
 const DesktopLocationPanel = (props: ComponentProps<"div">) => (
   <div
@@ -174,35 +105,11 @@ const DesktopLocationPanel = (props: ComponentProps<"div">) => (
   />
 );
 
-const DesktopButtonCenter = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute bottom-4 left-2/4 hidden -translate-x-2/4 lg:flex"
-    {...props}
-  />
-);
-
 const MobileAboveSearchBox = (props: ComponentProps<"div">) => (
   <div
     style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
     // 46px and 6px to keep the slider in the middle between them
     className="absolute bottom-[44px] left-0 right-0 block lg:hidden"
-    {...props}
-  />
-);
-
-const MobileTopRightButtons = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute right-2 top-2 flex flex-col gap-1 lg:hidden"
-    {...props}
-  />
-);
-
-const MobileTopCenter = (props: ComponentProps<"div">) => (
-  <div
-    style={{ zIndex: Z_INDEX.OVERLAY_BUTTONS }}
-    className="absolute left-2/4 top-2 flex -translate-x-2/4 lg:hidden"
     {...props}
   />
 );

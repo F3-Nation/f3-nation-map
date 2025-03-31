@@ -269,31 +269,3 @@ declare global {
     export default content;
   }
 }
-
-declare module "leaflet" {
-  // must import leaflet-canvas-markers.js before using this type
-  type CanvasIconLayer = {
-    addTo: (map: Map) => CanvasIconLayer;
-    addOnClickListener: (callback: (e: any, data: any) => void) => void;
-    addOnHoverListener: (callback: (e: any, data: any) => void) => void;
-    addLayers: (layers: L.Marker<any>[]) => void;
-    addMarkers: (markers: L.Marker<any>[]) => void;
-    removeMarker: (marker: L.Marker<any>, redraw?: boolean) => void;
-    clearLayers: () => void;
-    redraw: (clear?: boolean) => void;
-    remove: () => void;
-  };
-
-  interface MarkerOptions extends L.MarkerOptions {
-    data?: unknown;
-  }
-
-  // Must import smooth-zoom-wheel.js before using these options
-  interface MapOptions extends L.MapOptions {
-    smoothWheelZoom?: boolean;
-    smoothSensitivity?: number;
-  }
-
-  // must import leaflet-canvas-markers.js before using this function
-  export function canvasIconLayer(options: {}): CanvasIconLayer;
-}

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
 import { LocateFixed } from "lucide-react";
 
 import { cn } from "@acme/ui";
@@ -10,31 +11,45 @@ import { ModalType, openModal } from "~/utils/store/modal";
 import { UserLocationContent } from "../modal/user-location-content";
 import { useUserLocation } from "./user-location-provider";
 
-export const UserLocationIcon = () => {
+export const UserLocationIcon = ({
+  className,
+  ...rest
+}: DetailedHTMLProps<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  HTMLButtonElement
+>) => {
   const { updateUserLocation, status, permissions } = useUserLocation();
 
   return (
     <Tooltip disableHoverableContent>
-      <TooltipTrigger
-        onClick={() => {
-          const isMobile = isTouchDevice();
-          if (isMobile && status !== "success") {
-            openModal(ModalType.USER_LOCATION_INFO);
-          } else {
-            updateUserLocation();
-          }
-        }}
-      >
-        <div className={"flex flex-col"}>
-          <div
-            // variant="outline"
-            // size="icon"
+      <TooltipTrigger>
+        <div className={"flex flex-col lg:mx-2.5"}>
+          <button
+            onClick={() => {
+              console.log("updateUserLocation");
+              const touchDevice = isTouchDevice();
+              if (touchDevice && status !== "success") {
+                openModal(ModalType.USER_LOCATION_INFO);
+              } else {
+                updateUserLocation();
+              }
+            }}
+            draggable="false"
+            aria-label="My Location"
+            title="My Location"
+            type="button"
             className={cn(
-              "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-              "hover:bg-background focus:bg-background",
-              "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-              "size-9",
+              "cursor-pointer appearance-none overflow-hidden",
+              "relative block",
+              "h-10 w-10", // 40px x 40px
+              "bg-white",
+              "m-0 border-0 p-0",
+              "user-select-none",
+              "shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]", // Google Maps shadow
+              "flex items-center justify-center",
+              className,
             )}
+            {...rest}
           >
             <div
               className={cn({
@@ -43,11 +58,11 @@ export const UserLocationIcon = () => {
               })}
             >
               <LocateFixed
-                strokeWidth={1.25}
-                className={cn("size-6 scale-100 text-foreground")}
+                strokeWidth={1.75}
+                className={cn("size-7 text-[#666]")} // Matching the Settings icon style
               />
             </div>
-          </div>
+          </button>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="mr-4 flex max-w-40 flex-col gap-2">

@@ -10,7 +10,6 @@ import { Toaster } from "@acme/ui/toast";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
 
-import "leaflet/dist/leaflet.css";
 import "~/app/globals.css";
 
 import { TooltipProvider } from "@acme/ui/tooltip";

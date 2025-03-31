@@ -49,6 +49,7 @@ export const nationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const nationToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
+        orgType: "nation",
         meta: {
           ...(input.meta as Record<string, string>),
         },

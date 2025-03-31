@@ -12,7 +12,6 @@ import { setView } from "~/utils/set-view";
 import { appStore } from "~/utils/store/app";
 import { searchStore } from "~/utils/store/search";
 import {
-  openPanel,
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
@@ -34,6 +33,27 @@ export const NearbyLocationItem = (props: {
   const { item } = props;
   const isSelected = item.id === locationId;
 
+  const handleClick = (locationId: number, eventId: number | null) => {
+    console.log("onClick NearbyLocationItem", item);
+    const touchDevice = isTouchDevice();
+    // Open panel first so that the centering to the marker is offset if needed
+    setSelectedItem({
+      locationId,
+      eventId,
+      showPanel: true,
+    });
+    if (item.lat !== null && item.lon !== null) {
+      console.log("onClick NearbyLocationItem setView", item);
+      setView({ lat: item.lat, lng: item.lon });
+      // prevent the next mouse enter from triggering a change
+      appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
+    }
+    if (touchDevice) {
+      searchStore.setState({ shouldShowResults: false });
+      searchBarRef.current?.blur();
+    }
+  };
+
   const name = item.aoName;
   return (
     <button
@@ -43,54 +63,51 @@ export const NearbyLocationItem = (props: {
         "bg-background",
         { "bg-muted": isSelected },
       )}
-      onMouseEnter={() => {
-        const isMobile = isTouchDevice();
+      onMouseEnter={(e) => {
+        console.log("onMouseEnter NearbyLocationItem", item);
+        const touchDevice = isTouchDevice();
         // This is the click for mobile
 
-        setSelectedItem({
-          locationId: item.id,
-          eventId: null,
-        });
-
-        if (isMobile) {
+        if (touchDevice) {
           searchBarRef.current?.blur();
           if (item.lat !== null && item.lon !== null) {
             setView({ lat: item.lat, lng: item.lon });
           }
           searchStore.setState({ shouldShowResults: false });
+          setTimeout(() => {
+            setSelectedItem({
+              locationId: item.id,
+              // Must set an eventId
+              eventId: item.events[0]?.id,
+              showPanel: false,
+            });
+          }, 250);
         } else {
+          setSelectedItem({
+            locationId: item.id,
+            eventId: null,
+            showPanel: false,
+          });
           // Log to know if this was due to a mouse movement or element adjustment
           if (ignoreNextNearbyItemMouseEnter) {
             appStore.setState({ ignoreNextNearbyItemMouseEnter: false });
             return;
           }
         }
+        e.stopPropagation();
       }}
       onFocus={() => {
-        console.log("onMouseEnter NearbyLocationItem", item);
+        console.log("onFocus NearbyLocationItem", item);
         setSelectedItem({
           locationId: item.id,
           eventId: item.events[0]?.id,
+          showPanel: false,
         });
       }}
-      onClick={() => {
+      onClick={(e) => {
         console.log("onClick NearbyLocationItem", item);
-        const isMobileDeviceWidth = appStore.get("isMobileDeviceWidth");
-        // Open panel first so that the centering to the marker is offset if needed
-        openPanel({ locationId: item.id });
-        if (item.lat !== null && item.lon !== null) {
-          setView({ lat: item.lat, lng: item.lon });
-          setSelectedItem({
-            locationId: null,
-            eventId: null,
-          });
-          // prevent the next mouse enter from triggering a change
-          appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
-        }
-        if (isMobileDeviceWidth) {
-          searchStore.setState({ shouldShowResults: false });
-          searchBarRef.current?.blur();
-        }
+        handleClick(item.id, null);
+        e.stopPropagation();
       }}
     >
       <div className="flex flex-row items-stretch gap-1">
@@ -130,6 +147,7 @@ export const NearbyLocationItem = (props: {
                   size="small"
                   hideName
                   selected={event.id === eventId && item.id === locationId}
+                  onClick={() => handleClick(item.id, event.id)}
                 />
               );
             })}

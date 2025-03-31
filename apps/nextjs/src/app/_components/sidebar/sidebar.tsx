@@ -14,9 +14,6 @@ export const Sidebar = () => {
       <div className="relative">
         <MapSearchBox hideLogo className="" />
       </div>
-      {/* <div className="flex w-full flex-row justify-center">
-        <FiltersSome />
-        </div> */}
       <FiltersAll className={cn({ hidden: !allFilters })} />
       <DesktopNearbyLocations className={cn({ hidden: allFilters })} />
     </>

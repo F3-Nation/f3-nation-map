@@ -223,7 +223,7 @@ export const eventRouter = createTRPCRouter({
           ),
         )
         .where(eq(schema.events.id, input.id))
-        .groupBy(schema.events.id);
+        .groupBy(schema.events.id, aoOrg.id, regionOrg.id);
 
       return event;
     }),
@@ -232,6 +232,7 @@ export const eventRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const eventToUpdate: typeof schema.events.$inferInsert = {
         ...input,
+        orgId: input.aoId,
         meta: {
           ...(input.meta as Record<string, string>),
         },

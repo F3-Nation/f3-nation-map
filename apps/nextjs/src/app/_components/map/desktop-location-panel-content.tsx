@@ -5,11 +5,11 @@ import { isNumber } from "lodash";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+import { BreakPoints } from "@acme/shared/app/constants";
 import { toast } from "@acme/ui/toast";
 
 import { api } from "~/trpc/react";
 import { vanillaApi } from "~/trpc/vanilla";
-import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { modalStore } from "~/utils/store/modal";
 import { closePanel, selectedItemStore } from "~/utils/store/selected-item";
 import { WorkoutDetailsContent } from "../workout/workout-details-content";
@@ -32,8 +32,8 @@ export const DesktopLocationPanelContent = () => {
     panelEventId,
   );
   const width = useWindowWidth();
-  const isLarge = width > 1024;
-  const isMedium = width > 640;
+  const isLarge = width > Number(BreakPoints.LG);
+  const isMedium = width > Number(BreakPoints.MD);
 
   useEffect(() => {
     const resultsEventId = results?.events[0]?.eventId;
@@ -45,9 +45,6 @@ export const DesktopLocationPanelContent = () => {
   useEffect(() => {
     setSelectedEventId(panelEventId);
   }, [panelEventId]);
-
-  // Update the search params when the panel is open
-  useUpdateEventSearchParams(panelLocationId, panelEventId);
 
   if (!open) return null;
 

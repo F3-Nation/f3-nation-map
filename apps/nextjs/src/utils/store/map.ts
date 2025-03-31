@@ -1,7 +1,3 @@
-import type { LatLng, LatLngBounds, LatLngLiteral, Map } from "leaflet";
-import type { MutableRefObject } from "react";
-import { createRef } from "react";
-
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@acme/shared/app/constants";
 import { ZustandStore } from "@acme/shared/common/classes";
 
@@ -21,32 +17,39 @@ const initialState = {
     latitude: number;
     longitude: number;
   } | null,
-  bounds: null as LatLngBounds | null,
-  center: { lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] } as LatLng,
-  ref: createRef<Map>() as MutableRefObject<Map | null>,
+  // bounds: null as google.maps.LatLngBoundsLiteral | null,
+  center: {
+    lat: DEFAULT_CENTER[0],
+    lng: DEFAULT_CENTER[1],
+  } as google.maps.LatLngLiteral,
+  map: null as google.maps.Map | null,
+  projection: null as google.maps.MapCanvasProjection | null,
   // This is updated in the map listener on pan and is used to convert latlng to container point - definitely a hack
   placeResultArea: null as string | null,
-  placeResultLocation: null as LatLngLiteral | null,
-  updateLocation: null as LatLngLiteral | null,
+  placeResultLocation: null as google.maps.LatLngLiteral | null,
+  updateLocation: null as google.maps.LatLngLiteral | null,
   nearbyLocationCenter: {
-    lat: null as LatLngLiteral["lat"] | null,
-    lng: null as LatLngLiteral["lng"] | null,
+    lat: null as google.maps.LatLngLiteral["lat"] | null,
+    lng: null as google.maps.LatLngLiteral["lng"] | null,
     name: null as string | null,
     type: "default" as NearbyLocationCenterType,
   },
   modifiedLocationMarkers: {} as Record<number, { lat: number; lon: number }>,
-  tiles: "street" as "satellite" | "street",
+  tiles: "street" as "street" | "hybrid",
+  event: "idle" as "idle" | "drag" | "zoom",
+  tilesLoaded: false,
   showDebug: false,
   loaded: false,
-  dragging: false,
   hasMovedMap: false,
 };
+
+export type MapStoreState = typeof initialState;
 
 export const mapStore = new ZustandStore({
   initialState,
   persistOptions: {
     name: "map-store",
-    version: 1,
+    version: 2,
     persistedKeys: ["center", "zoom"],
     getStorage: () => localStorage,
     onRehydrateStorage: (state) => {

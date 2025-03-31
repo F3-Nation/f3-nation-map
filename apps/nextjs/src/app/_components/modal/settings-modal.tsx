@@ -1,14 +1,6 @@
 import { useCallback } from "react";
 import Link from "next/link";
-import {
-  CircleHelp,
-  Eye,
-  Moon,
-  Pencil,
-  QrCode,
-  Sun,
-  SunMoon,
-} from "lucide-react";
+import { CircleHelp, Eye, Moon, Pencil, QrCode, Sun } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
@@ -52,7 +44,7 @@ export default function SettingsModal() {
   }, [center, zoom]);
 
   return (
-    <Dialog open={true} onOpenChange={() => closeModal()}>
+    <Dialog open={true} onOpenChange={closeModal}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
         className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[400px]`)}
@@ -107,12 +99,12 @@ export default function SettingsModal() {
                 <span className="text-xs">Street</span>
               </button>
               <button
-                onClick={() => mapStore.setState({ tiles: "satellite" })}
+                onClick={() => mapStore.setState({ tiles: "hybrid" })}
                 className={cn(
                   "relative flex flex-col items-center gap-1 overflow-hidden rounded-md border-2 border-transparent bg-card p-2 shadow-sm hover:bg-accent",
                   {
                     "bg-primary text-white hover:bg-primary/90":
-                      tiles === "satellite",
+                      tiles === "hybrid",
                   },
                 )}
               >
@@ -167,7 +159,7 @@ export default function SettingsModal() {
           </div>
           <div className="flex flex-col">
             <p className="text-sm font-bold text-muted-foreground">Theme</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setTheme("light")}
                 className={cn(
@@ -194,6 +186,8 @@ export default function SettingsModal() {
                 <Moon className="size-5" />
                 <span className="text-xs">Dark</span>
               </button>
+              {/* 
+              // Turn off system for now
               <button
                 onClick={() => setTheme("system")}
                 className={cn(
@@ -206,7 +200,7 @@ export default function SettingsModal() {
               >
                 <SunMoon className="size-5" />
                 <span className="text-xs">System</span>
-              </button>
+              </button> */}
             </div>
           </div>
           {!session ? (

@@ -4,7 +4,6 @@ import type { DayOfWeek, RequestType } from "@acme/shared/app/enums";
 import { ZustandStore } from "@acme/shared/common/classes";
 
 import { mapStore } from "./map";
-import { hideSelectedItem } from "./selected-item";
 
 export enum ModalType {
   HOW_TO_JOIN = "HOW_TO_JOIN",
@@ -228,9 +227,6 @@ export const modalStore = new ZustandStore<{
 
 export const openModal = <T extends ModalType>(type: T, data?: DataType[T]) => {
   const existingModals = modalStore.get("modals");
-  if (type === ModalType.WORKOUT_DETAILS) {
-    hideSelectedItem();
-  }
 
   modalStore.setState({
     modals: [
@@ -246,12 +242,19 @@ export const useOpenModal = () => {
   return modals[modals.length - 1];
 };
 
-export const closeModal = () => {
+export const closeModal = (open?: boolean, type?: ModalType) => {
   const modals = modalStore.get("modals");
-  const lessOneModals = modals.slice(0, -1);
-  modalStore.setState({
-    modals: lessOneModals,
-  });
+  if (type) {
+    const lessModals = modals.filter((m) => m.type !== type);
+    modalStore.setState({
+      modals: lessModals,
+    });
+  } else {
+    const lessOneModals = modals.slice(0, -1);
+    modalStore.setState({
+      modals: lessOneModals,
+    });
+  }
   // Modal becomes unresponsive when closing with select menu open or similar
   // https://github.com/shadcn-ui/ui/issues/1912#issuecomment-2613189967
   setTimeout(() => {

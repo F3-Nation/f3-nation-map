@@ -1,24 +1,39 @@
-import type { GeoJSONProps } from "react-leaflet";
-import { GeoJSON } from "react-leaflet";
+"use client";
+
+import { useEffect, useRef } from "react";
+import { useMap } from "@vis.gl/react-google-maps";
 
 import { COUNTRY_ZOOM } from "@acme/shared/app/constants";
-import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { VISIBLE_COUNTRIES } from "~/assets/visible-countries";
 import { mapStore } from "~/utils/store/map";
 
 export const GeoJsonPane = () => {
-  RERENDER_LOGS && console.log("GeoJsonPane rerender");
+  const map = useMap();
   const zoom = mapStore.use.zoom();
-  const isFar = zoom < COUNTRY_ZOOM;
-  return !isFar ? null : (
-    <GeoJSON
-      data={VISIBLE_COUNTRIES as unknown as GeoJSONProps["data"]}
-      style={{
-        fillColor: "#FF000070",
-        fillOpacity: 1,
-        color: "#FF000010",
-      }}
-    />
-  );
+  const features = useRef<google.maps.Data.Feature[]>([]);
+
+  useEffect(() => {
+    if (!map) return;
+    if (zoom < COUNTRY_ZOOM) {
+      if (!features.current.length) {
+        const newFeatures = map.data.addGeoJson(VISIBLE_COUNTRIES, {
+          idPropertyName: "countries",
+        });
+        features.current = newFeatures;
+      }
+    } else {
+      features.current.forEach((feature) => {
+        map.data.remove(feature);
+      });
+      features.current = [];
+    }
+    return () => {
+      features.current.forEach((feature) => {
+        map.data.remove(feature);
+      });
+      features.current = [];
+    };
+  }, [map, zoom]);
+  return null;
 };

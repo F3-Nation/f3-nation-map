@@ -2,7 +2,7 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 
 export const creds = {
   private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY!.replace(
-    /\\n/g,
+    /\\\n/g,
     "\n",
   ),
   client_email: process.env.GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL!,

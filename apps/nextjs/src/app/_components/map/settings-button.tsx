@@ -6,25 +6,33 @@ import { cn } from "@acme/ui";
 
 import { ModalType, openModal } from "~/utils/store/modal";
 
-export const SettingsButton = () => {
+export const SettingsButton = ({ className }: { className?: string }) => {
   return (
-    <div className={"flex flex-col"}>
+    <div className={"flex flex-col lg:mx-2.5"}>
       <button
-        // variant="outline"
-        // size="icon"
+        draggable="false"
+        aria-label="Settings"
+        title="Settings"
+        type="button"
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-          "hover:bg-background focus:bg-background",
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-          "size-9",
+          "cursor-pointer appearance-none overflow-hidden",
+          "relative block",
+          "h-10 w-10", // 40px x 40px
+          "bg-white",
+          "m-0 border-0 p-0",
+          "user-select-none",
+          "shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]", // Google Maps shadow
+          "flex items-center justify-center",
+          // "rounded-sm", // Slight border radius (2px)
+          className,
         )}
         onClick={() => {
           openModal(ModalType.SETTINGS);
         }}
       >
         <Settings
-          strokeWidth={1.5}
-          className={cn("size-6 scale-90 text-foreground")}
+          strokeWidth={1.75}
+          className={cn("size-7 text-[#666]")} // 28px x 28px with gray color
         />
       </button>
     </div>

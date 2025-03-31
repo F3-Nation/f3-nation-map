@@ -52,9 +52,8 @@ export const LocationEventForm = ({
 
   const sortedLocationOptions = useMemo(() => {
     return locations?.locations
-      ?.map(({ name, aoName, id, regionName, regionId }) => ({
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        label: `${name || aoName} ${regionName ? `(${regionName})` : ""}`,
+      ?.map(({ locationName, aoName, id, regionName, regionId }) => ({
+        label: `${locationName || aoName} ${regionName ? `(${regionName})` : ""}`,
         value: id.toString(),
         regionId,
       }))
@@ -201,8 +200,11 @@ export const LocationEventForm = ({
 
             // Handle different property names between components
 
-            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- avoid ""
-            form.setValue("aoName", location.aoName || location.name || "");
+            form.setValue(
+              "aoName",
+              // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- avoid ""
+              location.aoName || location.locationName || "",
+            );
             form.setValue("locationDescription", location.description ?? "");
             form.setValue("locationAddress", location.addressStreet);
             form.setValue("locationAddress2", location.addressStreet2);
