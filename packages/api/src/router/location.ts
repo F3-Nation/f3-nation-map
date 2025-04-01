@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import omit from "lodash/omit";
 import { z } from "zod";
 
@@ -18,8 +19,14 @@ import { DayOfWeek } from "@acme/shared/app/enums";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema, SortingSchema } from "@acme/validators";
 
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getSortingColumns } from "../get-sorting-columns";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  editorProcedure,
+  publicProcedure,
+} from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const locationRouter = createTRPCRouter({
@@ -639,21 +646,78 @@ export const locationRouter = createTRPCRouter({
 
       return location;
     }),
-  crupdate: publicProcedure
+  crupdate: editorProcedure
     .input(LocationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      if (!input.orgId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Parent ID or ID is required",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.orgId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to update this Location",
+        });
+      }
       const locationToCrupdate: typeof schema.locations.$inferInsert = {
         ...input,
         meta: {
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db
+      const [result] = await ctx.db
         .insert(schema.locations)
         .values(locationToCrupdate)
         .onConflictDoUpdate({
           target: [schema.locations.id],
           set: locationToCrupdate,
+        })
+        .returning();
+      return result;
+    }),
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [location] = await ctx.db
+        .select()
+        .from(schema.locations)
+        .where(eq(schema.locations.id, input.id));
+
+      if (!location) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Location not found",
         });
+      }
+
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: location.orgId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to delete this Location",
+        });
+      }
+      await ctx.db
+        .update(schema.locations)
+        .set({ isActive: false })
+        .where(
+          and(
+            eq(schema.locations.id, input.id),
+            eq(schema.locations.isActive, true),
+          ),
+        );
     }),
 });

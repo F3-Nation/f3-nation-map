@@ -1,9 +1,16 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { aliasedTable, and, eq, schema } from "@acme/db";
 import { RegionInsertSchema } from "@acme/validators";
 
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  editorProcedure,
+  publicProcedure,
+} from "../trpc";
 
 export const regionRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
@@ -47,14 +54,34 @@ export const regionRouter = createTRPCRouter({
       const [region] = await ctx.db
         .select()
         .from(schema.orgs)
-        .where(eq(schema.orgs.id, input.id));
+        .where(
+          and(eq(schema.orgs.id, input.id), eq(schema.orgs.orgType, "region")),
+        );
       return { ...region };
     }),
 
-  crupdate: publicProcedure
-
+  crupdate: editorProcedure
     .input(RegionInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const orgIdToCheck = input.id ?? input.parentId;
+      if (!orgIdToCheck) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Parent ID or ID is required",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: orgIdToCheck,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to update this Region",
+        });
+      }
       const regionToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
         orgType: "region",
@@ -62,17 +89,31 @@ export const regionRouter = createTRPCRouter({
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db
+      const [result] = await ctx.db
         .insert(schema.orgs)
         .values(regionToCrupdate)
         .onConflictDoUpdate({
           target: [schema.orgs.id],
           set: regionToCrupdate,
-        });
+        })
+        .returning();
+      return result;
     }),
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.id,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to delete this Region",
+        });
+      }
       await ctx.db
         .update(schema.orgs)
         .set({ isActive: false })

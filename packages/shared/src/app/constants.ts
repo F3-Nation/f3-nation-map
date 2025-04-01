@@ -441,3 +441,14 @@ export const COUNTRIES = [
   { name: "Zambia", code: "ZM" },
   { name: "Zimbabwe", code: "ZW" },
 ];
+
+export const TEST_NATION_ORG_ID = 1;
+export const TEST_REGION_1_ORG_ID = 2;
+export const TEST_REGION_2_ORG_ID = 3;
+export const TEST_REGION_3_ORG_ID = 4;
+export const TEST_SECTOR_ORG_ID = 5;
+export const TEST_AREA_ORG_ID = 6;
+export const TEST_AO_1_ORG_ID = 7;
+export const TEST_AO_2_ORG_ID = 8;
+export const TEST_EDITOR_USER_ID = 1;
+export const TEST_ADMIN_USER_ID = 2;

@@ -408,7 +408,7 @@ export const LocationEventForm = ({
                       onChange(url640);
                       const blob64 = await scaleAndCropImage(file, 64, 64);
                       if (blob64) {
-                        void uploadLogo({
+                        await uploadLogo({
                           file: blob64,
                           regionId: formRegionId,
                           requestId: formId,

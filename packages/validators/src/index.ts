@@ -75,16 +75,16 @@ export const CreateEventSchema = EventInsertSchema.omit({
 export const NationInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
   email: (s) => s.email({ message: "Invalid email format" }),
+  parentId: z.null({ message: "Must not have a parent" }).optional(),
 }).omit({ orgType: true });
 export const NationSelectSchema = createSelectSchema(orgs);
 
 // SECTOR SCHEMA
 export const SectorInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
-  parentId: (s) =>
-    s
-      .min(1, { message: "Please select a nation" })
-      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  parentId: z
+    .number({ message: "Must have a parent" })
+    .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
 }).omit({ orgType: true });
 export const SectorSelectSchema = createSelectSchema(orgs);
@@ -92,10 +92,9 @@ export const SectorSelectSchema = createSelectSchema(orgs);
 // AREA SCHEMA
 export const AreaInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
-  parentId: (s) =>
-    s
-      .min(1, { message: "Please select a sector" })
-      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  parentId: z
+    .number({ message: "Must have a parent" })
+    .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
 }).omit({ orgType: true });
 export const AreaSelectSchema = createSelectSchema(orgs);
@@ -103,10 +102,9 @@ export const AreaSelectSchema = createSelectSchema(orgs);
 // REGION SCHEMA
 export const RegionInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
-  parentId: (s) =>
-    s
-      .min(1, { message: "Please select an area" })
-      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  parentId: z
+    .number({ message: "Must have a parent" })
+    .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
 }).omit({ orgType: true });
 export const RegionSelectSchema = createSelectSchema(orgs);
@@ -114,10 +112,9 @@ export const RegionSelectSchema = createSelectSchema(orgs);
 // AO SCHEMA
 export const AOInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
-  parentId: (s) =>
-    s
-      .min(1, { message: "Please select a region" })
-      .refine((value) => value !== -1, { message: "Invalid selection" }),
+  parentId: z
+    .number({ message: "Must have a parent" })
+    .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
 }).omit({ orgType: true });
 export const AOSelectSchema = createSelectSchema(orgs);

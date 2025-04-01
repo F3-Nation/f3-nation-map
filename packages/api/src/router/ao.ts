@@ -14,7 +14,12 @@ import { AOInsertSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getSortingColumns } from "../get-sorting-columns";
-import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  editorProcedure,
+  publicProcedure,
+} from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const aoRouter = createTRPCRouter({
@@ -110,21 +115,24 @@ export const aoRouter = createTRPCRouter({
       const [ao] = await ctx.db
         .select()
         .from(schema.orgs)
-        .where(eq(schema.orgs.id, input.id));
+        .where(
+          and(eq(schema.orgs.id, input.id), eq(schema.orgs.orgType, "ao")),
+        );
       return { ...ao };
     }),
 
   crupdate: editorProcedure
     .input(AOInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      if (!input.parentId) {
+      const orgIdToCheck = input.id ?? input.parentId;
+      if (!orgIdToCheck) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Parent ID is required",
+          message: "Parent ID or ID is required",
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: input.parentId,
+        orgId: orgIdToCheck,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",
@@ -135,6 +143,20 @@ export const aoRouter = createTRPCRouter({
           message: "You are not authorized to update this AO",
         });
       }
+
+      if (input.id) {
+        const [existingOrg] = await ctx.db
+          .select()
+          .from(schema.orgs)
+          .where(eq(schema.orgs.id, input.id));
+        if (existingOrg?.orgType !== "ao") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "org to edit is not an AO",
+          });
+        }
+      }
+
       const aoToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
         orgType: "ao",
@@ -142,20 +164,40 @@ export const aoRouter = createTRPCRouter({
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db
+      const [result] = await ctx.db
         .insert(schema.orgs)
         .values(aoToCrupdate)
         .onConflictDoUpdate({
           target: [schema.orgs.id],
           set: aoToCrupdate,
-        });
+        })
+        .returning();
+      return result;
     }),
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.id,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to delete this AO",
+        });
+      }
       await ctx.db
         .update(schema.orgs)
         .set({ isActive: false })
-        .where(eq(schema.orgs.id, input.id));
+        .where(
+          and(
+            eq(schema.orgs.id, input.id),
+            eq(schema.orgs.orgType, "ao"),
+            eq(schema.orgs.isActive, true),
+          ),
+        );
     }),
 });

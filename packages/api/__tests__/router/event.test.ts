@@ -27,19 +27,6 @@ describe("event router", () => {
 
   it("should event all", async () => {
     const result = await caller.event.all();
-    console.log(result);
-    expect(result).toEqual(
-      expect.objectContaining({
-        // events: expect.arrayContaining([
-        //   expect.objectContaining({
-        //     id: expect.any(Number) as number,
-        //     title: expect.any(String) as string,
-        //     content: expect.any(String) as string,
-        //     createdAt: expect.any(Date) as Date,
-        //     updatedAt: expect.any(Date) as Date,
-        //   }),
-        // ]),
-      }),
-    );
+    expect(result).toEqual(expect.anything());
   });
 });

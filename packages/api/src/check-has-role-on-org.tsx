@@ -3,7 +3,7 @@ import type { UserRole } from "@acme/shared/app/enums";
 import { aliasedTable, eq, schema } from "@acme/db";
 
 import type { Context } from "./trpc";
-import { isDevMode } from "./utils";
+import { isDevMode, isTestMode } from "./utils";
 
 export const checkHasRoleOnOrg = async ({
   session,
@@ -31,11 +31,15 @@ export const checkHasRoleOnOrg = async ({
   );
 
   // F3 Nation
-  if (session.email === "declan@mountaindev.com" || isDevMode) {
+  if (
+    session.email === "declan@mountaindev.com" ||
+    (isDevMode && !isTestMode)
+  ) {
     const nations = await db
       .select()
       .from(schema.orgs)
       .where(eq(schema.orgs.orgType, "nation"));
+    console.log("OVERRIDING ROLE DUE TO MTNDEV OVERRIDE (OR DEV)");
     if (nations.find((n) => n.id === orgId)) {
       return {
         success: true,

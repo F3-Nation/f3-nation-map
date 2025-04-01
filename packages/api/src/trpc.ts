@@ -135,3 +135,11 @@ export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  const isAdmin = ctx.session?.roles?.some((r) => r.roleName === "admin");
+  if (!isAdmin) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
+});

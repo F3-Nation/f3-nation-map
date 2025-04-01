@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
@@ -14,7 +15,8 @@ import {
 } from "@acme/db";
 import { EventInsertSchema } from "@acme/validators";
 
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const eventRouter = createTRPCRouter({
@@ -227,9 +229,28 @@ export const eventRouter = createTRPCRouter({
 
       return event;
     }),
-  crupdate: publicProcedure
+  crupdate: editorProcedure
     .input(EventInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const orgIdToCheck = input.aoId ?? input.regionId;
+      if (!orgIdToCheck) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "AO ID or Region ID is required",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: orgIdToCheck,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to update this Event",
+        });
+      }
       const eventToUpdate: typeof schema.events.$inferInsert = {
         ...input,
         orgId: input.aoId,
@@ -237,23 +258,49 @@ export const eventRouter = createTRPCRouter({
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db
+      const [result] = await ctx.db
         .insert(schema.events)
         .values(eventToUpdate)
         .onConflictDoUpdate({
           target: [schema.events.id],
           set: eventToUpdate,
-        });
+        })
+        .returning();
+      return result;
     }),
   types: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.select().from(schema.eventTypes);
   }),
-  delete: publicProcedure
+  delete: editorProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const [event] = await ctx.db
+        .select()
+        .from(schema.events)
+        .where(eq(schema.events.id, input.id));
+      if (!event) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event not found",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: event.orgId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to delete this Event",
+        });
+      }
       await ctx.db
         .update(schema.events)
         .set({ isActive: false })
-        .where(eq(schema.events.id, input.id));
+        .where(
+          and(eq(schema.events.id, input.id), eq(schema.events.isActive, true)),
+        );
     }),
 });

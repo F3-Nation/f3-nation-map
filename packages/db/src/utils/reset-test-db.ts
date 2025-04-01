@@ -3,13 +3,14 @@ import { migrate as migrator } from "drizzle-orm/postgres-js/migrator";
 import type { AppDb } from "../client";
 import drizzleConfig from "../../drizzle.config";
 import { reset } from "../reset";
-import { seed } from "../seed";
+import { testSeed } from "../test-seed";
 import { createDatabaseIfNotExists, getDb, getDbUrl } from "./functions";
 
 export const resetTestDb = async (params?: {
   db?: AppDb;
   shouldReset?: boolean;
   shouldSeed?: boolean;
+  seedType?: "test" | "project";
 }) => {
   const { databaseUrl, databaseName } = getDbUrl();
 
@@ -38,8 +39,14 @@ export const resetTestDb = async (params?: {
   await migrator(params?.db ?? getDb(), config);
 
   if (shouldSeed) {
-    console.log("Seeding database");
-    await seed(params.db ?? getDb());
+    console.log("Seeding database...");
+    if (params?.seedType === "test") {
+      await testSeed(params?.db ?? getDb());
+    } else {
+      // Import and run project seed
+      const { seed } = await import("../seed");
+      await seed();
+    }
   }
 };
 
@@ -47,7 +54,11 @@ const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 
 if (isMainModule) {
   // May need to seed the database for testing
-  void resetTestDb({ shouldReset: true, shouldSeed: false })
+  void resetTestDb({
+    shouldReset: true,
+    shouldSeed: true,
+    seedType: "test",
+  })
     .then(() => console.log("Migration done"))
     .catch((e) => {
       console.log("Migration failed", e);
