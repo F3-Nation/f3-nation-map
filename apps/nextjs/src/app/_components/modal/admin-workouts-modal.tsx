@@ -1,11 +1,13 @@
 "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { DayOfWeek } from "@acme/shared/app/enums";
-import { safeParseInt } from "@acme/shared/common/functions";
+import { Case } from "@acme/shared/common/enums";
+import { convertCase, safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -25,6 +27,7 @@ import {
 } from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
 import {
+  ControlledSelect,
   Select,
   SelectContent,
   SelectItem,
@@ -51,6 +54,7 @@ export default function AdminWorkoutsModal({
   const { data: locations } = api.location.all.useQuery();
   const { data: aos } = api.ao.all.useQuery();
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
+  const { data: eventTypes } = api.event.types.useQuery();
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -347,25 +351,61 @@ export default function AdminWorkoutsModal({
                 <FormField
                   control={form.control}
                   name="dayOfWeek"
-                  render={({ field }) => (
-                    <FormItem key={`dayOfWeek-${field.value}`}>
+                  render={() => (
+                    <FormItem>
                       <FormLabel>Day of Week</FormLabel>
+                      <ControlledSelect
+                        control={form.control}
+                        name="dayOfWeek"
+                        options={DayOfWeek.map((day) => ({
+                          value: day,
+                          label: convertCase({
+                            str: day,
+                            fromCase: Case.LowerCase,
+                            toCase: Case.TitleCase,
+                          }),
+                        }))}
+                        placeholder="Select a day of the week"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
+                  name="meta.eventTypeId"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel>Event Type</FormLabel>
                       <Select
                         value={field.value?.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value?.toString()}
+                        onValueChange={(value) => {
+                          if (value) {
+                            field.onChange(Number(value));
+                          }
+                        }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select day of week" />
+                          <SelectValue placeholder="Select an event type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {DayOfWeek.map((day) => (
-                            <SelectItem key={day} value={day}>
-                              {day}
+                          {eventTypes?.map((type) => (
+                            <SelectItem
+                              key={type.id}
+                              value={type.id.toString()}
+                            >
+                              {type.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {fieldState.error && (
+                        <p className="text-xs text-destructive">
+                          You must select at least one event type
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
