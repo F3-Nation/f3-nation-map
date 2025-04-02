@@ -385,7 +385,7 @@ export const LocationEventForm = ({
             name="aoLogo"
             render={({ field: { onChange, value } }) => {
               return (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-2 min-[320px]:flex-row">
                   <Input
                     type="file"
                     accept="image/*"
@@ -490,7 +490,7 @@ export const FormDebugData = () => {
   const formLocationId = form.watch("locationId");
   const formEventId = form.watch("eventId");
   return (
-    <div className="flex flex-row gap-1">
+    <div className="flex flex-col gap-1">
       <p className="text-sm text-muted-foreground">formId: {formId};</p>
       <p className="text-sm text-muted-foreground">regionId: {formRegionId};</p>
       <p className="text-sm text-muted-foreground">
