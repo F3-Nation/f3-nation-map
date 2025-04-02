@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import omit from "lodash/omit";
 import { z } from "zod";
 
@@ -18,8 +19,14 @@ import { DayOfWeek } from "@acme/shared/app/enums";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema, SortingSchema } from "@acme/validators";
 
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getSortingColumns } from "../get-sorting-columns";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  editorProcedure,
+  publicProcedure,
+} from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const locationRouter = createTRPCRouter({
@@ -112,17 +119,7 @@ export const locationRouter = createTRPCRouter({
 
       return { locations, total: locationCount?.count ?? 0 };
     }),
-  getLocationMarkersSparse: publicProcedure.query(({ ctx }) => {
-    return ctx.db
-      .select({
-        id: schema.locations.id,
-        lat: schema.locations.latitude,
-        lon: schema.locations.longitude,
-        locationDescription: schema.locations.description,
-      })
-      .from(schema.locations);
-  }),
-  allLocationMarkerFilterData: publicProcedure.query(async ({ ctx }) => {
+  getMapEventAndLocationData: publicProcedure.query(async ({ ctx }) => {
     const aoOrg = aliasedTable(schema.orgs, "ao_org");
     const locationsAndEvents = await ctx.db
       .select({
@@ -130,6 +127,9 @@ export const locationRouter = createTRPCRouter({
           id: schema.locations.id,
           name: aoOrg.name,
           logo: aoOrg.logoUrl,
+          lat: schema.locations.latitude,
+          lon: schema.locations.longitude,
+          locationDescription: schema.locations.description,
         },
         events: {
           id: schema.events.id,
@@ -145,7 +145,11 @@ export const locationRouter = createTRPCRouter({
       .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id))
       .leftJoin(
         schema.events,
-        eq(schema.events.locationId, schema.locations.id),
+        and(
+          eq(schema.events.locationId, schema.locations.id),
+          eq(schema.events.isActive, true),
+          eq(schema.events.isSeries, true),
+        ),
       )
       .leftJoin(
         schema.eventsXEventTypes,
@@ -168,10 +172,13 @@ export const locationRouter = createTRPCRouter({
         const location = item.locations;
         const event = item.events;
 
-        if (!acc[location.id]) {
+        if (!acc[location.id] && location.lat != null && location.lon != null) {
           acc[location.id] = {
             ...location,
             name: location.name ?? "",
+            description: location.locationDescription ?? "",
+            lat: location.lat,
+            lon: location.lon,
             events: [],
           };
         }
@@ -188,6 +195,9 @@ export const locationRouter = createTRPCRouter({
           id: number;
           name: string;
           logo: string | null;
+          lat: number;
+          lon: number;
+          description: string;
           events: Omit<
             NonNullable<(typeof locationsAndEvents)[number]["events"]>,
             "locationId"
@@ -202,6 +212,9 @@ export const locationRouter = createTRPCRouter({
       locationEvent.id,
       locationEvent.name,
       locationEvent.logo,
+      locationEvent.lat,
+      locationEvent.lon,
+      locationEvent.description,
       locationEvent.events
         .sort(
           (a, b) =>
@@ -639,21 +652,78 @@ export const locationRouter = createTRPCRouter({
 
       return location;
     }),
-  crupdate: publicProcedure
+  crupdate: editorProcedure
     .input(LocationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      if (!input.orgId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Parent ID or ID is required",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.orgId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to update this Location",
+        });
+      }
       const locationToCrupdate: typeof schema.locations.$inferInsert = {
         ...input,
         meta: {
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db
+      const [result] = await ctx.db
         .insert(schema.locations)
         .values(locationToCrupdate)
         .onConflictDoUpdate({
           target: [schema.locations.id],
           set: locationToCrupdate,
+        })
+        .returning();
+      return result;
+    }),
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [location] = await ctx.db
+        .select()
+        .from(schema.locations)
+        .where(eq(schema.locations.id, input.id));
+
+      if (!location) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Location not found",
         });
+      }
+
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: location.orgId,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to delete this Location",
+        });
+      }
+      await ctx.db
+        .update(schema.locations)
+        .set({ isActive: false })
+        .where(
+          and(
+            eq(schema.locations.id, input.id),
+            eq(schema.locations.isActive, true),
+          ),
+        );
     }),
 });

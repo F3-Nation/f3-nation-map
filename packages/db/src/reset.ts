@@ -1,11 +1,9 @@
 import { sql } from "drizzle-orm/sql";
 
-import { env } from "@acme/env";
+import { isTest } from "@acme/shared/common/constants";
 
-import { db } from ".";
 import { alembicVersion } from "../drizzle/schema";
-
-const databaseUrl = env.DATABASE_URL;
+import { getDb, getDbUrl } from "./utils/functions";
 
 interface DbUser extends Record<string, unknown> {
   rolname: string;
@@ -14,20 +12,28 @@ interface DbUser extends Record<string, unknown> {
 export let alembicVersionValue: string | undefined;
 
 export const reset = async () => {
+  const { databaseUrl, databaseName } = getDbUrl();
+  const db = getDb();
   if (!databaseUrl) return;
   if (process.env.CI) return;
 
+  const isTestDB = databaseName?.endsWith("_test");
+
   process.stdout.write(
-    `Resetting database ${databaseUrl} ARE YOU SURE? (y/n): `,
+    `Resetting database ${databaseUrl} ${isTest ? "(TEST)" : ""} ARE YOU SURE? (y/n): `,
   );
   // wait for confirmation from the command line
-  const confirmation = await new Promise((resolve) => {
-    process.stdin.once("data", (data) => {
-      resolve(data.toString().trim());
+  if (isTest && isTestDB) {
+    console.log("Bypassing confirmation for test database");
+  } else {
+    const confirmation = await new Promise((resolve) => {
+      process.stdin.once("data", (data) => {
+        resolve(data.toString().trim());
+      });
     });
-  });
-  if (confirmation !== "y") {
-    throw new Error("Reset cancelled");
+    if (confirmation !== "y") {
+      throw new Error("Reset cancelled");
+    }
   }
 
   // We need to manually handle the alembic version table for moneyball's work

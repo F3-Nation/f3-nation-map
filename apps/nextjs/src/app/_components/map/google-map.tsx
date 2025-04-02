@@ -14,6 +14,7 @@ import { safeParseFloat, safeParseInt } from "@acme/shared/common/functions";
 import { useTheme } from "@acme/ui/theme";
 import { toast } from "@acme/ui/toast";
 
+import type { RouterOutputs } from "~/trpc/types";
 import { env } from "~/env";
 import { api } from "~/trpc/react";
 import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
@@ -111,7 +112,7 @@ export const GoogleMapComponent = () => {
       <ProvidedGoogleMapComponent
         defaultZoom={getDefaultZoom({ queryZoom: queryZoom })}
         defaultCenter={getDefaultCenter({
-          locationData: utils.location.getLocationMarkersSparse.getData(),
+          locationData: utils.location.getMapEventAndLocationData.getData(),
           queryLat,
           queryLon,
           queryLocationId,
@@ -225,20 +226,19 @@ const getDefaultCenter = ({
   queryLon: number | undefined;
   queryLocationId: number | undefined;
   locationData:
-    | {
-        id: number;
-        lat: number | null;
-        lon: number | null;
-      }[]
-    | undefined;
+    | RouterOutputs["location"]["getMapEventAndLocationData"]
+    | undefined
+    | null;
 }) => {
   const locationLatLng = locationData?.find(
-    (location) => location.id === queryLocationId,
+    (location) => location[0] === queryLocationId,
   );
+  const lat = locationLatLng?.[3];
+  const lon = locationLatLng?.[4];
   const center = mapStore.get("center");
 
-  return locationLatLng?.lat != null && locationLatLng.lon != null
-    ? { lat: locationLatLng.lat, lng: locationLatLng.lon }
+  return lat != null && lon != null
+    ? { lat, lng: lon }
     : queryLat != null && queryLon != null
       ? { lat: queryLat, lng: queryLon }
       : center

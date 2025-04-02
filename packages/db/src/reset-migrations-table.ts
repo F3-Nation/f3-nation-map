@@ -4,8 +4,8 @@ import { readMigrationFiles } from "drizzle-orm/migrator";
 
 import { env } from "@acme/env";
 
-import { db as connection } from ".";
 import drizzleConfig from "../drizzle.config";
+import { db as connection } from "./client";
 
 const config = {
   ...drizzleConfig,

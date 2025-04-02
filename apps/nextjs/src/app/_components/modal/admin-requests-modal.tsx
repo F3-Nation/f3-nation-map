@@ -19,6 +19,7 @@ import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
+import { isDevMode } from "~/trpc/util";
 import { useUpdateLocationForm } from "~/utils/forms";
 import { closeModal } from "~/utils/store/modal";
 import { FormDebugData, LocationEventForm } from "../forms/location-event-form";
@@ -133,7 +134,7 @@ export default function AdminRequestsModal({
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
                 Edit Request
-                <FormDebugData />
+                {isDevMode && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
             <LocationEventForm isAdminForm={true} />

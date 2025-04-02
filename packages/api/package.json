@@ -11,6 +11,8 @@
     "clean": "rm -rf .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "lint": "eslint .",
+    "test": "pnpm with-env vitest --run",
+    "test:watch": "pnpm with-env vitest -w",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -43,6 +45,9 @@
     "root": true,
     "extends": [
       "@acme/eslint-config/base"
+    ],
+    "ignorePatterns": [
+      "vitest.config.ts"
     ]
   },
   "prettier": "@acme/prettier-config"

@@ -9,8 +9,17 @@ import { env } from "~/env";
 import { ssg } from "~/trpc/ssg";
 
 export default async function StaticMapPreview() {
-  const locationMarkersSparse =
-    await ssg.location.getLocationMarkersSparse.fetch();
+  const mapEventAndLocationData =
+    await ssg.location.getMapEventAndLocationData.fetch();
+
+  const markers = mapEventAndLocationData
+    .slice(0, 10)
+    .map((marker) => {
+      const lat = marker[3];
+      const lon = marker[4];
+      return lat == null || lon == null ? null : { lat, lon };
+    })
+    .filter(isTruthy);
 
   const staticMapsUrl = createStaticMapsUrl({
     apiKey: env.NEXT_PUBLIC_GOOGLE_API_KEY,
@@ -21,7 +30,7 @@ export default async function StaticMapPreview() {
     center: { lat: 32, lng: -97 },
     zoom: 4,
     language: "en",
-    markers: locationMarkersSparse
+    markers: markers
       .slice(0, 10)
       .map((marker) =>
         typeof marker.lat === "number" && typeof marker.lon === "number"

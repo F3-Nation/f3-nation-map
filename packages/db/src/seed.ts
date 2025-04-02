@@ -17,11 +17,14 @@ import {
 } from "@acme/shared/common/functions";
 
 import type { InferInsertModel } from ".";
+import type { AppDb } from "./client";
 import type {
   RegionSheetData,
   WorkoutSheetData,
 } from "./utils/get-location-data-gravity-forms";
-import { db, schema } from ".";
+import { schema } from ".";
+import { db } from "./client";
+import { getDb } from "./utils/functions";
 import { getLocationDataFromGravityForms } from "./utils/get-location-data-gravity-forms";
 
 const EVENT_TAGS = [
@@ -160,7 +163,8 @@ const _reseedJustData = async () => {
   await insertUsers();
 };
 
-export const seed = async () => {
+export const seed = async (db?: AppDb) => {
+  const _db = db ?? getDb();
   // await insertUsers();
   // await _reseedFromScratch();
   await _reseedJustData();

@@ -1,9 +1,16 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { and, eq, ne, schema } from "@acme/db";
 import { NationInsertSchema } from "@acme/validators";
 
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  editorProcedure,
+  publicProcedure,
+} from "../trpc";
 
 export const nationRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
@@ -40,13 +47,48 @@ export const nationRouter = createTRPCRouter({
       const [nation] = await ctx.db
         .select()
         .from(schema.orgs)
-        .where(eq(schema.orgs.id, input.id));
+        .where(
+          and(eq(schema.orgs.id, input.id), eq(schema.orgs.orgType, "nation")),
+        );
       return { ...nation };
     }),
 
-  crupdate: publicProcedure
+  crupdate: editorProcedure
     .input(NationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const orgIdToCheck = input.id;
+      if (!orgIdToCheck) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "ID is required",
+        });
+      }
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: orgIdToCheck,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "editor",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to update this Nation",
+        });
+      }
+
+      if (input.id) {
+        const [existingOrg] = await ctx.db
+          .select()
+          .from(schema.orgs)
+          .where(eq(schema.orgs.id, input.id));
+        if (existingOrg?.orgType !== "nation") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "org to edit is not a nation",
+          });
+        }
+      }
+
       const nationToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
         orgType: "nation",
@@ -54,21 +96,41 @@ export const nationRouter = createTRPCRouter({
           ...(input.meta as Record<string, string>),
         },
       };
-      await ctx.db
+      const [result] = await ctx.db
         .insert(schema.orgs)
         .values(nationToCrupdate)
         .onConflictDoUpdate({
           target: [schema.orgs.id],
           set: nationToCrupdate,
-        });
+        })
+        .returning();
+      return result;
     }),
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: input.id,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to delete this Nation",
+        });
+      }
       await ctx.db
         .update(schema.orgs)
         .set({ isActive: false })
-        .where(eq(schema.orgs.id, input.id));
+        .where(
+          and(
+            eq(schema.orgs.id, input.id),
+            eq(schema.orgs.orgType, "nation"),
+            eq(schema.orgs.isActive, true),
+          ),
+        );
     }),
   allOrgs: publicProcedure.query(async ({ ctx }) => {
     const orgs = await ctx.db

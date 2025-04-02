@@ -9,10 +9,8 @@ import { FilteredMapResultsProvider } from "./_components/map/filtered-map-resul
 import { TextSearchResultsProvider } from "./_components/map/search-results-provider";
 
 export default async function MapPage() {
-  const locationMarkersSparse =
-    await ssg.location.getLocationMarkersSparse.fetch();
-  const filteredMapResultsData =
-    await ssg.location.allLocationMarkerFilterData.fetch();
+  const mapEventAndLocationData =
+    await ssg.location.getMapEventAndLocationData.fetch();
   const regionsWithLocationData =
     await ssg.location.getRegionsWithLocation.fetch();
 
@@ -20,8 +18,7 @@ export default async function MapPage() {
 
   return (
     <FilteredMapResultsProvider
-      allLocationMarkers={locationMarkersSparse}
-      lowBandwidthAllLocationMarkerFilterData={filteredMapResultsData}
+      mapEventAndLocationData={mapEventAndLocationData}
     >
       {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
       <TextSearchResultsProvider

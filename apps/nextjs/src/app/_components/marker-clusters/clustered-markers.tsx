@@ -1,9 +1,4 @@
-import type {
-  Feature,
-  FeatureCollection,
-  GeoJsonProperties,
-  Point,
-} from "geojson";
+import type { Feature, FeatureCollection, Point } from "geojson";
 import type Supercluster from "supercluster";
 import type { ClusterProperties } from "supercluster";
 import { useCallback, useMemo } from "react";
@@ -18,16 +13,26 @@ import { useFilteredMapResults } from "../map/filtered-map-results-provider";
 import { FeatureMarker } from "../map/group-marker";
 import { FeaturesClusterMarker } from "./features-cluster-marker";
 
-interface ClusteredMarkersProps {
-  geojson: FeatureCollection<Point, GeoJsonProperties>;
+interface F3ClusterProperties extends ClusterProperties {
+  logos?: string;
+}
+
+interface MarkersProps {
+  geojson: FeatureCollection<Point, MarkerProperties>;
+}
+
+interface MarkerProperties {
+  name?: string | null;
+  address?: string | null;
+  logo?: string | null;
 }
 
 const superclusterOptions: Supercluster.Options<
-  GeoJsonProperties,
-  ClusterProperties
+  MarkerProperties,
+  F3ClusterProperties
 > = {
-  extent: 256,
-  radius: 80,
+  extent: 256, // smaller means more in a cluster
+  radius: 64, // Adjust this. smaller means more smaller clusters
   maxZoom: 12,
 };
 
@@ -41,7 +46,7 @@ export const ClusteredMarkers = () => {
   return geojson && <DataProvidedClusteredMarkers geojson={geojson} />;
 };
 
-const DataProvidedClusteredMarkers = ({ geojson }: ClusteredMarkersProps) => {
+const DataProvidedClusteredMarkers = ({ geojson }: MarkersProps) => {
   const [width] = useWindowSize();
 
   const map = useMap();
@@ -49,7 +54,7 @@ const DataProvidedClusteredMarkers = ({ geojson }: ClusteredMarkersProps) => {
   const handleClusterClick = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement, clusterId: number) => {
       // negative padding - https://github.com/visgl/react-google-maps/discussions/591
-      const negativePadding = -1 * Math.max(0, (BreakPoints.LG - width) / 6); // about 100 at 480px
+      const negativePadding = -1 * Math.max(0, (BreakPoints.LG - width) / 8); // about 80px at 480px
       const leaves = getLeaves(clusterId);
       const boundsOfLeaves = getBoundsOfLeaves(leaves);
       map?.fitBounds(boundsOfLeaves, negativePadding);
@@ -65,7 +70,7 @@ const DataProvidedClusteredMarkers = ({ geojson }: ClusteredMarkersProps) => {
         const featureId = feature.id?.toString();
         if (!featureId) return null;
 
-        const clusterProperties = feature.properties as ClusterProperties;
+        const clusterProperties = feature.properties as F3ClusterProperties;
         const isCluster: boolean = clusterProperties.cluster;
 
         return isCluster ? (
@@ -112,13 +117,14 @@ const getGeojson = (filteredLocationMarkers: SparseF3Marker[]) => {
         properties: {
           name: marker.aoName,
           address: marker.locationDescription,
+          logo: marker.logo,
         },
       });
       return acc;
     },
     { features: [], type: "FeatureCollection" } as FeatureCollection<
       Point,
-      GeoJsonProperties
+      MarkerProperties
     >,
   ) ?? { features: [], type: "FeatureCollection" };
   return geojson;

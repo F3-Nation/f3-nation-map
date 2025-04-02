@@ -13,7 +13,7 @@ import { ZodError } from "zod";
 
 import type { Session } from "@acme/auth";
 import { auth } from "@acme/auth";
-import { db } from "@acme/db";
+import { db } from "@acme/db/client";
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
@@ -131,6 +131,14 @@ export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
     ["editor", "admin"].includes(r.roleName),
   );
   if (!isEditorOrAdmin) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
+});
+
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  const isAdmin = ctx.session?.roles?.some((r) => r.roleName === "admin");
+  if (!isAdmin) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({ ctx });
