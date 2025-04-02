@@ -1,11 +1,14 @@
 "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import type { EventInsertType } from "@acme/validators";
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { DayOfWeek } from "@acme/shared/app/enums";
-import { safeParseInt } from "@acme/shared/common/functions";
+import { Case } from "@acme/shared/common/enums";
+import { convertCase, safeParseInt } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -25,6 +28,7 @@ import {
 } from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
 import {
+  ControlledSelect,
   Select,
   SelectContent,
   SelectItem,
@@ -39,6 +43,7 @@ import { EventInsertSchema } from "@acme/validators";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { TimeInput } from "../time-input";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminWorkoutsModal({
@@ -51,6 +56,7 @@ export default function AdminWorkoutsModal({
   const { data: locations } = api.location.all.useQuery();
   const { data: aos } = api.ao.all.useQuery();
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
+  const { data: eventTypes } = api.event.types.useQuery();
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,20 +64,23 @@ export default function AdminWorkoutsModal({
 
   useEffect(() => {
     form.reset({
-      id: event?.id ?? undefined,
+      id: event?.id,
       name: event?.name ?? "",
+      locationId: event?.locationId ?? null,
+      email: event?.email ?? "",
+      startTime: event?.startTime ?? "",
+      endTime: event?.endTime ?? "",
+      startDate: event?.startDate ?? "",
+      dayOfWeek: event?.dayOfWeek ?? null,
       isActive: event?.isActive ?? true,
-      description: event?.description ?? "",
-      aoId: event?.aos[0]?.aoId,
-      highlight: event?.highlight ?? true,
-      isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId,
-      dayOfWeek: event?.dayOfWeek,
-      startTime: event?.startTime?.slice(0, 5) ?? "0530",
-      endTime: event?.endTime?.slice(0, 5) ?? "0615",
-      email: event?.email ?? null,
-      regionId: event?.regions[0]?.regionId,
-      startDate: event?.startDate,
+      highlight: event?.highlight ?? false,
+      isSeries: event?.isSeries ?? false,
+      regionId: event?.regions?.[0]?.regionId ?? undefined,
+      aoId: event?.aos?.[0]?.aoId ?? undefined,
+      eventTypeId: event?.eventTypes?.[0]?.eventTypeId ?? undefined,
+      meta: {
+        mapSeed: event?.meta?.mapSeed ?? false,
+      },
     });
   }, [form, event]);
 
@@ -91,6 +100,62 @@ export default function AdminWorkoutsModal({
     },
   });
 
+  const onSubmit = async (data: EventInsertType) => {
+    // Validate times
+    const startTime = data.startTime;
+    const endTime = data.endTime;
+
+    if (startTime) {
+      const [hours, minutes] =
+        startTime
+          .match(/(\d{2})(\d{2})/)
+          ?.slice(1)
+          .map(Number) ?? [];
+      if (hours == null || hours > 23 || minutes == null || minutes > 59) {
+        form.setError("startTime", { message: "Invalid start time" });
+        toast.error("Invalid start time");
+        return;
+      }
+    }
+
+    if (endTime) {
+      const [hours, minutes] =
+        endTime
+          .match(/(\d{2})(\d{2})/)
+          ?.slice(1)
+          .map(Number) ?? [];
+      if (hours == null || hours > 23 || minutes == null || minutes > 59) {
+        form.setError("endTime", { message: "Invalid end time" });
+        toast.error("Invalid end time");
+        return;
+      }
+    }
+
+    // Validate day of week
+    if (!data.dayOfWeek) {
+      form.setError("dayOfWeek", { message: "Day of week is required" });
+      toast.error("Day of week is required");
+      return;
+    }
+
+    // Validate event type
+    if (!data.eventTypeId) {
+      form.setError("eventTypeId", { message: "Event type is required" });
+      toast.error("Event type is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await crupdateEvent.mutateAsync(data);
+    } catch (error) {
+      toast.error("Failed to update event");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
@@ -102,27 +167,7 @@ export default function AdminWorkoutsModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(
-              async (data) => {
-                setIsSubmitting(true);
-                try {
-                  await crupdateEvent.mutateAsync(data);
-                } catch (error) {
-                  toast.error("Failed to update event");
-                  console.error(error);
-                } finally {
-                  setIsSubmitting(false);
-                }
-              },
-              (error) => {
-                toast.error("Failed to update event");
-                console.log(error);
-                setIsSubmitting(false);
-              },
-            )}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-wrap">
               <div className="mb-4 w-1/2 px-2">
                 <FormField
@@ -347,25 +392,61 @@ export default function AdminWorkoutsModal({
                 <FormField
                   control={form.control}
                   name="dayOfWeek"
-                  render={({ field }) => (
-                    <FormItem key={`dayOfWeek-${field.value}`}>
+                  render={() => (
+                    <FormItem>
                       <FormLabel>Day of Week</FormLabel>
+                      <ControlledSelect
+                        control={form.control}
+                        name="dayOfWeek"
+                        options={DayOfWeek.map((day) => ({
+                          value: day,
+                          label: convertCase({
+                            str: day,
+                            fromCase: Case.LowerCase,
+                            toCase: Case.TitleCase,
+                          }),
+                        }))}
+                        placeholder="Select a day of the week"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="mb-4 w-1/2 px-2">
+                <FormField
+                  control={form.control}
+                  name="eventTypeId"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel>Event Type</FormLabel>
                       <Select
                         value={field.value?.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value?.toString()}
+                        onValueChange={(value) => {
+                          if (value) {
+                            field.onChange(parseInt(value));
+                          }
+                        }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select day of week" />
+                          <SelectValue placeholder="Select an event type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {DayOfWeek.map((day) => (
-                            <SelectItem key={day} value={day}>
-                              {day}
+                          {eventTypes?.map((type) => (
+                            <SelectItem
+                              key={type.id}
+                              value={type.id.toString()}
+                            >
+                              {type.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {fieldState.error && (
+                        <p className="text-xs text-destructive">
+                          You must select at least one event type
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -377,12 +458,24 @@ export default function AdminWorkoutsModal({
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time (24hr format)</FormLabel>
+                      <FormLabel>Start Time</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Start Time"
+                        <TimeInput
+                          placeholder="HH:mm"
                           {...field}
-                          value={field.value ?? ""}
+                          value={
+                            field.value
+                              ? `${field.value.slice(0, 2)}:${field.value.slice(2)}`
+                              : ""
+                          }
+                          onChange={(value) => {
+                            if (value) {
+                              const [hours, minutes] = value.split(":");
+                              field.onChange(`${hours}${minutes}`);
+                            } else {
+                              field.onChange("");
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -396,12 +489,24 @@ export default function AdminWorkoutsModal({
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time (24hr format)</FormLabel>
+                      <FormLabel>End Time</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="End Time"
+                        <TimeInput
+                          placeholder="HH:mm"
                           {...field}
-                          value={field.value ?? ""}
+                          value={
+                            field.value
+                              ? `${field.value.slice(0, 2)}:${field.value.slice(2)}`
+                              : ""
+                          }
+                          onChange={(value) => {
+                            if (value) {
+                              const [hours, minutes] = value.split(":");
+                              field.onChange(`${hours}${minutes}`);
+                            } else {
+                              field.onChange("");
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

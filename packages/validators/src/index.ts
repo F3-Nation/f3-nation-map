@@ -59,6 +59,7 @@ export const EventInsertSchema = createInsertSchema(events, {
   .extend({
     regionId: z.number(),
     aoId: z.number(),
+    eventTypeId: z.number().min(1, { message: "Event type is required" }),
   })
   .omit({
     orgId: true,
@@ -70,6 +71,7 @@ export const CreateEventSchema = EventInsertSchema.omit({
   created: true,
   updated: true,
 });
+export type EventInsertType = z.infer<typeof CreateEventSchema>;
 
 // NATION SCHEMA
 export const NationInsertSchema = createInsertSchema(orgs, {

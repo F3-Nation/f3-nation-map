@@ -173,6 +173,7 @@ export const eventRouter = createTRPCRouter({
           highlight: schema.events.highlight,
           isSeries: schema.events.isSeries,
           created: schema.events.created,
+          meta: schema.events.meta,
           aos: sql<{ aoId: number; aoName: string }[]>`COALESCE(
             json_agg(
               DISTINCT jsonb_build_object(
@@ -186,17 +187,31 @@ export const eventRouter = createTRPCRouter({
             '[]'
           )`,
           regions: sql<{ regionId: number; regionName: string }[]>`COALESCE(
-              json_agg(
-                DISTINCT jsonb_build_object(
-                  'regionId', ${regionOrg.id}, 
-                  'regionName', ${regionOrg.name}
-                )
-              ) 
-              FILTER (
-                WHERE ${regionOrg.id} IS NOT NULL
-              ), 
-              '[]'
-            )`,
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'regionId', ${regionOrg.id}, 
+                'regionName', ${regionOrg.name}
+              )
+            ) 
+            FILTER (
+              WHERE ${regionOrg.id} IS NOT NULL
+            ), 
+            '[]'
+          )`,
+          eventTypes: sql<
+            { eventTypeId: number; eventTypeName: string }[]
+          >`COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'eventTypeId', ${schema.eventTypes.id},
+                'eventTypeName', ${schema.eventTypes.name}
+              )
+            )
+            FILTER (
+              WHERE ${schema.eventTypes.id} IS NOT NULL
+            ),
+            '[]'
+          )`,
         })
         .from(schema.events)
         .leftJoin(
@@ -223,6 +238,14 @@ export const eventRouter = createTRPCRouter({
               eq(regionOrg.id, aoOrg.parentId),
             ),
           ),
+        )
+        .leftJoin(
+          schema.eventsXEventTypes,
+          eq(schema.eventsXEventTypes.eventId, schema.events.id),
+        )
+        .leftJoin(
+          schema.eventTypes,
+          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
         .where(eq(schema.events.id, input.id))
         .groupBy(schema.events.id, aoOrg.id, regionOrg.id);
@@ -251,13 +274,20 @@ export const eventRouter = createTRPCRouter({
           message: "You are not authorized to update this Event",
         });
       }
+
+      const { eventTypeId, meta, ...eventData } = input;
       const eventToUpdate: typeof schema.events.$inferInsert = {
-        ...input,
+        ...eventData,
         orgId: input.aoId,
-        meta: {
-          ...(input.meta as Record<string, string>),
-        },
+        meta: meta
+          ? {
+              ...meta,
+              mapSeed: meta.mapSeed as boolean | undefined,
+              eventTypeId: undefined, // Remove eventTypeId from meta since we handle it in join table
+            }
+          : null,
       };
+
       const [result] = await ctx.db
         .insert(schema.events)
         .values(eventToUpdate)
@@ -266,6 +296,26 @@ export const eventRouter = createTRPCRouter({
           set: eventToUpdate,
         })
         .returning();
+
+      if (!result) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create/update event",
+        });
+      }
+
+      // Handle event type in join table
+      if (eventTypeId) {
+        await ctx.db
+          .delete(schema.eventsXEventTypes)
+          .where(eq(schema.eventsXEventTypes.eventId, result.id));
+
+        await ctx.db.insert(schema.eventsXEventTypes).values({
+          eventId: result.id,
+          eventTypeId,
+        });
+      }
+
       return result;
     }),
   types: publicProcedure.query(async ({ ctx }) => {
