@@ -20,6 +20,12 @@ export const GeoJsonPane = () => {
         const newFeatures = map.data.addGeoJson(VISIBLE_COUNTRIES, {
           idPropertyName: "countries",
         });
+        // https://developers.google.com/maps/documentation/javascript/examples/layer-data-dynamic
+        map.data.setStyle({
+          fillColor: "#dc2626",
+          strokeColor: "#dc2626",
+          strokeWeight: 1,
+        });
         features.current = newFeatures;
       }
     } else {
