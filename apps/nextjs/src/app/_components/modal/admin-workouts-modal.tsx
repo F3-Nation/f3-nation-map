@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import type { EventInsertType } from "@acme/validators";
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { DayOfWeek } from "@acme/shared/app/enums";
 import { Case } from "@acme/shared/common/enums";
@@ -42,6 +43,7 @@ import { EventInsertSchema } from "@acme/validators";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { closeModal } from "~/utils/store/modal";
+import { TimeInput } from "../time-input";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminWorkoutsModal({
@@ -62,20 +64,23 @@ export default function AdminWorkoutsModal({
 
   useEffect(() => {
     form.reset({
-      id: event?.id ?? undefined,
+      id: event?.id,
       name: event?.name ?? "",
+      locationId: event?.locationId ?? null,
+      email: event?.email ?? "",
+      startTime: event?.startTime ?? "",
+      endTime: event?.endTime ?? "",
+      startDate: event?.startDate ?? "",
+      dayOfWeek: event?.dayOfWeek ?? null,
       isActive: event?.isActive ?? true,
-      description: event?.description ?? "",
-      aoId: event?.aos[0]?.aoId,
-      highlight: event?.highlight ?? true,
-      isSeries: event?.isSeries ?? true,
-      locationId: event?.locationId,
-      dayOfWeek: event?.dayOfWeek,
-      startTime: event?.startTime?.slice(0, 5) ?? "0530",
-      endTime: event?.endTime?.slice(0, 5) ?? "0615",
-      email: event?.email ?? null,
-      regionId: event?.regions[0]?.regionId,
-      startDate: event?.startDate,
+      highlight: event?.highlight ?? false,
+      isSeries: event?.isSeries ?? false,
+      regionId: event?.regions?.[0]?.regionId ?? undefined,
+      aoId: event?.aos?.[0]?.aoId ?? undefined,
+      eventTypeId: event?.eventTypes?.[0]?.eventTypeId ?? undefined,
+      meta: {
+        mapSeed: event?.meta?.mapSeed ?? false,
+      },
     });
   }, [form, event]);
 
@@ -95,6 +100,62 @@ export default function AdminWorkoutsModal({
     },
   });
 
+  const onSubmit = async (data: EventInsertType) => {
+    // Validate times
+    const startTime = data.startTime;
+    const endTime = data.endTime;
+
+    if (startTime) {
+      const [hours, minutes] =
+        startTime
+          .match(/(\d{2})(\d{2})/)
+          ?.slice(1)
+          .map(Number) ?? [];
+      if (hours == null || hours > 23 || minutes == null || minutes > 59) {
+        form.setError("startTime", { message: "Invalid start time" });
+        toast.error("Invalid start time");
+        return;
+      }
+    }
+
+    if (endTime) {
+      const [hours, minutes] =
+        endTime
+          .match(/(\d{2})(\d{2})/)
+          ?.slice(1)
+          .map(Number) ?? [];
+      if (hours == null || hours > 23 || minutes == null || minutes > 59) {
+        form.setError("endTime", { message: "Invalid end time" });
+        toast.error("Invalid end time");
+        return;
+      }
+    }
+
+    // Validate day of week
+    if (!data.dayOfWeek) {
+      form.setError("dayOfWeek", { message: "Day of week is required" });
+      toast.error("Day of week is required");
+      return;
+    }
+
+    // Validate event type
+    if (!data.eventTypeId) {
+      form.setError("eventTypeId", { message: "Event type is required" });
+      toast.error("Event type is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await crupdateEvent.mutateAsync(data);
+    } catch (error) {
+      toast.error("Failed to update event");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
@@ -106,27 +167,7 @@ export default function AdminWorkoutsModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(
-              async (data) => {
-                setIsSubmitting(true);
-                try {
-                  await crupdateEvent.mutateAsync(data);
-                } catch (error) {
-                  toast.error("Failed to update event");
-                  console.error(error);
-                } finally {
-                  setIsSubmitting(false);
-                }
-              },
-              (error) => {
-                toast.error("Failed to update event");
-                console.log(error);
-                setIsSubmitting(false);
-              },
-            )}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-wrap">
               <div className="mb-4 w-1/2 px-2">
                 <FormField
@@ -375,7 +416,7 @@ export default function AdminWorkoutsModal({
               <div className="mb-4 w-1/2 px-2">
                 <FormField
                   control={form.control}
-                  name="meta.eventTypeId"
+                  name="eventTypeId"
                   render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Event Type</FormLabel>
@@ -383,7 +424,7 @@ export default function AdminWorkoutsModal({
                         value={field.value?.toString()}
                         onValueChange={(value) => {
                           if (value) {
-                            field.onChange(Number(value));
+                            field.onChange(parseInt(value));
                           }
                         }}
                       >
@@ -417,12 +458,24 @@ export default function AdminWorkoutsModal({
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time (24hr format)</FormLabel>
+                      <FormLabel>Start Time</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Start Time"
+                        <TimeInput
+                          placeholder="HH:mm"
                           {...field}
-                          value={field.value ?? ""}
+                          value={
+                            field.value
+                              ? `${field.value.slice(0, 2)}:${field.value.slice(2)}`
+                              : ""
+                          }
+                          onChange={(value) => {
+                            if (value) {
+                              const [hours, minutes] = value.split(":");
+                              field.onChange(`${hours}${minutes}`);
+                            } else {
+                              field.onChange("");
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -436,12 +489,24 @@ export default function AdminWorkoutsModal({
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time (24hr format)</FormLabel>
+                      <FormLabel>End Time</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="End Time"
+                        <TimeInput
+                          placeholder="HH:mm"
                           {...field}
-                          value={field.value ?? ""}
+                          value={
+                            field.value
+                              ? `${field.value.slice(0, 2)}:${field.value.slice(2)}`
+                              : ""
+                          }
+                          onChange={(value) => {
+                            if (value) {
+                              const [hours, minutes] = value.split(":");
+                              field.onChange(`${hours}${minutes}`);
+                            } else {
+                              field.onChange("");
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

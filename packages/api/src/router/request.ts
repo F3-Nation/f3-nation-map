@@ -608,7 +608,6 @@ export const applyUpdateRequest = async (
 
   // EVENT
   if (updateRequest.eventId != undefined) {
-    console.log("updating event", updateRequest);
     await ctx.db
       .update(schema.events)
       .set({
@@ -661,12 +660,10 @@ export const applyUpdateRequest = async (
       .values(newEvent)
       .returning();
 
-    console.log("inserting event type", newEvent);
     if (!_inserted) {
       throw new Error("Failed to insert event");
     }
 
-    console.log("updating event types", updateRequest.eventTypeIds);
     await ctx.db
       .delete(schema.eventsXEventTypes)
       .where(eq(schema.eventsXEventTypes.eventId, _inserted.id));
