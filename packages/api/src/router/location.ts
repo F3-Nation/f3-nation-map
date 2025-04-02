@@ -119,17 +119,7 @@ export const locationRouter = createTRPCRouter({
 
       return { locations, total: locationCount?.count ?? 0 };
     }),
-  getLocationMarkersSparse: publicProcedure.query(({ ctx }) => {
-    return ctx.db
-      .select({
-        id: schema.locations.id,
-        lat: schema.locations.latitude,
-        lon: schema.locations.longitude,
-        locationDescription: schema.locations.description,
-      })
-      .from(schema.locations);
-  }),
-  allLocationMarkerFilterData: publicProcedure.query(async ({ ctx }) => {
+  getMapEventAndLocationData: publicProcedure.query(async ({ ctx }) => {
     const aoOrg = aliasedTable(schema.orgs, "ao_org");
     const locationsAndEvents = await ctx.db
       .select({
@@ -137,6 +127,9 @@ export const locationRouter = createTRPCRouter({
           id: schema.locations.id,
           name: aoOrg.name,
           logo: aoOrg.logoUrl,
+          lat: schema.locations.latitude,
+          lon: schema.locations.longitude,
+          locationDescription: schema.locations.description,
         },
         events: {
           id: schema.events.id,
@@ -152,7 +145,11 @@ export const locationRouter = createTRPCRouter({
       .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id))
       .leftJoin(
         schema.events,
-        eq(schema.events.locationId, schema.locations.id),
+        and(
+          eq(schema.events.locationId, schema.locations.id),
+          eq(schema.events.isActive, true),
+          eq(schema.events.isSeries, true),
+        ),
       )
       .leftJoin(
         schema.eventsXEventTypes,
@@ -175,10 +172,13 @@ export const locationRouter = createTRPCRouter({
         const location = item.locations;
         const event = item.events;
 
-        if (!acc[location.id]) {
+        if (!acc[location.id] && location.lat != null && location.lon != null) {
           acc[location.id] = {
             ...location,
             name: location.name ?? "",
+            description: location.locationDescription ?? "",
+            lat: location.lat,
+            lon: location.lon,
             events: [],
           };
         }
@@ -195,6 +195,9 @@ export const locationRouter = createTRPCRouter({
           id: number;
           name: string;
           logo: string | null;
+          lat: number;
+          lon: number;
+          description: string;
           events: Omit<
             NonNullable<(typeof locationsAndEvents)[number]["events"]>,
             "locationId"
@@ -209,6 +212,9 @@ export const locationRouter = createTRPCRouter({
       locationEvent.id,
       locationEvent.name,
       locationEvent.logo,
+      locationEvent.lat,
+      locationEvent.lon,
+      locationEvent.description,
       locationEvent.events
         .sort(
           (a, b) =>

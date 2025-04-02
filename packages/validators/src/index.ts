@@ -179,16 +179,19 @@ export const AllLocationMarkerFilterDataSchema = z
   .array();
 
 export const LowBandwidthF3Marker = z.tuple([
-  z.number(),
-  z.string(),
-  z.string().nullable(),
+  z.number(), // location id
+  z.string(), // location name
+  z.string().nullable(), // location logo
+  z.number(), // location lat
+  z.number(), // location lon
+  z.string(), // location description
   z
     .tuple([
-      z.number(),
-      z.string(),
-      z.enum(DayOfWeek).nullable(),
-      z.string().nullable(),
-      z.array(z.string()),
+      z.number(), // event id
+      z.string(), // event name
+      z.enum(DayOfWeek).nullable(), // event day of week
+      z.string().nullable(), // event start time
+      z.array(z.string()), // event types
     ])
     .array(),
 ]);

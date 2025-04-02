@@ -243,8 +243,8 @@ describe("all admin routers", () => {
       expect(result).toBeDefined();
     });
 
-    it("should get location markers sparse", async () => {
-      const result = await caller.location.getLocationMarkersSparse();
+    it("should get map event and location data", async () => {
+      const result = await caller.location.getMapEventAndLocationData();
       expect(result).toBeDefined();
     });
 

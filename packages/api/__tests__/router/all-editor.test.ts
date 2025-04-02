@@ -242,8 +242,8 @@ describe("all editor routers", () => {
       expect(result).toBeDefined();
     });
 
-    it("should get location markers sparse", async () => {
-      const result = await caller.location.getLocationMarkersSparse();
+    it("should get map event and location data", async () => {
+      const result = await caller.location.getMapEventAndLocationData();
       expect(result).toBeDefined();
     });
 
@@ -408,8 +408,6 @@ describe("all editor routers", () => {
 
   // Sector Router Tests
   describe("sector router", () => {
-    let createdSectorId: number | undefined;
-
     it("should fail to create and get sector by id", async () => {
       const sectorData = {
         name: "Test Sector",

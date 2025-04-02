@@ -35,34 +35,31 @@ const FilteredMapResultsContext = createContext<{
 });
 
 export const FilteredMapResultsProvider = (params: {
-  allLocationMarkers: RouterOutputs["location"]["getLocationMarkersSparse"];
-  lowBandwidthAllLocationMarkerFilterData: RouterOutputs["location"]["allLocationMarkerFilterData"];
+  mapEventAndLocationData: RouterOutputs["location"]["getMapEventAndLocationData"];
   children: ReactNode;
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
-  const { data: allLocationMarkers } =
-    api.location.getLocationMarkersSparse.useQuery(undefined, {
-      initialData: params.allLocationMarkers,
-    });
-  const { data: lowBandwidthAllLocationMarkerFilterData } =
-    api.location.allLocationMarkerFilterData.useQuery(undefined, {
-      initialData: params.lowBandwidthAllLocationMarkerFilterData,
+  const { data: mapEventAndLocationData } =
+    api.location.getMapEventAndLocationData.useQuery(undefined, {
+      initialData: params.mapEventAndLocationData,
     });
 
   const filters = filterStore.useBoundStore();
 
   const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
-    if (!allLocationMarkers || !lowBandwidthAllLocationMarkerFilterData)
-      return undefined;
+    if (!mapEventAndLocationData) return undefined;
 
-    const allLocationMarkerFilterData =
-      lowBandwidthAllLocationMarkerFilterData.map((location) => {
+    const allLocationMarkerFilterData = mapEventAndLocationData.map(
+      (location) => {
         return {
           id: location[0],
-          logo: location[2],
           aoName: location[1],
-          events: location[3].map((event) => {
+          logo: location[2],
+          lat: location[3],
+          lon: location[4],
+          description: location[5],
+          events: location[6].map((event) => {
             return {
               id: event[0],
               name: event[1],
@@ -72,15 +69,12 @@ export const FilteredMapResultsProvider = (params: {
             };
           }),
         };
-      });
+      },
+    );
 
-    const locationIdToLatLng = allLocationMarkers.reduce(
+    const locationIdToLatLng = allLocationMarkerFilterData.reduce(
       (acc, location) => {
-        acc[location.id] = {
-          lat: location.lat,
-          lon: location.lon,
-          locationDescription: location.locationDescription,
-        };
+        acc[location.id] = location;
         return acc;
       },
       {} as Record<
@@ -88,7 +82,7 @@ export const FilteredMapResultsProvider = (params: {
         {
           lat: number | null;
           lon: number | null;
-          locationDescription: string | null;
+          description: string | null;
         }
       >,
     );
@@ -99,10 +93,10 @@ export const FilteredMapResultsProvider = (params: {
         lat: locationIdToLatLng[location.id]?.lat ?? null,
         lon: locationIdToLatLng[location.id]?.lon ?? null,
         locationDescription:
-          locationIdToLatLng[location.id]?.locationDescription ?? null,
+          locationIdToLatLng[location.id]?.description ?? null,
       };
     });
-  }, [allLocationMarkers, lowBandwidthAllLocationMarkerFilterData]);
+  }, [mapEventAndLocationData]);
 
   const filteredLocationMarkers = useMemo(() => {
     if (!allLocationMarkersWithLatLngAndFilterData) return undefined;
