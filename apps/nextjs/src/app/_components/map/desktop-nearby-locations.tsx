@@ -7,6 +7,7 @@ import { RERENDER_LOGS } from "@acme/shared/common/constants";
 import { cn } from "@acme/ui";
 
 import { latLngToMeters } from "~/utils/lat-lng-to-meters";
+import { filterStore, isAnyFilterActive } from "~/utils/store/filter";
 import { mapStore } from "~/utils/store/map";
 import { DesktopNearbyLocationItemSkeleton } from "./desktop-nearby-location-item-skeleton";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
@@ -18,6 +19,7 @@ export const DesktopNearbyLocations = ({
   ...rest
 }: ComponentProps<"div">) => {
   RERENDER_LOGS && console.log("DrawerSearchResults rerender");
+  const filters = filterStore.useBoundStore();
   const { locationOrderedLocationMarkers, nearbyLocationCenter } =
     useFilteredMapResults();
   const nearbyLocationScrollRef = useRef<HTMLDivElement>(null);
@@ -68,15 +70,22 @@ export const DesktopNearbyLocations = ({
         {...rest}
       >
         <div className="flex flex-col justify-center divide-y divide-solid">
-          {!locationOrderedLocationMarkers?.length
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <DesktopNearbyLocationItemSkeleton key={index} />
+          {!locationOrderedLocationMarkers ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <DesktopNearbyLocationItemSkeleton key={index} />
+            ))
+          ) : locationOrderedLocationMarkers.length === 0 ? (
+            <div className="py-4 text-center text-sm text-muted-foreground">
+              No locations found{" "}
+              {isAnyFilterActive(filters) ? "matching your filters" : ""}
+            </div>
+          ) : (
+            locationOrderedLocationMarkers
+              .slice(0, 20)
+              .map((result) => (
+                <NearbyLocationItem key={result.id} item={result} />
               ))
-            : locationOrderedLocationMarkers
-                ?.slice(0, 20)
-                .map((result) => (
-                  <NearbyLocationItem key={result.id} item={result} />
-                ))}
+          )}
         </div>
       </div>
       <WithLove />
