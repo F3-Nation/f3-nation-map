@@ -19,7 +19,7 @@ export const DAY_ORDER = [
 export const SHORT_DAY_ORDER = ["Su", "M", "Tu", "W", "Th", "F", "Sa"] as const;
 
 export const DEFAULT_ZOOM = 2.9;
-export const BOONE_CENTER = [36.2, -81.66] as [number, number];
+export const BOONE_CENTER = [36.211104, -81.660849] as [number, number];
 export const DEFAULT_CENTER = BOONE_CENTER;
 
 export const CLOSE_ZOOM = 13;

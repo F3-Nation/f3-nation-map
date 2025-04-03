@@ -26,6 +26,7 @@ export enum ModalType {
   DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
   ADMIN_DELETE_REQUEST = "ADMIN_DELETE_REQUEST",
   QR_CODE = "QR_CODE",
+  ABOUT_MAP = "ABOUT_MAP",
 }
 export enum DeleteType {
   AREA = "AREA",
@@ -184,6 +185,7 @@ export interface DataType {
     fileName: string;
     title: string;
   };
+  [ModalType.ABOUT_MAP]: null;
 }
 
 export interface Modal<T extends ModalType> {

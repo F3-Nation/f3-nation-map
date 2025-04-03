@@ -6,6 +6,7 @@ import { BreakPoints } from "@acme/shared/app/constants";
 
 import type { DataType } from "~/utils/store/modal";
 import { ModalType, useOpenModal } from "~/utils/store/modal";
+import { AboutMapModal } from "../map/about-map-modal";
 import AdminAOsModal from "./admin-aos-modal";
 import AdminAreasModal from "./admin-areas-modal";
 import AdminDeleteModal from "./admin-delete-modal";
@@ -103,6 +104,8 @@ export default function ModalSwitcher() {
       );
     case ModalType.QR_CODE:
       return <QRCodeModal data={data as DataType[ModalType.QR_CODE]} />;
+    case ModalType.ABOUT_MAP:
+      return <AboutMapModal />;
     default:
       return null;
   }
