@@ -110,7 +110,7 @@ export const LocationEventForm = ({
             control={form.control}
             name="eventStartTime"
             id={"eventStartTime"}
-            label={"Start Time (24hr format)"}
+            label={"Start Time"}
           />
         </div>
         <div className="space-y-2">
@@ -118,7 +118,7 @@ export const LocationEventForm = ({
             control={form.control}
             name="eventEndTime"
             id={"eventEndTime"}
-            label={"End Time (24hr format)"}
+            label={"End Time"}
           />
         </div>
 

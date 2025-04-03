@@ -438,7 +438,7 @@ export default function AdminWorkoutsModal({
                   control={form.control}
                   name="startTime"
                   id={"startTime"}
-                  label={"Start Time (24hr format)"}
+                  label={"Start Time"}
                 />
               </div>
               <div className="mb-4 w-1/2 px-2">
@@ -446,7 +446,7 @@ export default function AdminWorkoutsModal({
                   control={form.control}
                   name="endTime"
                   id={"endTime"}
-                  label={"End Time (24hr format)"}
+                  label={"End Time"}
                 />
               </div>
               <div className="mb-4 w-1/2 px-2">
