@@ -255,6 +255,12 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Submitted by is required");
       }
 
+      if (input.eventStartTime && input.eventEndTime) {
+        if (input.eventStartTime > input.eventEndTime) {
+          throw new Error("End time must be after start time");
+        }
+      }
+
       const canEditRegion = ctx.session
         ? await checkHasRoleOnOrg({
             orgId: input.regionId,

@@ -3,6 +3,7 @@
 import type { SortingState, TableOptions } from "@tanstack/react-table";
 import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { dayOfWeekToShortDayOfWeek } from "node_modules/@acme/shared/src/app/functions";
 
 import type { RouterOutputs } from "@acme/api";
 import { Button } from "@acme/ui/button";
@@ -78,7 +79,7 @@ const columns: TableOptions<
   {
     accessorKey: "dayOfWeek",
     meta: { name: "Day of Week" },
-    accessorFn: (row) => row.dayOfWeek ?? "sunday",
+    accessorFn: (row) => dayOfWeekToShortDayOfWeek(row.dayOfWeek ?? "sunday"),
     header: Header,
     cell: Cell,
   },

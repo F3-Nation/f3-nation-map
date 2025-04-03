@@ -6,6 +6,10 @@ import { TRPCClientError } from "@trpc/client";
 import { v4 as uuid } from "uuid";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import {
+  convertHH_mmToHHmm,
+  convertHHmmToHH_mm,
+} from "@acme/shared/app/functions";
 import { Button } from "@acme/ui/button";
 import {
   Dialog,
@@ -47,28 +51,37 @@ export default function AdminRequestsModal({
 
   const onSubmit = form.handleSubmit(
     async (values) => {
-      setIsSubmitting(true);
-      console.log(values);
-      await validateSubmissionByAdmin
-        .mutateAsync(values)
-        .then(() => {
-          void utils.event.invalidate();
-          void utils.location.invalidate();
-          void utils.request.invalidate();
-          router.refresh();
-          toast.success("Approved update");
-          closeModal();
-        })
-        .catch((error) => {
-          if (error instanceof TRPCClientError) {
-            toast.error(error.message);
-          } else {
-            toast.error("Failed to approve update");
-          }
-        })
-        .finally(() => {
-          setIsSubmitting(false);
+      try {
+        setIsSubmitting(true);
+        await validateSubmissionByAdmin.mutateAsync({
+          ...values,
+          eventStartTime: convertHH_mmToHHmm(values.eventStartTime ?? ""),
+          eventEndTime: convertHH_mmToHHmm(values.eventEndTime ?? ""),
         });
+        void utils.event.invalidate();
+        void utils.location.invalidate();
+        void utils.request.invalidate();
+        router.refresh();
+        toast.success("Approved update");
+        closeModal();
+      } catch (error) {
+        console.log(error);
+        if (!(error instanceof TRPCClientError)) {
+          toast.error("Failed to approve update");
+          return;
+        }
+
+        if (error.message.includes("End time must be after start time")) {
+          form.setError("eventEndTime", {
+            message: "End time must be after start time",
+          });
+          throw new Error("End time must be after start time");
+        } else {
+          toast.error("Failed to approve update");
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     },
     (error) => {
       toast.error("Failed to approve update");
@@ -110,8 +123,8 @@ export default function AdminRequestsModal({
       locationLat: request.locationLat ?? 0,
       locationLng: request.locationLng ?? 0,
       locationDescription: request.locationDescription ?? "",
-      eventStartTime: request.eventStartTime?.slice(0, 5) ?? "0530",
-      eventEndTime: request.eventEndTime?.slice(0, 5) ?? "0615",
+      eventStartTime: convertHHmmToHH_mm(request.eventStartTime ?? ""),
+      eventEndTime: convertHHmmToHH_mm(request.eventEndTime ?? ""),
       eventDayOfWeek: request.eventDayOfWeek ?? "monday",
       eventTypeIds: request.eventTypeIds ?? [],
       eventDescription: request.eventDescription ?? "",

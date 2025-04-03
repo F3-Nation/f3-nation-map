@@ -154,6 +154,8 @@ describe("all editor routers", () => {
     });
 
     let eventId: number | undefined;
+    let aoId: number | undefined;
+    let locationId: number | undefined;
 
     it("should create and get event by id", async () => {
       const aoData = {
@@ -177,26 +179,28 @@ describe("all editor routers", () => {
       if (!aoResult) {
         throw new Error("AO result is undefined");
       }
+      aoId = aoResult.id;
 
       const locationData = {
         name: "Test Location",
         isActive: true,
-        orgId: aoResult.id,
+        orgId: aoId,
         aoName: "Test AO",
         email: "test@location.com",
         description: "Test Location Description",
       };
       const locationResult = await caller.location.crupdate(locationData);
       expect(locationResult).toBeDefined();
-      if (!locationResult) {
+      if (!locationResult?.id) {
         throw new Error("Location result is undefined");
       }
+      locationId = locationResult.id;
 
       const eventData = {
         name: "Test Event",
         isActive: true,
-        aoId: aoResult.id,
-        locationId: locationResult?.id,
+        aoId,
+        locationId,
         regionId: TEST_REGION_2_ORG_ID,
         isSeries: false,
         highlight: false,
@@ -213,6 +217,7 @@ describe("all editor routers", () => {
         backblast: "Backblast",
         backblastTs: dayjs().unix(),
         meta: { key: "value" },
+        eventTypeId: 1,
       };
       const eventResult = await caller.event.crupdate(eventData);
       expect(eventResult).toBeDefined();
@@ -220,6 +225,37 @@ describe("all editor routers", () => {
         throw new Error("Event result is undefined");
       }
       eventId = eventResult.id;
+    });
+
+    it("should fail to create event with poorly formatted time", async () => {
+      if (!aoId || !locationId) {
+        throw new Error("AO ID and location ID is undefined");
+      }
+
+      const eventData = {
+        name: "Test Event",
+        isActive: true,
+        aoId,
+        locationId,
+        regionId: TEST_REGION_2_ORG_ID,
+        isSeries: false,
+        highlight: false,
+        startDate: dayjs().format("YYYY-MM-DD"),
+        startTime: "06:00", // HH:mm
+        endTime: "07:00", // HH:mm
+        email: "test@event.com",
+        description: "Test Event Description",
+        dayOfWeek: "monday" as DayOfWeek,
+        qSource: "QSource",
+        q: "Q",
+        coq: "COQ",
+        fng: "FNG",
+        backblast: "Backblast",
+        backblastTs: dayjs().unix(),
+        meta: { key: "value" },
+        eventTypeId: 1,
+      };
+      await expect(caller.event.crupdate(eventData)).rejects.toThrow();
     });
 
     it("should get event types", async () => {

@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TRPCClientError } from "@trpc/client";
 import gte from "lodash/gte";
 import { useSession } from "next-auth/react";
 import { v4 as uuid } from "uuid";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import {
+  convertHH_mmToHHmm,
+  convertHHmmToHH_mm,
+} from "@acme/shared/app/functions";
 import { isTruthy } from "@acme/shared/common/functions";
 import { Button } from "@acme/ui/button";
 import {
@@ -62,37 +67,53 @@ export const UpdateLocationModal = ({
     async (values) => {
       try {
         console.log("onSubmit values", values);
+        setIsSubmitting(true);
         if (values.badImage && !!values.aoLogo) {
           form.setError("aoLogo", { message: "Invalid image URL" });
-          return;
+          throw new Error("Invalid image URL");
         }
-        setIsSubmitting(true);
         appStore.setState({ myEmail: values.submittedBy });
+
         const updateRequestData = {
           ...values,
+          eventStartTime: convertHH_mmToHHmm(values.eventStartTime ?? ""),
+          eventEndTime: convertHH_mmToHHmm(values.eventEndTime ?? ""),
           eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
         };
 
-        await submitUpdateRequest(updateRequestData).then((result) => {
-          if (result.status === "pending") {
-            toast.success(
-              "Request submitted. An admin will review your submission soon.",
-            );
-          } else if (result.status === "rejected") {
-            toast.error("Failed to submit update request");
-          } else if (result.status === "approved") {
-            void utils.location.invalidate();
-            void utils.event.invalidate();
-            toast.success("Update request automatically applied");
-            router.refresh();
-          }
-        });
+        const result = await submitUpdateRequest(updateRequestData);
+        if (result.status === "pending") {
+          toast.success(
+            "Request submitted. An admin will review your submission soon.",
+          );
+        } else if (result.status === "rejected") {
+          toast.error("Failed to submit update request");
+          throw new Error("Failed to submit update request");
+        } else if (result.status === "approved") {
+          void utils.location.invalidate();
+          void utils.event.invalidate();
+          toast.success("Update request automatically applied");
+          router.refresh();
+        }
 
-        setIsSubmitting(false);
         closeModal();
       } catch (error) {
-        console.error("Error submitting update request", error);
-        toast.error("Failed to submit update request");
+        console.error(error);
+        if (!(error instanceof TRPCClientError)) {
+          toast.error("Failed to submit update request");
+          return;
+        }
+
+        if (error.message.includes("End time must be after start time")) {
+          form.setError("eventEndTime", {
+            message: "End time must be after start time",
+          });
+          toast.error("End time must be after start time");
+          throw new Error("End time must be after start time");
+        } else {
+          toast.error("Failed to submit update request");
+        }
+      } finally {
         setIsSubmitting(false);
       }
     },
@@ -145,8 +166,10 @@ export const UpdateLocationModal = ({
 
     form.setValue("eventId", data.eventId ?? null);
     form.setValue("eventName", data.workoutName ?? "");
-    form.setValue("eventStartTime", data.startTime?.slice(0, 5) ?? "0530");
-    form.setValue("eventEndTime", data.endTime?.slice(0, 5) ?? "0615");
+    // startTime: convertHHmmToHH_mm(event?.startTime ?? ""),
+    // endTime: convertHHmmToHH_mm(event?.endTime ?? ""),
+    form.setValue("eventStartTime", convertHHmmToHH_mm(data.startTime ?? ""));
+    form.setValue("eventEndTime", convertHHmmToHH_mm(data.endTime ?? ""));
     form.setValue("eventDescription", data.eventDescription ?? "");
     if (data.dayOfWeek) {
       form.setValue("eventDayOfWeek", data.dayOfWeek);

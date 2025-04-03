@@ -27,7 +27,7 @@ import { uploadLogo } from "~/utils/image/upload-logo";
 import { mapStore } from "~/utils/store/map";
 import { DebouncedImage } from "../debounced-image";
 import { CountrySelect } from "../modal/country-select";
-import { TimeInput } from "../time-input";
+import { ControlledTimeInput } from "../time-input";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export const UpdateLocationSchema = RequestInsertSchema.extend({
@@ -106,66 +106,20 @@ export const LocationEventForm = ({
         </div>
 
         <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Start Time (24hr format)
-          </div>
-          <Controller
+          <ControlledTimeInput
             control={form.control}
             name="eventStartTime"
-            render={({ field }) => (
-              <TimeInput
-                placeholder="HH:mm"
-                {...field}
-                value={
-                  field.value
-                    ? `${field.value.slice(0, 2)}:${field.value.slice(2)}`
-                    : ""
-                }
-                onChange={(value) => {
-                  if (value) {
-                    const [hours, minutes] = value.split(":");
-                    field.onChange(`${hours}${minutes}`);
-                  } else {
-                    field.onChange("");
-                  }
-                }}
-              />
-            )}
+            id={"eventStartTime"}
+            label={"Start Time (24hr format)"}
           />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.eventStartTime?.message}
-          </p>
         </div>
         <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            End Time (24hr format)
-          </div>
-          <Controller
+          <ControlledTimeInput
             control={form.control}
             name="eventEndTime"
-            render={({ field }) => (
-              <TimeInput
-                placeholder="HH:mm"
-                {...field}
-                value={
-                  field.value
-                    ? `${field.value.slice(0, 2)}:${field.value.slice(2)}`
-                    : ""
-                }
-                onChange={(value) => {
-                  if (value) {
-                    const [hours, minutes] = value.split(":");
-                    field.onChange(`${hours}${minutes}`);
-                  } else {
-                    field.onChange("");
-                  }
-                }}
-              />
-            )}
+            id={"eventEndTime"}
+            label={"End Time (24hr format)"}
           />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.eventEndTime?.message}
-          </p>
         </div>
 
         <div className="space-y-2">
