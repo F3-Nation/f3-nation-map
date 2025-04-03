@@ -87,3 +87,17 @@ export const getReadableDayOfWeek = (dayOfWeek: DayOfWeek | null) => {
   }
   return dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
 };
+
+export const convertHH_mmToHHmm = (value: string) => {
+  if (!value || value.length !== 5) {
+    return "";
+  }
+  return value.replace(":", "");
+};
+
+export const convertHHmmToHH_mm = (value: string) => {
+  if (!value || value.length !== 4) {
+    return "";
+  }
+  return value.slice(0, 2) + ":" + value.slice(2, 4);
+};

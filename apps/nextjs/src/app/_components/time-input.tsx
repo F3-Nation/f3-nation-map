@@ -1,94 +1,76 @@
-import type { InputHTMLAttributes } from "react";
-import { forwardRef, useEffect, useState } from "react";
+/**
+ * v0 by Vercel.
+ * @see https://v0.dev/t/1U7tA9qTarA
+ * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
+ */
+import type { Control, FieldValues, Path } from "react-hook-form";
 
-import { cn } from "@acme/ui";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
 
-interface TimeInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
-  value?: string;
-  onChange?: (value: string) => void;
-  className?: string;
+interface TimeInputProps {
+  label?: string;
+  id?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(
-  ({ className, value, onChange, ...props }, ref) => {
-    const [displayValue, setDisplayValue] = useState(value ?? "");
-    const [isValid, setIsValid] = useState(true);
+type ControlledTimeInputProps<T extends FieldValues> = Omit<
+  TimeInputProps,
+  "value" | "defaultValue" | "onChange"
+> & {
+  control: Control<T>;
+  name: Path<T>;
+  label?: string;
+  placeholder?: string;
+  disabled?: boolean;
+};
 
-    // Update display value when prop value changes
-    useEffect(() => {
-      if (value !== undefined) {
-        setDisplayValue(value);
-        setIsValid(isValidTime(value));
-      }
-    }, [value]);
+export const TimeInput = ({ label, id, value, onChange }: TimeInputProps) => {
+  console.log("value", value);
+  return (
+    <Input
+      type="time"
+      value={value}
+      onChange={onChange}
+      id={id}
+      aria-label={label}
+      className="w-full"
+    />
+  );
+};
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
-      setDisplayValue(newValue);
-      setIsValid(true); // Be permissive during typing
-      onChange?.(newValue);
-    };
-
-    const handleBlur = () => {
-      if (!isValidTime(displayValue)) {
-        // Reset to previous valid value on blur if invalid
-        setDisplayValue(value ?? "");
-        setIsValid(false);
-        return;
-      }
-
-      // Format the time to ensure consistent format (HH:mm)
-      const [hoursStr, minutesStr] = displayValue.split(":");
-      const hours = parseInt(hoursStr ?? "0", 10);
-      const minutes = parseInt(minutesStr ?? "0", 10);
-
-      const formattedHours = hours.toString().padStart(2, "0");
-      const formattedMinutes = minutes.toString().padStart(2, "0");
-      const formattedTime = `${formattedHours}:${formattedMinutes}`;
-
-      setDisplayValue(formattedTime);
-      setIsValid(true);
-      onChange?.(formattedTime);
-    };
-
-    const isValidTime = (time: string): boolean => {
-      // Allow empty value
-      if (!time) return true;
-
-      // Check format (HH:mm or H:mm)
-      if (!/^\d{1,2}:\d{2}$/.test(time)) return false;
-
-      const [hoursStr, minutesStr] = time.split(":");
-      const hours = parseInt(hoursStr ?? "0", 10);
-      const minutes = parseInt(minutesStr ?? "0", 10);
-
-      // Validate hours and minutes
-      if (isNaN(hours) || isNaN(minutes)) return false;
-      if (hours < 0 || hours > 23) return false;
-      if (minutes < 0 || minutes > 59) return false;
-
-      return true;
-    };
-
-    return (
-      <Input
-        type="text"
-        ref={ref}
-        value={displayValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        placeholder="HH:mm"
-        className={cn(
-          "font-mono",
-          !isValid && "border-destructive focus-visible:ring-destructive",
-          className,
-        )}
-        {...props}
-      />
-    );
-  },
-);
-
-TimeInput.displayName = "TimeInput";
+export const ControlledTimeInput = <T extends FieldValues>(
+  props: ControlledTimeInputProps<T>,
+) => {
+  const { control, name, label, ...rest } = props;
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => {
+        return (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              <TimeInput
+                value={field.value}
+                onChange={(value) => {
+                  field.onChange(value);
+                }}
+                {...rest}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
+    />
+  );
+};

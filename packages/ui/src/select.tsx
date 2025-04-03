@@ -5,11 +5,17 @@ import type { Control, FieldValues, Path, PathValue } from "react-hook-form";
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
-import { Controller } from "react-hook-form";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { cn } from ".";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./form";
 
 type ControlledSelectProps<T extends FieldValues> = Omit<
   SelectProps,
@@ -173,36 +179,37 @@ const ControlledSelect = <T extends FieldValues>(
 ) => {
   const { control, name, ...rest } = props;
   return (
-    <Controller
+    <FormField
       control={control}
       name={name}
-      render={({ field, fieldState }) => {
+      render={({ field }) => {
         return (
-          <>
-            <Select
-              value={field.value}
-              onValueChange={(value) => {
-                if (value) {
-                  field.onChange(value);
-                }
-              }}
-              {...rest}
-            >
-              <SelectTrigger id={`${name}`} aria-label={props.label}>
-                <SelectValue placeholder={props.placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {props.options?.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-destructive">
-              {fieldState.error?.message}
-            </p>
-          </>
+          <FormItem>
+            <FormLabel>{props.label}</FormLabel>
+            <FormControl>
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  if (value) {
+                    field.onChange(value);
+                  }
+                }}
+                {...rest}
+              >
+                <SelectTrigger id={`${name}`} aria-label={props.label}>
+                  <SelectValue placeholder={props.placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.options?.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         );
       }}
     />

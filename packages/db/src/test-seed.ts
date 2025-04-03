@@ -1,4 +1,4 @@
-import type { RegionRole } from "@acme/shared/app/enums";
+import type { EventCategory, RegionRole } from "@acme/shared/app/enums";
 import {
   TEST_ADMIN_USER_ID,
   TEST_AO_1_ORG_ID,
@@ -11,10 +11,17 @@ import {
   TEST_REGION_3_ORG_ID,
   TEST_SECTOR_ORG_ID,
 } from "@acme/shared/app/constants";
+import { EventTypes } from "@acme/shared/app/enums";
 
 import type { AppDb } from "./client";
 import { sql } from ".";
-import { orgs, roles, rolesXUsersXOrg, users } from "../drizzle/schema";
+import {
+  eventTypes,
+  orgs,
+  roles,
+  rolesXUsersXOrg,
+  users,
+} from "../drizzle/schema";
 import { getDb } from "./utils/functions";
 
 export const testSeed = async (db?: AppDb) => {
@@ -211,6 +218,14 @@ export const testSeed = async (db?: AppDb) => {
       orgId: TEST_NATION_ORG_ID,
     },
   ]);
+
+  // Insert event types
+  await _db.insert(eventTypes).values(
+    Object.values(EventTypes).map((eventType) => ({
+      name: eventType,
+      eventCategory: "first_f" as EventCategory,
+    })),
+  );
 
   // Update the orgs id sequence to handle the manual id insertion
   await _db.execute(sql`
