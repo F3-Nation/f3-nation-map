@@ -1,9 +1,11 @@
 import type { EventCategory, RegionRole } from "@acme/shared/app/enums";
 import {
+  TEST_ADMIN_ROLE_ID,
   TEST_ADMIN_USER_ID,
   TEST_AO_1_ORG_ID,
   TEST_AO_2_ORG_ID,
   TEST_AREA_ORG_ID,
+  TEST_EDITOR_ROLE_ID,
   TEST_EDITOR_USER_ID,
   TEST_NATION_ORG_ID,
   TEST_REGION_1_ORG_ID,
@@ -160,6 +162,7 @@ export const testSeed = async (db?: AppDb) => {
     _db
       .insert(roles)
       .values({
+        id: TEST_EDITOR_ROLE_ID,
         name: "editor" as RegionRole,
         description: "Editor role",
       })
@@ -167,6 +170,7 @@ export const testSeed = async (db?: AppDb) => {
     _db
       .insert(roles)
       .values({
+        id: TEST_ADMIN_ROLE_ID,
         name: "admin" as RegionRole,
         description: "Admin role",
       })
@@ -203,18 +207,18 @@ export const testSeed = async (db?: AppDb) => {
   // Associate roles with user
   await _db.insert(rolesXUsersXOrg).values([
     {
-      roleId: editorRole[0].id,
-      userId: editorUser.id,
+      roleId: TEST_EDITOR_ROLE_ID,
+      userId: TEST_EDITOR_USER_ID,
       orgId: TEST_REGION_2_ORG_ID,
     },
     {
-      roleId: adminRole[0].id,
-      userId: editorUser.id,
+      roleId: TEST_ADMIN_ROLE_ID,
+      userId: TEST_EDITOR_USER_ID,
       orgId: TEST_REGION_3_ORG_ID,
     },
     {
-      roleId: adminRole[0].id,
-      userId: adminUser.id,
+      roleId: TEST_ADMIN_ROLE_ID,
+      userId: TEST_ADMIN_USER_ID,
       orgId: TEST_NATION_ORG_ID,
     },
   ]);

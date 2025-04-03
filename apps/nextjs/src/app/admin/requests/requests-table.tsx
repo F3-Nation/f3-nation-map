@@ -15,7 +15,10 @@ import { ModalType, openModal } from "~/utils/store/modal";
 
 export const RequestsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingSchema>([]);
+  const [sorting, setSorting] = useState<SortingSchema>([
+    // Default to sorting by created at descending
+    { id: "created", desc: true },
+  ]);
   const { pagination, setPagination } = usePagination();
   const { data: requests } = api.request.all.useQuery({
     pageIndex: pagination.pageIndex,

@@ -452,3 +452,5 @@ export const TEST_AO_1_ORG_ID = 7;
 export const TEST_AO_2_ORG_ID = 8;
 export const TEST_EDITOR_USER_ID = 1;
 export const TEST_ADMIN_USER_ID = 2;
+export const TEST_EDITOR_ROLE_ID = 1;
+export const TEST_ADMIN_ROLE_ID = 2;
