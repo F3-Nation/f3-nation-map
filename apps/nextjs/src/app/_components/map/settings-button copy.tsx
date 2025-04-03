@@ -1,13 +1,19 @@
-import { Info } from "lucide-react";
+"use client";
+
+import { Settings } from "lucide-react";
 
 import { cn } from "@acme/ui";
 
 import { ModalType, openModal } from "~/utils/store/modal";
 
-export const InfoButton = ({ className }: { className?: string }) => {
+export const SettingsButton = ({ className }: { className?: string }) => {
   return (
     <div className={"flex flex-col lg:mx-2.5"}>
       <button
+        draggable="false"
+        aria-label="Settings"
+        title="Settings"
+        type="button"
         className={cn(
           "cursor-pointer appearance-none overflow-hidden",
           "relative block",
@@ -21,10 +27,10 @@ export const InfoButton = ({ className }: { className?: string }) => {
           className,
         )}
         onClick={() => {
-          openModal(ModalType.ABOUT_MAP);
+          openModal(ModalType.SETTINGS);
         }}
       >
-        <Info
+        <Settings
           strokeWidth={1.75}
           className={cn("size-7 text-[#666]")} // 28px x 28px with gray color
         />

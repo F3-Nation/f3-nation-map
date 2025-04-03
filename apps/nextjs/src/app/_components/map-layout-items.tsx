@@ -15,6 +15,7 @@ import DesktopSelectedItem from "./map/desktop-selected-item";
 import { GeoJsonPane } from "./map/geo-json-pane";
 import { GeolocationMarker } from "./map/geolocation-marker";
 import { HelpButton } from "./map/help-button";
+import { InfoButton } from "./map/info-button";
 import { MapProvider } from "./map/map-provider";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
@@ -57,10 +58,13 @@ export const MapLayoutItems = () => {
       {isDesktopWidth ? (
         <>
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-            <SettingsButton className="mt-2" />
+            <SettingsButton />
           </MapControl>
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-            <UserLocationIcon />
+            <UserLocationIcon className="mb-2" />
+          </MapControl>
+          <MapControl position={ControlPosition.RIGHT_BOTTOM}>
+            <InfoButton className="mb-2" />
           </MapControl>
           <MapControl position={ControlPosition.TOP_LEFT}>
             <DesktopFilterButtons />
@@ -76,6 +80,9 @@ export const MapLayoutItems = () => {
           </MapControl>
           <MapControl position={ControlPosition.RIGHT_TOP}>
             <UserLocationIcon className="mr-[10px] mt-2" />
+          </MapControl>
+          <MapControl position={ControlPosition.RIGHT_TOP}>
+            <InfoButton className="mr-[10px] mt-2" />
           </MapControl>
         </>
       )}
