@@ -33,7 +33,7 @@ export const WorkoutDetailsModal = ({
   const isMedium = width > Number(BreakPoints.MD);
 
   useEffect(() => {
-    const resultsEventId = results?.events[0]?.eventId;
+    const resultsEventId = results?.location.events[0]?.eventId;
     if (isNumber(resultsEventId)) {
       setSelectedEventId(resultsEventId);
     }
@@ -58,7 +58,7 @@ export const WorkoutDetailsModal = ({
           onDeleteClick={() => {
             if (!results?.location.regionId || !selectedEventId) return;
 
-            const event = results.events.find(
+            const event = results.location.events.find(
               (e) => e.eventId === selectedEventId,
             );
             if (!event) return;

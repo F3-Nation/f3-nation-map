@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { DayOfWeek, RequestType } from "@acme/shared/app/enums";
 import { ZustandStore } from "@acme/shared/common/classes";
 
+import type { RouterOutputs } from "~/trpc/types";
 import { mapStore } from "./map";
 
 export enum ModalType {
@@ -65,32 +66,13 @@ export const eventAndLocationToUpdateRequest = ({
   location,
 }: {
   event:
-    | {
-        eventId: number;
-        eventName: string;
-        startTime: string | null;
-        endTime: string | null;
-        dayOfWeek: DayOfWeek | null;
-        types: string[];
-        description: string | null;
-      }
+    | NonNullable<
+        RouterOutputs["location"]["getAoWorkoutData"]
+      >["location"]["events"][number]
     | undefined;
-  location: {
-    lat: number;
-    lon: number;
-    locationId: number;
-    locationAddress: string | null;
-    locationAddress2: string | null;
-    locationCity: string | null;
-    locationState: string | null;
-    locationZip: string | null;
-    locationCountry: string | null;
-    locationDescription: string | null;
-    aoName: string | null;
-    aoWebsite: string | null;
-    aoLogo: string | null;
-    regionId: number | null;
-  };
+  location: NonNullable<
+    RouterOutputs["location"]["getAoWorkoutData"]
+  >["location"];
 }): Omit<DataType[ModalType.UPDATE_LOCATION], "mode" | "requestType"> => {
   const possiblyEditedLoc = mapStore.get("modifiedLocationMarkers")[
     location.locationId
@@ -110,7 +92,7 @@ export const eventAndLocationToUpdateRequest = ({
     types: event?.types ?? [],
     eventDescription: event?.description ?? null,
     locationId: location.locationId,
-    aoName: location.aoName,
+    aoName: location.parentName,
     locationAddress: location.locationAddress,
     locationAddress2: location.locationAddress2,
     locationCity: location.locationCity,
@@ -119,8 +101,8 @@ export const eventAndLocationToUpdateRequest = ({
     locationCountry: location.locationCountry,
     locationDescription: location.locationDescription,
     regionId: location.regionId,
-    workoutWebsite: location.aoWebsite,
-    aoLogo: location.aoLogo,
+    workoutWebsite: location.parentWebsite,
+    aoLogo: location.parentLogo,
   };
 };
 

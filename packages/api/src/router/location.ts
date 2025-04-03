@@ -403,67 +403,109 @@ export const locationRouter = createTRPCRouter({
   getAoWorkoutData: publicProcedure
     .input(z.object({ locationId: z.number() }))
     .query(async ({ ctx, input }) => {
-      const aoOrg = aliasedTable(schema.orgs, "ao_org");
+      const parentOrg = aliasedTable(schema.orgs, "parent_org");
       const regionOrg = aliasedTable(schema.orgs, "region_org");
-      const [[locationResult], events] = await Promise.all([
-        ctx.db
-          .select({
-            locationId: schema.locations.id,
-            lat: schema.locations.latitude,
-            lon: schema.locations.longitude,
-            locationMeta: schema.locations.meta,
-            locationAddress: schema.locations.addressStreet,
-            locationAddress2: schema.locations.addressStreet2,
-            locationCity: schema.locations.addressCity,
-            locationState: schema.locations.addressState,
-            locationZip: schema.locations.addressZip,
-            locationCountry: schema.locations.addressCountry,
-            isActive: schema.locations.isActive,
-            created: schema.locations.created,
-            updated: schema.locations.updated,
-            locationDescription: schema.locations.description,
-            orgId: schema.locations.orgId,
+      const [locationResult] = await ctx.db
+        .select({
+          locationId: schema.locations.id,
+          lat: schema.locations.latitude,
+          lon: schema.locations.longitude,
+          locationMeta: schema.locations.meta,
+          locationAddress: schema.locations.addressStreet,
+          locationAddress2: schema.locations.addressStreet2,
+          locationCity: schema.locations.addressCity,
+          locationState: schema.locations.addressState,
+          locationZip: schema.locations.addressZip,
+          locationCountry: schema.locations.addressCountry,
+          isActive: schema.locations.isActive,
+          created: schema.locations.created,
+          updated: schema.locations.updated,
+          locationDescription: schema.locations.description,
+          orgId: schema.locations.orgId,
 
-            aoId: aoOrg.id,
-            aoLogo: aoOrg.logoUrl,
-            aoWebsite: aoOrg.website,
-            aoName: aoOrg.name,
+          // For when orgId points to an AO
+          parentId: parentOrg.id,
+          parentLogo: parentOrg.logoUrl,
+          parentWebsite: parentOrg.website,
+          parentName: parentOrg.name,
+          parentType: parentOrg.orgType,
 
-            regionId: regionOrg.id,
-            regionLogo: regionOrg.logoUrl,
-            regionWebsite: regionOrg.website,
-            regionName: regionOrg.name,
-          })
-          .from(schema.locations)
-          .where(eq(schema.locations.id, input.locationId))
-          .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id))
-          .leftJoin(regionOrg, eq(aoOrg.parentId, regionOrg.id)),
-        ctx.db
-          .select({
-            eventId: schema.events.id,
-            eventName: schema.events.name,
-            eventAddress: schema.events.description,
-            eventMeta: schema.events.meta,
-            dayOfWeek: schema.events.dayOfWeek,
-            startTime: schema.events.startTime,
-            endTime: schema.events.endTime,
-            description: schema.events.description,
-            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
-          })
-          .from(schema.events)
-          .where(eq(schema.events.locationId, input.locationId))
-          .leftJoin(
-            schema.eventsXEventTypes,
-            eq(schema.eventsXEventTypes.eventId, schema.events.id),
-          )
-          .leftJoin(
-            schema.eventTypes,
-            eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
-          )
-          .groupBy(schema.events.id),
-      ]);
+          // For when orgId points to a Region
+          grandParentId: regionOrg.id,
+          grandParentLogo: regionOrg.logoUrl,
+          grandParentWebsite: regionOrg.website,
+          grandParentName: regionOrg.name,
+          grandParentType: regionOrg.orgType,
 
-      // This also validates that the location is not undefined
+          // Events as a nested array
+          events: sql<
+            {
+              eventId: number;
+              eventName: string;
+              eventAddress: string | null;
+              eventMeta: unknown;
+              dayOfWeek: DayOfWeek | null;
+              startTime: string | null;
+              endTime: string | null;
+              description: string | null;
+              types: string[];
+            }[]
+          >`
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'eventId', ${schema.events.id},
+                  'eventName', ${schema.events.name},
+                  'eventAddress', ${schema.events.description},
+                  'eventMeta', ${schema.events.meta},
+                  'dayOfWeek', ${schema.events.dayOfWeek},
+                  'startTime', ${schema.events.startTime},
+                  'endTime', ${schema.events.endTime},
+                  'description', ${schema.events.description},
+                  'types', (
+                    SELECT json_agg(${schema.eventTypes.name})
+                    FROM ${schema.eventsXEventTypes}
+                    LEFT JOIN ${schema.eventTypes} ON ${schema.eventTypes.id} = ${schema.eventsXEventTypes.eventTypeId}
+                    WHERE ${schema.eventsXEventTypes.eventId} = ${schema.events.id}
+                  )
+                )
+              ) FILTER (WHERE ${schema.events.id} IS NOT NULL),
+              '[]'
+            )`,
+        })
+        .from(schema.locations)
+        .where(eq(schema.locations.id, input.locationId))
+        .leftJoin(parentOrg, and(eq(schema.locations.orgId, parentOrg.id)))
+        .leftJoin(
+          regionOrg,
+          and(
+            eq(parentOrg.parentId, regionOrg.id),
+            eq(regionOrg.orgType, "region"),
+          ),
+        )
+        .leftJoin(
+          schema.events,
+          and(
+            eq(schema.events.locationId, schema.locations.id),
+            eq(schema.events.isActive, true),
+            eq(schema.events.isSeries, true),
+          ),
+        )
+        .groupBy(
+          schema.locations.id,
+          parentOrg.id,
+          parentOrg.logoUrl,
+          parentOrg.website,
+          parentOrg.name,
+          parentOrg.orgType,
+          regionOrg.id,
+          regionOrg.logoUrl,
+          regionOrg.website,
+          regionOrg.name,
+          regionOrg.orgType,
+        );
+
+      // Validate location exists and has coordinates
       if (
         locationResult?.lat == undefined ||
         locationResult?.lon == undefined
@@ -471,15 +513,29 @@ export const locationRouter = createTRPCRouter({
         return null;
       }
 
+      const hasAO = locationResult.parentType === "ao";
+
       const location = {
-        ...locationResult,
-        events: events.sort(
-          (a, b) =>
-            DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
-            DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
-        ),
+        ...omit(locationResult, "parentRegionId"),
         lat: locationResult.lat,
         lon: locationResult.lon,
+        parentId: locationResult.parentId,
+        parentLogo: locationResult.parentLogo,
+        parentWebsite: locationResult.parentWebsite,
+        parentName: locationResult.parentName,
+        parentType: locationResult.parentType,
+        regionId: hasAO
+          ? locationResult.grandParentId
+          : locationResult.parentId,
+        regionLogo: hasAO
+          ? locationResult.grandParentLogo
+          : locationResult.parentLogo,
+        regionWebsite: hasAO
+          ? locationResult.grandParentWebsite
+          : locationResult.parentWebsite,
+        regionName: hasAO
+          ? locationResult.grandParentName
+          : locationResult.parentName,
         fullAddress: [
           locationResult.locationAddress,
           locationResult.locationAddress2,
@@ -500,7 +556,7 @@ export const locationRouter = createTRPCRouter({
           .replace(/,\s*$/, ""), // Remove trailing comma
       };
 
-      return { location, events };
+      return { location };
     }),
   getRegions: publicProcedure.query(async ({ ctx }) => {
     const regions = await ctx.db

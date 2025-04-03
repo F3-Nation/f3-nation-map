@@ -335,6 +335,77 @@ describe("all editor routers", () => {
         caller.location.delete({ id: createdLocationId }),
       ).rejects.toThrow();
     });
+
+    it("should get ao workout data", async () => {
+      if (!createdLocationId) {
+        throw new Error("Created location ID is undefined");
+      }
+      const result = await caller.location.getAoWorkoutData({
+        locationId: createdLocationId,
+      });
+
+      expect(result).toBeDefined();
+
+      // Check the structure of the result
+      if (result) {
+        // Check location object
+        expect(result.location).toBeDefined();
+        expect(result.location.locationId).toBe(createdLocationId);
+        expect(typeof result.location.lat).toBe("number");
+        expect(typeof result.location.lon).toBe("number");
+        expect(result.location.locationMeta).toEqual({ key: "value" });
+        expect(result.location.locationAddress).toBe("123 Test St");
+        expect(result.location.locationAddress2).toBe("Apt 4B");
+        expect(result.location.locationCity).toBe("Test City");
+        expect(result.location.locationState).toBe("TS");
+        expect(result.location.locationZip).toBe("12345");
+        expect(result.location.locationCountry).toBe("Test Country");
+        expect(result.location.isActive).toBe(true);
+        expect(result.location.created).toBeDefined();
+        expect(result.location.updated).toBeDefined();
+        expect(result.location.locationDescription).toBe(
+          "Test Location Description",
+        );
+        expect(result.location.orgId).toBe(TEST_REGION_2_ORG_ID);
+
+        // Check parent fields
+        expect(result.location.parentId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.parentLogo).toBeDefined();
+        expect(result.location.parentWebsite).toBeDefined();
+        expect(result.location.parentName).toBeDefined();
+
+        // Check Region fields
+        expect(result.location.regionId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.regionLogo).toBeDefined();
+        expect(result.location.regionWebsite).toBeDefined();
+        expect(result.location.regionName).toBeDefined();
+
+        // Check computed field
+        expect(result.location.fullAddress).toBeDefined();
+        expect(typeof result.location.fullAddress).toBe("string");
+        expect(result.location.fullAddress).toContain("123 Test St");
+        expect(result.location.fullAddress).toContain("Test City");
+        expect(result.location.fullAddress).toContain("TS");
+        expect(result.location.fullAddress).toContain("12345");
+
+        // Check top-level events array
+        expect(Array.isArray(result.location.events)).toBe(true);
+
+        // If there are events, check their structure
+        if (result.location.events.length > 0) {
+          const event = result.location.events[0]!; // Use non-null assertion to fix linter error
+          expect(event.eventId).toBeDefined();
+          expect(event.eventName).toBe("Test Event");
+          expect(event.eventAddress).toBe("Test Event Description");
+          expect(event.eventMeta).toEqual({ key: "value" });
+          expect(event.dayOfWeek).toBe("monday");
+          expect(event.startTime).toBe("0600");
+          expect(event.endTime).toBe("0700");
+          expect(event.description).toBe("Test Event Description");
+          expect(Array.isArray(event.types)).toBe(true);
+        }
+      }
+    });
   });
 
   // Nation Router Tests

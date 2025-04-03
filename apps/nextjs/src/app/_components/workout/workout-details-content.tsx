@@ -13,6 +13,7 @@ import { isTruthy } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { toast } from "@acme/ui/toast";
 
+import type { RouterOutputs } from "~/trpc/types";
 import { isDevMode } from "~/trpc/util";
 import { dayjs } from "~/utils/frontendDayjs";
 import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
@@ -30,37 +31,7 @@ import { EventChip } from "../map/event-chip";
 import { WorkoutDetailsSkeleton } from "../modal/workout-details-skeleton";
 
 export interface WorkoutDetailsContentProps {
-  results?: {
-    events: {
-      eventId: number;
-      eventName: string;
-      dayOfWeek: DayOfWeek | null;
-      startTime: string | null;
-      endTime: string | null;
-      types: string[];
-      description: string | null;
-    }[];
-    location: {
-      locationId: number;
-      lat: number;
-      lon: number;
-      aoName: string | null;
-      aoLogo: string | null;
-      aoWebsite: string | null;
-      fullAddress: string | null;
-      locationDescription: string | null;
-      regionId: number | null;
-      regionName: string | null;
-      regionWebsite: string | null;
-      regionLogo: string | null;
-      locationAddress: string | null;
-      locationAddress2: string | null;
-      locationCity: string | null;
-      locationState: string | null;
-      locationZip: string | null;
-      locationCountry: string | null;
-    };
-  } | null;
+  results?: RouterOutputs["location"]["getAoWorkoutData"];
   isLoading: boolean;
   selectedEventId: number | null;
   setSelectedEventId: (id: number | null) => void;
@@ -111,7 +82,10 @@ export const WorkoutDetailsContent = ({
   const mode = appStore.use.mode();
 
   const event = useMemo(
-    () => results?.events.find((event) => event.eventId === selectedEventId),
+    () =>
+      results?.location.events.find(
+        (event) => event.eventId === selectedEventId,
+      ),
     [selectedEventId, results],
   );
   const location = useMemo(() => results?.location, [results]);
@@ -146,7 +120,9 @@ export const WorkoutDetailsContent = ({
       ),
       What: event?.types.join(", "),
       Where: [
-        location?.aoName ? <p key="aoName">{location.aoName}</p> : null,
+        location?.parentName ? (
+          <p key="parentName">{location.parentName}</p>
+        ) : null,
         location?.fullAddress ? (
           <Link
             key="fullAddress"
@@ -167,9 +143,13 @@ export const WorkoutDetailsContent = ({
         ) : null,
       ].filter(isTruthy),
       When: event ? getWhenFromWorkout(event) : "",
-      Website: location?.aoWebsite ? (
-        <Link href={location.aoWebsite} target="_blank" className="underline">
-          {location.aoWebsite}
+      Website: location?.parentWebsite ? (
+        <Link
+          href={location.parentWebsite}
+          target="_blank"
+          className="underline"
+        >
+          {location.parentWebsite}
         </Link>
       ) : null,
       Notes: event?.description ? textLink(event.description) : null,
@@ -203,12 +183,12 @@ export const WorkoutDetailsContent = ({
       <div className="flex flex-row flex-wrap items-center justify-start gap-x-2">
         <div className="flex flex-shrink-0 flex-col items-center">
           <ImageWithFallback
-            src={location?.aoLogo ? location.aoLogo : "/f3_logo.png"}
+            src={location?.parentLogo ? location.parentLogo : "/f3_logo.png"}
             fallbackSrc="/f3_logo.png"
             loading="lazy"
             width={64}
             height={64}
-            alt={location?.aoLogo ?? "F3 logo"}
+            alt={location?.parentLogo ?? "F3 logo"}
             className="rounded-lg bg-black"
           />
         </div>
@@ -239,15 +219,16 @@ export const WorkoutDetailsContent = ({
       ) : null}
 
       <div>
-        {(results?.events.length ?? 0) > 1 ? (
+        {(results?.location.events.length ?? 0) > 1 ? (
           <span className="text-sm">
-            There are {results?.events.length} workouts at this location
+            There are {results?.location.events.length} workouts at this
+            location
           </span>
         ) : (
           <div className="h-1" />
         )}
         <div className="flex flex-row flex-wrap gap-1">
-          {results?.events.map((event) => (
+          {results?.location.events.map((event) => (
             <EventChip
               key={event.eventId}
               onClick={() => setSelectedEventId(event.eventId)}
@@ -267,7 +248,7 @@ export const WorkoutDetailsContent = ({
                 id: results.location.locationId,
               }}
               size={chipSize}
-              hideName={results.events.length === 1}
+              hideName={results.location.events.length === 1}
             />
           ))}
           {mode === "edit" ? (
