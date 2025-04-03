@@ -1,6 +1,6 @@
 import { initTRPC } from "@trpc/server";
 import dayjs from "dayjs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
 import { db } from "@acme/db/client";
@@ -16,6 +16,11 @@ import {
 } from "@acme/shared/app/constants";
 
 import { appRouter } from "../../src/index";
+
+// Mock the revalidatePath function
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
 
 interface User {
   id: number;
@@ -335,6 +340,77 @@ describe("all editor routers", () => {
         caller.location.delete({ id: createdLocationId }),
       ).rejects.toThrow();
     });
+
+    it("should get ao workout data", async () => {
+      if (!createdLocationId) {
+        throw new Error("Created location ID is undefined");
+      }
+      const result = await caller.location.getAoWorkoutData({
+        locationId: createdLocationId,
+      });
+
+      expect(result).toBeDefined();
+
+      // Check the structure of the result
+      if (result) {
+        // Check location object
+        expect(result.location).toBeDefined();
+        expect(result.location.locationId).toBe(createdLocationId);
+        expect(typeof result.location.lat).toBe("number");
+        expect(typeof result.location.lon).toBe("number");
+        expect(result.location.locationMeta).toEqual({ key: "value" });
+        expect(result.location.locationAddress).toBe("123 Test St");
+        expect(result.location.locationAddress2).toBe("Apt 4B");
+        expect(result.location.locationCity).toBe("Test City");
+        expect(result.location.locationState).toBe("TS");
+        expect(result.location.locationZip).toBe("12345");
+        expect(result.location.locationCountry).toBe("Test Country");
+        expect(result.location.isActive).toBe(true);
+        expect(result.location.created).toBeDefined();
+        expect(result.location.updated).toBeDefined();
+        expect(result.location.locationDescription).toBe(
+          "Test Location Description",
+        );
+        expect(result.location.orgId).toBe(TEST_REGION_2_ORG_ID);
+
+        // Check parent fields
+        expect(result.location.parentId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.parentLogo).toBeDefined();
+        expect(result.location.parentWebsite).toBeDefined();
+        expect(result.location.parentName).toBeDefined();
+
+        // Check Region fields
+        expect(result.location.regionId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.regionLogo).toBeDefined();
+        expect(result.location.regionWebsite).toBeDefined();
+        expect(result.location.regionName).toBeDefined();
+
+        // Check computed field
+        expect(result.location.fullAddress).toBeDefined();
+        expect(typeof result.location.fullAddress).toBe("string");
+        expect(result.location.fullAddress).toContain("123 Test St");
+        expect(result.location.fullAddress).toContain("Test City");
+        expect(result.location.fullAddress).toContain("TS");
+        expect(result.location.fullAddress).toContain("12345");
+
+        // Check top-level events array
+        expect(Array.isArray(result.location.events)).toBe(true);
+
+        // If there are events, check their structure
+        if (result.location.events.length > 0) {
+          const event = result.location.events[0]!; // Use non-null assertion to fix linter error
+          expect(event.eventId).toBeDefined();
+          expect(event.eventName).toBe("Test Event");
+          expect(event.eventAddress).toBe("Test Event Description");
+          expect(event.eventMeta).toEqual({ key: "value" });
+          expect(event.dayOfWeek).toBe("monday");
+          expect(event.startTime).toBe("0600");
+          expect(event.endTime).toBe("0700");
+          expect(event.description).toBe("Test Event Description");
+          expect(Array.isArray(event.types)).toBe(true);
+        }
+      }
+    });
   });
 
   // Nation Router Tests
@@ -439,6 +515,202 @@ describe("all editor routers", () => {
         orgId: TEST_REGION_2_ORG_ID,
       });
       expect(result).toBeDefined();
+    });
+
+    it("should create a new request that is not auto approved", async () => {
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        regionId: TEST_REGION_1_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Test Event Request",
+        eventDescription: "Test Event Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        eventMeta: { key: "value" },
+        requestType: "edit" as const,
+      };
+
+      const result = await caller.request.submitUpdateRequest(requestData);
+      expect(result).toBeDefined();
+      expect(result.status).toBe("pending");
+    });
+
+    it("should create a new request that is auto approved", async () => {
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174001",
+        regionId: TEST_REGION_2_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Auto Approved Event",
+        eventDescription: "Auto Approved Event Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        eventMeta: { autoApprove: true },
+        requestType: "edit" as const,
+      };
+
+      const result = await caller.request.submitUpdateRequest(requestData);
+      expect(result).toBeDefined();
+      expect(result.status).toBe("approved");
+    });
+
+    it("should fail to create a new request with an invalid event start time", async () => {
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174002",
+        regionId: TEST_REGION_2_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Invalid Start Time Event",
+        eventDescription: "Test Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "25:00",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        requestType: "edit" as const,
+      };
+
+      await expect(
+        caller.request.submitUpdateRequest(requestData),
+      ).rejects.toThrow();
+    });
+
+    it("should fail to create a new request with an invalid event end time", async () => {
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174003",
+        regionId: TEST_REGION_2_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Invalid End Time Event",
+        eventDescription: "Test Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "99:99",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        requestType: "edit" as const,
+      };
+
+      await expect(
+        caller.request.submitUpdateRequest(requestData),
+      ).rejects.toThrow();
+    });
+
+    const callerWithPermissions = createCaller(
+      createTRPCContext({
+        id: TEST_EDITOR_USER_ID,
+        email: "editor@test.com",
+        roles: [
+          {
+            orgId: TEST_REGION_1_ORG_ID,
+            orgName: "Test Region 1",
+            roleName: "admin",
+          },
+        ],
+      }),
+    );
+
+    it("should allow us to approve a request", async () => {
+      // First create a request
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174004",
+        regionId: TEST_REGION_1_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Request To Approve",
+        eventDescription: "Test Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        requestType: "edit" as const,
+      };
+
+      const request = await caller.request.submitUpdateRequest(requestData);
+      expect(request.status).toBe("pending");
+
+      // Then approve it
+      const result =
+        await callerWithPermissions.request.validateSubmissionByAdmin(
+          requestData,
+        );
+      expect(result.status).toBe("approved");
+    });
+
+    it("should allow us to reject a request", async () => {
+      // First create a request
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174005",
+        regionId: TEST_REGION_1_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Request To Reject",
+        eventDescription: "Test Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        requestType: "edit" as const,
+      };
+
+      const request = await caller.request.submitUpdateRequest(requestData);
+      expect(request.status).toBe("pending");
+
+      // Then reject it
+      await callerWithPermissions.request.rejectSubmission({
+        id: request.updateRequest.id,
+      });
+
+      // Verify the request was rejected
+      const updatedRequest = await caller.request.byId({
+        id: request.updateRequest.id,
+      });
+      expect(updatedRequest?.status).toBe("rejected");
     });
   });
 
