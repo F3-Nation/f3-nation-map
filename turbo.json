@@ -24,6 +24,9 @@
       "outputs": ["node_modules/.cache/.prettiercache"],
       "outputMode": "new-only"
     },
+    "//#lint:ws": {
+      "cache": false
+    },
     "lint": {
       "dependsOn": ["^topo"],
       "outputs": ["node_modules/.cache/.eslintcache"]

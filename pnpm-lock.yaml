@@ -87,9 +87,6 @@ importers:
       '@trpc/server':
         specifier: ^11.0.0-rc.477
         version: 11.0.0-rc.819(typescript@5.3.3)
-      '@types/google.maps':
-        specifier: ^3.58.1
-        version: 3.58.1
       '@vis.gl/react-google-maps':
         specifier: ^1.5.2
         version: 1.5.2(react-dom@18.2.0)(react@18.2.0)
@@ -190,6 +187,9 @@ importers:
       '@types/geojson':
         specifier: ^7946.0.16
         version: 7946.0.16
+      '@types/google.maps':
+        specifier: ^3.58.1
+        version: 3.58.1
       '@types/lodash':
         specifier: ^4.14.195
         version: 4.14.202
@@ -4297,7 +4297,6 @@ packages:
 
   /@types/google.maps@3.58.1:
     resolution: {integrity: sha512-X9QTSvGJ0nCfMzYOnaVs/k6/4L+7F5uCS+4iUmkLEls6J9S/Phv+m/i3mDeyc49ZBgwab3EFO1HEoBY7k98EGQ==}
-    dev: false
 
   /@types/http-errors@2.0.4:
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
