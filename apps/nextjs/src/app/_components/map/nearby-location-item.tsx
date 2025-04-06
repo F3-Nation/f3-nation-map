@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
@@ -7,7 +8,6 @@ import { isProduction, RERENDER_LOGS } from "@acme/shared/common/constants";
 import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import { setView } from "~/utils/set-view";
 import { appStore } from "~/utils/store/app";
 import { searchStore } from "~/utils/store/search";
@@ -33,26 +33,53 @@ export const NearbyLocationItem = (props: {
   const { item } = props;
   const isSelected = item.id === locationId;
 
-  const handleClick = (locationId: number, eventId: number | null) => {
-    console.log("onClick NearbyLocationItem", item);
-    const touchDevice = isTouchDevice();
-    // Open panel first so that the centering to the marker is offset if needed
-    setSelectedItem({
+  const handleClick = useCallback(
+    ({
       locationId,
       eventId,
-      showPanel: true,
-    });
-    if (item.lat !== null && item.lon !== null) {
-      console.log("onClick NearbyLocationItem setView", item);
-      setView({ lat: item.lat, lng: item.lon });
-      // prevent the next mouse enter from triggering a change
-      appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
-    }
-    if (touchDevice) {
-      searchStore.setState({ shouldShowResults: false });
-      searchBarRef.current?.blur();
-    }
-  };
+      clearSearch,
+    }: {
+      locationId: number;
+      eventId: number | null;
+      clearSearch: boolean;
+    }) => {
+      // Open panel first so that the centering to the marker is offset if needed
+      setTimeout(() => {
+        setSelectedItem({
+          locationId,
+          eventId,
+          showPanel: true,
+        });
+      }, 250);
+      if (item.lat !== null && item.lon !== null) {
+        setView({ lat: item.lat, lng: item.lon });
+        // prevent the next mouse enter from triggering a change
+        appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
+      }
+      if (clearSearch) {
+        searchStore.setState({ shouldShowResults: false });
+        searchBarRef.current?.blur();
+      }
+    },
+    [item, searchBarRef],
+  );
+
+  const handleHover = useCallback(
+    ({
+      locationId,
+      eventId,
+    }: {
+      locationId: number;
+      eventId: number | null;
+    }) => {
+      setSelectedItem({
+        locationId,
+        eventId,
+        showPanel: false,
+      });
+    },
+    [],
+  );
 
   const name = item.aoName;
   return (
@@ -63,50 +90,26 @@ export const NearbyLocationItem = (props: {
         "bg-background",
         { "bg-muted": isSelected },
       )}
-      onMouseEnter={(e) => {
-        console.log("onMouseEnter NearbyLocationItem", item);
-        const touchDevice = isTouchDevice();
-        // This is the click for mobile
-
-        if (touchDevice) {
-          searchBarRef.current?.blur();
-          if (item.lat !== null && item.lon !== null) {
-            setView({ lat: item.lat, lng: item.lon });
-          }
-          searchStore.setState({ shouldShowResults: false });
-          setTimeout(() => {
-            setSelectedItem({
-              locationId: item.id,
-              // Must set an eventId
-              eventId: item.events[0]?.id,
-              showPanel: false,
-            });
-          }, 250);
-        } else {
-          setSelectedItem({
-            locationId: item.id,
-            eventId: null,
-            showPanel: false,
-          });
-          // Log to know if this was due to a mouse movement or element adjustment
-          if (ignoreNextNearbyItemMouseEnter) {
-            appStore.setState({ ignoreNextNearbyItemMouseEnter: false });
-            return;
-          }
-        }
+      // @RollOver (SoCo - St. Louis) & @Mr. Roboto (New Bern, NC) had issues with the mouse events we were using here
+      // Likely everything needs to be condensed to onClick and onMouseEnter for handleClick and handleHover
+      // Dell Precision Notebook
+      onClick={(e) => {
+        handleClick({
+          locationId: item.id,
+          eventId: null,
+          clearSearch: true,
+        });
         e.stopPropagation();
       }}
-      onFocus={() => {
-        console.log("onFocus NearbyLocationItem", item);
-        setSelectedItem({
+      onMouseEnter={(e) => {
+        if (ignoreNextNearbyItemMouseEnter) {
+          appStore.setState({ ignoreNextNearbyItemMouseEnter: false });
+          return;
+        }
+        handleHover({
           locationId: item.id,
-          eventId: item.events[0]?.id,
-          showPanel: false,
+          eventId: null,
         });
-      }}
-      onClick={(e) => {
-        console.log("onClick NearbyLocationItem", item);
-        handleClick(item.id, null);
         e.stopPropagation();
       }}
     >
@@ -147,7 +150,14 @@ export const NearbyLocationItem = (props: {
                   size="small"
                   hideName
                   selected={event.id === eventId && item.id === locationId}
-                  onClick={() => handleClick(item.id, event.id)}
+                  onClick={(e) => {
+                    handleClick({
+                      locationId: item.id,
+                      eventId: event.id,
+                      clearSearch: false,
+                    });
+                    e?.stopPropagation();
+                  }}
                 />
               );
             })}
