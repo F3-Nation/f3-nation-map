@@ -34,7 +34,6 @@ export interface WorkoutDetailsContentProps {
   results?: RouterOutputs["location"]["getAoWorkoutData"];
   isLoading: boolean;
   selectedEventId: number | null;
-  setSelectedEventId: (id: number | null) => void;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
   chipSize: "small" | "medium" | "large";
@@ -74,7 +73,6 @@ export const WorkoutDetailsContent = ({
   results,
   isLoading,
   selectedEventId,
-  setSelectedEventId,
   onEditClick,
   onDeleteClick,
   chipSize,
@@ -231,7 +229,6 @@ export const WorkoutDetailsContent = ({
           {results?.location.events.map((event) => (
             <EventChip
               key={event.eventId}
-              onClick={() => setSelectedEventId(event.eventId)}
               selected={selectedEventId === event.eventId}
               event={{
                 id: event.eventId,

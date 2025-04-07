@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import {
   AdvancedMarker,
   AdvancedMarkerAnchorPoint,
@@ -8,11 +9,11 @@ import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
 import { cn } from "@acme/ui";
 
 import { groupMarkerClick } from "~/utils/actions/group-marker-click";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import {
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
+import { useTouchDevice } from "~/utils/touch-device-provider";
 import { useFilteredMapResults } from "../map/filtered-map-results-provider";
 
 interface TreeMarkerProps {
@@ -30,7 +31,7 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
   const selectedEventId = selectedItemStore.use.eventId();
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
-  const touchDevice = isTouchDevice();
+  const { isTouchDevice: touchDevice } = useTouchDevice();
   const [markerRef] = useAdvancedMarkerRef();
   const id = Number(featureId);
 
@@ -41,6 +42,23 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
   const isCurrentPanelLocation = panelLocationId === id;
   const noSelectedEvent = selectedEventId == null;
   const noSelectedPanelEvent = panelEventId == null;
+
+  const handleClick = useCallback(
+    ({ locationId, eventId }: { locationId: number; eventId?: number }) => {
+      void groupMarkerClick({
+        locationId,
+        ...(eventId == null ? {} : { eventId }),
+      });
+    },
+    [],
+  );
+
+  const handleHover = useCallback(
+    ({ locationId, eventId }: { locationId: number; eventId?: number }) => {
+      setSelectedItem({ locationId, eventId, showPanel: false });
+    },
+    [],
+  );
 
   return !events?.length ? null : (
     <AdvancedMarker
@@ -73,21 +91,12 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
               <button
                 key={id + "-" + event.id}
                 onClick={(e) => {
+                  handleClick({ locationId: id, eventId: event.id });
                   e.stopPropagation();
-                  void groupMarkerClick({
-                    locationId: id,
-                    ...(isNaN(event.id) ? {} : { eventId: event.id }),
-                  });
                 }}
                 onMouseEnter={(e) => {
-                  e.preventDefault();
-                  if (touchDevice) return;
-                  const eventId = event.id;
-                  setSelectedItem({
-                    locationId: id,
-                    ...(isNaN(eventId) ? {} : { eventId }),
-                    showPanel: false,
-                  });
+                  handleHover({ locationId: id, eventId: event.id });
+                  e.stopPropagation();
                 }}
                 className={cn(
                   "flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",

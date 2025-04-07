@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWindowWidth } from "@react-hook/window-size";
-import { isNumber } from "lodash";
 import { useSession } from "next-auth/react";
 
 import { BreakPoints, Z_INDEX } from "@acme/shared/app/constants";
@@ -12,6 +10,7 @@ import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { vanillaApi } from "~/trpc/vanilla";
 import { closeModal, modalStore } from "~/utils/store/modal";
+import { selectedItemStore } from "~/utils/store/selected-item";
 import { WorkoutDetailsContent } from "../workout/workout-details-content";
 
 export const WorkoutDetailsModal = ({
@@ -22,22 +21,18 @@ export const WorkoutDetailsModal = ({
   const utils = api.useUtils();
   const router = useRouter();
   const { data: session } = useSession();
-  const locationId = typeof data.locationId === "number" ? data.locationId : -1;
+  const selectedLocationId = selectedItemStore.use.locationId();
+  const selectedEventId = selectedItemStore.use.eventId();
+  const providedLocationId =
+    typeof data.locationId === "number" ? data.locationId : -1;
+  const locationId = selectedLocationId ?? providedLocationId;
   const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
     { locationId },
     { enabled: locationId >= 0 },
   );
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const width = useWindowWidth();
   const isLarge = width > Number(BreakPoints.LG);
   const isMedium = width > Number(BreakPoints.MD);
-
-  useEffect(() => {
-    const resultsEventId = results?.location.events[0]?.eventId;
-    if (isNumber(resultsEventId)) {
-      setSelectedEventId(resultsEventId);
-    }
-  }, [results]);
 
   return (
     <Dialog open={true} onOpenChange={closeModal}>
@@ -53,7 +48,6 @@ export const WorkoutDetailsModal = ({
           results={results}
           isLoading={isLoading}
           selectedEventId={selectedEventId}
-          setSelectedEventId={setSelectedEventId}
           chipSize={isLarge ? "large" : isMedium ? "medium" : "large"}
           onDeleteClick={() => {
             if (!results?.location.regionId || !selectedEventId) return;
