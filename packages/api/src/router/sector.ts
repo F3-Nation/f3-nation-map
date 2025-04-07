@@ -13,7 +13,7 @@ import {
 } from "../trpc";
 
 export const sectorRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
+  all: editorProcedure.query(async ({ ctx }) => {
     const sectors = await ctx.db
       .select({
         id: schema.orgs.id,
@@ -41,7 +41,7 @@ export const sectorRouter = createTRPCRouter({
     return sectors;
   }),
 
-  byId: publicProcedure
+  byId: editorProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const [sector] = await ctx.db

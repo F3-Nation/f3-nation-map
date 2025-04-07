@@ -17,13 +17,13 @@ import { CrupdateUserSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getSortingColumns } from "../get-sorting-columns";
-import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, editorProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
 
 const schema = { ...schemaRaw, users: schemaRaw.users };
 
 export const userRouter = createTRPCRouter({
-  all: publicProcedure
+  all: editorProcedure
     .input(
       z
         .object({
@@ -159,7 +159,7 @@ export const userRouter = createTRPCRouter({
         count: userCount?.count ?? 0,
       };
     }),
-  byId: publicProcedure
+  byId: editorProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const [user] = await ctx.db
