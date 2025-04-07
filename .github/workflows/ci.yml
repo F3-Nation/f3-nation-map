@@ -1,12 +1,9 @@
 name: CI
 
 on:
-  pull_request:
-    branches-ignore:
-      - "renovate/**"
   push:
-    branches: ["main"]
-  merge_group:
+    branches:
+      - "**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,9 +15,59 @@ env:
   FORCE_COLOR: 3
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  PROJECT: ${{ github.event.repository.name }}
 
 jobs:
+  env-setup:
+    runs-on: ubuntu-latest
+    outputs:
+      config: ${{ steps.set-config.outputs.config }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - id: set-config
+        run: |
+          case "${{ github.ref_name }}" in
+            "main" | "master" | "prod" | "production")
+              echo "config=prd" >> $GITHUB_OUTPUT
+              ;;
+            "staging" | "stage")
+              echo "config=stg" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "config=dev" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Download Doppler ENV vars
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          CONFIG: ${{ steps.set-config.outputs.config }}
+        # Hardcode project since we have f3-2 and f3-nation-map in github and only f3-2 is used in Doppler
+        run: |
+          curl --get \
+            --url 'https://api.doppler.com/v3/configs/config/secrets/download' \
+            --header 'authorization: Bearer ${{ env.DOPPLER_TOKEN }}' \
+            --data-urlencode "project=f3-2" \
+            --data-urlencode "config=${{ env.CONFIG }}" \
+            --data-urlencode 'format=env' \
+            -o .env
+
+      - name: Upload .env file
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-file
+          path: .env
+          include-hidden-files: true
+
+      - name: Check env
+        run: pnpm -F nextjs check-env
+
   lint:
+    needs: env-setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,12 +75,13 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
+      - name: Download .env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint && pnpm lint:ws
 
   format:
     runs-on: ubuntu-latest
@@ -47,23 +95,35 @@ jobs:
         run: pnpm format
 
   typecheck:
+    needs: env-setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Download .env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
 
       - name: Typecheck
         run: pnpm typecheck
 
   test:
+    needs: env-setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Download .env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
 
       - name: Test
         run: pnpm test

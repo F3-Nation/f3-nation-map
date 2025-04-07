@@ -26,7 +26,6 @@ export const MobileNearbyLocationsItem = (props: {
   const searchBarRef = searchStore.use.searchBarRef();
 
   const locationId = selectedItemStore.use.locationId();
-  const eventId = selectedItemStore.use.eventId();
   const { searchResult } = props;
   const isSelected = searchResult.id === locationId;
 
@@ -95,9 +94,7 @@ export const MobileNearbyLocationsItem = (props: {
               return (
                 <EventChip
                   key={event.id}
-                  selected={
-                    locationId === searchResult.id && event.id === eventId
-                  }
+                  selected={false}
                   size="small"
                   event={event}
                   location={searchResult}

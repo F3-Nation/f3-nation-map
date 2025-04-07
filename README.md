@@ -64,3 +64,13 @@ Rebuilt git history on 9-3-24 to clean it
 # Database notes
 
 - added limit of 4 characters to event start and end time
+
+# Automatic Version Bumping
+
+Usage:
+
+```bash
+pnpm run release
+```
+
+This will proceed to an interactive CLI prompt to bump versions in the `package.json`, `apps/nextjs/package.json` and `tooling/release-it/package.json` files and also an option to directly create a new release commit and tag.

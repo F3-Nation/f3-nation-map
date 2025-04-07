@@ -13,7 +13,7 @@ import {
 } from "../trpc";
 
 export const regionRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
+  all: editorProcedure.query(async ({ ctx }) => {
     const regionOrg = aliasedTable(schema.orgs, "region_org");
     const sectorOrg = aliasedTable(schema.orgs, "sector_org");
 
@@ -48,7 +48,7 @@ export const regionRouter = createTRPCRouter({
     return regions;
   }),
 
-  byId: publicProcedure
+  byId: editorProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const [region] = await ctx.db

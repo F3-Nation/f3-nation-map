@@ -23,7 +23,7 @@ import {
 import { withPagination } from "../with-pagination";
 
 export const aoRouter = createTRPCRouter({
-  all: publicProcedure
+  all: editorProcedure
     .input(
       z
         .object({
@@ -109,7 +109,7 @@ export const aoRouter = createTRPCRouter({
       return { aos, total: aoCount?.count ?? 0 };
     }),
 
-  byId: publicProcedure
+  byId: editorProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const [ao] = await ctx.db

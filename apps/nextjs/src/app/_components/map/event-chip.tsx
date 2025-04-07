@@ -1,14 +1,16 @@
 // Must disable these since we can't use a button in a button
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
+
 "use client";
+
+import { useCallback } from "react";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
 import { getReadableDayOfWeek } from "@acme/shared/app/functions";
 import { cn } from "@acme/ui";
 
 import { dayjs } from "~/utils/frontendDayjs";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import { setView } from "~/utils/set-view";
 import { setSelectedItem } from "~/utils/store/selected-item";
 import BootSvgComponent from "../SVGs/boot-camp";
@@ -69,6 +71,38 @@ export const EventChip = (props: {
         "minutes",
       )
     : null;
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (props.onClick) {
+        props.onClick();
+      } else {
+        setSelectedItem({
+          locationId: event.locationId,
+          eventId: event.id,
+          showPanel: true,
+        });
+        if (location.lat !== null && location.lon !== null) {
+          setView({ lat: location.lat, lng: location.lon });
+        }
+      }
+      e.stopPropagation();
+    },
+    [event.id, event.locationId, location.lat, location.lon, props],
+  );
+
+  const handleHover = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      setSelectedItem({
+        locationId: event.locationId,
+        eventId: event.id,
+        showPanel: false,
+      });
+      e.stopPropagation();
+    },
+    [event.id, event.locationId],
+  );
+
   return (
     <div
       key={event.id}
@@ -79,56 +113,14 @@ export const EventChip = (props: {
         "px-2 shadow",
         "cursor-pointer",
         { "pointer-events-none bg-muted": !isInteractive },
-        { "bg-red-600": selected && isInteractive },
-        { "bg-muted": !selected && isInteractive },
+        { "bg-red-600": isInteractive && selected },
+        { "bg-muted": isInteractive && !selected },
         { "gap-1 py-[1px]": size === "small" },
         { "gap-1 py-[2px]": size === "medium" },
         { "gap-2 py-[3px]": size === "large" },
       )}
-      onMouseOver={(e) => {
-        console.log("event-chip onMouseOver", event.id);
-        const touchDevice = isTouchDevice();
-        if (!touchDevice) {
-          setSelectedItem({
-            locationId: event.locationId,
-            eventId: event.id,
-            showPanel: false,
-          });
-        } else {
-          if (!props.onClick) {
-            // Skip stopPropagation if there is no onClick handler
-            return;
-          }
-          props.onClick?.();
-        }
-        e.stopPropagation();
-      }}
-      onFocus={(e) => {
-        console.log("event-chip onFocus", event.id);
-        setSelectedItem({
-          locationId: event.locationId,
-          eventId: event.id,
-          showPanel: false,
-        });
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        console.log("event-chip onClick", event.id);
-        if (props.onClick) {
-          props.onClick();
-          e.stopPropagation();
-        } else {
-          setSelectedItem({
-            locationId: event.locationId,
-            eventId: event.id,
-            showPanel: true,
-          });
-          if (location.lat !== null && location.lon !== null) {
-            setView({ lat: location.lat, lng: location.lon });
-          }
-          e.stopPropagation();
-        }
-      }}
+      onMouseEnter={handleHover}
+      onClick={handleClick}
     >
       <div
         className={cn("flex flex-1 gap-2 text-foreground", {

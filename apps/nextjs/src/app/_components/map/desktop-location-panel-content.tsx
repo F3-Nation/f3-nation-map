@@ -54,7 +54,6 @@ export const DesktopLocationPanelContent = () => {
         results={results}
         isLoading={isLoading}
         selectedEventId={selectedEventId}
-        setSelectedEventId={setSelectedEventId}
         chipSize={isLarge ? "large" : isMedium ? "medium" : "small"}
         onDeleteClick={() => {
           if (!results?.location.regionId || !selectedEventId) return;

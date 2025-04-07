@@ -7,7 +7,6 @@ import { RERENDER_LOGS } from "@acme/shared/common/constants";
 import { cn } from "@acme/ui";
 
 import type { F3Marker } from "~/utils/types";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import {
   clearSelectedItem,
   setSelectedItem,
@@ -22,7 +21,6 @@ export const SelectedItem = (props: {
   hideCloseButton?: boolean;
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");
-  const touchDevice = isTouchDevice();
 
   const { hideCloseButton, selectedLocation, selectedEvent } = props;
 
@@ -38,29 +36,12 @@ export const SelectedItem = (props: {
           "overflow-hidden overflow-y-auto rounded-lg p-2 text-sm text-foreground shadow-xl transition-all",
           "dark:border-[1px] dark:border-muted",
         )}
-        onMouseEnter={() => {
-          if (touchDevice) return;
-          setSelectedItem({
-            locationId: selectedLocation.id,
-            eventId: selectedEvent.id,
-            showPanel: false,
-          });
-
-          // Needed to handle the mouse enter from the marker on desktop
-          // Doesn't work on mobile
-        }}
         onMouseLeave={() => {
-          if (touchDevice) return;
           clearSelectedItem();
         }}
         onClick={() => {
           // There is a problem here where the selected item is clicked through
-          // the search results when they are open
-          console.log(
-            "selected-item on click",
-            selectedEvent,
-            selectedLocation,
-          );
+          // the search results when they are open. Needed e.stop() somewhere else to resolve
           setSelectedItem({
             locationId: selectedLocation.id,
             eventId: selectedEvent.id,

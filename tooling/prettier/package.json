@@ -2,9 +2,10 @@
   "name": "@acme/prettier-config",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
+  "type": "commonjs",
+  "main": "./index.cjs",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.cjs"
   },
   "scripts": {
     "clean": "rm -rf .turbo node_modules",

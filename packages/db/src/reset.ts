@@ -15,7 +15,7 @@ export const reset = async () => {
   const { databaseUrl, databaseName } = getDbUrl();
   const db = getDb();
   if (!databaseUrl) return;
-  if (process.env.CI) return;
+  if (process.env.CI && !isTest) return;
 
   const isTestDB = databaseName?.endsWith("_test");
 

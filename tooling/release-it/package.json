@@ -1,0 +1,12 @@
+{
+  "name": "@acme/release-it",
+  "private": true,
+  "scripts": {
+    "release": "release-it --config ./.release-it.json"
+  },
+  "devDependencies": {
+    "@release-it/bumper": "^7.0.1",
+    "release-it": "^18.1.2"
+  },
+  "version": "0.48.0"
+}
