@@ -46,11 +46,12 @@ jobs:
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
           CONFIG: ${{ steps.set-config.outputs.config }}
+        # Hardcode project since we have f3-2 and f3-nation-map in github and only f3-2 is used in Doppler
         run: |
           curl --get \
             --url 'https://api.doppler.com/v3/configs/config/secrets/download' \
             --header 'authorization: Bearer ${{ env.DOPPLER_TOKEN }}' \
-            --data-urlencode "project=${{ env.PROJECT }}" \
+            --data-urlencode "project=f3-2" \
             --data-urlencode "config=${{ env.CONFIG }}" \
             --data-urlencode 'format=env' \
             -o .env
