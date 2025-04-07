@@ -14,12 +14,7 @@ import { AOInsertSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getSortingColumns } from "../get-sorting-columns";
-import {
-  adminProcedure,
-  createTRPCRouter,
-  editorProcedure,
-  publicProcedure,
-} from "../trpc";
+import { adminProcedure, createTRPCRouter, editorProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const aoRouter = createTRPCRouter({

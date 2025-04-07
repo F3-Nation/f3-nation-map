@@ -5,12 +5,7 @@ import { and, eq, ne, schema } from "@acme/db";
 import { NationInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
-import {
-  adminProcedure,
-  createTRPCRouter,
-  editorProcedure,
-  publicProcedure,
-} from "../trpc";
+import { adminProcedure, createTRPCRouter, editorProcedure } from "../trpc";
 
 export const nationRouter = createTRPCRouter({
   all: editorProcedure.query(async ({ ctx }) => {

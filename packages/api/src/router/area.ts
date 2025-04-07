@@ -5,12 +5,7 @@ import { aliasedTable, and, eq, schema } from "@acme/db";
 import { AreaInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
-import {
-  adminProcedure,
-  createTRPCRouter,
-  editorProcedure,
-  publicProcedure,
-} from "../trpc";
+import { adminProcedure, createTRPCRouter, editorProcedure } from "../trpc";
 
 export const areaRouter = createTRPCRouter({
   all: editorProcedure.query(async ({ ctx }) => {
