@@ -148,7 +148,6 @@ export const locationRouter = createTRPCRouter({
         and(
           eq(schema.events.locationId, schema.locations.id),
           eq(schema.events.isActive, true),
-          eq(schema.events.isSeries, true),
         ),
       )
       .leftJoin(
@@ -488,7 +487,6 @@ export const locationRouter = createTRPCRouter({
           and(
             eq(schema.events.locationId, schema.locations.id),
             eq(schema.events.isActive, true),
-            eq(schema.events.isSeries, true),
           ),
         )
         .groupBy(

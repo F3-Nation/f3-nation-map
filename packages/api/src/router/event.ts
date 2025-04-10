@@ -171,7 +171,6 @@ export const eventRouter = createTRPCRouter({
           endTime: schema.events.endTime,
           email: schema.events.email,
           highlight: schema.events.highlight,
-          isSeries: schema.events.isSeries,
           created: schema.events.created,
           meta: schema.events.meta,
           aos: sql<{ aoId: number; aoName: string }[]>`COALESCE(

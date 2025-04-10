@@ -84,12 +84,12 @@ const _reseedJustData = async () => {
   // await db.execute(sql`SET session_replication_role = 'replica';`);
   try {
     console.log("deleting data");
-    console.log("getting series events");
+    console.log("getting map seed events");
     const seededEvents = await db
       .select()
       .from(schema.events)
-      .where(eq(schema.events.isSeries, true));
-    console.log("series events", seededEvents.length);
+      .where(sql`${schema.events.meta}->>'mapSeed' = 'true'`);
+    console.log("map seed events", seededEvents.length);
 
     console.log("getting seeded orgs");
     const seededOrgs = await db
@@ -729,7 +729,6 @@ export async function insertData(data: {
         const workoutItem: InferInsertModel<typeof schema.events> = {
           locationId: workoutAoLoc?.id, // locationIdDict[workout.Location],
           isActive: true,
-          isSeries: true,
           highlight: false,
           startDate:
             workout.Created === "0000-00-00 00:00:00"

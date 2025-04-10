@@ -207,7 +207,6 @@ describe("all editor routers", () => {
         aoId,
         locationId,
         regionId: TEST_REGION_2_ORG_ID,
-        isSeries: false,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "0600",
@@ -243,7 +242,6 @@ describe("all editor routers", () => {
         aoId,
         locationId,
         regionId: TEST_REGION_2_ORG_ID,
-        isSeries: false,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "06:00", // HH:mm

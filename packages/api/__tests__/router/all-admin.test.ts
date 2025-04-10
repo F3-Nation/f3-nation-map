@@ -197,7 +197,6 @@ describe("all admin routers", () => {
         aoId: aoResult.id,
         locationId: locationResult?.id,
         regionId: TEST_REGION_2_ORG_ID,
-        isSeries: false,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "0600",

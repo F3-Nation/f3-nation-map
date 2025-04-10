@@ -95,7 +95,6 @@ export default function AdminWorkoutsModal({
       dayOfWeek: event?.dayOfWeek ?? undefined,
       isActive: event?.isActive ?? true,
       highlight: event?.highlight ?? false,
-      isSeries: event?.isSeries ?? false,
       regionId: event?.regions?.[0]?.regionId ?? undefined,
       aoId: event?.aos?.[0]?.aoId ?? undefined,
       eventTypeId: event?.eventTypes?.[0]?.eventTypeId?.toString() ?? undefined,
