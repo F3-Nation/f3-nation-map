@@ -16,7 +16,6 @@ import {
   text,
   timestamp,
   unique,
-  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -71,6 +70,70 @@ export const citext = customType<{ data: string }>({
 export const alembicVersion = pgTable("alembic_version", {
   versionNum: varchar("version_num", { length: 32 }).primaryKey().notNull(),
 });
+
+export const eventInstances = pgTable(
+  "event_instances",
+  {
+    id: serial().primaryKey().notNull(),
+    orgId: integer("org_id").notNull(),
+    locationId: integer("location_id"),
+    seriesId: integer("series_id"),
+    isActive: boolean("is_active").notNull(),
+    highlight: boolean().notNull(),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
+    startTime: varchar("start_time"),
+    endTime: varchar("end_time"),
+    name: varchar().notNull(),
+    description: varchar(),
+    email: varchar(),
+    paxCount: integer("pax_count"),
+    fngCount: integer("fng_count"),
+    preblast: varchar(),
+    backblast: varchar(),
+    preblastRich: json("preblast_rich"),
+    backblastRich: json("backblast_rich"),
+    preblastTs: doublePrecision("preblast_ts"),
+    backblastTs: doublePrecision("backblast_ts"),
+    meta: json(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table) => [
+    index("idx_event_instances_is_active").using(
+      "btree",
+      table.isActive.asc().nullsLast().op("bool_ops"),
+    ),
+    index("idx_event_instances_location_id").using(
+      "btree",
+      table.locationId.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_event_instances_org_id").using(
+      "btree",
+      table.orgId.asc().nullsLast().op("int4_ops"),
+    ),
+    foreignKey({
+      columns: [table.locationId],
+      foreignColumns: [locations.id],
+      name: "event_instances_location_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.orgId],
+      foreignColumns: [orgs.id],
+      name: "event_instances_org_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.seriesId],
+      foreignColumns: [events.id],
+      name: "event_instances_series_id_fkey",
+    }),
+  ],
+);
+
 export const permissions = pgTable("permissions", {
   id: serial().primaryKey().notNull(),
   name: varchar().notNull(),
@@ -156,7 +219,6 @@ export const attendance = pgTable(
   "attendance",
   {
     id: serial().primaryKey().notNull(),
-    eventId: integer("event_id").notNull(),
     userId: integer("user_id").notNull(),
     isPlanned: boolean("is_planned").notNull(),
     meta: json().$type<AttendanceMeta>(),
@@ -166,22 +228,23 @@ export const attendance = pgTable(
     updated: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
+    eventInstanceId: integer("event_instance_id").notNull(),
   },
   (table) => [
     foreignKey({
-      columns: [table.eventId],
-      foreignColumns: [events.id],
-      name: "attendance_event_id_fkey",
+      columns: [table.eventInstanceId],
+      foreignColumns: [eventInstances.id],
+      name: "event_instance_id_fkey",
     }),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
       name: "attendance_user_id_fkey",
     }),
-    unique("attendance_event_id_user_id_is_planned_key").on(
-      table.eventId,
+    unique("attendance_event_instance_id_user_id_is_planned_key").on(
       table.userId,
       table.isPlanned,
+      table.eventInstanceId,
     ),
   ],
 );
@@ -203,8 +266,6 @@ export const locations = pgTable(
   {
     id: serial().primaryKey().notNull(),
     orgId: integer("org_id").notNull(),
-    // This is not used in general. Keeping in case we change our plans
-    // Use AO name instead
     name: varchar().notNull(),
     description: varchar(),
     isActive: boolean("is_active").notNull(),
@@ -226,9 +287,18 @@ export const locations = pgTable(
     addressStreet2: varchar("address_street2"),
   },
   (table) => [
-    index("idx_locations_org_id").on(table.orgId),
-    index("idx_locations_name").on(table.name),
-    index("idx_locations_is_active").on(table.isActive),
+    index("idx_locations_is_active").using(
+      "btree",
+      table.isActive.asc().nullsLast().op("bool_ops"),
+    ),
+    index("idx_locations_name").using(
+      "btree",
+      table.name.asc().nullsLast().op("text_ops"),
+    ),
+    index("idx_locations_org_id").using(
+      "btree",
+      table.orgId.asc().nullsLast().op("int4_ops"),
+    ),
     foreignKey({
       columns: [table.orgId],
       foreignColumns: [orgs.id],
@@ -298,15 +368,12 @@ export const users = pgTable(
     status: userStatus().default("active").notNull(),
   },
   (table) => [
-    uniqueIndex("users_email_key").using(
-      "btree",
-      table.email.asc().nullsLast().op("citext_ops"),
-    ),
     foreignKey({
       columns: [table.homeRegionId],
       foreignColumns: [orgs.id],
       name: "users_home_region_id_fkey",
     }),
+    unique("users_email_key").on(table.email),
   ],
 );
 
@@ -386,9 +453,18 @@ export const orgs = pgTable(
     orgType: orgType("org_type").notNull(),
   },
   (table) => [
-    index("idx_orgs_is_active").on(table.isActive),
-    index("idx_orgs_org_type").on(table.orgType),
-    index("idx_orgs_parent_id").on(table.parentId),
+    index("idx_orgs_is_active").using(
+      "btree",
+      table.isActive.asc().nullsLast().op("bool_ops"),
+    ),
+    index("idx_orgs_org_type").using(
+      "btree",
+      table.orgType.asc().nullsLast().op("enum_ops"),
+    ),
+    index("idx_orgs_parent_id").using(
+      "btree",
+      table.parentId.asc().nullsLast().op("int4_ops"),
+    ),
     foreignKey({
       columns: [table.parentId],
       foreignColumns: [table.id],
@@ -428,7 +504,6 @@ export const events = pgTable(
     orgId: integer("org_id").notNull(),
     locationId: integer("location_id"),
     seriesId: integer("series_id"),
-    isSeries: boolean("is_series").notNull(),
     isActive: boolean("is_active").notNull(),
     highlight: boolean().notNull(),
     startDate: date("start_date").notNull(),
@@ -441,14 +516,6 @@ export const events = pgTable(
     recurrencePattern: eventCadence("recurrence_pattern"),
     recurrenceInterval: integer("recurrence_interval"),
     indexWithinInterval: integer("index_within_interval"),
-    paxCount: integer("pax_count"),
-    fngCount: integer("fng_count"),
-    preblast: varchar(),
-    backblast: varchar(),
-    preblastRich: json("preblast_rich"),
-    backblastRich: json("backblast_rich"),
-    preblastTs: doublePrecision("preblast_ts"),
-    backblastTs: doublePrecision("backblast_ts"),
     meta: json().$type<EventMeta>(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
@@ -459,9 +526,18 @@ export const events = pgTable(
     email: varchar(),
   },
   (table) => [
-    index("idx_events_location_id").on(table.locationId),
-    index("idx_events_org_id").on(table.orgId),
-    index("idx_events_is_active").on(table.isActive),
+    index("idx_events_is_active").using(
+      "btree",
+      table.isActive.asc().nullsLast().op("bool_ops"),
+    ),
+    index("idx_events_location_id").using(
+      "btree",
+      table.locationId.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_events_org_id").using(
+      "btree",
+      table.orgId.asc().nullsLast().op("int4_ops"),
+    ),
     foreignKey({
       columns: [table.locationId],
       foreignColumns: [locations.id],
@@ -552,6 +628,54 @@ export const updateRequests = pgTable(
   ],
 );
 
+export const eventInstancesXEventTypes = pgTable(
+  "event_instances_x_event_types",
+  {
+    eventInstanceId: integer("event_instance_id").notNull(),
+    eventTypeId: integer("event_type_id").notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.eventInstanceId],
+      foreignColumns: [eventInstances.id],
+      name: "event_instances_x_event_types_event_instance_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.eventTypeId],
+      foreignColumns: [eventTypes.id],
+      name: "event_instances_x_event_types_event_type_id_fkey",
+    }),
+    primaryKey({
+      columns: [table.eventInstanceId, table.eventTypeId],
+      name: "event_instances_x_event_types_pkey",
+    }),
+  ],
+);
+
+export const eventTagsXEventInstances = pgTable(
+  "event_tags_x_event_instances",
+  {
+    eventInstanceId: integer("event_instance_id").notNull(),
+    eventTagId: integer("event_tag_id").notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.eventInstanceId],
+      foreignColumns: [eventInstances.id],
+      name: "event_tags_x_event_instances_event_instance_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.eventTagId],
+      foreignColumns: [eventTags.id],
+      name: "event_tags_x_event_instances_event_tag_id_fkey",
+    }),
+    primaryKey({
+      columns: [table.eventInstanceId, table.eventTagId],
+      name: "event_tags_x_event_instances_pkey",
+    }),
+  ],
+);
+
 export const rolesXPermissions = pgTable(
   "roles_x_permissions",
   {
@@ -607,8 +731,14 @@ export const eventsXEventTypes = pgTable(
     eventTypeId: integer("event_type_id").notNull(),
   },
   (table) => [
-    index("idx_events_x_event_types_event_id").on(table.eventId),
-    index("idx_events_x_event_types_event_type_id").on(table.eventTypeId),
+    index("idx_events_x_event_types_event_id").using(
+      "btree",
+      table.eventId.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_events_x_event_types_event_type_id").using(
+      "btree",
+      table.eventTypeId.asc().nullsLast().op("int4_ops"),
+    ),
     foreignKey({
       columns: [table.eventId],
       foreignColumns: [events.id],
@@ -798,11 +928,11 @@ export const authAccounts = pgTable(
     providerAccountId: varchar("provider_account_id").notNull(),
     refreshToken: varchar("refresh_token"),
     accessToken: varchar("access_token"),
-    expiresAt: integer("expires_at"),
+    expiresAt: timestamp("expires_at", { mode: "string" }),
     tokenType: varchar("token_type"),
     scope: varchar(),
     idToken: varchar("id_token"),
-    sessionState: text("session_state"),
+    sessionState: varchar("session_state"),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
@@ -814,8 +944,12 @@ export const authAccounts = pgTable(
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
-      name: "auth_accounts_userId_users_id_fk",
-    }).onDelete("cascade"),
+      name: "auth_accounts_user_id_fkey",
+    }),
+    primaryKey({
+      columns: [table.provider, table.providerAccountId],
+      name: "auth_accounts_pkey",
+    }),
   ],
 );
 
@@ -836,15 +970,28 @@ export const authSessions = pgTable(
     foreignKey({
       columns: [table.userId],
       foreignColumns: [users.id],
-      name: "auth_sessions_userId_users_id_fk",
+      name: "auth_sessions_user_id_fkey",
     }).onDelete("cascade"),
   ],
 );
 
-export const authVerificationTokens = pgTable("auth_verification_tokens", {
-  identifier: text().notNull(),
-  token: text().notNull(),
-  expires: timestamp({ mode: "string" }).notNull(),
-  created: timestamp({ mode: "string" }).defaultNow(),
-  updated: timestamp({ mode: "string" }),
-});
+export const authVerificationTokens = pgTable(
+  "auth_verification_tokens",
+  {
+    identifier: varchar().notNull(),
+    token: varchar().notNull(),
+    expires: timestamp({ mode: "string" }).notNull(),
+    created: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updated: timestamp({ mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.identifier, table.token],
+      name: "auth_verification_tokens_pkey",
+    }),
+  ],
+);
