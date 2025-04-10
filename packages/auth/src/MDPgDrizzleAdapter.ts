@@ -1,5 +1,6 @@
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import type { MdAdapter } from "next-auth";
+import dayjs from "dayjs";
 import { and, eq } from "drizzle-orm";
 import omit from "lodash/omit";
 
@@ -66,6 +67,9 @@ const getUser = async (
   return {
     ...user,
     editingRegionIds: user.editingRegionIds.map((r) => Number(r)) ?? [],
+    emailVerified: user.emailVerified
+      ? dayjs(user.emailVerified).toDate()
+      : null,
   };
 };
 
@@ -78,7 +82,10 @@ export function MDPGDrizzleAdapter(
       if (LOG) console.log("createUser", data);
       const { id: userId } = await client
         .insert(users)
-        .values({ ...omit(data, "id") })
+        .values({
+          ...omit(data, "id"),
+          emailVerified: data.emailVerified?.toISOString(),
+        })
         .returning()
         // .onConflictDoNothing()
         .then((res) => res[0]!);
@@ -111,48 +118,21 @@ export function MDPGDrizzleAdapter(
     async getSessionAndUser(data) {
       if (LOG) console.log("getSessionAndUser", data);
       const [session] = await client
-        .select({
-          session: sessions,
-          user: {
-            id: users.id,
-            email: users.email,
-            emailVerified: users.emailVerified,
-            roles: sql<
-              { orgId: number; orgName: string; roleName: UserRole }[]
-            >`COALESCE(
-              json_agg(
-                json_build_object(
-                  'orgId', ${schema.orgs.id}, 
-                  'orgName', ${schema.orgs.name}, 
-                  'roleName', ${schema.roles.name}
-                )
-              ) 
-              FILTER (
-                WHERE ${schema.orgs.id} IS NOT NULL
-              ), 
-              '[]'
-            )`,
-          },
-        })
+        .select()
         .from(sessions)
-        .where(eq(sessions.sessionToken, data))
-        .innerJoin(users, eq(users.id, sessions.userId))
-        .leftJoin(rolesXUsersXOrg, eq(users.id, rolesXUsersXOrg.userId))
-        .leftJoin(orgs, eq(orgs.id, rolesXUsersXOrg.orgId))
-        .leftJoin(roles, eq(rolesXUsersXOrg.roleId, roles.id))
-        .groupBy(users.id);
+        .where(eq(sessions.sessionToken, data));
+      if (!session) return null;
 
-      return session
-        ? {
-            session: {
-              ...session.session,
-              expires: new Date(session.session.expires),
-            },
-            user: {
-              ...session.user,
-            },
-          }
-        : null;
+      const user = await getUser({ id: session.userId }, client);
+      if (!user) return null;
+
+      return {
+        session: {
+          ...session,
+          expires: new Date(session.expires),
+        },
+        user,
+      };
     },
     async updateUser(data) {
       if (LOG) console.log("updateUser", data);

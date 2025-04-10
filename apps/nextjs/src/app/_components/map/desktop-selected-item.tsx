@@ -41,8 +41,8 @@ const SelectedItemWrapper = () => {
       setDebouncedSelectedItem(undefined);
       return;
     } else if (typeof selectedItem.selectedLocation?.id === "number") {
-      void utils.location.getLocationMarker.prefetch({
-        id: selectedItem.selectedLocation?.id,
+      void utils.location.getAoWorkoutData.prefetch({
+        locationId: selectedItem.selectedLocation?.id,
       });
     }
 

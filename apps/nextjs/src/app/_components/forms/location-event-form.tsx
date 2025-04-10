@@ -223,7 +223,7 @@ export const LocationEventForm = ({
               );
               form.setValue(
                 "locationLng",
-                possiblyUpdatedLocation?.lon ?? location.longitude,
+                possiblyUpdatedLocation?.lng ?? location.longitude,
               );
             } else {
               form.setValue("locationLat", location.latitude);

@@ -76,15 +76,15 @@ export const eventAndLocationToUpdateRequest = ({
   >["location"];
 }): Omit<DataType[ModalType.UPDATE_LOCATION], "mode" | "requestType"> => {
   const possiblyEditedLoc = mapStore.get("modifiedLocationMarkers")[
-    location.locationId
+    location.id
   ];
 
   const lat = possiblyEditedLoc?.lat ?? location.lat;
-  const lng = possiblyEditedLoc?.lon ?? location.lon;
+  const lng = possiblyEditedLoc?.lng ?? location.lon;
 
   return {
-    eventId: event?.eventId ?? null,
-    workoutName: event?.eventName ?? null,
+    eventId: event?.id ?? null,
+    workoutName: event?.name ?? null,
     lat,
     lng,
     startTime: event?.startTime ?? null,
@@ -92,7 +92,7 @@ export const eventAndLocationToUpdateRequest = ({
     dayOfWeek: event?.dayOfWeek ?? null,
     types: event?.types ?? [],
     eventDescription: event?.description ?? null,
-    locationId: location.locationId,
+    locationId: location.id,
     aoName: location.parentName,
     locationAddress: location.locationAddress,
     locationAddress2: location.locationAddress2,

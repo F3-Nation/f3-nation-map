@@ -6,7 +6,7 @@ export type F3MarkerLocation =
   RouterOutputs["location"]["getMapEventAndLocationData"][number];
 
 export type F3Marker = NonNullable<
-  RouterOutputs["location"]["getLocationMarker"]
+  RouterOutputs["location"]["getAoWorkoutData"]
 >;
 
 export interface SparseF3Marker {
@@ -25,10 +25,11 @@ export interface SparseF3Marker {
   }[];
 }
 
-export type LocationMarkerEventWithLatLon = F3Marker["events"][number] & {
-  lat: number;
-  lon: number;
-};
+export type LocationMarkerEventWithLatLon =
+  F3Marker["location"]["events"][number] & {
+    lat: number;
+    lon: number;
+  };
 
 // export type F3MapSearchResultItem =
 //   RouterOutputs["location"]["getAllLocationMarkers"][number]["events"][number] & {

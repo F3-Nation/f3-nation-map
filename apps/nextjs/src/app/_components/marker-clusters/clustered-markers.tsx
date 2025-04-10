@@ -9,6 +9,7 @@ import { BreakPoints } from "@acme/shared/app/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
 import { useSupercluster } from "~/utils/hooks/use-supercluster";
+import { mapStore } from "~/utils/store/map";
 import { useFilteredMapResults } from "../map/filtered-map-results-provider";
 import { FeatureMarker } from "../map/group-marker";
 import { FeaturesClusterMarker } from "./features-cluster-marker";
@@ -38,6 +39,10 @@ const superclusterOptions: Supercluster.Options<
 
 export const ClusteredMarkers = () => {
   const { filteredLocationMarkers } = useFilteredMapResults();
+  console.log(
+    "filteredLocationMarkers",
+    filteredLocationMarkers?.find((m) => m.id === 1284),
+  );
 
   const geojson = useMemo(() => {
     if (!filteredLocationMarkers) return null;
@@ -47,7 +52,12 @@ export const ClusteredMarkers = () => {
 };
 
 const DataProvidedClusteredMarkers = ({ geojson }: MarkersProps) => {
+  const modifiedLocationMarkers = mapStore.use.modifiedLocationMarkers();
   const [width] = useWindowSize();
+  console.log(
+    "geojson",
+    geojson.features.find((f) => f.id?.toString() === "1284"),
+  );
 
   const map = useMap();
   const { clusters, getLeaves } = useSupercluster(geojson, superclusterOptions);
@@ -60,6 +70,11 @@ const DataProvidedClusteredMarkers = ({ geojson }: MarkersProps) => {
       map?.fitBounds(boundsOfLeaves, negativePadding);
     },
     [getLeaves, map, width],
+  );
+
+  console.log(
+    "ClusteredMarkers",
+    clusters.find((c) => c.id?.toString() === "1284"),
   );
 
   return (
@@ -89,6 +104,9 @@ const DataProvidedClusteredMarkers = ({ geojson }: MarkersProps) => {
             position={{ lat, lng }}
           />
         );
+      })}
+      {Object.entries(modifiedLocationMarkers).map(([id, marker]) => {
+        return <FeatureMarker key={id} featureId={id} position={marker} />;
       })}
     </>
   );
