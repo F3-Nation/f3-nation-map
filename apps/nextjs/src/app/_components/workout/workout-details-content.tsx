@@ -81,37 +81,35 @@ export const WorkoutDetailsContent = ({
 
   const event = useMemo(
     () =>
-      results?.location.events.find(
-        (event) => event.eventId === selectedEventId,
-      ),
+      results?.location.events.find((event) => event.id === selectedEventId),
     [selectedEventId, results],
   );
   const location = useMemo(() => results?.location, [results]);
 
   // Update the search params when the panel is open
-  useUpdateEventSearchParams(location?.locationId ?? null, selectedEventId);
+  useUpdateEventSearchParams(location?.id ?? null, selectedEventId);
 
   const isLongNotes = useMemo(() => {
     return gte(event?.description?.length, 300);
   }, [event?.description]);
 
   const onCopyLink = useCallback(async () => {
-    if (location?.locationId == null || event?.eventId == null) {
+    if (location?.id == null || event?.id == null) {
       toast.error("No location or event found");
     }
-    const url = `${window.location.origin}/?locationId=${location?.locationId}&eventId=${event?.eventId}`;
+    const url = `${window.location.origin}/?locationId=${location?.id}&eventId=${event?.id}`;
     await navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard");
-  }, [event?.eventId, location?.locationId]);
+  }, [event?.id, location?.id]);
 
   const workoutFields = useMemo(
     () => ({
       Name: (
         <>
-          {event?.eventName}
+          {event?.name}
           {isDevMode ? (
             <p className="text-xs text-muted-foreground">
-              event: {event?.eventId}; loc: {location?.locationId}
+              event: {event?.id}; loc: {location?.id}
             </p>
           ) : null}
         </>
@@ -191,7 +189,7 @@ export const WorkoutDetailsContent = ({
           />
         </div>
         <div className="line-clamp-2 flex-1 text-left text-2xl font-bold leading-6 sm:text-4xl">
-          {event?.eventName ?? "Workout Information"}
+          {event?.name ?? "Workout Information"}
         </div>
       </div>
 
@@ -228,12 +226,12 @@ export const WorkoutDetailsContent = ({
         <div className="flex flex-row flex-wrap gap-1">
           {results?.location.events.map((event) => (
             <EventChip
-              key={event.eventId}
-              selected={selectedEventId === event.eventId}
+              key={event.id}
+              selected={selectedEventId === event.id}
               event={{
-                id: event.eventId,
-                name: event.eventName,
-                locationId: results.location.locationId,
+                id: event.id,
+                name: event.name,
+                locationId: results.location.id,
                 dayOfWeek: event.dayOfWeek,
                 startTime: event.startTime,
                 endTime: event.endTime,
@@ -242,7 +240,7 @@ export const WorkoutDetailsContent = ({
               location={{
                 lat: results.location.lat,
                 lon: results.location.lon,
-                id: results.location.locationId,
+                id: results.location.id,
               }}
               size={chipSize}
               hideName={results.location.events.length === 1}

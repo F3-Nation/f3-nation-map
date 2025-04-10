@@ -353,7 +353,7 @@ describe("all editor routers", () => {
       if (result) {
         // Check location object
         expect(result.location).toBeDefined();
-        expect(result.location.locationId).toBe(createdLocationId);
+        expect(result.location.id).toBe(createdLocationId);
         expect(typeof result.location.lat).toBe("number");
         expect(typeof result.location.lon).toBe("number");
         expect(result.location.locationMeta).toEqual({ key: "value" });
@@ -397,10 +397,10 @@ describe("all editor routers", () => {
         // If there are events, check their structure
         if (result.location.events.length > 0) {
           const event = result.location.events[0]!; // Use non-null assertion to fix linter error
-          expect(event.eventId).toBeDefined();
-          expect(event.eventName).toBe("Test Event");
-          expect(event.eventAddress).toBe("Test Event Description");
-          expect(event.eventMeta).toEqual({ key: "value" });
+          expect(event.id).toBeDefined();
+          expect(event.name).toBe("Test Event");
+          expect(event.address).toBe("Test Event Description");
+          expect(event.meta).toEqual({ key: "value" });
           expect(event.dayOfWeek).toBe("monday");
           expect(event.startTime).toBe("0600");
           expect(event.endTime).toBe("0700");

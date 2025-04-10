@@ -746,6 +746,12 @@ importers:
 
   tooling/release-it:
     devDependencies:
+      '@acme/prettier-config':
+        specifier: workspace:^0.1.0
+        version: link:../prettier
+      '@acme/tsconfig':
+        specifier: workspace:^0.1.0
+        version: link:../typescript
       '@release-it/bumper':
         specifier: ^7.0.1
         version: 7.0.2(release-it@18.1.2)

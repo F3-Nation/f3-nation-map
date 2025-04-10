@@ -36,7 +36,7 @@ export const DesktopLocationPanelContent = () => {
   const isMedium = width > Number(BreakPoints.MD);
 
   useEffect(() => {
-    const resultsEventId = results?.location.events[0]?.eventId;
+    const resultsEventId = results?.location.events[0]?.id;
     if (isNumber(resultsEventId)) {
       setSelectedEventId(resultsEventId);
     }
@@ -59,15 +59,15 @@ export const DesktopLocationPanelContent = () => {
           if (!results?.location.regionId || !selectedEventId) return;
 
           const event = results.location.events.find(
-            (e) => e.eventId === selectedEventId,
+            (e) => e.id === selectedEventId,
           );
           if (!event) return;
 
           void vanillaApi.request.submitDeleteRequest
             .mutate({
               regionId: results.location.regionId,
-              eventId: event.eventId,
-              eventName: event.eventName,
+              eventId: event.id,
+              eventName: event.name,
               submittedBy: session?.user?.email ?? "",
             })
             .then((result) => {

@@ -19,13 +19,13 @@ export const useSelectedItem = () => {
   const locationId = selectedItemStore.use.locationId();
   const eventId = selectedItemStore.use.eventId();
   const [debouncedLocationId, setDebouncedLocationId] = useState(locationId);
-  const { data } = api.location.getLocationMarker.useQuery(
-    { id: debouncedLocationId ?? -1 },
+  const { data } = api.location.getAoWorkoutData.useQuery(
+    { locationId: debouncedLocationId ?? -1 },
     { enabled: typeof debouncedLocationId === "number" },
   );
 
   const selectedLocation =
-    debouncedLocationId === locationId ? data : undefined;
+    debouncedLocationId === locationId ? data?.location : undefined;
 
   const position = useMemo(() => {
     const ne = bounds?.getNorthEast();

@@ -16,8 +16,8 @@ import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
 export const SelectedItem = (props: {
-  selectedLocation: F3Marker;
-  selectedEvent: F3Marker["events"][number];
+  selectedLocation: F3Marker["location"];
+  selectedEvent: F3Marker["location"]["events"][number];
   hideCloseButton?: boolean;
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");
@@ -54,13 +54,15 @@ export const SelectedItem = (props: {
           <div className="flex flex-shrink-0 flex-col items-center">
             <ImageWithFallback
               src={
-                selectedLocation.logo ? selectedLocation.logo : "/f3_logo.png"
+                selectedLocation.parentLogo
+                  ? selectedLocation.parentLogo
+                  : "/f3_logo.png"
               }
               fallbackSrc="/f3_logo.png"
               loading="lazy"
               width={64}
               height={64}
-              alt={selectedLocation.logo ?? "F3 logo"}
+              alt={selectedLocation.parentLogo ?? "F3 logo"}
               className="rounded-lg bg-black"
             />
           </div>

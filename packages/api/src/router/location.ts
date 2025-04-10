@@ -231,81 +231,6 @@ export const locationRouter = createTRPCRouter({
 
     return lowBandwidthLocationEvents;
   }),
-  getLocationMarker: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ ctx, input }) => {
-      const aoOrg = aliasedTable(schema.orgs, "ao_org");
-      const locationsAndEvents = await ctx.db
-        .select({
-          // TODO: Reduce the properties as much as possible
-          locations: {
-            id: schema.locations.id,
-            lat: schema.locations.latitude,
-            lon: schema.locations.longitude,
-            name: aoOrg.name,
-            isActive: schema.locations.isActive,
-            created: schema.locations.created,
-            updated: schema.locations.updated,
-            meta: schema.locations.meta,
-            locationDescription: schema.locations.description,
-            orgId: schema.locations.orgId,
-            logo: aoOrg.logoUrl,
-            website: aoOrg.website,
-          },
-          events: {
-            id: schema.events.id,
-            locationId: schema.events.locationId,
-            dayOfWeek: schema.events.dayOfWeek,
-            startTime: schema.events.startTime,
-            endTime: schema.events.endTime,
-            description: schema.events.description,
-            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
-            name: schema.events.name,
-          },
-          // locations: { id: schema.locations.id },
-          // events: { id: schema.events.id },
-        })
-        .from(schema.locations)
-        .where(eq(schema.locations.id, input.id))
-        .innerJoin(
-          schema.events,
-          eq(schema.events.locationId, schema.locations.id),
-        )
-        .leftJoin(aoOrg, eq(schema.locations.orgId, aoOrg.id))
-        .leftJoin(
-          schema.eventsXEventTypes,
-          eq(schema.eventsXEventTypes.eventId, schema.events.id),
-        )
-        .leftJoin(
-          schema.eventTypes,
-          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
-        )
-        .groupBy(
-          schema.events.id,
-          schema.locations.id,
-          aoOrg.logoUrl,
-          aoOrg.website,
-          aoOrg.name,
-        );
-      const locationEvents = locationsAndEvents.reduce(
-        (acc, item) => {
-          const location = item.locations;
-          const event = item.events;
-          acc[location.id] = {
-            ...location,
-            events: [...(acc[location.id]?.events ?? []), event],
-          };
-          return acc;
-        },
-        {} as Record<
-          number,
-          (typeof locationsAndEvents)[0]["locations"] & {
-            events: (typeof locationsAndEvents)[0]["events"][];
-          }
-        >,
-      );
-      return locationEvents[input.id];
-    }),
   getPreviewLocations: publicProcedure.query(async ({ ctx }) => {
     const aoOrg = aliasedTable(schema.orgs, "ao_org");
     const events = await ctx.db
@@ -439,10 +364,10 @@ export const locationRouter = createTRPCRouter({
           // Events as a nested array
           events: sql<
             {
-              eventId: number;
-              eventName: string;
-              eventAddress: string | null;
-              eventMeta: unknown;
+              id: number;
+              name: string;
+              address: string | null;
+              meta: unknown;
               dayOfWeek: DayOfWeek | null;
               startTime: string | null;
               endTime: string | null;
@@ -453,10 +378,10 @@ export const locationRouter = createTRPCRouter({
             COALESCE(
               json_agg(
                 json_build_object(
-                  'eventId', ${schema.events.id},
-                  'eventName', ${schema.events.name},
-                  'eventAddress', ${schema.events.description},
-                  'eventMeta', ${schema.events.meta},
+                  'id', ${schema.events.id},
+                  'name', ${schema.events.name},
+                  'address', ${schema.events.description},
+                  'meta', ${schema.events.meta},
                   'dayOfWeek', ${schema.events.dayOfWeek},
                   'startTime', ${schema.events.startTime},
                   'endTime', ${schema.events.endTime},
@@ -514,7 +439,8 @@ export const locationRouter = createTRPCRouter({
       const hasAO = locationResult.parentType === "ao";
 
       const location = {
-        ...omit(locationResult, "parentRegionId"),
+        ...omit(locationResult, "parentRegionId", "locationId"),
+        id: locationResult.locationId,
         lat: locationResult.lat,
         lon: locationResult.lon,
         parentId: locationResult.parentId,

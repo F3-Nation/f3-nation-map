@@ -34,7 +34,7 @@ const initialState = {
     name: null as string | null,
     type: "default" as NearbyLocationCenterType,
   },
-  modifiedLocationMarkers: {} as Record<number, { lat: number; lon: number }>,
+  modifiedLocationMarkers: {} as Record<number, { lat: number; lng: number }>,
   tiles: "street" as "street" | "hybrid",
   event: "idle" as "idle" | "drag" | "zoom",
   tilesLoaded: false,

@@ -9,6 +9,8 @@ import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
 import { cn } from "@acme/ui";
 
 import { groupMarkerClick } from "~/utils/actions/group-marker-click";
+import { appStore } from "~/utils/store/app";
+import { mapStore } from "~/utils/store/map";
 import {
   selectedItemStore,
   setSelectedItem,
@@ -25,7 +27,11 @@ interface TreeMarkerProps {
   ) => void;
 }
 
-export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
+export const FeatureMarker = ({
+  position: _position,
+  featureId,
+}: TreeMarkerProps) => {
+  const mode = appStore.use.mode();
   const { filteredLocationMarkers } = useFilteredMapResults();
   const selectedLocationId = selectedItemStore.use.locationId();
   const selectedEventId = selectedItemStore.use.eventId();
@@ -34,6 +40,11 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
   const { isTouchDevice: touchDevice } = useTouchDevice();
   const [markerRef] = useAdvancedMarkerRef();
   const id = Number(featureId);
+  const modifiedLocation = mapStore.useBoundStore(
+    (s) => s.modifiedLocationMarkers[id],
+  );
+  const position = modifiedLocation ?? _position;
+  // const position = _position;
 
   const events = filteredLocationMarkers?.find(
     (marker) => marker.id === id,
@@ -60,12 +71,29 @@ export const FeatureMarker = ({ position, featureId }: TreeMarkerProps) => {
     [],
   );
 
+  const handleDragEnd = (e: google.maps.MapMouseEvent) => {
+    e.stop();
+    const lat = e.latLng?.lat();
+    const lng = e.latLng?.lng();
+
+    if (!lat || !lng) return;
+
+    mapStore.setState({
+      modifiedLocationMarkers: {
+        ...mapStore.get("modifiedLocationMarkers"),
+        [id]: { lat, lng },
+      },
+    });
+  };
+
   return !events?.length ? null : (
     <AdvancedMarker
       ref={markerRef}
+      draggable={mode === "edit"}
       position={position}
       anchorPoint={AdvancedMarkerAnchorPoint.BOTTOM}
       className={"marker feature"}
+      onDragEnd={handleDragEnd}
       onClick={(e) => {
         // Must call stop to prevent the map from being clicked
         e.stop();

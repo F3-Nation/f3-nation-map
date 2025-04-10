@@ -5,6 +5,7 @@ import {
 } from "~/utils/store/selected-item";
 import { isTouchDevice } from "../is-touch-device";
 import { setView } from "../set-view";
+import { mapStore } from "../store/map";
 
 export const groupMarkerClick = async ({
   locationId,
@@ -17,12 +18,15 @@ export const groupMarkerClick = async ({
   const isAlreadySelected =
     selectedItemStore.get("locationId") === locationId &&
     selectedItemStore.get("eventId") === eventId;
-  const location = await queryClientUtils.location.getLocationMarker.fetch({
-    id: locationId,
+  const location = await queryClientUtils.location.getAoWorkoutData.fetch({
+    locationId,
   });
   if (!location) return;
 
-  const { lat, lon } = location;
+  const modifiedLocation = mapStore.get("modifiedLocationMarkers")[locationId];
+
+  const lat = modifiedLocation?.lat ?? location.location.lat;
+  const lon = modifiedLocation?.lng ?? location.location.lon;
   if (lat === null || lon === null) return;
 
   setSelectedItem({

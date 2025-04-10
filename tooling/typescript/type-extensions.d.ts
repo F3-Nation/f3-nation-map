@@ -27,7 +27,7 @@ type OrgRole = {
 interface AdapterUser {
   id: number;
   email: string;
-  emailVerified: string | null;
+  emailVerified: Date | null;
   roles: OrgRole[];
 }
 
