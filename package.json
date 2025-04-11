@@ -1,6 +1,6 @@
 {
   "name": "f3-nation-map",
-  "version": "0.50.0",
+  "version": "0.51.0",
   "private": true,
   "engines": {
     "node": ">=20.19.0"
