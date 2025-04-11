@@ -8,7 +8,7 @@ import { EDITOR_PATHS, routes } from "@acme/shared/app/constants";
 
 import type { MiddlewareFactory } from "./types";
 
-const withAdmin: MiddlewareFactory = (next: NextMiddleware) => {
+const withEditor: MiddlewareFactory = (next: NextMiddleware) => {
   return async (request: NextRequest, _next: NextFetchEvent) => {
     const res = await next(request, _next);
 
@@ -51,4 +51,4 @@ const withAdmin: MiddlewareFactory = (next: NextMiddleware) => {
   };
 };
 
-export default withAdmin;
+export default withEditor;
