@@ -138,7 +138,7 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   eventDayOfWeek: z.enum(DayOfWeek, {
     message: "Day of the week is required",
   }),
-  aoName: (s) => s.min(1, { message: "Location / AO name is required" }),
+  aoName: (s) => s.min(1, { message: "AO name is required" }),
   // Location fields are optional
   // locationAddress: (s) => s.min(1, { message: "Location address is required" }),
   // locationCity: (s) => s.min(1, { message: "Location city is required" }),

@@ -1,4 +1,5 @@
 import { ZustandStore } from "@acme/shared/common/classes";
+import { isDevelopment } from "@acme/shared/common/constants";
 
 import { isTouchDevice } from "../is-touch-device";
 import { ModalType, openModal } from "./modal";
@@ -49,11 +50,13 @@ export const setSelectedItem = (item: {
   showPanel: boolean;
 }) => {
   // Get caller information from stack trace
-  const stackTrace = new Error().stack;
-  const callerInfo =
-    stackTrace?.split("\n")[2]?.trim().split("/").slice(-1)[0] ??
-    "Unknown caller";
-  console.log("setSelectedItem called by:", callerInfo, "with params:", item);
+  if (isDevelopment) {
+    const stackTrace = new Error().stack;
+    const callerInfo =
+      stackTrace?.split("\n")[2]?.trim().split("/").slice(-1)[0] ??
+      "Unknown caller";
+    console.log("setSelectedItem called by:", callerInfo, "with params:", item);
+  }
 
   const touchDevice = isTouchDevice();
   const newSelectedItemStore: Partial<SelectedItemStore> = {

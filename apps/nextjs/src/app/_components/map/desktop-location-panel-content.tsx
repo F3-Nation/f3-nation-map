@@ -24,10 +24,11 @@ export const DesktopLocationPanelContent = () => {
 
   const open = panelLocationId !== null;
   const locationId = panelLocationId ?? -1;
-  const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
-    { locationId },
-    { enabled: locationId >= 0 && open },
-  );
+  const { data: results, isLoading } =
+    api.location.getLocationWorkoutData.useQuery(
+      { locationId },
+      { enabled: locationId >= 0 && open },
+    );
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     panelEventId,
   );

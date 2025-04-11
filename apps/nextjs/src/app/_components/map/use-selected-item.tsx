@@ -18,14 +18,27 @@ export const useSelectedItem = () => {
   const debounceAmount = isClose ? 0 : 300;
   const locationId = selectedItemStore.use.locationId();
   const eventId = selectedItemStore.use.eventId();
+  const modifiedLocationMarkers = mapStore.use.modifiedLocationMarkers();
   const [debouncedLocationId, setDebouncedLocationId] = useState(locationId);
-  const { data } = api.location.getAoWorkoutData.useQuery(
+  const { data } = api.location.getLocationWorkoutData.useQuery(
     { locationId: debouncedLocationId ?? -1 },
     { enabled: typeof debouncedLocationId === "number" },
   );
 
-  const selectedLocation =
-    debouncedLocationId === locationId ? data?.location : undefined;
+  const selectedLocation = useMemo(() => {
+    if (debouncedLocationId !== locationId) return undefined;
+
+    const selectedLocation = data?.location;
+    if (!selectedLocation) return undefined;
+
+    const modifiedLocationMarker = modifiedLocationMarkers[selectedLocation.id];
+    if (!modifiedLocationMarker) return selectedLocation;
+
+    selectedLocation.lat = modifiedLocationMarker.lat;
+    selectedLocation.lon = modifiedLocationMarker.lng;
+
+    return selectedLocation;
+  }, [debouncedLocationId, locationId, data, modifiedLocationMarkers]);
 
   const position = useMemo(() => {
     const ne = bounds?.getNorthEast();
@@ -53,14 +66,18 @@ export const useSelectedItem = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoom is not a dependency but we need to monitor its changes
   }, [selectedLocation?.lat, selectedLocation?.lon, map, zoom, bounds]);
 
-  const selectedEvent = !selectedLocation
-    ? undefined
-    : // check for null or undefined
-      eventId === null || eventId === undefined
-      ? // get the first of the week (monday is first)
-        selectedLocation.events[0]
-      : // use == incase it is a string
-        selectedLocation.events.find((event) => event.id == eventId);
+  const selectedEvent = useMemo(
+    () =>
+      !selectedLocation
+        ? undefined
+        : // check for null or undefined
+          eventId === null || eventId === undefined
+          ? // get the first of the week (monday is first)
+            selectedLocation.events[0]
+          : // use == incase it is a string
+            selectedLocation.events.find((event) => event.id == eventId),
+    [selectedLocation, eventId],
+  );
 
   // Create memoized debounced function
   const debouncedSetSelectedItem = useMemo(

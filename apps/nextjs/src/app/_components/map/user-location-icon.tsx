@@ -1,6 +1,6 @@
 "use client";
 
-import type { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
+import type { DetailedHTMLProps, HTMLAttributes } from "react";
 import { LocateFixed } from "lucide-react";
 
 import { cn } from "@acme/ui";
@@ -14,30 +14,25 @@ import { useUserLocation } from "./user-location-provider";
 export const UserLocationIcon = ({
   className,
   ...rest
-}: DetailedHTMLProps<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  HTMLButtonElement
->) => {
+}: DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>) => {
   const { updateUserLocation, status, permissions } = useUserLocation();
 
   return (
     <Tooltip disableHoverableContent>
-      <TooltipTrigger>
+      <TooltipTrigger
+        onClick={() => {
+          const touchDevice = isTouchDevice();
+          if (touchDevice && status !== "success") {
+            openModal(ModalType.USER_LOCATION_INFO);
+          } else {
+            updateUserLocation();
+          }
+        }}
+      >
         <div className={"flex flex-col lg:mx-2.5"}>
-          <button
-            onClick={() => {
-              console.log("updateUserLocation");
-              const touchDevice = isTouchDevice();
-              if (touchDevice && status !== "success") {
-                openModal(ModalType.USER_LOCATION_INFO);
-              } else {
-                updateUserLocation();
-              }
-            }}
-            draggable="false"
+          <div
             aria-label="My Location"
             title="My Location"
-            type="button"
             className={cn(
               "cursor-pointer appearance-none overflow-hidden",
               "relative block",
@@ -62,7 +57,7 @@ export const UserLocationIcon = ({
                 className={cn("size-7 text-[#666]")} // Matching the Settings icon style
               />
             </div>
-          </button>
+          </div>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="mr-4 flex max-w-40 flex-col gap-2">

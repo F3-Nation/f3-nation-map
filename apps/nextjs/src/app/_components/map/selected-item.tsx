@@ -54,15 +54,15 @@ export const SelectedItem = (props: {
           <div className="flex flex-shrink-0 flex-col items-center">
             <ImageWithFallback
               src={
-                selectedLocation.parentLogo
-                  ? selectedLocation.parentLogo
+                selectedLocation.regionLogo
+                  ? selectedLocation.regionLogo
                   : "/f3_logo.png"
               }
               fallbackSrc="/f3_logo.png"
               loading="lazy"
               width={64}
               height={64}
-              alt={selectedLocation.parentLogo ?? "F3 logo"}
+              alt={selectedLocation.regionLogo ?? "F3 logo"}
               className="rounded-lg bg-black"
             />
           </div>

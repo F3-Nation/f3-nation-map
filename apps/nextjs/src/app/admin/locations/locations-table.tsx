@@ -62,12 +62,6 @@ const columns: TableOptions<
     cell: (cell) => <Cell {...cell} />,
   },
   {
-    accessorKey: "aoName",
-    meta: { name: "AO" },
-    header: Header,
-    cell: (cell) => <Cell {...cell} />,
-  },
-  {
     accessorKey: "isActive",
     meta: { name: "Status" },
     header: Header,

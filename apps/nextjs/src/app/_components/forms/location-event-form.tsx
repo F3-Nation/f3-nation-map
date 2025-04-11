@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { DayOfWeek } from "@acme/shared/app/enums";
 import { Case } from "@acme/shared/common/enums";
-import { convertCase } from "@acme/shared/common/functions";
+import { convertCase, isTruthy } from "@acme/shared/common/functions";
 import { Button } from "@acme/ui/button";
 import { Input } from "@acme/ui/input";
 import {
@@ -45,26 +45,34 @@ export const LocationEventForm = ({
   const formId = form.watch("id");
   const formRegionId = form.watch("regionId");
   const formLocationId = form.watch("locationId");
+  const formAoId = form.watch("aoId");
 
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
+  const { data: aos } = api.ao.all.useQuery();
   const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
 
   const sortedLocationOptions = useMemo(() => {
     return locations?.locations
-      ?.map(({ locationName, aoName, id, regionName, regionId }) => ({
-        label: `${locationName || aoName} ${regionName ? `(${regionName})` : ""}`,
-        value: id.toString(),
-        regionId,
-      }))
       ?.sort((a, b) =>
         a.regionId === formRegionId && b.regionId !== formRegionId
           ? -1
           : a.regionId !== formRegionId && b.regionId === formRegionId
             ? 1
-            : a.label.localeCompare(b.label),
-      );
+            : a.locationName.localeCompare(b.locationName),
+      )
+      ?.map((l) => ({
+        labelComponent: (
+          <span>
+            {`${l.locationName}${l.regionName ? ` (${l.regionName})` : ""}`}
+            <span className="text-foreground/30">{` ${[l.addressStreet, l.addressStreet2, l.addressCity, l.addressState, l.addressZip, l.addressCountry].filter(isTruthy).join(", ")}`}</span>
+          </span>
+        ),
+        label: `${l.locationName}${l.regionName ? ` (${l.regionName})` : ""} ${[l.addressStreet, l.addressStreet2, l.addressCity, l.addressState, l.addressZip, l.addressCountry].filter(isTruthy).join(", ")}`,
+        value: l.id.toString(),
+        regionId: l.regionId,
+      }));
   }, [locations, formRegionId]);
 
   return (
@@ -180,14 +188,15 @@ export const LocationEventForm = ({
         </div>
       </div>
       <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-        Location Details:
+        Physical Location Details:
       </h2>
       <div className="text-sm font-medium text-muted-foreground">
-        Existing Location / AO (Region)
+        Existing location
       </div>
       <div className="mb-3">
         <VirtualizedCombobox
           key={formLocationId?.toString()}
+          className="w-full"
           options={sortedLocationOptions ?? []}
           value={formLocationId?.toString()}
           onSelect={(item) => {
@@ -198,12 +207,6 @@ export const LocationEventForm = ({
             if (!location) return;
 
             // Handle different property names between components
-
-            form.setValue(
-              "aoName",
-              // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- avoid ""
-              location.aoName || location.locationName || "",
-            );
             form.setValue("locationDescription", location.description ?? "");
             form.setValue("locationAddress", location.addressStreet);
             form.setValue("locationAddress2", location.addressStreet2);
@@ -241,11 +244,10 @@ export const LocationEventForm = ({
         />
         <div className="mx-3 text-xs text-muted-foreground">
           Select a location above to move this workout to a different location
-          (AO)
         </div>
       </div>
       <div className="my-2 text-base font-bold text-foreground">
-        The fields below update the location / AO for all associated workouts
+        The fields below update the location for all associated workouts
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -275,15 +277,6 @@ export const LocationEventForm = ({
           />
           <p className="text-xs text-destructive">
             {form.formState.errors.regionId?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location / AO Name
-          </div>
-          <Input {...form.register("aoName")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.aoName?.message}
           </p>
         </div>
         <div className="space-y-2">
@@ -372,9 +365,52 @@ export const LocationEventForm = ({
         </div>
       </div>
       <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-        Other Details:
+        AO Details:
       </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-muted-foreground">
+            Existing AO
+          </div>
+          <div className="mb-3">
+            <VirtualizedCombobox
+              key={formAoId?.toString()}
+              options={
+                aos?.aos
+                  ?.map((ao) => ({
+                    label: `${ao.name} (${ao.region})`,
+                    value: ao.id.toString(),
+                  }))
+                  .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+              }
+              value={formAoId?.toString()}
+              onSelect={(item) => {
+                const ao = aos?.aos?.find((ao) => ao.id.toString() === item);
+                if (ao) {
+                  form.setValue("aoId", ao.id);
+                  form.setValue("aoName", ao.name);
+                  form.setValue("aoLogo", ao.logoUrl);
+                }
+              }}
+              searchPlaceholder="Select"
+            />
+            <div className="mx-3 text-xs text-muted-foreground">
+              Select an AO above to move this workout to a different AO
+            </div>
+          </div>
+          <p className="text-xs text-destructive">
+            {form.formState.errors.aoId?.message}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-muted-foreground">
+            AO Name
+          </div>
+          <Input {...form.register("aoName")} />
+          <p className="text-xs text-destructive">
+            {form.formState.errors.aoName?.message}
+          </p>
+        </div>
         <div className="space-y-2">
           <div className="text-sm font-medium text-muted-foreground">
             AO Logo
@@ -434,6 +470,11 @@ export const LocationEventForm = ({
             {form.formState.errors.aoLogo?.message}
           </p>
         </div>
+      </div>
+      <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+        Other Details:
+      </h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <div className="text-sm font-medium text-muted-foreground">
             Submitter Email
@@ -485,13 +526,15 @@ export const DevLoadTestData = () => {
 export const FormDebugData = () => {
   const form = useUpdateLocationFormContext();
   const formId = form.watch("id");
+  const formEventId = form.watch("eventId");
+  const formAoId = form.watch("aoId");
   const formRegionId = form.watch("regionId");
   const formLocationId = form.watch("locationId");
-  const formEventId = form.watch("eventId");
   return (
     <div className="flex flex-col gap-1">
       <p className="text-sm text-muted-foreground">formId: {formId};</p>
       <p className="text-sm text-muted-foreground">regionId: {formRegionId};</p>
+      <p className="text-sm text-muted-foreground">aoId: {formAoId};</p>
       <p className="text-sm text-muted-foreground">
         locationId: {formLocationId};
       </p>

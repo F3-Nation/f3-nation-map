@@ -1,5 +1,5 @@
 {
-  "id": "31537424-6dec-4198-8ca3-f68eb07fcbbe",
+  "id": "80fe1e10-0593-4fcb-9717-4c6e62556733",
   "prevId": "50806772-c0d6-409e-871b-5d92734b9596",
   "version": "7",
   "dialect": "postgresql",
@@ -2846,6 +2846,12 @@
         "location_contact_email": {
           "name": "location_contact_email",
           "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ao_id": {
+          "name": "ao_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },

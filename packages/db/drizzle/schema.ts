@@ -593,6 +593,7 @@ export const updateRequests = pgTable(
     locationLng: real("location_lng"),
     locationId: integer("location_id"),
     locationContactEmail: varchar("location_contact_email"),
+    aoId: integer("ao_id"),
     aoName: varchar("ao_name"),
     aoLogo: varchar("ao_logo"),
     submittedBy: varchar("submitted_by").notNull(),

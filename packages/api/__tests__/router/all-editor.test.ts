@@ -286,11 +286,6 @@ describe("all editor routers", () => {
       expect(result).toBeDefined();
     });
 
-    it("should get preview locations", async () => {
-      const result = await caller.location.getPreviewLocations();
-      expect(result).toBeDefined();
-    });
-
     it("should get regions with location", async () => {
       const result = await caller.location.getRegionsWithLocation();
       expect(result).toBeDefined();
@@ -343,7 +338,7 @@ describe("all editor routers", () => {
       if (!createdLocationId) {
         throw new Error("Created location ID is undefined");
       }
-      const result = await caller.location.getAoWorkoutData({
+      const result = await caller.location.getLocationWorkoutData({
         locationId: createdLocationId,
       });
 
@@ -371,12 +366,6 @@ describe("all editor routers", () => {
         );
         expect(result.location.orgId).toBe(TEST_REGION_2_ORG_ID);
 
-        // Check parent fields
-        expect(result.location.parentId).toBe(TEST_REGION_2_ORG_ID);
-        expect(result.location.parentLogo).toBeDefined();
-        expect(result.location.parentWebsite).toBeDefined();
-        expect(result.location.parentName).toBeDefined();
-
         // Check Region fields
         expect(result.location.regionId).toBe(TEST_REGION_2_ORG_ID);
         expect(result.location.regionLogo).toBeDefined();
@@ -399,13 +388,17 @@ describe("all editor routers", () => {
           const event = result.location.events[0]!; // Use non-null assertion to fix linter error
           expect(event.id).toBeDefined();
           expect(event.name).toBe("Test Event");
-          expect(event.address).toBe("Test Event Description");
-          expect(event.meta).toEqual({ key: "value" });
           expect(event.dayOfWeek).toBe("monday");
           expect(event.startTime).toBe("0600");
           expect(event.endTime).toBe("0700");
           expect(event.description).toBe("Test Event Description");
           expect(Array.isArray(event.types)).toBe(true);
+
+          // Check parent fields
+          expect(event.aoId).toBe(TEST_REGION_2_ORG_ID);
+          expect(event.aoLogo).toBeDefined();
+          expect(event.aoWebsite).toBeDefined();
+          expect(event.aoName).toBeDefined();
         }
       }
     });

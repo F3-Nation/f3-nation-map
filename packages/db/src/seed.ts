@@ -654,10 +654,12 @@ export async function insertData(data: {
     .insert(schema.locations)
     .values(
       Object.values(uniqueAOsWithWorkouts).map(({ ao, events }) => {
+        const aoRegion = regions.find((r) => r.id === ao.regionId);
+        if (aoRegion == undefined) throw new Error("AO region not found");
         const aoOrg = aoOrgKeyDict[ao.key];
         if (aoOrg == undefined) throw new Error("AO org not found");
         if (!isNumber(aoOrg.id)) throw new Error("AO org id is not a number");
-        const aoData: InferInsertModel<typeof schema.locations> = {
+        const locationData: InferInsertModel<typeof schema.locations> = {
           name: aoOrg.name,
           isActive: true,
           addressStreet: events[0]?.["Address 1"],
@@ -669,7 +671,7 @@ export async function insertData(data: {
           description: aoOrg?.description, // AOs description is the address
           latitude: safeParseFloat(ao.latitude),
           longitude: safeParseFloat(ao.longitude),
-          orgId: aoOrg.id,
+          orgId: aoRegion.id,
           meta: {
             latLonKey: ao.key,
             address1: events[0]?.["Address 1"],
@@ -681,7 +683,7 @@ export async function insertData(data: {
             mapSeed: true,
           },
         };
-        return aoData;
+        return locationData;
       }),
     )
     .returning();

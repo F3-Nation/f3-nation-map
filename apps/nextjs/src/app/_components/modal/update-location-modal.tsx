@@ -90,8 +90,7 @@ export const UpdateLocationModal = ({
           toast.error("Failed to submit update request");
           throw new Error("Failed to submit update request");
         } else if (result.status === "approved") {
-          void utils.location.invalidate();
-          void utils.event.invalidate();
+          void utils.invalidate();
           toast.success("Update request automatically applied");
           router.refresh();
         }
@@ -161,6 +160,7 @@ export const UpdateLocationModal = ({
     form.setValue("locationLng", data.lng);
     form.setValue("locationDescription", data.locationDescription ?? "");
 
+    form.setValue("aoId", data.aoId ?? null);
     form.setValue("aoName", data.aoName ?? "");
     form.setValue("aoLogo", data.aoLogo ?? "");
 
@@ -200,7 +200,7 @@ export const UpdateLocationModal = ({
         className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
       >
         <Form {...form}>
-          <form className="w-[inherit]" onSubmit={onSubmit}>
+          <form className="w-[inherit] overflow-x-hidden" onSubmit={onSubmit}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
                 {data.requestType === "edit"

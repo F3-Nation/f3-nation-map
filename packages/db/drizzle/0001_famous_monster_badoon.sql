@@ -362,6 +362,7 @@ CREATE TABLE "update_requests" (
 	"location_lng" real,
 	"location_id" integer,
 	"location_contact_email" varchar,
+	"ao_id" integer,
 	"ao_name" varchar,
 	"ao_logo" varchar,
 	"submitted_by" varchar NOT NULL,

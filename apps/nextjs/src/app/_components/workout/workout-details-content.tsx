@@ -31,7 +31,7 @@ import { EventChip } from "../map/event-chip";
 import { WorkoutDetailsSkeleton } from "../modal/workout-details-skeleton";
 
 export interface WorkoutDetailsContentProps {
-  results?: RouterOutputs["location"]["getAoWorkoutData"];
+  results?: RouterOutputs["location"]["getLocationWorkoutData"];
   isLoading: boolean;
   selectedEventId: number | null;
   onEditClick?: () => void;
@@ -116,8 +116,8 @@ export const WorkoutDetailsContent = ({
       ),
       What: event?.types.join(", "),
       Where: [
-        location?.parentName ? (
-          <p key="parentName">{location.parentName}</p>
+        location?.regionName ? (
+          <p key="regionName">{location.regionName}</p>
         ) : null,
         location?.fullAddress ? (
           <Link
@@ -139,13 +139,13 @@ export const WorkoutDetailsContent = ({
         ) : null,
       ].filter(isTruthy),
       When: event ? getWhenFromWorkout(event) : "",
-      Website: location?.parentWebsite ? (
+      Website: location?.regionWebsite ? (
         <Link
-          href={location.parentWebsite}
+          href={location.regionWebsite}
           target="_blank"
           className="underline"
         >
-          {location.parentWebsite}
+          {location.regionWebsite}
         </Link>
       ) : null,
       Notes: event?.description ? textLink(event.description) : null,
@@ -179,12 +179,12 @@ export const WorkoutDetailsContent = ({
       <div className="flex flex-row flex-wrap items-center justify-start gap-x-2">
         <div className="flex flex-shrink-0 flex-col items-center">
           <ImageWithFallback
-            src={location?.parentLogo ? location.parentLogo : "/f3_logo.png"}
+            src={location?.regionLogo ? location.regionLogo : "/f3_logo.png"}
             fallbackSrc="/f3_logo.png"
             loading="lazy"
             width={64}
             height={64}
-            alt={location?.parentLogo ?? "F3 logo"}
+            alt={location?.regionLogo ?? "F3 logo"}
             className="rounded-lg bg-black"
           />
         </div>

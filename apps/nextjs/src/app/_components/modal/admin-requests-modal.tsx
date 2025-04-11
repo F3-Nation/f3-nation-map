@@ -129,6 +129,7 @@ export default function AdminRequestsModal({
       eventTypeIds: request.eventTypeIds ?? [],
       eventDescription: request.eventDescription ?? "",
       regionId: request.regionId ?? null,
+      aoId: request.aoId ?? null,
       aoName: request.aoName ?? "",
       aoLogo: request.aoLogo ?? "",
       submittedBy: request.submittedBy ?? "",
@@ -143,7 +144,7 @@ export default function AdminRequestsModal({
         className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
       >
         <Form {...form}>
-          <form onSubmit={onSubmit}>
+          <form className="w-[inherit] overflow-x-hidden" onSubmit={onSubmit}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
                 Edit Request
