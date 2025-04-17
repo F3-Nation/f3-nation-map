@@ -41,6 +41,8 @@ const initialState = {
   showDebug: false,
   loaded: false,
   hasMovedMap: false,
+  // This allows us to be precise with zoom level when clicking on a cluster
+  fractionalZoom: false,
 };
 
 export type MapStoreState = typeof initialState;

@@ -135,6 +135,7 @@ const ProvidedGoogleMapComponent = memo(
     const { isMobileWidth } = useIsMobileWidth();
     const { resolvedTheme } = useTheme();
 
+    const fractionalZoom = mapStore.use.fractionalZoom();
     const tiles = mapStore.use.tiles();
     const mapTiles = MAP_CONFIGS.find((map) =>
       tiles !== "street"
@@ -182,6 +183,7 @@ const ProvidedGoogleMapComponent = memo(
           }}
           cameraControl={false}
           disableDoubleClickZoom
+          isFractionalZoomEnabled={fractionalZoom}
           // styles={[ { featureType: "all", elementType: "all", stylers: [{ visibility: "off" }], }, ]}
           onClick={(e) => {
             console.log("map on click", e);
