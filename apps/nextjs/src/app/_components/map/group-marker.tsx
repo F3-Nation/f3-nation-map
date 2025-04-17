@@ -71,20 +71,23 @@ export const FeatureMarker = ({
     [],
   );
 
-  const handleDragEnd = (e: google.maps.MapMouseEvent) => {
-    e.stop();
-    const lat = e.latLng?.lat();
-    const lng = e.latLng?.lng();
+  const handleDragEnd = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      e.stop();
+      const lat = e.latLng?.lat();
+      const lng = e.latLng?.lng();
 
-    if (!lat || !lng) return;
+      if (!lat || !lng) return;
 
-    mapStore.setState({
-      modifiedLocationMarkers: {
-        ...mapStore.get("modifiedLocationMarkers"),
-        [id]: { lat, lng },
-      },
-    });
-  };
+      mapStore.setState({
+        modifiedLocationMarkers: {
+          ...mapStore.get("modifiedLocationMarkers"),
+          [id]: { lat, lng },
+        },
+      });
+    },
+    [id],
+  );
 
   return !events?.length ? null : (
     <AdvancedMarker
@@ -95,6 +98,17 @@ export const FeatureMarker = ({
       className={"marker feature"}
       onDragEnd={handleDragEnd}
       onClick={(e) => {
+        // There are some places on the icon where the button is not clicked
+        // but the marker is clicked (bottom left and right corners)
+        // This is also necessary for mobile edit mode clicks
+        const eventId = events.find(
+          (event) => event.id === selectedEventId,
+        )?.id;
+        handleClick({
+          locationId: id,
+          eventId: eventId ?? events[0]?.id,
+        });
+
         // Must call stop to prevent the map from being clicked
         e.stop();
       }}
