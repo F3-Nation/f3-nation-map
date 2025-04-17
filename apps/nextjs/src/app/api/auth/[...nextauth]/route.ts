@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { handlers } from "@acme/auth";
 
 type Action = "callback" | "signin" | "session";
-type Provider = "email-password" | "credentials";
+type Provider = "email-password" | "credentials" | "dev-mode";
 
 export const POST = async (
   req: NextRequest,

@@ -14,7 +14,7 @@ import { cn } from "@acme/ui";
 import { toast } from "@acme/ui/toast";
 
 import type { RouterOutputs } from "~/trpc/types";
-import { isDevMode } from "~/trpc/util";
+import { isProd } from "~/trpc/util";
 import { dayjs } from "~/utils/frontendDayjs";
 import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { appStore } from "~/utils/store/app";
@@ -107,7 +107,7 @@ export const WorkoutDetailsContent = ({
       Name: (
         <>
           {event?.name}
-          {isDevMode ? (
+          {!isProd ? (
             <p className="text-xs text-muted-foreground">
               event: {event?.id}; loc: {location?.id}
             </p>

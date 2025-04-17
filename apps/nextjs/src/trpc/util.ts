@@ -6,4 +6,4 @@ export function getBaseUrl() {
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
-export const isDevMode = env.NEXT_PUBLIC_CHANNEL !== "prod";
+export const isProd = env.NEXT_PUBLIC_CHANNEL === "prod";

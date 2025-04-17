@@ -25,7 +25,7 @@ import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { isDevMode } from "~/trpc/util";
+import { isProd } from "~/trpc/util";
 import { useUpdateLocationForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
 import { closeModal } from "~/utils/store/modal";
@@ -208,7 +208,7 @@ export const UpdateLocationModal = ({
                   : data.requestType === "create_location"
                     ? "New Location"
                     : "New Event"}
-                {isDevMode && <FormDebugData />}
+                {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
 
@@ -242,7 +242,7 @@ export const UpdateLocationModal = ({
               >
                 Cancel
               </Button>
-              {isDevMode && <DevLoadTestData />}
+              {!isProd && <DevLoadTestData />}
             </div>
           </form>
         </Form>
