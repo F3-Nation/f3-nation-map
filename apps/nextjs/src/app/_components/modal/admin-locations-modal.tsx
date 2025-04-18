@@ -51,12 +51,11 @@ export default function AdminLocationsModal({
   const utils = api.useUtils();
   const { data: location } = api.location.byId.useQuery({ id: data.id ?? -1 });
   const { data: regions } = api.region.all.useQuery();
-  const { data: aoData } = api.ao.all.useQuery();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
-    schema: LocationInsertSchema.extend({
+    schema: LocationInsertSchema.omit({ orgId: true }).extend({
       regionId: z.number(),
       longitude: z.string(),
       latitude: z.string(),
@@ -72,7 +71,6 @@ export default function AdminLocationsModal({
       email: location?.email ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
-      orgId: location?.orgId ?? -1,
       regionId: location?.regionId ?? -1,
       latitude: location?.latitude
         ? location.latitude.toString()
@@ -121,9 +119,8 @@ export default function AdminLocationsModal({
         </DialogHeader>
 
         <div className="flex flex-wrap">
-          Locations are the the placements of workouts. They are usually
-          associated with AOs. If you are creating a new location, you must
-          associate it with an AO or create an AO first.
+          Locations are the the placements of workouts. They are grouped by
+          regions.
           <div className="w-1/2">
             <Form {...form}>
               <form
@@ -131,8 +128,13 @@ export default function AdminLocationsModal({
                   async (data) => {
                     setIsSubmitting(true);
                     try {
+                      if (!data?.regionId) {
+                        toast.error("Region not found");
+                        return;
+                      }
                       await crupdateLocation.mutateAsync({
                         ...data,
+                        orgId: data.regionId,
                         latitude: safeParseFloat(data.latitude),
                         longitude: safeParseFloat(data.longitude),
                       });
@@ -228,42 +230,6 @@ export default function AdminLocationsModal({
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
-                  </div>
-                  <div className="mb-4 w-1/2 px-2">
-                    <FormField
-                      control={form.control}
-                      name="orgId"
-                      render={({ field }) => {
-                        const filteredAOs = aoData?.aos.filter(
-                          (ao) => ao.parentId === form.watch("regionId"),
-                        );
-                        return (
-                          <FormItem key={`ao-${field.value}`}>
-                            <FormLabel>AO</FormLabel>
-                            <VirtualizedCombobox
-                              value={field.value?.toString()}
-                              options={
-                                filteredAOs?.map((ao) => ({
-                                  value: ao.id.toString(),
-                                  label: ao.name,
-                                })) ?? []
-                              }
-                              searchPlaceholder="Select an AO in this region"
-                              onSelect={(value) => {
-                                const aoId = safeParseInt(value as string);
-                                if (aoId == null) {
-                                  toast.error("Invalid aoId");
-                                  return;
-                                }
-                                field.onChange(aoId);
-                              }}
-                              isMulti={false}
-                            />
-                            <FormMessage />
-                          </FormItem>
-                        );
-                      }}
                     />
                   </div>
 
@@ -504,8 +470,10 @@ export default function AdminLocationsModal({
                           variant="outline"
                           onClick={() => {
                             form.setValue("name", "Fake Location");
-                            form.setValue("regionId", 1);
-                            form.setValue("orgId", 1);
+                            form.setValue(
+                              "regionId",
+                              regions?.find((r) => r.name === "Boone")?.id ?? 1,
+                            );
                             form.setValue("email", "fake@example.com");
                             form.setValue("latitude", "37.7749");
                             form.setValue("longitude", "-122.4194");

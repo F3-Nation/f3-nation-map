@@ -29,6 +29,7 @@ export enum ModalType {
   ABOUT_MAP = "ABOUT_MAP",
 }
 export enum DeleteType {
+  USER = "USER",
   AREA = "AREA",
   AO = "AO",
   EVENT = "EVENT",

@@ -34,9 +34,7 @@ export const EmailAuthSchema = UserInsertSchema.pick({
 });
 
 // LOCATION SCHEMA
-export const LocationInsertSchema = createInsertSchema(locations).extend({
-  aoName: z.string().min(1, { message: "Location / AO name is required" }),
-});
+export const LocationInsertSchema = createInsertSchema(locations);
 export const LocationSelectSchema = createSelectSchema(locations);
 
 // EVENT SCHEMA

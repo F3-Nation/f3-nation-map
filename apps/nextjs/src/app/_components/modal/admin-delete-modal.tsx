@@ -15,6 +15,7 @@ import {
 import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
+import { api } from "~/trpc/react";
 import { vanillaApi } from "~/trpc/vanilla";
 import { closeModal, DeleteType } from "~/utils/store/modal";
 
@@ -25,6 +26,7 @@ export default function AdminDeleteModal({
 }) {
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
+  const utils = api.useUtils();
 
   let mutation: ({ id }: { id: number }) => Promise<void>;
 
@@ -47,6 +49,9 @@ export default function AdminDeleteModal({
     case DeleteType.EVENT:
       mutation = vanillaApi.event.delete.mutate;
       break;
+    case DeleteType.USER:
+      mutation = vanillaApi.user.delete.mutate;
+      break;
     default:
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       throw new Error(`Invalid delete type: ${data.type}`);
@@ -58,6 +63,33 @@ export default function AdminDeleteModal({
       .then(() => {
         closeModal();
         toast.success(`Successfully deleted ${data.type.toLowerCase()}`);
+
+        switch (data.type) {
+          case DeleteType.NATION:
+            void utils.nation.invalidate();
+            break;
+          case DeleteType.SECTOR:
+            void utils.sector.invalidate();
+            break;
+          case DeleteType.AREA:
+            void utils.area.invalidate();
+            break;
+          case DeleteType.REGION:
+            void utils.region.invalidate();
+            break;
+          case DeleteType.AO:
+            void utils.ao.invalidate();
+            break;
+          case DeleteType.EVENT:
+            void utils.event.invalidate();
+            break;
+          case DeleteType.USER:
+            void utils.user.invalidate();
+            break;
+          default:
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            throw new Error(`Invalid delete type: ${data.type}`);
+        }
         router.refresh();
       })
       .catch((err) => {
