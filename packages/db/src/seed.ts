@@ -80,8 +80,7 @@ const _reseedFromScratch = async () => {
 
   SEED_LOGS && console.log("Seed done");
 };
-
-const _reseedJustData = async () => {
+const _deleteSeededData = async () => {
   // await db.execute(sql`SET session_replication_role = 'replica';`);
   try {
     console.log("deleting data");
@@ -234,7 +233,9 @@ const _reseedJustData = async () => {
   } finally {
     // await db.execute(sql`SET session_replication_role = 'origin';`);
   }
+};
 
+const _reseedJustData = async () => {
   const { regionData, workoutData } = await getLocationDataFromGravityForms();
   await insertData({ regionData, workoutData });
   await insertUsers();
@@ -244,6 +245,7 @@ export const seed = async (db?: AppDb) => {
   const _db = db ?? getDb();
   // await insertUsers();
   // await _reseedFromScratch();
+  // await _deleteSeededData()
   await _reseedJustData();
   // await _reseedUsers();
   // await insertRandomUsers();
