@@ -248,11 +248,6 @@ describe("all admin routers", () => {
       expect(result).toBeDefined();
     });
 
-    it("should get preview locations", async () => {
-      const result = await caller.location.getPreviewLocations();
-      expect(result).toBeDefined();
-    });
-
     it("should get regions with location", async () => {
       const result = await caller.location.getRegionsWithLocation();
       expect(result).toBeDefined();

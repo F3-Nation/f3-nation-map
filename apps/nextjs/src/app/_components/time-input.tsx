@@ -33,7 +33,6 @@ type ControlledTimeInputProps<T extends FieldValues> = Omit<
 };
 
 export const TimeInput = ({ label, id, value, onChange }: TimeInputProps) => {
-  console.log("value", value);
   return (
     <Input
       type="time"

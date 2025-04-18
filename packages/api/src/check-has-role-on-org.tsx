@@ -3,7 +3,7 @@ import type { UserRole } from "@acme/shared/app/enums";
 import { aliasedTable, eq, schema } from "@acme/db";
 
 import type { Context } from "./trpc";
-import { isDevMode, isTestMode } from "./utils";
+import { isProd, isTestMode } from "./utils";
 
 export const checkHasRoleOnOrg = async ({
   session,
@@ -31,10 +31,7 @@ export const checkHasRoleOnOrg = async ({
   );
 
   // F3 Nation
-  if (
-    session.email === "declan@mountaindev.com" ||
-    (isDevMode && !isTestMode)
-  ) {
+  if (session.email === "declan@mountaindev.com" || (!isProd && !isTestMode)) {
     const nations = await db
       .select()
       .from(schema.orgs)

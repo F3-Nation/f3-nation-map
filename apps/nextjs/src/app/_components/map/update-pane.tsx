@@ -3,6 +3,7 @@ import { MapPinPlusInside } from "lucide-react";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 
+import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import {
   eventDefaults,
@@ -13,10 +14,11 @@ import {
 
 export const UpdatePane = () => {
   const updateLocation = mapStore.use.updateLocation();
+  const mode = appStore.use.mode();
 
   return (
     <div style={{ zIndex: Z_INDEX.UPDATE_PANE }}>
-      {updateLocation ? (
+      {updateLocation && mode === "edit" ? (
         <>
           <AdvancedMarker
             draggable

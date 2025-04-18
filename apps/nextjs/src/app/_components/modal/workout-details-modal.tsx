@@ -26,10 +26,11 @@ export const WorkoutDetailsModal = ({
   const providedLocationId =
     typeof data.locationId === "number" ? data.locationId : -1;
   const locationId = selectedLocationId ?? providedLocationId;
-  const { data: results, isLoading } = api.location.getAoWorkoutData.useQuery(
-    { locationId },
-    { enabled: locationId >= 0 },
-  );
+  const { data: results, isLoading } =
+    api.location.getLocationWorkoutData.useQuery(
+      { locationId },
+      { enabled: locationId >= 0 },
+    );
   const width = useWindowWidth();
   const isLarge = width > Number(BreakPoints.LG);
   const isMedium = width > Number(BreakPoints.MD);

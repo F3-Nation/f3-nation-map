@@ -24,9 +24,14 @@ export const NearbyLocationUpdateButton = () => {
     ); // one km
   }, [center, nearbyLocationCenter]);
   return status === "loading" ? (
-    <div className="absolute left-2/4 top-14 -translate-x-2/4">
+    <div
+      className={cn(
+        "rounded-xl bg-background px-4 py-1 text-sm text-foreground shadow",
+        "absolute left-2/4 top-14 -translate-x-2/4",
+      )}
+    >
       <div className="flex flex-row items-center gap-2">
-        <Spinner />
+        <Spinner className="h-4 w-4" />
         <p>Loading your location...</p>
       </div>
     </div>

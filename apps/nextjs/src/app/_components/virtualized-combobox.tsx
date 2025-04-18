@@ -27,6 +27,7 @@ const MIN_WIDTH = 300;
 interface Option<T> {
   value: string;
   label: string;
+  labelComponent?: React.ReactNode;
   data?: T;
 }
 
@@ -131,7 +132,10 @@ const VirtualizedCommand = <T,>({
                 })}
               />
               <div className="line-clamp-1 flex flex-1 items-center justify-between leading-4">
-                <div>{sortedFilteredOptions[virtualOption.index]?.label}</div>
+                <div>
+                  {sortedFilteredOptions[virtualOption.index]?.labelComponent ??
+                    sortedFilteredOptions[virtualOption.index]?.label}
+                </div>
               </div>
             </CommandItem>
           ))}
@@ -156,6 +160,7 @@ interface VirtualizedComboboxProps<T> {
   onSelect?: (items: string | string[]) => void;
   required?: boolean;
   isMulti?: boolean;
+  className?: string;
 }
 
 export function VirtualizedCombobox<T>({
@@ -167,6 +172,7 @@ export function VirtualizedCombobox<T>({
   required,
   isMulti,
   disabled,
+  className,
 }: VirtualizedComboboxProps<T>) {
   const [open, setOpen] = useState<boolean>(false);
   const [selectedOptions, setSelectedOptions] = useState<string[]>(
@@ -219,6 +225,7 @@ export function VirtualizedCombobox<T>({
             "dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 disabled:cursor-not-allowed disabled:opacity-50",
             "file:border-0 file:bg-transparent file:text-sm file:font-medium",
+            className,
           )}
           ref={(element) => setButtonWidth(element?.offsetWidth ?? 0)}
         >

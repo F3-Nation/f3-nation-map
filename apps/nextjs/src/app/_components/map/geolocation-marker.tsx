@@ -2,15 +2,21 @@ import {
   AdvancedMarker,
   AdvancedMarkerAnchorPoint,
 } from "@vis.gl/react-google-maps";
+import { Z_INDEX } from "node_modules/@acme/shared/src/app/constants";
 
-import { useUserLocation } from "./user-location-provider";
+import { mapStore } from "~/utils/store/map";
 
 export const GeolocationMarker = () => {
-  const { userLocation } = useUserLocation();
-  return !userLocation ? null : (
+  const userGpsLocation = mapStore.use.userGpsLocation();
+  const userGpsLocationStatus = mapStore.use.userGpsLocationStatus();
+  return userGpsLocationStatus !== "success" || !userGpsLocation ? null : (
     <AdvancedMarker
       anchorPoint={AdvancedMarkerAnchorPoint.CENTER}
-      position={{ lat: userLocation.latitude, lng: userLocation.longitude }}
+      position={{
+        lat: userGpsLocation.latitude,
+        lng: userGpsLocation.longitude,
+      }}
+      zIndex={Z_INDEX.GEOLOCATION_MARKER}
     >
       <svg width="40" height="40" viewBox="0 0 40 40">
         {/* Larger transparent blue circle for accuracy/range indication */}

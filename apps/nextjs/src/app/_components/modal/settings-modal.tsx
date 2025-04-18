@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 import Link from "next/link";
 import { CircleHelp, Eye, Moon, Pencil, QrCode, Sun } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { isDevelopment } from "@acme/shared/common/constants";
 import { cn } from "@acme/ui";
 import {
   Dialog,
@@ -14,12 +15,14 @@ import {
 } from "@acme/ui/dialog";
 import { toast } from "@acme/ui/toast";
 
+import { isProd } from "~/trpc/util";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { closeModal, ModalType, openModal } from "~/utils/store/modal";
 import { VersionInfo } from "../version-info";
 
 export default function SettingsModal() {
+  const showDebug = mapStore.use.showDebug();
   const mode = appStore.use.mode();
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
@@ -204,17 +207,39 @@ export default function SettingsModal() {
             </div>
           </div>
           {!session ? (
-            <Link href={"/api/auth/signin"}>
-              <button
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
-                  "text-center text-sm",
-                  "w-full",
-                )}
-              >
-                Sign in
-              </button>
-            </Link>
+            <>
+              <Link href={"/api/auth/signin"}>
+                <button
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
+                    "text-center text-sm",
+                    "w-full",
+                  )}
+                >
+                  Sign in
+                </button>
+              </Link>
+              {!isProd && (isDevelopment || showDebug) ? (
+                <button
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
+                    "text-center text-sm",
+                    "w-full",
+                  )}
+                  onClick={() => {
+                    signIn("dev-mode", {
+                      email: "admin@mountaindev.com",
+                      redirect: true,
+                    }).catch((error: unknown) => {
+                      console.log("DevModeSignIn", { error });
+                      toast.error("Failed to sign in. Use regular sign in.");
+                    });
+                  }}
+                >
+                  Sign in (Dev Mode)
+                </button>
+              ) : null}
+            </>
           ) : (
             <div className="flex flex-col gap-2">
               <div>

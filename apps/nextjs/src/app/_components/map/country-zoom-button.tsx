@@ -1,18 +1,18 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { useMap } from "@vis.gl/react-google-maps";
+import { Globe2 } from "lucide-react";
 
 import { cn } from "@acme/ui";
 
-import { ModalType, openModal } from "~/utils/store/modal";
-
-export const SettingsButton = ({ className }: { className?: string }) => {
+export const CountryZoomButton = ({ className }: { className?: string }) => {
+  const map = useMap();
   return (
     <div className={"flex flex-col lg:mx-2.5"}>
       <button
         draggable="false"
-        aria-label="Settings"
-        title="Settings"
+        aria-label="Country Zoom"
+        title="Country Zoom"
         type="button"
         className={cn(
           "cursor-pointer appearance-none overflow-hidden",
@@ -27,10 +27,10 @@ export const SettingsButton = ({ className }: { className?: string }) => {
           className,
         )}
         onClick={() => {
-          openModal(ModalType.SETTINGS);
+          map?.setZoom(4);
         }}
       >
-        <Settings
+        <Globe2
           strokeWidth={1.75}
           className={cn("size-7 text-[#666]")} // 28px x 28px with gray color
         />

@@ -45,6 +45,7 @@ export const eventDefaults = {
   dayOfWeek: null,
   types: ["Bootcamp"],
   eventDescription: "",
+  aoId: null,
 };
 
 export const locationDefaults = {
@@ -58,8 +59,8 @@ export const locationDefaults = {
   locationDescription: "",
   aoName: "",
   aoLogo: "",
-  workoutWebsite: "",
   regionId: null,
+  regionWebsite: "",
 };
 
 export const eventAndLocationToUpdateRequest = ({
@@ -68,11 +69,11 @@ export const eventAndLocationToUpdateRequest = ({
 }: {
   event:
     | NonNullable<
-        RouterOutputs["location"]["getAoWorkoutData"]
+        RouterOutputs["location"]["getLocationWorkoutData"]
       >["location"]["events"][number]
     | undefined;
   location: NonNullable<
-    RouterOutputs["location"]["getAoWorkoutData"]
+    RouterOutputs["location"]["getLocationWorkoutData"]
   >["location"];
 }): Omit<DataType[ModalType.UPDATE_LOCATION], "mode" | "requestType"> => {
   const possiblyEditedLoc = mapStore.get("modifiedLocationMarkers")[
@@ -93,7 +94,6 @@ export const eventAndLocationToUpdateRequest = ({
     types: event?.types ?? [],
     eventDescription: event?.description ?? null,
     locationId: location.id,
-    aoName: location.parentName,
     locationAddress: location.locationAddress,
     locationAddress2: location.locationAddress2,
     locationCity: location.locationCity,
@@ -102,8 +102,10 @@ export const eventAndLocationToUpdateRequest = ({
     locationCountry: location.locationCountry,
     locationDescription: location.locationDescription,
     regionId: location.regionId,
-    workoutWebsite: location.parentWebsite,
-    aoLogo: location.parentLogo,
+    regionWebsite: location.regionWebsite,
+    aoId: event?.aoId ?? null,
+    aoName: event?.aoName ?? null,
+    aoLogo: event?.aoLogo ?? null,
   };
 };
 
@@ -116,8 +118,9 @@ export interface DataType {
     locationId: number | null;
     eventId: number | null;
     regionId: number | null;
+    regionWebsite: string | null;
     workoutName: string | null;
-    workoutWebsite: string | null;
+    aoId: number | null;
     aoLogo: string | null;
     aoName: string | null;
     lat: number;

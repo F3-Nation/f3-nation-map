@@ -503,24 +503,6 @@ export const applyUpdateRequest = async (
 }> => {
   // LOCATION
   if (updateRequest.locationId == undefined) {
-    console.log("Getting existing ao");
-
-    // INSERT AO
-    console.log("inserting ao", updateRequest);
-    const [ao] = await ctx.db
-      .insert(schema.orgs)
-      .values({
-        parentId: updateRequest.regionId,
-        orgType: "ao",
-        defaultLocationId: updateRequest.locationId,
-        name: updateRequest.aoName ?? "",
-        isActive: true,
-        logoUrl: updateRequest.aoLogo,
-      })
-      .returning();
-
-    if (!ao) throw new Error("Failed to insert AO");
-
     // INSERT LOCATION
     console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
@@ -534,7 +516,7 @@ export const applyUpdateRequest = async (
       addressCountry: updateRequest.locationCountry ?? "",
       latitude: updateRequest.locationLat,
       longitude: updateRequest.locationLng,
-      orgId: ao.id,
+      orgId: updateRequest.regionId,
       email: updateRequest.locationContactEmail,
       isActive: true,
     };
@@ -569,16 +551,34 @@ export const applyUpdateRequest = async (
     if (!location) {
       throw new Error("Failed to find location to update");
     }
+  }
 
+  // AO
+  if (updateRequest.aoId == undefined) {
+    // INSERT AO
+    console.log("inserting ao", updateRequest);
+    const [ao] = await ctx.db
+      .insert(schema.orgs)
+      .values({
+        parentId: updateRequest.regionId,
+        orgType: "ao",
+        defaultLocationId: updateRequest.locationId,
+        name: updateRequest.aoName ?? "",
+        isActive: true,
+        logoUrl: updateRequest.aoLogo,
+      })
+      .returning();
+
+    if (!ao) throw new Error("Failed to insert AO");
+    updateRequest.aoId = ao.id;
+  } else {
     const [ao] = await ctx.db
       .select()
       .from(schema.orgs)
-      .where(eq(schema.orgs.id, location.orgId));
+      .where(eq(schema.orgs.id, updateRequest.aoId));
 
     if (ao?.orgType !== "ao") {
-      throw new Error(
-        "Failed to find ao to update. Is the location associated to an AO?",
-      );
+      throw new Error("Failed to find ao to update. Does the AO exist?");
     }
 
     // UPDATE AO
@@ -589,7 +589,7 @@ export const applyUpdateRequest = async (
         logoUrl: updateRequest.aoLogo,
         parentId: updateRequest.regionId,
       })
-      .where(eq(schema.orgs.id, location.orgId));
+      .where(eq(schema.orgs.id, updateRequest.aoId));
   }
 
   const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {
@@ -629,7 +629,7 @@ export const applyUpdateRequest = async (
         seriesId: updateRequest.eventSeriesId,
         isActive: true,
         highlight: false,
-        orgId: updateRequest.regionId,
+        orgId: updateRequest.aoId,
         recurrencePattern: updateRequest.eventRecurrencePattern,
         recurrenceInterval: updateRequest.eventRecurrenceInterval,
         indexWithinInterval: updateRequest.eventIndexWithinInterval,
@@ -651,7 +651,7 @@ export const applyUpdateRequest = async (
       isActive: true,
       highlight: false,
       dayOfWeek: updateRequest.eventDayOfWeek,
-      orgId: updateRequest.regionId,
+      orgId: updateRequest.aoId,
       recurrencePattern: updateRequest.eventRecurrencePattern,
       recurrenceInterval: updateRequest.eventRecurrenceInterval,
       indexWithinInterval: updateRequest.eventIndexWithinInterval,

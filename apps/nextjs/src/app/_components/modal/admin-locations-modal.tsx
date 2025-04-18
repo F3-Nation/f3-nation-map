@@ -69,7 +69,6 @@ export default function AdminLocationsModal({
     form.reset({
       id: location?.id ?? undefined,
       name: location?.locationName ?? "",
-      aoName: location?.aoName ?? "",
       email: location?.email ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,

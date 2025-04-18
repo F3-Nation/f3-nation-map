@@ -18,9 +18,11 @@ export const groupMarkerClick = async ({
   const isAlreadySelected =
     selectedItemStore.get("locationId") === locationId &&
     selectedItemStore.get("eventId") === eventId;
-  const location = await queryClientUtils.location.getAoWorkoutData.fetch({
-    locationId,
-  });
+  const location = await queryClientUtils.location.getLocationWorkoutData.fetch(
+    {
+      locationId,
+    },
+  );
   if (!location) return;
 
   const modifiedLocation = mapStore.get("modifiedLocationMarkers")[locationId];

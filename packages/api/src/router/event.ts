@@ -124,13 +124,7 @@ export const eventRouter = createTRPCRouter({
         )
         .leftJoin(
           aoOrg,
-          and(
-            eq(aoOrg.orgType, "ao"),
-            or(
-              eq(aoOrg.id, schema.locations.orgId),
-              eq(aoOrg.id, schema.events.orgId),
-            ),
-          ),
+          and(eq(aoOrg.orgType, "ao"), eq(aoOrg.id, schema.events.orgId)),
         )
         .leftJoin(
           regionOrg,
@@ -219,13 +213,7 @@ export const eventRouter = createTRPCRouter({
         )
         .leftJoin(
           aoOrg,
-          and(
-            eq(aoOrg.orgType, "ao"),
-            or(
-              eq(aoOrg.id, schema.locations.orgId),
-              eq(aoOrg.id, schema.events.orgId),
-            ),
-          ),
+          and(eq(aoOrg.orgType, "ao"), eq(aoOrg.id, schema.events.orgId)),
         )
         .leftJoin(
           regionOrg,

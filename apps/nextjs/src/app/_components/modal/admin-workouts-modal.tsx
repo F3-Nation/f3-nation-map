@@ -278,18 +278,19 @@ export default function AdminWorkoutsModal({
                               form.setValue("regionId", selectedAO.parentId);
                             }
 
-                            const aoLocations = locations?.locations.filter(
-                              (l) => l.aoId === aoId,
+                            const regionId = form.getValues("regionId");
+                            const regionLocations = locations?.locations.filter(
+                              (l) => l.regionId === regionId,
                             );
 
                             // If the current location's parentId is not the selected AO, then we need to update the location
                             const locationId = form.getValues("locationId");
                             if (
-                              !aoLocations?.find((l) => l.id === locationId)
+                              !regionLocations?.find((l) => l.id === locationId)
                             ) {
                               form.setValue(
                                 "locationId",
-                                aoLocations?.[0]?.id ?? null,
+                                regionLocations?.[0]?.id ?? null,
                               );
                             }
                           }}
@@ -327,11 +328,8 @@ export default function AdminWorkoutsModal({
                   name="locationId"
                   render={({ field }) => {
                     const regionId = form.getValues("regionId");
-                    const aoId = form.getValues("aoId");
                     const filteredLocations = locations?.locations.filter(
-                      (location) =>
-                        location.regionId === regionId &&
-                        location.aoId === aoId,
+                      (location) => location.regionId === regionId,
                     );
                     return (
                       <FormItem key={`location-${field.value}`}>
@@ -345,9 +343,6 @@ export default function AdminWorkoutsModal({
                             const selectedLocation = locations?.locations.find(
                               (location) => location.id === Number(value),
                             );
-                            if (selectedLocation?.aoId != null) {
-                              form.setValue("aoId", selectedLocation.aoId);
-                            }
                             if (selectedLocation?.regionId != null) {
                               form.setValue(
                                 "regionId",
@@ -365,7 +360,9 @@ export default function AdminWorkoutsModal({
                               ?.slice()
                               .sort(
                                 (a, b) =>
-                                  a.aoName?.localeCompare(b.aoName ?? "") ?? 0,
+                                  a.locationName?.localeCompare(
+                                    b.locationName ?? "",
+                                  ) ?? 0,
                               )
                               .map((location) => (
                                 <SelectItem

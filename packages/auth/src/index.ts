@@ -1,15 +1,20 @@
 import type { Adapter } from "next-auth/adapters";
+import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import Email from "next-auth/providers/nodemailer";
 
 import type { UserRole } from "@acme/shared/app/enums";
 import { db } from "@acme/db/client";
+import { orgs } from "@acme/db/schema/schema";
 import { env } from "@acme/env";
 
 import { MDPGDrizzleAdapter } from "./MDPgDrizzleAdapter";
 import { sendVerificationRequest } from "./sendVerificationRequest";
 
 export type { Session } from "next-auth";
+
+const isProd = env.NEXT_PUBLIC_CHANNEL === "prod";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Must cast since we use number for user ids
@@ -28,6 +33,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       server: env.EMAIL_SERVER,
       from: env.EMAIL_FROM,
       sendVerificationRequest,
+    }),
+    CredentialsProvider({
+      id: "dev-mode",
+      name: "Development Mode",
+      credentials: {
+        email: { label: "Email", type: "email" },
+      },
+      async authorize(credentials) {
+        if (isProd) return null;
+
+        const [f3Nation] = await db
+          .select()
+          .from(orgs)
+          .where(eq(orgs.orgType, "nation"));
+        if (!f3Nation) return null;
+
+        // Return a mock user for development
+        return {
+          id: "1",
+          email: credentials.email as string,
+          name: "Dev User",
+          roles: [
+            {
+              orgId: f3Nation.id,
+              orgName: f3Nation.name,
+              roleName: "admin",
+            },
+          ],
+        };
+      },
     }),
   ],
   callbacks: {
