@@ -13,8 +13,13 @@ export const setView = ({
   lat: number;
   lng: number;
   zoom?: number;
-  options?: { animate?: boolean };
+  options?: { animate?: boolean; onlyIfNotMovedMap?: boolean };
 }) => {
+  if (_options?.onlyIfNotMovedMap && mapStore.get("hasMovedMap")) {
+    console.log("Not redirecting because we've moved the map");
+    return;
+  }
+
   const map = mapStore.get("map");
   const touchDevice = isTouchDevice();
   const [openModal] = modalStore.get("modals").slice(-1);

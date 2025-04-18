@@ -6,10 +6,9 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useState,
+  useRef,
 } from "react";
 
-import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { getRandomLocation } from "~/utils/random-location";
@@ -17,159 +16,225 @@ import { setView } from "~/utils/set-view";
 import { mapStore } from "~/utils/store/map";
 
 const UserLocationContext = createContext<{
-  userLocation: { latitude: number; longitude: number } | null;
-  status: "loading" | "error" | "success";
+  status: "loading" | "error" | "success" | "idle";
   permissions: PermissionState | null;
-  updateUserLocation: () => void;
+  attemptToNavigateToUserLocation: () => Promise<void>;
 }>({
-  userLocation: null,
-  permissions: null,
   status: "loading",
-  updateUserLocation: () => undefined,
+  permissions: null,
+  attemptToNavigateToUserLocation: () => Promise.resolve(),
 });
+
+const USER_LOCATION_LOGS = false as boolean;
 
 export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   RERENDER_LOGS && console.log("UserLocationProvider rerender");
-  const userGpsLocation = mapStore.use.userGpsLocation();
-  const [permissions, setPermissions] = useState<PermissionState | null>(null);
-  const [status, setStatus] = useState<"loading" | "error" | "success">(
-    "loading",
-  );
+  const hasTriedInitialShowUserLocation = useRef(false);
+  const userGpsLocationStatus = mapStore.use.userGpsLocationStatus();
+  const userGpsLocationPermissions = mapStore.use.userGpsLocationPermissions();
+  const setPermissions = (permissionState: PermissionState) => {
+    mapStore.setState({ userGpsLocationPermissions: permissionState });
+  };
+  const setStatus = (status: "loading" | "error" | "success") => {
+    mapStore.setState({ userGpsLocationStatus: status });
+  };
 
-  const setUserGpsLocation = useCallback((position: GeolocationPosition) => {
-    mapStore.setState({
-      nearbyLocationCenter: {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        name: "you",
-        type: "self",
-      },
-
-      userGpsLocation: {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      },
-    });
-  }, []);
-
-  const handlePermissions = useCallback((result: PermissionStatus) => {
-    console.log(
-      "UserLocationProvider navigator.permissions.query result",
-      result,
-    );
-    setPermissions(result.state);
-    if (result.state === "denied") {
-      setStatus("error");
-      // Set the nearbyLocationCenter to a random location
-      const randomLocation = getRandomLocation();
-      console.log("randomLocation", randomLocation);
-      if (
-        typeof randomLocation?.lat === "number" &&
-        typeof randomLocation?.lon === "number"
-      ) {
-        mapStore.setState({
-          nearbyLocationCenter: {
-            lat: randomLocation.lat,
-            lng: randomLocation.lon,
-            name: "random",
-            type: "random",
-          },
-        });
-      }
-    } else {
-      setStatus("success");
-    }
-  }, []);
-
-  const handlePermissionsCatch = useCallback(() => {
-    setStatus("error");
-    console.log("Error getting user location");
-  }, []);
-
-  const updateUserLocation = useCallback(
-    (params?: { onlyUpdateIfNotHasMovedMap?: boolean }) => {
-      console.log("updateUserLocation", params);
-      // one function to set the view and check if the map has moved
-      const setViewIfNotMovedMap = (loc: { lat: number; lng: number }) => {
-        const mapStoreValues = mapStore.getState();
-        const hasMovedMap =
-          mapStoreValues.hasMovedMap ||
-          (mapStoreValues.center.lat !== DEFAULT_CENTER[0] &&
-            mapStoreValues.center.lng !== DEFAULT_CENTER[1]);
-
-        if (params?.onlyUpdateIfNotHasMovedMap && hasMovedMap) {
-          console.log("Not redirecting because we've moved the map");
+  /**
+   * 1. Get permission
+   * 2. Get location
+   * 3. Update map
+   */
+  const attemptToNavigateToUserLocation = useCallback(
+    async (params?: { onlyUpdateIfNotHasMovedMap?: boolean }) => {
+      USER_LOCATION_LOGS && console.log("attemptToNavigateToUserLocation");
+      try {
+        // 1. Get permission
+        const permissionState = await getGeolocationPermission();
+        USER_LOCATION_LOGS && console.log("permissionState", permissionState);
+        setPermissions(permissionState);
+        if (permissionState === "denied") {
+          setStatus("error");
+          setNearbyToRandomLocation({
+            onlyIfNoNearbyLocation: true,
+          });
           return;
         }
-        setView(loc);
-      };
-      console.log("userGpsLocation", userGpsLocation);
-      if (userGpsLocation) {
-        setViewIfNotMovedMap({
-          lat: userGpsLocation.latitude,
-          lng: userGpsLocation.longitude,
+
+        // 2. Get location
+        let position = mapStore.get("userGpsLocation");
+        USER_LOCATION_LOGS && console.log("mapStore position", position);
+
+        const geoLocation = await getGeolocationPosition();
+        USER_LOCATION_LOGS && console.log("geoLocationCache", geoLocation);
+
+        if (geoLocation) {
+          setPermissions("granted");
+          position ??= {
+            latitude: geoLocation.coords.latitude,
+            longitude: geoLocation.coords.longitude,
+          };
+        }
+
+        USER_LOCATION_LOGS && console.log("final position", position);
+        if (!position) {
+          throw new Error("No position");
+        }
+        setStatus("success");
+
+        // 3. Update map
+        setView({
+          lat: position.latitude,
+          lng: position.longitude,
+          zoom: 15,
+          options: { onlyIfNotMovedMap: params?.onlyUpdateIfNotHasMovedMap },
         });
-        mapStore.setState({
-          nearbyLocationCenter: {
-            lat: userGpsLocation.latitude,
-            lng: userGpsLocation.longitude,
-            name: "you",
-            type: "self",
-          },
+      } catch (error) {
+        USER_LOCATION_LOGS &&
+          console.error("Error navigating to user location", error);
+        setStatus("error");
+        setNearbyToRandomLocation({
+          onlyIfNoNearbyLocation: true,
         });
-        return;
-      } else {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setPermissions("granted");
-            setStatus("success");
-            setUserGpsLocation(position);
-            setViewIfNotMovedMap({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
-          },
-          () => {
-            setStatus("error");
-            console.log("Error getting user location");
-          },
-        );
       }
     },
-    [setUserGpsLocation, userGpsLocation],
+    [],
   );
 
   // Initial load
   useEffect(() => {
-    console.log("UserLocationProvider useEffect");
+    USER_LOCATION_LOGS && console.log("UserLocationProvider initial useEffect");
     setStatus("loading");
-    void navigator.permissions
-      .query({ name: "geolocation" })
-      .then(handlePermissions)
-      .catch(handlePermissionsCatch);
-  }, [handlePermissions, handlePermissionsCatch]);
 
-  useEffect(() => {
-    if (!permissions || permissions === "denied") return;
+    const loadLocationAndUpdateMap = async () => {
+      const permissionState = await getGeolocationPermission();
+      if (permissionState === "denied") return;
+      let position = mapStore.get("userGpsLocation");
 
-    // Don't automatically redirect if we've moved the map more than 10 meters
-    console.log("Automatically updating user location");
+      if (!position) {
+        const geoLocation = await getGeolocationPosition({
+          timeout: 10000,
+        }).catch(() => {
+          setNearbyToRandomLocation({
+            onlyIfNoNearbyLocation: true,
+          });
+        });
+        if (!geoLocation) return;
+        position = {
+          latitude: geoLocation.coords.latitude,
+          longitude: geoLocation.coords.longitude,
+        };
+      }
 
-    updateUserLocation({ onlyUpdateIfNotHasMovedMap: true });
-  }, [permissions, updateUserLocation]);
+      if (position && !hasTriedInitialShowUserLocation.current) {
+        hasTriedInitialShowUserLocation.current = true;
+        setView({
+          lat: position.latitude,
+          lng: position.longitude,
+          zoom: 15,
+          options: { onlyIfNotMovedMap: true },
+        });
+      }
+    };
+
+    // React recommendation is to make async fn then call it in useEffect
+    void loadLocationAndUpdateMap().finally(() => {
+      setStatus("success");
+    });
+  }, []);
 
   return (
     <UserLocationContext.Provider
       value={{
-        userLocation: userGpsLocation,
-        permissions,
-        status,
-        updateUserLocation,
+        attemptToNavigateToUserLocation,
+        status: userGpsLocationStatus,
+        permissions: userGpsLocationPermissions,
       }}
     >
       {children}
     </UserLocationContext.Provider>
   );
+};
+
+const setNearbyToRandomLocation = (params?: {
+  onlyIfNoNearbyLocation?: boolean;
+}) => {
+  if (params?.onlyIfNoNearbyLocation) {
+    const nearbyLocation = mapStore.get("nearbyLocationCenter");
+    if (nearbyLocation.lat != null || nearbyLocation.lng != null) {
+      return;
+    }
+  }
+
+  const randomLocation = getRandomLocation();
+  USER_LOCATION_LOGS && console.log("randomLocation", randomLocation);
+  if (
+    typeof randomLocation?.lat === "number" &&
+    typeof randomLocation?.lon === "number"
+  ) {
+    mapStore.setState({
+      nearbyLocationCenter: {
+        lat: randomLocation.lat,
+        lng: randomLocation.lon,
+        name: "random",
+        type: "random",
+      },
+    });
+  }
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getCurrentLocationCache =
+  async (): Promise<GeolocationPosition | null> => {
+    try {
+      const position = await getGeolocationPosition({ timeout: 1 });
+      return position;
+    } catch (error) {
+      return null;
+    }
+  };
+
+const getGeolocationPermission = (): Promise<PermissionState> => {
+  return new Promise((resolve, reject) => {
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((result) => {
+        resolve(result.state);
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+};
+
+const getGeolocationPosition = (
+  options?: PositionOptions,
+): Promise<GeolocationPosition> => {
+  return new Promise((resolve, reject) => {
+    USER_LOCATION_LOGS && console.log("getCurrentPositionPromise");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        USER_LOCATION_LOGS &&
+          console.log("getCurrentPositionPromise", { position });
+        mapStore.setState({
+          userGpsLocation: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+        });
+        resolve(position);
+      },
+      (error) => {
+        USER_LOCATION_LOGS &&
+          console.log("getCurrentPositionPromise", { error });
+        reject(error);
+      },
+      {
+        timeout: options?.timeout ?? Infinity,
+        enableHighAccuracy: options?.enableHighAccuracy ?? false,
+        maximumAge: options?.maximumAge ?? Infinity,
+      },
+    );
+  });
 };
 
 export const useUserLocation = () => {

@@ -13,6 +13,9 @@ const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   zoom: DEFAULT_ZOOM,
   userGpsLocation: null as { latitude: number; longitude: number } | null,
+  userGpsLocationStatus: "loading" as "loading" | "success" | "error" | "idle",
+  userGpsLocationPermissions: "prompt" as PermissionState,
+
   userInitialIpLocation: null as {
     latitude: number;
     longitude: number;
@@ -43,6 +46,7 @@ const initialState = {
   hasMovedMap: false,
   // This allows us to be precise with zoom level when clicking on a cluster
   fractionalZoom: false,
+  hasTriedInitialShowUserLocation: false,
 };
 
 export type MapStoreState = typeof initialState;

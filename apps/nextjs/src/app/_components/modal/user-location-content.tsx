@@ -2,8 +2,11 @@ import { cn } from "@acme/ui";
 
 import { useUserLocation } from "../map/user-location-provider";
 
-export const UserLocationContent = () => {
-  const { permissions, status, updateUserLocation } = useUserLocation();
+export const UserLocationContent = (params?: {
+  allowInteraction?: boolean;
+}) => {
+  const { permissions, status, attemptToNavigateToUserLocation } =
+    useUserLocation();
 
   return (
     <div className="flex flex-col items-start gap-4 text-sm">
@@ -16,12 +19,12 @@ export const UserLocationContent = () => {
           : status === "loading"
             ? "Your position is loading"
             : "Permissions have been granted. Press this to show your location"}
-      {permissions !== "granted" ? (
+      {permissions !== "granted" && params?.allowInteraction ? (
         <button
           className={cn(
             "self-center rounded-md bg-foreground px-4 py-2 text-background shadow hover:bg-foreground/90",
           )}
-          onClick={() => updateUserLocation()}
+          onClick={() => attemptToNavigateToUserLocation()}
         >
           Request location permissions
         </button>

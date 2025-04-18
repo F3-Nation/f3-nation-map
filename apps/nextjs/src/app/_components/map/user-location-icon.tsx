@@ -15,7 +15,8 @@ export const UserLocationIcon = ({
   className,
   ...rest
 }: DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>) => {
-  const { updateUserLocation, status, permissions } = useUserLocation();
+  const { attemptToNavigateToUserLocation, status, permissions } =
+    useUserLocation();
 
   return (
     <Tooltip disableHoverableContent>
@@ -25,7 +26,7 @@ export const UserLocationIcon = ({
           if (touchDevice && status !== "success") {
             openModal(ModalType.USER_LOCATION_INFO);
           } else {
-            updateUserLocation();
+            void attemptToNavigateToUserLocation();
           }
         }}
       >
@@ -61,7 +62,7 @@ export const UserLocationIcon = ({
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="mr-4 flex max-w-40 flex-col gap-2">
-        <UserLocationContent />
+        <UserLocationContent allowInteraction={false} />
       </TooltipContent>
     </Tooltip>
   );
