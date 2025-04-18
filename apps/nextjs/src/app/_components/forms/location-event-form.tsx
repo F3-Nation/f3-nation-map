@@ -53,8 +53,9 @@ export const LocationEventForm = ({
   const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
 
-  const sortedLocationOptions = useMemo(() => {
+  const sortedRegionLocationOptions = useMemo(() => {
     return locations?.locations
+      ?.filter((l) => !formRegionId || l.regionId === formRegionId)
       ?.sort((a, b) =>
         a.regionId === formRegionId && b.regionId !== formRegionId
           ? -1
@@ -74,6 +75,18 @@ export const LocationEventForm = ({
         regionId: l.regionId,
       }));
   }, [locations, formRegionId]);
+
+  const sortedRegionAoOptions = useMemo(() => {
+    return (
+      aos?.aos
+        ?.filter((a) => !formRegionId || a.parentId === formRegionId)
+        ?.map((ao) => ({
+          label: `${ao.name} (${ao.region})`,
+          value: ao.id.toString(),
+        }))
+        ?.sort((a, b) => a.label.localeCompare(b.label)) ?? []
+    );
+  }, [aos, formRegionId]);
 
   return (
     <>
@@ -191,13 +204,42 @@ export const LocationEventForm = ({
         Physical Location Details:
       </h2>
       <div className="text-sm font-medium text-muted-foreground">
+        Location Region
+      </div>
+      <div className="mb-3">
+        <VirtualizedCombobox
+          key={formRegionId?.toString()}
+          options={
+            regions
+              ?.map((region) => ({
+                label: region.name,
+                value: region.id.toString(),
+              }))
+              .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+          }
+          value={formRegionId?.toString()}
+          onSelect={(item) => {
+            const region = regions?.find(
+              (region) => region.id.toString() === item,
+            );
+            if (region) {
+              form.setValue("regionId", region.id);
+            }
+          }}
+          searchPlaceholder="Select"
+        />
+        <p className="text-xs text-destructive">
+          {form.formState.errors.regionId?.message}
+        </p>
+      </div>
+      <div className="text-sm font-medium text-muted-foreground">
         Existing location
       </div>
       <div className="mb-3">
         <VirtualizedCombobox
           key={formLocationId?.toString()}
           className="w-full"
-          options={sortedLocationOptions ?? []}
+          options={sortedRegionLocationOptions ?? []}
           value={formLocationId?.toString()}
           onSelect={(item) => {
             const location = locations?.locations.find(
@@ -250,35 +292,6 @@ export const LocationEventForm = ({
         The fields below update the location for all associated workouts
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Region
-          </div>
-          <VirtualizedCombobox
-            key={formRegionId?.toString()}
-            options={
-              regions
-                ?.map((region) => ({
-                  label: region.name,
-                  value: region.id.toString(),
-                }))
-                .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-            }
-            value={formRegionId?.toString()}
-            onSelect={(item) => {
-              const region = regions?.find(
-                (region) => region.id.toString() === item,
-              );
-              if (region) {
-                form.setValue("regionId", region.id);
-              }
-            }}
-            searchPlaceholder="Select"
-          />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.regionId?.message}
-          </p>
-        </div>
         <div className="space-y-2">
           <div className="text-sm font-medium text-muted-foreground">
             Location Description
@@ -375,14 +388,7 @@ export const LocationEventForm = ({
           <div className="mb-3">
             <VirtualizedCombobox
               key={formAoId?.toString()}
-              options={
-                aos?.aos
-                  ?.map((ao) => ({
-                    label: `${ao.name} (${ao.region})`,
-                    value: ao.id.toString(),
-                  }))
-                  .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-              }
+              options={sortedRegionAoOptions}
               value={formAoId?.toString()}
               onSelect={(item) => {
                 const ao = aos?.aos?.find((ao) => ao.id.toString() === item);
@@ -393,6 +399,7 @@ export const LocationEventForm = ({
                 }
               }}
               searchPlaceholder="Select"
+              className="overflow-hidden"
             />
             <div className="mx-3 text-xs text-muted-foreground">
               Select an AO above to move this workout to a different AO
