@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -135,5 +136,32 @@ export const nationRouter = createTRPCRouter({
         and(eq(schema.orgs.isActive, true), ne(schema.orgs.orgType, "ao")),
       );
     return orgs;
+  }),
+  revalidate: adminProcedure.mutation(async ({ ctx }) => {
+    const [nation] = await ctx.db
+      .select({ id: schema.orgs.id })
+      .from(schema.orgs)
+      .where(eq(schema.orgs.orgType, "nation"));
+    if (!nation) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Nation not found",
+      });
+    }
+
+    const roleCheckResult = await checkHasRoleOnOrg({
+      orgId: nation.id,
+      session: ctx.session,
+      db: ctx.db,
+      roleName: "admin",
+    });
+    if (!roleCheckResult.success) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You are not authorized to revalidate this Nation",
+      });
+    }
+
+    revalidatePath("/");
   }),
 });

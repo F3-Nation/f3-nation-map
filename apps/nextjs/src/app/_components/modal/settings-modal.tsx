@@ -16,6 +16,7 @@ import {
 import { toast } from "@acme/ui/toast";
 
 import { isProd } from "~/trpc/util";
+import { vanillaApi } from "~/trpc/vanilla";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { closeModal, ModalType, openModal } from "~/utils/store/modal";
@@ -29,6 +30,11 @@ export default function SettingsModal() {
   const { data: session } = useSession();
   const center = mapStore.use.center();
   const zoom = mapStore.use.zoom();
+  const isNationAdmin = session?.roles?.some(
+    (role) =>
+      ["admin", "editor"].includes(role.roleName) &&
+      role.orgName.toLowerCase().includes("f3 nation"),
+  );
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/?lat=${center.lat}&lng=${center.lng}&zoom=${zoom}`;
@@ -290,6 +296,28 @@ export default function SettingsModal() {
               </Link>
             </div>
           )}
+          {isNationAdmin ? (
+            <button
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
+                "text-center text-sm",
+                "w-full",
+              )}
+              onClick={() => {
+                void vanillaApi.nation.revalidate
+                  .mutate()
+                  .then(() => {
+                    toast.success("Nation revalidated");
+                  })
+                  .catch((error: unknown) => {
+                    console.log("RevalidateNation", { error });
+                    toast.error("Failed to revalidate Nation");
+                  });
+              }}
+            >
+              Revalidate map
+            </button>
+          ) : null}
           <div className="flex flex-col items-center justify-center gap-4">
             <Link
               className="flex w-full flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
