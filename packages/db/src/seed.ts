@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import isNumber from "lodash/isNumber";
 
-import { and, eq, inArray, sql } from "@acme/db";
+import { and, eq, inArray, or, sql } from "@acme/db";
 import { env } from "@acme/env";
 import {
   DayOfWeek,
@@ -14,6 +14,7 @@ import {
   isTruthy,
   onlyUnique,
   safeParseFloat,
+  safeParseInt,
 } from "@acme/shared/common/functions";
 
 import type { InferInsertModel } from ".";
@@ -84,27 +85,103 @@ const _reseedJustData = async () => {
   // await db.execute(sql`SET session_replication_role = 'replica';`);
   try {
     console.log("deleting data");
-    console.log("getting map seed events");
-    const seededEvents = await db
-      .select()
-      .from(schema.events)
-      .where(sql`${schema.events.meta}->>'mapSeed' = 'true'`);
-    console.log("map seed events", seededEvents.length);
 
     console.log("getting seeded orgs");
-    const seededOrgs = await db
+    const seededOrgsDirect = await db
       .select()
       .from(schema.orgs)
       .where(sql`${schema.orgs.meta}->>'mapSeed' = 'true'`);
+
+    const seededOrgsByParentId = await db
+      .select()
+      .from(schema.orgs)
+      .where(
+        inArray(
+          schema.orgs.parentId,
+          seededOrgsDirect.map((o) => o.id),
+        ),
+      );
+    const seededOrgs = [...seededOrgsDirect, ...seededOrgsByParentId];
     console.log("seeded orgs", seededOrgs.length);
 
     console.log("getting seeded locations");
     const seededLocations = await db
       .select()
       .from(schema.locations)
-      .where(sql`${schema.locations.meta}->>'mapSeed' = 'true'`);
+      .where(
+        or(
+          sql`${schema.locations.meta}->>'mapSeed' = 'true'`,
+          inArray(
+            schema.locations.orgId,
+            seededOrgs.map((l) => l.id),
+          ),
+        ),
+      );
     console.log("seeded locations", seededLocations.length);
 
+    console.log("getting map seed events");
+    const seededEvents = await db
+      .select()
+      .from(schema.events)
+      .where(
+        or(
+          sql`${schema.events.meta}->>'mapSeed' = 'true'`,
+          inArray(
+            schema.events.orgId,
+            seededOrgs.map((l) => l.id),
+          ),
+          inArray(
+            schema.events.locationId,
+            seededLocations.map((l) => l.id),
+          ),
+        ),
+      );
+    console.log("map seed events", seededEvents.length);
+
+    console.log("Getting map event instances");
+    const seededEventInstances = await db
+      .select()
+      .from(schema.eventInstances)
+      .where(
+        inArray(
+          schema.eventInstances.seriesId,
+          seededEvents.map((e) => e.id),
+        ),
+      );
+    console.log("map event instances", seededEventInstances.length);
+
+    console.log("Getting map event instance event types");
+    const seededEventInstanceEventTypes = await db
+      .select()
+      .from(schema.eventInstancesXEventTypes)
+      .where(
+        inArray(
+          schema.eventInstancesXEventTypes.eventInstanceId,
+          seededEventInstances.map((e) => e.id),
+        ),
+      );
+    console.log(
+      "map event instance event types",
+      seededEventInstanceEventTypes.length,
+    );
+
+    console.log("deleting event instance event types");
+    await db.delete(schema.eventInstancesXEventTypes).where(
+      inArray(
+        schema.eventInstancesXEventTypes.eventInstanceId,
+        seededEventInstances.map((e) => e.id),
+      ),
+    );
+    console.log("deleted event instance event types");
+
+    console.log("deleting event instances");
+    await db.delete(schema.eventInstances).where(
+      inArray(
+        schema.eventInstances.id,
+        seededEventInstances.map((e) => e.id),
+      ),
+    );
+    console.log("deleted event instances");
     console.log("deleting update requests");
     await db.delete(schema.updateRequests);
 
@@ -307,6 +384,8 @@ export async function insertUsers() {
   if (!user6) throw new Error("PJ not found");
   const user7 = users.find((u) => u.email === "johnanthonyreynolds@gmail.com");
   if (!user7) throw new Error("John not found");
+  const user8 = users.find((u) => u.email === "evan.petzoldt@protonmail.com");
+  if (!user8) throw new Error("Evan not found");
 
   const rolesXUsersXOrg: InferInsertModel<typeof schema.rolesXUsersXOrg>[] = [
     {
@@ -316,16 +395,26 @@ export async function insertUsers() {
     },
     {
       userId: user2.id,
-      roleId: editorRegionRole.id,
-      orgId: boone.id,
+      roleId: adminRegionRole.id,
+      orgId: f3nation.id,
     },
     {
       userId: user3.id,
-      roleId: editorRegionRole.id,
-      orgId: boone.id,
+      roleId: adminRegionRole.id,
+      orgId: f3nation.id,
     },
     {
       userId: user4.id,
+      roleId: adminRegionRole.id,
+      orgId: f3nation.id,
+    },
+    {
+      userId: user7.id,
+      roleId: adminRegionRole.id,
+      orgId: f3nation.id,
+    },
+    {
+      userId: user8.id,
       roleId: adminRegionRole.id,
       orgId: f3nation.id,
     },
@@ -443,30 +532,52 @@ export async function insertData(data: {
   const insertedNation = await db
     .insert(schema.orgs)
     .values({
+      id: 1,
       name: "F3 Nation",
       isActive: true,
       orgType: "nation",
-      meta: { mapSeed: true },
+    })
+    .onConflictDoUpdate({
+      target: [schema.orgs.id],
+      set: {
+        name: sql`excluded.name`,
+        isActive: sql`excluded.is_active`,
+        orgType: sql`excluded.org_type`,
+      },
     })
     .returning({ id: schema.orgs.id });
 
   const { workoutData, regionData } = data;
   const sectorsToInsert = regionData
-    .map((d) => d.Sector || null)
+    .map((d) =>
+      d.Sector ? { name: d.Sector, id: safeParseInt(d["Entry ID"]) } : null,
+    )
     .filter(isTruthy)
     .filter(onlyUnique);
 
+  console.log("inserting sectors", sectorsToInsert.length);
   const insertedSectors = await db
     .insert(schema.orgs)
     .values(
       sectorsToInsert.map((d) => ({
-        name: d,
+        name: d.name,
+        id: d.id,
         isActive: true,
         orgType: "sector" as const,
         parentId: insertedNation[0]?.id,
         meta: { mapSeed: true },
       })),
     )
+    .onConflictDoUpdate({
+      target: [schema.orgs.id],
+      set: {
+        name: sql`excluded.name`,
+        isActive: sql`excluded.is_active`,
+        orgType: sql`excluded.org_type`,
+        parentId: sql`excluded.parent_id`,
+        meta: sql`excluded.meta`,
+      },
+    })
     .returning();
   const sectorNameToId = insertedSectors.reduce(
     (acc, d) => {
@@ -480,7 +591,7 @@ export async function insertData(data: {
     .map((d) => {
       const sectorId = sectorNameToId[d.Sector];
       if (sectorId === undefined || !d.Area) return null;
-      return { name: d.Area, sectorId };
+      return { name: d.Area, sectorId, id: safeParseInt(d["Entry ID"]) };
     })
     .filter(isTruthy)
     .filter(
@@ -490,10 +601,12 @@ export async function insertData(data: {
         arr.findIndex((d2) => d2.name === d.name) === idx,
     );
 
+  console.log("inserting areas", areasToInsert.length);
   const insertedAreas = await db
     .insert(schema.orgs)
     .values(
       areasToInsert.map((d) => ({
+        id: d.id,
         name: d.name,
         isActive: true,
         orgType: "area" as const,
@@ -501,6 +614,16 @@ export async function insertData(data: {
         meta: { mapSeed: true },
       })),
     )
+    .onConflictDoUpdate({
+      target: [schema.orgs.id],
+      set: {
+        name: sql`excluded.name`,
+        isActive: sql`excluded.is_active`,
+        orgType: sql`excluded.org_type`,
+        parentId: sql`excluded.parent_id`,
+        meta: sql`excluded.meta`,
+      },
+    })
     .returning();
 
   const areaNameToId = insertedAreas.reduce(
@@ -511,6 +634,7 @@ export async function insertData(data: {
     {} as Record<string, number>,
   );
 
+  console.log("inserting regions", regionData.length);
   const regions = await db
     .insert(schema.orgs)
     .values(
@@ -520,6 +644,7 @@ export async function insertData(data: {
           const areaId = areaNameToId[region.Area];
           if (areaId === undefined) return null;
           const regionData: InferInsertModel<typeof schema.orgs> = {
+            id: safeParseInt(region["Entry ID"]),
             name: region["Region Name"] ?? "",
             isActive: true,
             orgType: "region" as const,
@@ -539,7 +664,21 @@ export async function insertData(data: {
         })
         .filter(isTruthy),
     )
-    .onConflictDoNothing()
+    .onConflictDoUpdate({
+      target: [schema.orgs.id],
+      set: {
+        name: sql`excluded.name`,
+        isActive: sql`excluded.is_active`,
+        orgType: sql`excluded.org_type`,
+        parentId: sql`excluded.parent_id`,
+        meta: sql`excluded.meta`,
+        created: sql`excluded.created`,
+        updated: sql`excluded.updated`,
+        website: sql`excluded.website`,
+        email: sql`excluded.email`,
+        description: sql`excluded.description`,
+      },
+    })
     .returning({ id: schema.orgs.id, name: schema.orgs.name });
 
   console.log("inserted regions", regions.length, regions[0]);
@@ -557,6 +696,7 @@ export async function insertData(data: {
       if (!acc[latLonKey]) {
         acc[latLonKey] = {
           ao: {
+            id: safeParseInt(workout["Entry ID"]),
             regionId: workoutRegionId,
             latitude: workout.Latitude,
             longitude: workout.Longitude,
@@ -572,6 +712,7 @@ export async function insertData(data: {
       string,
       {
         ao: {
+          id: number | undefined;
           regionId: number;
           latitude: string | undefined;
           longitude: string | undefined;
@@ -603,6 +744,7 @@ export async function insertData(data: {
 
         const aoData: InferInsertModel<typeof schema.orgs> = {
           // name: "", // AOs do not have names yet
+          id: ao.id,
           name: events
             .map((e) => e["Workout Name"])
             .filter(onlyUnique)
@@ -660,6 +802,7 @@ export async function insertData(data: {
         if (aoOrg == undefined) throw new Error("AO org not found");
         if (!isNumber(aoOrg.id)) throw new Error("AO org id is not a number");
         const locationData: InferInsertModel<typeof schema.locations> = {
+          id: aoOrg.id,
           name: aoOrg.name,
           isActive: true,
           addressStreet: events[0]?.["Address 1"],
@@ -696,6 +839,7 @@ export async function insertData(data: {
       const orgId = aoOrg?.id;
       if (orgId == undefined) throw new Error("AO org id not found");
       return events.map((workout) => {
+        const id = safeParseInt(workout["Entry ID"]);
         const dayOfWeek = DayOfWeek.includes(
           workout.Weekday.toLowerCase() as DayOfWeek,
         )
@@ -729,6 +873,7 @@ export async function insertData(data: {
             `Event type id is undefined for event ${workout.Type}, ${getCleanedEventType(workout.Type)}`,
           );
         const workoutItem: InferInsertModel<typeof schema.events> = {
+          id,
           locationId: workoutAoLoc?.id, // locationIdDict[workout.Location],
           isActive: true,
           highlight: false,
