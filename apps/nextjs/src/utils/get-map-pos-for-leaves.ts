@@ -1,5 +1,7 @@
 import type { Feature, Point } from "geojson";
 
+import { bound } from "@acme/shared/common/functions";
+
 import { adjustBounds } from "~/utils/adjust-bounds";
 import { getBoundsOfLeaves } from "~/utils/get-bounds-of-leaves";
 
@@ -46,18 +48,11 @@ export const getMapPosForLeaves = (params: {
   const lngZoom = currentZoom - lngZoomOffset;
 
   // Use the smaller zoom to ensure all points are visible
-  const zoomValue = Math.min(latZoom, lngZoom);
+  const zoomValue = bound(Math.min(latZoom, lngZoom), 3, 20);
 
   // It seems that fractional zoom is applied automatically
   // const zoom = IS_FRACTIONAL_ZOOM_ENABLED ? zoomValue : Math.floor(zoomValue);
   const zoom = zoomValue;
-
-  console.log("getMapPosForLeaves", {
-    currentZoom,
-    latZoom,
-    lngZoom,
-    finalZoom: zoom,
-  });
 
   return { center, zoom };
 };
