@@ -2,6 +2,7 @@
 
 import type { TableOptions } from "@tanstack/react-table";
 import { useCallback, useState } from "react";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import type { RouterOutputs } from "@acme/api";
@@ -15,13 +16,19 @@ import {
   CommandInput,
   CommandItem,
 } from "@acme/ui/command";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
 import { useDebounce } from "~/utils/hooks/use-debounce";
-import { ModalType, openModal } from "~/utils/store/modal";
+import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 
 const UserRoleFilter = ({
   onRoleSelect,
@@ -253,7 +260,7 @@ const columns: TableOptions<
           {row.original.roles.map((role) => (
             <span
               key={role.orgId}
-              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+              className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${
                 roleStyles[role.roleName]
               }`}
             >
@@ -340,5 +347,35 @@ const columns: TableOptions<
     meta: { name: "Created At" },
     header: Header,
     cell: Cell,
+  },
+
+  {
+    id: "id",
+    enableHiding: false,
+    cell: ({ row }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <DotsHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                  id: Number(row.original.id),
+                  type: DeleteType.USER,
+                });
+              }}
+            >
+              <div>Delete</div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];

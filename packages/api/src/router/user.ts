@@ -332,4 +332,46 @@ export const userRouter = createTRPCRouter({
         roles: updatedRoles,
       };
     }),
+
+  delete: editorProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [f3nationOrg] = await ctx.db
+        .select()
+        .from(schema.orgs)
+        .where(
+          and(
+            eq(schema.orgs.orgType, "nation"),
+            eq(schema.orgs.name, "F3 Nation"),
+          ),
+        )
+        .limit(1);
+
+      if (!f3nationOrg) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "No F3 Nation record is found.",
+        });
+      }
+
+      const roleCheckResult = await checkHasRoleOnOrg({
+        orgId: f3nationOrg.id,
+        session: ctx.session,
+        db: ctx.db,
+        roleName: "admin",
+      });
+
+      if (!roleCheckResult.success) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User doesn't have an Admin F3 Nation role.",
+        });
+      }
+
+      await ctx.db
+        .delete(schema.rolesXUsersXOrg)
+        .where(eq(schema.rolesXUsersXOrg.userId, input.id));
+
+      await ctx.db.delete(schema.users).where(eq(schema.users.id, input.id));
+    }),
 });
