@@ -37,6 +37,13 @@ export const hideSelectedItem = () => {
 };
 
 export const clearSelectedItem = () => {
+  if (isDevelopment) {
+    const stackTrace = new Error().stack;
+    const callerInfo =
+      stackTrace?.split("\n")[2]?.trim().split("/").slice(-1)[0] ??
+      "Unknown caller";
+    console.log("clearSelectedItem called by:", callerInfo);
+  }
   selectedItemStore.setState({
     locationId: null,
     eventId: null,

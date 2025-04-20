@@ -5,6 +5,7 @@ import {
   useAdvancedMarkerRef,
 } from "@vis.gl/react-google-maps";
 
+import { Z_INDEX } from "@acme/shared/app/constants";
 import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
 import { cn } from "@acme/ui";
 
@@ -113,7 +114,11 @@ export const FeatureMarker = ({
         e.stop();
       }}
       zIndex={
-        isCurrentSelectedLocation ? 1002 : isCurrentPanelLocation ? 1001 : 1000
+        isCurrentSelectedLocation
+          ? Z_INDEX.SELECTED_MARKER
+          : isCurrentPanelLocation
+            ? Z_INDEX.PANEL_ITEM_MARKER
+            : Z_INDEX.NON_HOVERED_MAP_MARKER
       }
     >
       <div className="relative flex flex-col">
