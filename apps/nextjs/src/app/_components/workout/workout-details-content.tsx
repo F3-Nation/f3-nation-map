@@ -1,27 +1,25 @@
 import { useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import gte from "lodash/gte";
 import { Edit, PlusCircle, Trash } from "lucide-react";
+import { useSession } from "next-auth/react";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
-import {
-  START_END_TIME_DB_FORMAT,
-  START_END_TIME_DISPLAY_FORMAT,
-} from "@acme/shared/app/constants";
-import { getReadableDayOfWeek } from "@acme/shared/app/functions";
 import { isTruthy } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
 import { toast } from "@acme/ui/toast";
 
-import type { RouterOutputs } from "~/trpc/types";
+import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
-import { dayjs } from "~/utils/frontendDayjs";
+import { vanillaApi } from "~/trpc/vanilla";
+import { getWhenFromWorkout } from "~/utils/get-when-from-workout";
 import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { appStore } from "~/utils/store/app";
 import {
   DeleteType,
   eventAndLocationToUpdateRequest,
   eventDefaults,
+  modalStore,
   ModalType,
   openModal,
 } from "~/utils/store/modal";
@@ -31,56 +29,30 @@ import { EventChip } from "../map/event-chip";
 import { WorkoutDetailsSkeleton } from "../modal/workout-details-skeleton";
 
 export interface WorkoutDetailsContentProps {
-  results?: RouterOutputs["location"]["getLocationWorkoutData"];
-  isLoading: boolean;
+  locationId: number;
   selectedEventId: number | null;
-  onEditClick?: () => void;
-  onDeleteClick?: () => void;
   chipSize: "small" | "medium" | "large";
 }
 
-export const getWhenFromWorkout = (params: {
-  startTime: string | null;
-  endTime: string | null;
-  dayOfWeek: DayOfWeek | null;
-  condensed?: boolean;
-}) => {
-  const event = params;
-  const condensed = params.condensed ?? false;
-  const startTimeRaw =
-    event.startTime === null
-      ? undefined
-      : dayjs(event.startTime, START_END_TIME_DB_FORMAT).format(
-          START_END_TIME_DISPLAY_FORMAT,
-        );
-
-  const startTime = !condensed
-    ? startTimeRaw
-    : startTimeRaw?.replace(":00", "");
-
-  const endTime = dayjs(event.endTime, START_END_TIME_DB_FORMAT).format(
-    START_END_TIME_DISPLAY_FORMAT,
-  );
-
-  const duration = dayjs(event.endTime, START_END_TIME_DB_FORMAT).diff(
-    dayjs(event.startTime, START_END_TIME_DB_FORMAT),
-    "minutes",
-  );
-  return `${getReadableDayOfWeek(event.dayOfWeek)} ${startTime} - ${endTime} (${duration}min)`;
-};
-
 export const WorkoutDetailsContent = ({
-  results,
-  isLoading,
+  locationId,
   selectedEventId,
-  onEditClick,
-  onDeleteClick,
   chipSize,
 }: WorkoutDetailsContentProps) => {
+  const router = useRouter();
+  const utils = api.useUtils();
+  const { data: session } = useSession();
+  const { data: results, isLoading } =
+    api.location.getLocationWorkoutData.useQuery(
+      { locationId },
+      { enabled: locationId >= 0 },
+    );
+
   const mode = appStore.use.mode();
 
   const event = useMemo(
     () =>
+      // Dont provide a fallback. This is indicative of worse problems
       results?.location.events.find((event) => event.id === selectedEventId),
     [selectedEventId, results],
   );
@@ -206,7 +178,6 @@ export const WorkoutDetailsContent = ({
                 location,
               }),
             });
-            onEditClick?.();
           }}
         >
           <Edit className="h-4 w-4" />
@@ -392,7 +363,6 @@ export const WorkoutDetailsContent = ({
                   location,
                 }),
               });
-              onEditClick?.();
             }}
           >
             <Edit className="h-4 w-4" />
@@ -408,7 +378,31 @@ export const WorkoutDetailsContent = ({
                   if (location.regionId == null) {
                     return;
                   }
-                  onDeleteClick?.();
+                  if (!results?.location.regionId || !selectedEventId) return;
+
+                  const event = results.location.events.find(
+                    (e) => e.id === selectedEventId,
+                  );
+                  if (!event) return;
+
+                  void vanillaApi.request.submitDeleteRequest
+                    .mutate({
+                      regionId: results.location.regionId,
+                      eventId: event.id,
+                      eventName: event.name,
+                      submittedBy: session?.user?.email ?? "",
+                    })
+                    .then((result) => {
+                      void utils.location.invalidate();
+                      router.refresh();
+                      toast.success(
+                        result.status === "pending"
+                          ? "Delete request submitted"
+                          : "Successfully deleted event",
+                      );
+                      // Close all modals
+                      modalStore.setState({ modals: [] });
+                    });
                 },
               });
             }}

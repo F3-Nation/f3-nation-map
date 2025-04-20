@@ -1,15 +1,11 @@
-import { useRouter } from "next/navigation";
 import { useWindowWidth } from "@react-hook/window-size";
-import { useSession } from "next-auth/react";
 
 import { BreakPoints, Z_INDEX } from "@acme/shared/app/constants";
 import { Dialog, DialogContent, DialogHeader } from "@acme/ui/dialog";
-import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { vanillaApi } from "~/trpc/vanilla";
-import { closeModal, modalStore } from "~/utils/store/modal";
+import { closeModal } from "~/utils/store/modal";
 import { selectedItemStore } from "~/utils/store/selected-item";
 import { WorkoutDetailsContent } from "../workout/workout-details-content";
 
@@ -18,19 +14,19 @@ export const WorkoutDetailsModal = ({
 }: {
   data: DataType[ModalType.WORKOUT_DETAILS];
 }) => {
-  const utils = api.useUtils();
-  const router = useRouter();
-  const { data: session } = useSession();
   const selectedLocationId = selectedItemStore.use.locationId();
   const selectedEventId = selectedItemStore.use.eventId();
   const providedLocationId =
     typeof data.locationId === "number" ? data.locationId : -1;
   const locationId = selectedLocationId ?? providedLocationId;
-  const { data: results, isLoading } =
-    api.location.getLocationWorkoutData.useQuery(
-      { locationId },
-      { enabled: locationId >= 0 },
-    );
+  const { data: results } = api.location.getLocationWorkoutData.useQuery(
+    { locationId },
+    { enabled: locationId >= 0 },
+  );
+  const modalEventId =
+    results?.location.events.find((e) => e.id === selectedEventId)?.id ??
+    results?.location.events[0]?.id ??
+    null;
   const width = useWindowWidth();
   const isLarge = width > Number(BreakPoints.LG);
   const isMedium = width > Number(BreakPoints.MD);
@@ -46,37 +42,10 @@ export const WorkoutDetailsModal = ({
         </DialogHeader>
 
         <WorkoutDetailsContent
-          results={results}
-          isLoading={isLoading}
-          selectedEventId={selectedEventId}
+          // Need to provide a fallback for selectedEventId
+          locationId={locationId}
+          selectedEventId={modalEventId}
           chipSize={isLarge ? "large" : isMedium ? "medium" : "large"}
-          onDeleteClick={() => {
-            if (!results?.location.regionId || !selectedEventId) return;
-
-            const event = results.location.events.find(
-              (e) => e.id === selectedEventId,
-            );
-            if (!event) return;
-
-            void vanillaApi.request.submitDeleteRequest
-              .mutate({
-                regionId: results.location.regionId,
-                eventId: event.id,
-                eventName: event.name,
-                submittedBy: session?.user?.email ?? "",
-              })
-              .then((result) => {
-                void utils.location.invalidate();
-                router.refresh();
-                toast.success(
-                  result.status === "pending"
-                    ? "Delete request submitted"
-                    : "Successfully deleted event",
-                );
-                // Close all modals
-                modalStore.setState({ modals: [] });
-              });
-          }}
         />
 
         <div className="h-2" />
