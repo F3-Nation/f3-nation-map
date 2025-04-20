@@ -12,6 +12,7 @@ import {
   setSelectedItem,
 } from "~/utils/store/selected-item";
 import textLink from "~/utils/text-link";
+import { isTouchDevice } from "~/utils/touch-device-provider";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
@@ -37,7 +38,11 @@ export const SelectedItem = (props: {
           "dark:border-[1px] dark:border-muted",
         )}
         onMouseLeave={() => {
-          clearSelectedItem();
+          if (!isTouchDevice()) {
+            // This is caused a bug where clicking on a workout details modal on mobile
+            // caused the selected item to be cleared
+            clearSelectedItem();
+          }
         }}
         onClick={() => {
           // There is a problem here where the selected item is clicked through
