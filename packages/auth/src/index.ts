@@ -1,4 +1,5 @@
 import type { Adapter } from "next-auth/adapters";
+import type { Provider } from "next-auth/providers";
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -16,24 +17,18 @@ export type { Session } from "next-auth";
 
 const isProd = env.NEXT_PUBLIC_CHANNEL === "prod";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Must cast since we use number for user ids
-  // And next-auth expects string for user ids
-  // And it is a nightmare (impossible?) to overwrite the type
-  adapter: MDPGDrizzleAdapter(db) as Adapter,
-  session: { strategy: "jwt" },
-  // Needed to run on cloud build docker deployment (basePath and trustHost)
-  // https://github.com/nextauthjs/next-auth/issues/9819#issuecomment-1912903196
-  basePath: "/api/auth",
-  trustHost: true,
-  providers: [
-    Email({
-      id: "email", // needed to allow signIn("email")
-      name: "Email", // Changes text on default sign in button
-      server: env.EMAIL_SERVER,
-      from: env.EMAIL_FROM,
-      sendVerificationRequest,
-    }),
+const providers: Provider[] = [
+  Email({
+    id: "email", // needed to allow signIn("email")
+    name: "Email", // Changes text on default sign in button
+    server: env.EMAIL_SERVER,
+    from: env.EMAIL_FROM,
+    sendVerificationRequest,
+  }),
+];
+
+if (!isProd) {
+  providers.push(
     CredentialsProvider({
       id: "dev-mode",
       name: "Development Mode",
@@ -64,7 +59,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-  ],
+  );
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Must cast since we use number for user ids
+  // And next-auth expects string for user ids
+  // And it is a nightmare (impossible?) to overwrite the type
+  adapter: MDPGDrizzleAdapter(db) as Adapter,
+  session: { strategy: "jwt" },
+  // Needed to run on cloud build docker deployment (basePath and trustHost)
+  // https://github.com/nextauthjs/next-auth/issues/9819#issuecomment-1912903196
+  basePath: "/api/auth",
+  trustHost: true,
+  providers,
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {

@@ -2,7 +2,8 @@ import {
   AdvancedMarker,
   AdvancedMarkerAnchorPoint,
 } from "@vis.gl/react-google-maps";
-import { Z_INDEX } from "node_modules/@acme/shared/src/app/constants";
+
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { mapStore } from "~/utils/store/map";
 
