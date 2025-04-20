@@ -1,11 +1,11 @@
 "use client";
 
-import type { LatLngLiteral } from "leaflet";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
-import { DEFAULT_CENTER } from "node_modules/@f3/shared/src/app/constants";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
+import type { RouterOutputs } from "@acme/api";
+import { DEFAULT_CENTER } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import type { SparseF3Marker } from "~/utils/types";
 import { api } from "~/trpc/react";
@@ -18,46 +18,63 @@ export type LocationMarkerWithDistance = SparseF3Marker & {
 };
 
 const FilteredMapResultsContext = createContext<{
-  isLoading: boolean;
-  nearbyLocationCenter: LatLngLiteral & { name?: string };
+  nearbyLocationCenter: ReturnType<typeof mapStore.use.nearbyLocationCenter>;
   filteredLocationMarkers: SparseF3Marker[] | undefined;
   locationOrderedLocationMarkers: LocationMarkerWithDistance[] | undefined;
   allLocationMarkersWithLatLngAndFilterData: SparseF3Marker[] | undefined;
 }>({
-  isLoading: true,
   nearbyLocationCenter: {
+    type: "default",
     lat: DEFAULT_CENTER[0],
     lng: DEFAULT_CENTER[1],
+    name: null,
   },
   filteredLocationMarkers: undefined,
   locationOrderedLocationMarkers: undefined,
   allLocationMarkersWithLatLngAndFilterData: undefined,
 });
 
-export const FilteredMapResultsProvider = ({
-  children,
-}: {
+export const FilteredMapResultsProvider = (params: {
+  mapEventAndLocationData: RouterOutputs["location"]["getMapEventAndLocationData"];
   children: ReactNode;
 }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
+  const { data: mapEventAndLocationData } =
+    api.location.getMapEventAndLocationData.useQuery(undefined, {
+      initialData: params.mapEventAndLocationData,
+    });
 
-  const { data: allLocationMarkers, isLoading } =
-    api.location.getLocationMarkersSparse.useQuery();
-  const { data: allLocationMarkerFilterData } =
-    api.location.allLocationMarkerFilterData.useQuery();
   const filters = filterStore.useBoundStore();
 
   const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
-    if (!allLocationMarkers || !allLocationMarkerFilterData) return undefined;
+    if (!mapEventAndLocationData) return undefined;
 
-    const locationIdToLatLng = allLocationMarkers.reduce(
-      (acc, location) => {
-        acc[location.id] = {
-          lat: location.lat,
-          lon: location.lon,
-          locationDescription: location.locationDescription,
+    const allLocationMarkerFilterData = mapEventAndLocationData.map(
+      (location) => {
+        return {
+          id: location[0],
+          aoName: location[1],
+          logo: location[2],
+          lat: location[3],
+          lon: location[4],
+          description: location[5],
+          events: location[6].map((event) => {
+            return {
+              id: event[0],
+              name: event[1],
+              dayOfWeek: event[2],
+              startTime: event[3],
+              types: event[4],
+            };
+          }),
         };
+      },
+    );
+
+    const locationIdToLatLng = allLocationMarkerFilterData.reduce(
+      (acc, location) => {
+        acc[location.id] = location;
         return acc;
       },
       {} as Record<
@@ -65,7 +82,7 @@ export const FilteredMapResultsProvider = ({
         {
           lat: number | null;
           lon: number | null;
-          locationDescription: string | null;
+          description: string | null;
         }
       >,
     );
@@ -76,10 +93,10 @@ export const FilteredMapResultsProvider = ({
         lat: locationIdToLatLng[location.id]?.lat ?? null,
         lon: locationIdToLatLng[location.id]?.lon ?? null,
         locationDescription:
-          locationIdToLatLng[location.id]?.locationDescription ?? null,
+          locationIdToLatLng[location.id]?.description ?? null,
       };
     });
-  }, [allLocationMarkerFilterData, allLocationMarkers]);
+  }, [mapEventAndLocationData]);
 
   const filteredLocationMarkers = useMemo(() => {
     if (!allLocationMarkersWithLatLngAndFilterData) return undefined;
@@ -107,6 +124,7 @@ export const FilteredMapResultsProvider = ({
         return { ...location, distance };
       },
     );
+
     return locationMarkersWithDistances.sort((a, b) => {
       if (a.distance === null || b.distance === null) return 0;
       return a.distance - b.distance;
@@ -120,10 +138,9 @@ export const FilteredMapResultsProvider = ({
         locationOrderedLocationMarkers,
         allLocationMarkersWithLatLngAndFilterData,
         nearbyLocationCenter,
-        isLoading,
       }}
     >
-      {children}
+      {params.children}
     </FilteredMapResultsContext.Provider>
   );
 };

@@ -1,9 +1,10 @@
 import { migrate as migrator } from "drizzle-orm/postgres-js/migrator";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
-import { db } from ".";
-import { reset } from "./reset";
+import { sql } from ".";
+import { db } from "./client";
+import { alembicVersionValue, reset } from "./reset";
 import { seed } from "./seed";
 
 const databaseUrl = env.DATABASE_URL;
@@ -24,6 +25,13 @@ const migrate = async () => {
     migrationsTable: `__drizzle_migrations_${database}`,
     migrationsFolder: "drizzle",
   });
+
+  // We need to manually handle the alembic version table for moneyball's work
+  if (alembicVersionValue) {
+    await db.execute(sql`
+      INSERT INTO alembic_version (version_num) VALUES (${alembicVersionValue});
+    `);
+  }
 
   if (process.argv.includes("--seed")) {
     console.log("Seeding database");

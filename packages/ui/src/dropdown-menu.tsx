@@ -8,8 +8,9 @@ import {
   DotFilledIcon,
 } from "@radix-ui/react-icons";
 
+import { Z_INDEX } from "@acme/shared/app/constants";
+
 import { cn } from ".";
-import { Z_INDEX } from "../../shared/src/app/constants";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;

@@ -11,9 +11,11 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Session } from "@f3/auth";
-import { auth } from "@f3/auth";
-import { db } from "@f3/db";
+import type { Session } from "@acme/auth";
+import { auth } from "@acme/auth";
+import { db } from "@acme/db/client";
+
+export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
 /**
  * 1. CONTEXT
@@ -43,7 +45,7 @@ export const createTRPCContext = async (opts: {
     ">>> tRPC Request from",
     source,
     "by",
-    session?.user ?? "a guest",
+    session?.user?.email ?? "a guest",
     "at",
     ip,
   );
@@ -63,7 +65,7 @@ export const createTRPCContext = async (opts: {
  */
 const t = initTRPC
   .meta<OpenApiMeta>()
-  .context<typeof createTRPCContext>()
+  .context<Context>()
   .create({
     transformer: superjson,
     errorFormatter: ({ shape, error }) => ({
@@ -122,4 +124,22 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       session: { ...ctx.session, user: ctx.session.user },
     },
   });
+});
+
+export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
+  const isEditorOrAdmin = ctx.session?.roles?.some((r) =>
+    ["editor", "admin"].includes(r.roleName),
+  );
+  if (!isEditorOrAdmin) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
+});
+
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  const isAdmin = ctx.session?.roles?.some((r) => r.roleName === "admin");
+  if (!isAdmin) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
 });

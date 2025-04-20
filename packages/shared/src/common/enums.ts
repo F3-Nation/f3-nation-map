@@ -5,9 +5,11 @@ export enum Header {
   Accept = "Accept",
   MobileVersion = "mobile_version",
   MobileBuild = "mobile_build",
+  Source = "x-trpc-source",
 }
 
 export enum Case {
+  LowerCase = "lowercase",
   CamelCase = "camelCase",
   PascalCase = "PascalCase",
   SnakeCase = "snake_case",

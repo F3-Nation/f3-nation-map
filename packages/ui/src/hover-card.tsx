@@ -1,8 +1,9 @@
 import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 
+import { Z_INDEX } from "@acme/shared/app/constants";
+
 import { cn } from ".";
-import { Z_INDEX } from "../../shared/src/app/constants";
 
 const HoverCard = HoverCardPrimitive.Root;
 

@@ -1,43 +1,52 @@
+import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { MapPinPlusInside } from "lucide-react";
-import ReactDOMServer from "react-dom/server";
-import { Marker } from "react-leaflet/Marker";
-import { Pane } from "react-leaflet/Pane";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
+import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
-import { ModalType, openModal } from "~/utils/store/modal";
+import {
+  eventDefaults,
+  locationDefaults,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 
 export const UpdatePane = () => {
   const updateLocation = mapStore.use.updateLocation();
+  const mode = appStore.use.mode();
 
   return (
-    <Pane name="update-pane" style={{ zIndex: Z_INDEX.UPDATE_PANE }}>
-      {updateLocation ? (
+    <div style={{ zIndex: Z_INDEX.UPDATE_PANE }}>
+      {updateLocation && mode === "edit" ? (
         <>
-          <Marker
+          <AdvancedMarker
             draggable
-            eventHandlers={{
-              click: () => {
-                openModal(ModalType.UPDATE_LOCATION, {
-                  mode: "new-location",
-                  lat: updateLocation.lat,
-                  lng: updateLocation.lng,
-                });
-              },
+            onClick={(e) => {
+              if (!e.latLng) throw new Error("No latLng");
+              openModal(ModalType.UPDATE_LOCATION, {
+                requestType: "create_location",
+                ...eventDefaults,
+                ...locationDefaults,
+                lat: e.latLng.lat(),
+                lng: e.latLng.lng(),
+              });
+            }}
+            onDragEnd={(e) => {
+              if (!e.latLng) throw new Error("No latLng");
+              mapStore.setState({
+                updateLocation: {
+                  lat: e.latLng.lat(),
+                  lng: e.latLng.lng(),
+                },
+              });
             }}
             position={updateLocation}
-            icon={L.divIcon({
-              iconSize: [31, 31],
-              iconAnchor: [16, 16],
-              className: "",
-              html: ReactDOMServer.renderToString(
-                <MapPinPlusInside className="fill-blue-500 text-foreground dark:fill-blue-600" />,
-              ),
-            })}
-          ></Marker>
+          >
+            <MapPinPlusInside className="size-8 fill-blue-500 text-foreground dark:fill-blue-600" />
+          </AdvancedMarker>
         </>
       ) : null}
-    </Pane>
+    </div>
   );
 };

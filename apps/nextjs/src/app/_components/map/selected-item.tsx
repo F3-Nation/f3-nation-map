@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { Maximize2, X } from "lucide-react";
 
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
 
 import type { F3Marker } from "~/utils/types";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import {
   clearSelectedItem,
-  openPanel,
   setSelectedItem,
 } from "~/utils/store/selected-item";
 import textLink from "~/utils/text-link";
@@ -18,8 +16,8 @@ import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
 export const SelectedItem = (props: {
-  selectedLocation: F3Marker;
-  selectedEvent: F3Marker["events"][number];
+  selectedLocation: F3Marker["location"];
+  selectedEvent: F3Marker["location"]["events"][number];
   hideCloseButton?: boolean;
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");
@@ -38,37 +36,33 @@ export const SelectedItem = (props: {
           "overflow-hidden overflow-y-auto rounded-lg p-2 text-sm text-foreground shadow-xl transition-all",
           "dark:border-[1px] dark:border-muted",
         )}
-        onMouseEnter={() => {
-          const isMobile = isTouchDevice();
-          if (!isMobile) {
-            setSelectedItem({
-              locationId: selectedLocation.id,
-              eventId: selectedEvent.id,
-            });
-          }
-          // Needed to handle the mouse enter from the marker on desktop
-          // Doesn't work on mobile
-        }}
         onMouseLeave={() => {
-          const isMobile = isTouchDevice();
-          if (!isMobile) {
-            clearSelectedItem();
-          }
+          clearSelectedItem();
         }}
-        onClick={() => openPanel({ locationId: selectedLocation.id })}
+        onClick={() => {
+          // There is a problem here where the selected item is clicked through
+          // the search results when they are open. Needed e.stop() somewhere else to resolve
+          setSelectedItem({
+            locationId: selectedLocation.id,
+            eventId: selectedEvent.id,
+            showPanel: true,
+          });
+        }}
       >
         <div className="text-lg font-bold">{selectedEvent.name}</div>
         <div className="mt-2 flex flex-row items-start gap-2">
           <div className="flex flex-shrink-0 flex-col items-center">
             <ImageWithFallback
               src={
-                selectedLocation.logo ? selectedLocation.logo : "/f3_logo.png"
+                selectedLocation.regionLogo
+                  ? selectedLocation.regionLogo
+                  : "/f3_logo.png"
               }
               fallbackSrc="/f3_logo.png"
               loading="lazy"
               width={64}
               height={64}
-              alt={selectedLocation.logo ?? "F3 logo"}
+              alt={selectedLocation.regionLogo ?? "F3 logo"}
               className="rounded-lg bg-black"
             />
           </div>
@@ -97,7 +91,7 @@ export const SelectedItem = (props: {
             ) : null}
             <div>
               <span className="font-semibold">Type: </span>
-              {selectedEvent.types.map((type) => type.name).join(", ")}
+              {selectedEvent.types.join(", ")}
             </div>
             {selectedEvent.description ? (
               <p className="leading-4">
@@ -118,6 +112,7 @@ export const SelectedItem = (props: {
             setSelectedItem({
               locationId: null,
               eventId: null,
+              showPanel: false,
             })
           }
         >

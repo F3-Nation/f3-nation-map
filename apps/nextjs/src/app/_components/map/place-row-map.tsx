@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 
-import { cn } from "@f3/ui";
-import { CardDescription, CardHeader, CardTitle } from "@f3/ui/card";
+import { cn } from "@acme/ui";
+import { CardDescription, CardHeader, CardTitle } from "@acme/ui/card";
 
 import type { GeoMapSearchResult } from "~/utils/types";
 import { onClickPlaceRowMap } from "~/utils/on-click-place-row-map";

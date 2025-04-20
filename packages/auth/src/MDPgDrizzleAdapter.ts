@@ -1,19 +1,20 @@
 import type { PgDatabase } from "drizzle-orm/pg-core";
-import type {
-  AdapterAuthenticator,
-  VerificationToken,
-} from "next-auth/adapters";
-import type { ProviderType } from "next-auth/providers";
+import type { MdAdapter } from "next-auth";
+import dayjs from "dayjs";
 import { and, eq } from "drizzle-orm";
 import omit from "lodash/omit";
 
-import { schema } from "@f3/db";
+import type { UserRole } from "@acme/shared/app/enums";
+import { schema, sql } from "@acme/db";
 
 const {
   users,
-  nextAuthAccounts: accounts,
-  nextAuthSessions: sessions,
-  nextAuthVerificationTokens: verificationTokens,
+  roles,
+  orgs,
+  rolesXUsersXOrg,
+  authAccounts: accounts,
+  authSessions: sessions,
+  authVerificationTokens: verificationTokens,
 } = schema;
 
 type NonNullableProps<T> = {
@@ -26,54 +27,112 @@ function stripUndefined<T>(obj: T): Pick<T, NonNullableProps<T>> {
   return result;
 }
 
+const getUser = async (
+  data: { id: number } | { email: string },
+  client: InstanceType<typeof PgDatabase>,
+) => {
+  if (LOG) console.log("getUser", data);
+  const user = await client
+    .select({
+      id: users.id,
+      email: users.email,
+      emailVerified: users.emailVerified,
+      editingRegionIds: sql<string[]>`array_agg(${rolesXUsersXOrg.orgId})`,
+      roles: sql<
+        { orgId: number; orgName: string; roleName: UserRole }[]
+      >`COALESCE(
+          json_agg(
+            json_build_object(
+              'orgId', ${schema.orgs.id}, 
+              'orgName', ${schema.orgs.name}, 
+              'roleName', ${schema.roles.name}
+            )
+          ) 
+          FILTER (
+            WHERE ${schema.orgs.id} IS NOT NULL
+          ), 
+          '[]'
+        )`,
+    })
+    .from(users)
+    .leftJoin(rolesXUsersXOrg, eq(users.id, rolesXUsersXOrg.userId))
+    .leftJoin(roles, eq(rolesXUsersXOrg.roleId, roles.id))
+    .leftJoin(orgs, eq(orgs.id, rolesXUsersXOrg.orgId))
+    .where("id" in data ? eq(users.id, data.id) : eq(users.email, data.email))
+    .groupBy(users.id)
+    .then((res) => res[0] ?? null);
+
+  if (!user) return null;
+
+  return {
+    ...user,
+    editingRegionIds: user.editingRegionIds.map((r) => Number(r)) ?? [],
+    emailVerified: user.emailVerified
+      ? dayjs(user.emailVerified).toDate()
+      : null,
+  };
+};
+
 const LOG = true;
 export function MDPGDrizzleAdapter(
   client: InstanceType<typeof PgDatabase>,
-): CustomAdapter {
+): MdAdapter {
   return {
     async createUser(data) {
       if (LOG) console.log("createUser", data);
-      return await client
+      const { id: userId } = await client
         .insert(users)
-        .values({ ...omit(data, "id") })
+        .values({
+          ...omit(data, "id"),
+          emailVerified: data.emailVerified?.toISOString(),
+        })
         .returning()
+        // .onConflictDoNothing()
         .then((res) => res[0]!);
+
+      const user = await getUser({ id: userId }, client);
+
+      if (!user) throw new Error("User not found.");
+
+      return user;
     },
     async getUser(data) {
       if (LOG) console.log("getUser", data);
-      return await client
-        .select()
-        .from(users)
-        .where(eq(users.id, data))
-        .then((res) => res[0] ?? null);
+      return await getUser({ id: data }, client);
     },
     async getUserByEmail(data) {
       if (LOG) console.log("getUserByEmail", data);
-      return await client
-        .select()
-        .from(users)
-        .where(eq(users.email, data))
-        .then((res) => res[0] ?? null);
+      return await getUser({ email: data }, client);
     },
     async createSession(data) {
       if (LOG) console.log("createSession", data);
-      return await client
+      const [session] = await client
         .insert(sessions)
-        .values(data)
-        .returning()
-        .then((res) => res[0]!);
+        .values({ ...data, expires: data.expires.toISOString() })
+        .returning();
+
+      if (!session) throw new Error("Unable to create session");
+
+      return { ...session, expires: new Date(session.expires) };
     },
     async getSessionAndUser(data) {
       if (LOG) console.log("getSessionAndUser", data);
-      return await client
-        .select({
-          session: sessions,
-          user: users,
-        })
+      const [session] = await client
+        .select()
         .from(sessions)
-        .where(eq(sessions.sessionToken, data))
-        .innerJoin(users, eq(users.id, sessions.userId))
-        .then((res) => res[0] ?? null);
+        .where(eq(sessions.sessionToken, data));
+      if (!session) return null;
+
+      const user = await getUser({ id: session.userId }, client);
+      if (!user) return null;
+
+      return {
+        session: {
+          ...session,
+          expires: new Date(session.expires),
+        },
+        user,
+      };
     },
     async updateUser(data) {
       if (LOG) console.log("updateUser", data);
@@ -81,21 +140,34 @@ export function MDPGDrizzleAdapter(
         throw new Error("No user id.");
       }
 
-      return await client
+      await client
         .update(users)
-        .set(data)
-        .where(eq(users.id, data.id))
-        .returning()
-        .then((res) => res[0]!);
+        .set({
+          id: data.id,
+          email: data.email,
+        })
+        .where(eq(users.id, data.id));
+
+      const user = await getUser({ id: data.id }, client);
+
+      if (!user) throw new Error("User not found.");
+
+      return user;
     },
     async updateSession(data) {
       if (LOG) console.log("updateSession", data);
-      return await client
+      const [session] = await client
         .update(sessions)
-        .set(data)
+        .set({ ...data, expires: data.expires?.toISOString() })
         .where(eq(sessions.sessionToken, data.sessionToken))
-        .returning()
-        .then((res) => res[0]);
+        .returning();
+
+      if (!session) throw new Error("Unable to update session");
+
+      return {
+        ...session,
+        expires: new Date(session.expires),
+      };
     },
     async linkAccount(rawAccount) {
       if (LOG) console.log("linkAccount", rawAccount);
@@ -103,58 +175,65 @@ export function MDPGDrizzleAdapter(
         await client
           .insert(accounts)
           .values(rawAccount)
+          // .onConflictDoNothing()
           .returning()
           .then((res) => res[0]!),
       );
     },
     async getUserByAccount(account) {
       if (LOG) console.log("getUserByAccount", account);
-      const dbAccount =
-        (await client
-          .select()
-          .from(accounts)
-          .where(
-            and(
-              eq(accounts.providerAccountId, account.providerAccountId),
-              eq(accounts.provider, account.provider),
-            ),
-          )
-          .leftJoin(users, eq(accounts.userId, users.id))
-          .then((res) => res[0])) ?? null;
+      const userId = await client
+        .select({ userId: accounts.userId })
+        .from(accounts)
+        .where(
+          and(
+            eq(accounts.providerAccountId, account.providerAccountId),
+            eq(accounts.provider, account.provider),
+          ),
+        )
+        .then((res) => res[0]?.userId ?? null);
 
-      return dbAccount?.users ?? null;
+      if (!userId) return null;
+
+      return await getUser({ id: userId }, client);
     },
     async deleteSession(sessionToken) {
       if (LOG) console.log("deleteSession", sessionToken);
-      const session = await client
+      const [session] = await client
         .delete(sessions)
         .where(eq(sessions.sessionToken, sessionToken))
-        .returning()
-        .then((res) => res[0] ?? null);
+        .returning();
 
-      return session;
+      return session
+        ? { ...session, expires: new Date(session.expires) }
+        : null;
     },
-    async createVerificationToken(token) {
-      if (LOG) console.log("createVerificationToken", token);
-      return await client
+    async createVerificationToken(data) {
+      if (LOG) console.log("createVerificationToken", data);
+      const [token] = await client
         .insert(verificationTokens)
-        .values(token)
-        .returning()
-        .then((res) => res[0]);
+        .values({ ...data, expires: data.expires.toISOString() })
+        .returning();
+
+      if (!token) throw new Error("Unable to create token");
+      return { ...token, expires: new Date(token.expires) };
     },
-    async useVerificationToken(token) {
+    async useVerificationToken(data) {
       try {
-        if (LOG) console.log("useVerificationToken", token);
-        return await client
+        if (LOG) console.log("useVerificationToken", data);
+        const [token] = await client
           .select()
           .from(verificationTokens)
           .where(
             and(
-              eq(verificationTokens.identifier, token.identifier),
-              eq(verificationTokens.token, token.token),
+              eq(verificationTokens.identifier, data.identifier),
+              eq(verificationTokens.token, data.token),
             ),
-          )
-          .then((res) => res[0] ?? null);
+          );
+
+        if (!token) throw new Error("No verification token found.");
+
+        return { ...token, expires: new Date(token.expires) };
       } catch (err) {
         throw new Error("No verification token found.");
       }
@@ -184,181 +263,3 @@ export function MDPGDrizzleAdapter(
     },
   };
 }
-
-interface AdapterUser {
-  id: number;
-  email: string;
-}
-
-interface AdapterSession {
-  userId: number;
-  sessionToken: string;
-  expires: Date;
-}
-
-interface AdapterAccount {
-  userId: number;
-  type: Extract<ProviderType, "oauth" | "oidc" | "email" | "webauthn">;
-  provider: string;
-  providerAccountId: string;
-}
-
-export interface CustomAdapter {
-  /**
-   * Creates a user in the database and returns it.
-   *
-   * See also [User management](https://authjs.dev/guides/adapters/creating-a-database-adapter#user-management)
-   */
-  createUser?(user: AdapterUser): Awaitable<AdapterUser>;
-  /**
-   * Returns a user from the database via the user id.
-   *
-   * See also [User management](https://authjs.dev/guides/adapters/creating-a-database-adapter#user-management)
-   */
-  getUser?(id: number): Awaitable<AdapterUser | null>;
-  /**
-   * Returns a user from the database via the user's email address.
-   *
-   * See also [Verification tokens](https://authjs.dev/guides/adapters/creating-a-database-adapter#verification-tokens)
-   */
-  getUserByEmail?(email: string): Awaitable<AdapterUser | null>;
-  /**
-   * Using the provider id and the id of the user for a specific account, get the user.
-   *
-   * See also [User management](https://authjs.dev/guides/adapters/creating-a-database-adapter#user-management)
-   */
-  getUserByAccount?(
-    providerAccountId: Pick<AdapterAccount, "provider" | "providerAccountId">,
-  ): Awaitable<AdapterUser | null>;
-  /**
-   * Updates a user in the database and returns it.
-   *
-   * See also [User management](https://authjs.dev/guides/adapters/creating-a-database-adapter#user-management)
-   */
-  updateUser?(
-    user: Partial<AdapterUser> & Pick<AdapterUser, "id">,
-  ): Awaitable<AdapterUser>;
-  /**
-   * @todo This method is currently not invoked yet.
-   *
-   * See also [User management](https://authjs.dev/guides/adapters/creating-a-database-adapter#user-management)
-   */
-  deleteUser?(
-    userId: number,
-  ): Promise<void> | Awaitable<AdapterUser | null | undefined>;
-  /**
-   * This method is invoked internally (but optionally can be used for manual linking).
-   * It creates an [Account](https://authjs.dev/reference/core/adapters#models) in the database.
-   *
-   * See also [User management](https://authjs.dev/guides/adapters/creating-a-database-adapter#user-management)
-   */
-  linkAccount?(
-    account: AdapterAccount,
-  ): Promise<void> | Awaitable<AdapterAccount | null | undefined>;
-  /** @todo This method is currently not invoked yet. */
-  unlinkAccount?(
-    providerAccountId: Pick<AdapterAccount, "provider" | "providerAccountId">,
-  ): Promise<void> | Awaitable<AdapterAccount | undefined>;
-  /**
-   * Creates a session for the user and returns it.
-   *
-   * See also [Database Session management](https://authjs.dev/guides/adapters/creating-a-database-adapter#database-session-management)
-   */
-  createSession?(session: {
-    sessionToken: string;
-    userId: number;
-    expires: Date;
-  }): Awaitable<AdapterSession>;
-  /**
-   * Returns a session and a userfrom the database in one go.
-   *
-   * :::tip
-   * If the database supports joins, it's recommended to reduce the number of database queries.
-   * :::
-   *
-   * See also [Database Session management](https://authjs.dev/guides/adapters/creating-a-database-adapter#database-session-management)
-   */
-  getSessionAndUser?(
-    sessionToken: string,
-  ): Awaitable<{ session: AdapterSession; user: AdapterUser } | null>;
-  /**
-   * Updates a session in the database and returns it.
-   *
-   * See also [Database Session management](https://authjs.dev/guides/adapters/creating-a-database-adapter#database-session-management)
-   */
-  updateSession?(
-    session: Partial<AdapterSession> & Pick<AdapterSession, "sessionToken">,
-  ): Awaitable<AdapterSession | null | undefined>;
-  /**
-   * Deletes a session from the database. It is preferred that this method also
-   * returns the session that is being deleted for logging purposes.
-   *
-   * See also [Database Session management](https://authjs.dev/guides/adapters/creating-a-database-adapter#database-session-management)
-   */
-  deleteSession?(
-    sessionToken: string,
-  ): Promise<void> | Awaitable<AdapterSession | null | undefined>;
-  /**
-   * Creates a verification token and returns it.
-   *
-   * See also [Verification tokens](https://authjs.dev/guides/adapters/creating-a-database-adapter#verification-tokens)
-   */
-  createVerificationToken?(
-    verificationToken: VerificationToken,
-  ): Awaitable<VerificationToken | null | undefined>;
-  /**
-   * Return verification token from the database and deletes it
-   * so it can only be used once.
-   *
-   * See also [Verification tokens](https://authjs.dev/guides/adapters/creating-a-database-adapter#verification-tokens)
-   */
-  useVerificationToken?(params: {
-    identifier: string;
-    token: string;
-  }): Awaitable<VerificationToken | null>;
-  /**
-   * Get account by provider account id and provider.
-   *
-   * If an account is not found, the adapter must return `null`.
-   */
-  getAccount?(
-    providerAccountId: AdapterAccount["providerAccountId"],
-    provider: AdapterAccount["provider"],
-  ): Awaitable<AdapterAccount | null>;
-  /**
-   * Returns an authenticator from its credentialID.
-   *
-   * If an authenticator is not found, the adapter must return `null`.
-   */
-  getAuthenticator?(
-    credentialID: AdapterAuthenticator["credentialID"],
-  ): Awaitable<AdapterAuthenticator | null>;
-  /**
-   * Create a new authenticator.
-   *
-   * If the creation fails, the adapter must throw an error.
-   */
-  createAuthenticator?(
-    authenticator: AdapterAuthenticator,
-  ): Awaitable<AdapterAuthenticator>;
-  /**
-   * Returns all authenticators from a user.
-   *
-   * If a user is not found, the adapter should still return an empty array.
-   * If the retrieval fails for some other reason, the adapter must throw an error.
-   */
-  listAuthenticatorsByUserId?(
-    userId: AdapterAuthenticator["userId"],
-  ): Awaitable<AdapterAuthenticator[]>;
-  /**
-   * Updates an authenticator's counter.
-   *
-   * If the update fails, the adapter must throw an error.
-   */
-  updateAuthenticatorCounter?(
-    credentialID: AdapterAuthenticator["credentialID"],
-    newCounter: AdapterAuthenticator["counter"],
-  ): Awaitable<AdapterAuthenticator>;
-}
-export type Awaitable<T> = T | PromiseLike<T>;
-export type Awaited<T> = T extends Promise<infer U> ? U : T;

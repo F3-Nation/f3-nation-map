@@ -1,6 +1,6 @@
 "use client";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { SelectedItem } from "./selected-item";
 import { SelectedItemSkeleton } from "./selected-item-skeleton";

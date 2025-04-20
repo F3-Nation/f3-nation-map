@@ -9,10 +9,10 @@ export async function ValidateSubmission({
   token,
   submissionId,
 }: ValidateSubmissionProps) {
-  let result: { success: boolean } | null = null;
+  let result: { status: "approved" | "rejected" | "pending" } | null = null;
 
   try {
-    result = await api.location.validateSubmission({
+    result = await api.request.validateSubmission({
       token,
       submissionId,
     });
@@ -20,7 +20,7 @@ export async function ValidateSubmission({
     console.error(error);
   }
 
-  if (result?.success) {
+  if (result?.status === "approved") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="rounded-full bg-green-100 p-3">

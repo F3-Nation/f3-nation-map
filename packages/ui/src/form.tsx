@@ -194,7 +194,7 @@ const ShadCNFormFactory = <T extends ZodType>(schema: T) => {
       schema,
     });
   const useSchemaFormContext = () => useFormContext<T["_input"]>();
-  return { useSchemaForm, useSchemaFormContext, schemaType: typeof schema };
+  return { useSchemaForm, useSchemaFormContext };
 };
 
 // Example usage

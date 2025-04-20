@@ -1,31 +1,35 @@
+import type { DayOfWeek } from "@acme/shared/app/enums";
+
 import type { RouterOutputs } from "~/trpc/types";
 
 export type F3MarkerLocation =
-  RouterOutputs["location"]["getLocationMarkersSparse"][number];
+  RouterOutputs["location"]["getMapEventAndLocationData"][number];
 
 export type F3Marker = NonNullable<
-  RouterOutputs["location"]["getLocationMarker"]
+  RouterOutputs["location"]["getLocationWorkoutData"]
 >;
 
 export interface SparseF3Marker {
   id: number;
   lat: number | null;
   lon: number | null;
-  logo: string | null;
+  logo?: string | null;
+  aoName: string | null;
   locationDescription: string | null;
   events: {
     id: number;
     name: string;
-    dayOfWeek: number | null;
+    dayOfWeek: DayOfWeek | null;
     startTime: string | null;
-    types: { id: number; name: string }[];
+    types: string[];
   }[];
 }
 
-export type LocationMarkerEventWithLatLon = F3Marker["events"][number] & {
-  lat: number;
-  lon: number;
-};
+export type LocationMarkerEventWithLatLon =
+  F3Marker["location"]["events"][number] & {
+    lat: number;
+    lon: number;
+  };
 
 // export type F3MapSearchResultItem =
 //   RouterOutputs["location"]["getAllLocationMarkers"][number]["events"][number] & {
@@ -61,9 +65,9 @@ export interface F3LocationMapSearchResult {
       id: number;
       locationId: number;
       name: string;
-      dayOfWeek: number | null;
+      dayOfWeek: DayOfWeek | null;
       startTime: string | null;
-      types: { id: number; name: string }[];
+      types: string[];
     };
     placeId: null;
   };

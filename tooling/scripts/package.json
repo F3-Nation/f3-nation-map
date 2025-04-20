@@ -1,5 +1,5 @@
 {
-  "name": "@f3/scripts",
+  "name": "@acme/scripts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,10 +17,10 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "devDependencies": {
-    "@f3/env": "workspace:*",
-    "@f3/eslint-config": "workspace:*",
-    "@f3/prettier-config": "workspace:*",
-    "@f3/tsconfig": "workspace:*",
+    "@acme/env": "workspace:*",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "tsx": "^4.7.1",
@@ -29,11 +29,11 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@f3/eslint-config/base"
+      "@acme/eslint-config/base"
     ],
     "ignorePatterns": [
       "**/*.js"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

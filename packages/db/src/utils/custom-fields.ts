@@ -1,7 +1,7 @@
 import { customType } from "drizzle-orm/pg-core";
 import z from "zod";
 
-import { safeParseFloat } from "@f3/shared/common/functions";
+import { safeParseFloat } from "@acme/shared/common/functions";
 
 const CustomNumericSchema = z.object({
   precision: z.number(),

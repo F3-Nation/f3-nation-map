@@ -2,13 +2,14 @@
 
 import type { ComponentProps } from "react";
 import Image from "next/image"; // Next.js Image component for optimized image rendering.
+
 import { X } from "lucide-react";
 
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { cn } from "@f3/ui";
-import { Button } from "@f3/ui/button";
-import { useTheme } from "@f3/ui/theme";
+import { SHORT_DAY_ORDER } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
+import { Button } from "@acme/ui/button";
+import { useTheme } from "@acme/ui/theme";
 
 import type { FiltersType } from "~/utils/store/filter";
 import {

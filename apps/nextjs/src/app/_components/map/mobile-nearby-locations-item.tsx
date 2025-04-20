@@ -2,17 +2,16 @@
 
 import isNumber from "lodash/isNumber";
 
-import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@f3/shared/app/constants";
-import { RERENDER_LOGS } from "@f3/shared/common/constants";
-import { onlyUnique } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { MOBILE_SEARCH_RESULT_ITEM_HEIGHT } from "@acme/shared/app/constants";
+import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { onlyUnique } from "@acme/shared/common/functions";
+import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
 import { useSearchResultSize } from "~/utils/hooks/use-search-result-size";
 import { setView } from "~/utils/set-view";
 import { searchStore } from "~/utils/store/search";
 import {
-  openPanel,
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
@@ -27,7 +26,6 @@ export const MobileNearbyLocationsItem = (props: {
   const searchBarRef = searchStore.use.searchBarRef();
 
   const locationId = selectedItemStore.use.locationId();
-  const eventId = selectedItemStore.use.eventId();
   const { searchResult } = props;
   const isSelected = searchResult.id === locationId;
 
@@ -54,6 +52,7 @@ export const MobileNearbyLocationsItem = (props: {
         setSelectedItem({
           locationId: searchResult.id,
           eventId: searchResult.events[0]?.id,
+          showPanel: true,
         });
         if (searchResult.lat !== null && searchResult.lon !== null) {
           setView({ lat: searchResult.lat, lng: searchResult.lon });
@@ -71,7 +70,9 @@ export const MobileNearbyLocationsItem = (props: {
       <div className="flex flex-row items-start gap-2">
         <button
           className="flex flex-shrink-0 flex-col items-center"
-          onClick={() => openPanel({ locationId: searchResult.id })}
+          onClick={() => {
+            setSelectedItem({ locationId: searchResult.id, showPanel: true });
+          }}
         >
           <ImageWithFallback
             src={searchResult.logo ? searchResult.logo : "/f3_logo.png"}
@@ -93,9 +94,7 @@ export const MobileNearbyLocationsItem = (props: {
               return (
                 <EventChip
                   key={event.id}
-                  selected={
-                    locationId === searchResult.id && event.id === eventId
-                  }
+                  selected={false}
                   size="small"
                   event={event}
                   location={searchResult}

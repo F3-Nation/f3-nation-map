@@ -1,5 +1,5 @@
-import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
+import { SIDEBAR_WIDTH } from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
 
 export const DesktopSidebarContainer = (props: {
   children: React.ReactNode;

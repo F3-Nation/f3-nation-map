@@ -8,13 +8,13 @@ import {
   DEFAULT_CENTER,
   SIDEBAR_WIDTH,
   Z_INDEX,
-} from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
-import { Checkbox } from "@f3/ui/checkbox";
-import { Input } from "@f3/ui/input";
-import { Label } from "@f3/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@f3/ui/popover";
-import { Spinner } from "@f3/ui/spinner";
+} from "@acme/shared/app/constants";
+import { cn } from "@acme/ui";
+import { Checkbox } from "@acme/ui/checkbox";
+import { Input } from "@acme/ui/input";
+import { Label } from "@acme/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
+import { Spinner } from "@acme/ui/spinner";
 
 import { api } from "~/trpc/react";
 import { useOnKeyPress } from "~/utils/hooks/use-on-key-press";
@@ -39,6 +39,8 @@ import { useTextSearchResults } from "./search-results-provider";
 
 export function MapSearchBox({
   className,
+  // Need to remove this prop from the component props
+  hideLogo: _hideLogo,
   ...rest
 }: ComponentProps<"div"> & { hideLogo?: true }) {
   const [showResults, setShowResults] = useState({
@@ -184,97 +186,99 @@ export function MapSearchBox({
               width: SIDEBAR_WIDTH,
             }}
           >
-            <div
-              ref={checkboxContainerRef}
-              className="border-b border-gray-200 p-2"
-            >
-              <div className="flex flex-row justify-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-locations"
-                    checked={showResults.location}
-                    onCheckedChange={(checked) => {
-                      inputRef.current?.focus(); // focus so blur will call next time
-                      setShowResults((prev) => ({
-                        ...prev,
-                        location: checked === true,
-                      }));
-                    }}
-                  />
-                  <Label htmlFor="show-locations">F3 Workouts</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-regions"
-                    checked={showResults.region}
-                    onCheckedChange={(checked) => {
-                      inputRef.current?.focus(); // focus so blur will call next time
-                      setShowResults((prev) => ({
-                        ...prev,
-                        region: checked === true,
-                      }));
-                    }}
-                  />
-                  <Label htmlFor="show-regions">F3 Regions</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-geo"
-                    checked={showResults.geo}
-                    onCheckedChange={(checked) => {
-                      inputRef.current?.focus(); // focus so blur will call next time
-                      setShowResults((prev) => ({
-                        ...prev,
-                        geo: checked === true,
-                      }));
-                    }}
-                  />
-                  <Label htmlFor="show-geo">Places</Label>
+            <>
+              <div
+                ref={checkboxContainerRef}
+                className="border-b border-gray-200 p-2"
+              >
+                <div className="flex flex-row justify-center gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="show-locations"
+                      checked={showResults.location}
+                      onCheckedChange={(checked) => {
+                        inputRef.current?.focus(); // focus so blur will call next time
+                        setShowResults((prev) => ({
+                          ...prev,
+                          location: checked === true,
+                        }));
+                      }}
+                    />
+                    <Label htmlFor="show-locations">F3 Workouts</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="show-regions"
+                      checked={showResults.region}
+                      onCheckedChange={(checked) => {
+                        inputRef.current?.focus(); // focus so blur will call next time
+                        setShowResults((prev) => ({
+                          ...prev,
+                          region: checked === true,
+                        }));
+                      }}
+                    />
+                    <Label htmlFor="show-regions">F3 Regions</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="show-geo"
+                      checked={showResults.geo}
+                      onCheckedChange={(checked) => {
+                        inputRef.current?.focus(); // focus so blur will call next time
+                        setShowResults((prev) => ({
+                          ...prev,
+                          geo: checked === true,
+                        }));
+                      }}
+                    />
+                    <Label htmlFor="show-geo">Places</Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {combinedResults.length === 0 ? (
-              <div className="mt-4 w-full text-center text-sm text-gray-700">
-                Search for a place or F3 workout by location, city, zip, etc.
-              </div>
-            ) : (
-              combinedResults
-                .filter((result) => {
-                  if (isF3LocationMapSearchResult(result)) {
-                    return showResults.location;
-                  }
-                  if (isF3RegionMapSearchResult(result)) {
-                    return showResults.region;
-                  }
-                  if (isGeoMapSearchResult(result)) {
-                    return showResults.geo;
-                  }
-                  return true;
-                })
-                .slice(0, 30)
-                .map((result, index) =>
-                  isF3LocationMapSearchResult(result) ? (
-                    <PlaceRowF3Location
-                      key={`f3-location-result-${result.destination.item.id}`}
-                      result={result}
-                      focused={focusedIndex === index}
-                    />
-                  ) : isF3RegionMapSearchResult(result) ? (
-                    <PlaceRowF3Region
-                      key={`f3-region-result-${result.destination.id}`}
-                      result={result}
-                      focused={focusedIndex === index}
-                    />
-                  ) : (
-                    <PlaceRowMap
-                      key={`geo-result-${result.destination.placeId}`}
-                      result={result}
-                      focused={focusedIndex === index}
-                    />
-                  ),
-                )
-            )}
+              {combinedResults.length === 0 ? (
+                <div className="mt-4 w-full text-center text-sm text-gray-700">
+                  Search for a place or F3 workout by location, city, zip, etc.
+                </div>
+              ) : (
+                combinedResults
+                  .filter((result) => {
+                    if (isF3LocationMapSearchResult(result)) {
+                      return showResults.location;
+                    }
+                    if (isF3RegionMapSearchResult(result)) {
+                      return showResults.region;
+                    }
+                    if (isGeoMapSearchResult(result)) {
+                      return showResults.geo;
+                    }
+                    return true;
+                  })
+                  .slice(0, 30)
+                  .map((result, index) =>
+                    isF3LocationMapSearchResult(result) ? (
+                      <PlaceRowF3Location
+                        key={`f3-location-result-${result.destination.item.id}`}
+                        result={result}
+                        focused={focusedIndex === index}
+                      />
+                    ) : isF3RegionMapSearchResult(result) ? (
+                      <PlaceRowF3Region
+                        key={`f3-region-result-${result.destination.id}`}
+                        result={result}
+                        focused={focusedIndex === index}
+                      />
+                    ) : (
+                      <PlaceRowMap
+                        key={`geo-result-${result.destination.placeId}`}
+                        result={result}
+                        focused={focusedIndex === index}
+                      />
+                    ),
+                  )
+              )}
+            </>
           </PopoverContent>
         </Popover>
       </div>

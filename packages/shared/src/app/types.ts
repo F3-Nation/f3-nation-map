@@ -18,26 +18,6 @@ export interface WorkoutData {
   Description: string;
 }
 
-export interface LeafletWorkoutData {
-  Group: string;
-  Time: string;
-  Type: string;
-  Region: string;
-  Website: string;
-  Notes: string;
-  "Marker Icon": string;
-  "Marker Color": string;
-  "Icon Color": string;
-  "Custom Size": string;
-  Name: string;
-  Image: string;
-  Description: string;
-  Location: string;
-  Latitude: string;
-  Longitude: string;
-  "Entry ID": string;
-}
-
 // Group the
 export interface GroupedMapData {
   id: string;
@@ -370,3 +350,33 @@ export const isDDD = (
     "Saturday",
   ].includes(day);
 };
+
+export type SlackUserMeta = Record<string, unknown>;
+
+export type SlackSpacesMeta = Record<string, unknown>;
+
+export type UserMeta = Record<string, unknown>;
+
+export type EventMeta = {
+  eventTypeId?: number;
+  mapSeed?: boolean;
+} & Record<string, unknown>;
+
+export type LocationMeta = {
+  latLonKey?: string;
+  mapSeed?: boolean;
+} & Record<string, unknown>;
+
+export type OrgMeta = {
+  latLonKey?: string;
+  mapSeed?: boolean;
+} & Record<string, unknown>;
+
+export type UpdateRequestMeta = Record<string, unknown>;
+
+export type AttendanceMeta = Record<string, unknown>;
+
+export interface RoleEntry {
+  orgId: number;
+  roleName: "editor" | "admin";
+}

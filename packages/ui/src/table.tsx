@@ -1,6 +1,12 @@
+import type { CellContext, Column } from "@tanstack/react-table";
 import * as React from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+
+import { Case } from "@acme/shared/common/enums";
+import { convertCase } from "@acme/shared/common/functions";
 
 import { cn } from ".";
+import { Button } from "./button";
 
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -102,7 +108,69 @@ const TableCaption = React.forwardRef<
 ));
 TableCaption.displayName = "TableCaption";
 
+const Row = ({
+  children,
+}: React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLDivElement>,
+  HTMLDivElement
+>) => {
+  return <div className="ml-4 flex items-center">{children}</div>;
+};
+
+const ColumnSortIcon = <T,>({ column }: { column: Column<T, unknown> }) => {
+  switch (column.getIsSorted()) {
+    case "asc":
+      return <ArrowUp className="ml-2 h-4 w-4" color="black" />;
+    case "desc":
+      return <ArrowDown className="ml-2 h-4 w-4" color="black" />;
+    default:
+      return <ArrowUpDown className="ml-2 h-4 w-4" color="#bbb" />;
+  }
+};
+
+const Header = <T,>({
+  column,
+  children,
+}: {
+  column: Column<T>;
+  children?: React.ReactNode;
+}) => {
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      className="text-left"
+    >
+      {children ??
+        column.columnDef.meta?.name ??
+        convertCase({
+          str: column.id,
+          fromCase: Case.CamelCase,
+          toCase: Case.TitleCase,
+        })}
+      <ColumnSortIcon column={column} />
+    </Button>
+  );
+};
+const Cell = <T,>(
+  params: React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLDivElement>,
+    HTMLDivElement
+  > &
+    Partial<CellContext<T, string | number>>,
+) => {
+  return (
+    <div className={cn("ml-4 flex items-center", params.className)}>
+      {params.children ?? params.getValue?.()}
+    </div>
+  );
+};
+
 export {
+  Cell,
+  ColumnSortIcon,
+  Header,
+  Row,
   Table,
   TableBody,
   TableCaption,

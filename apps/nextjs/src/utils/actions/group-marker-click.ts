@@ -1,33 +1,40 @@
-import { clientUtils } from "~/trpc/server-side-react-helpers";
+import { queryClientUtils } from "~/trpc/react";
+import {
+  selectedItemStore,
+  setSelectedItem,
+} from "~/utils/store/selected-item";
 import { isTouchDevice } from "../is-touch-device";
 import { setView } from "../set-view";
-import { openPanel, selectedItemStore } from "../store/selected-item";
+import { mapStore } from "../store/map";
 
-export const groupMarkerClick = ({
+export const groupMarkerClick = async ({
   locationId,
   eventId,
 }: {
-  locationId?: number | null;
-  eventId?: number | null;
+  locationId: number;
+  eventId?: number;
 }) => {
-  const isMobile = isTouchDevice();
+  const touchDevice = isTouchDevice();
   const isAlreadySelected =
     selectedItemStore.get("locationId") === locationId &&
     selectedItemStore.get("eventId") === eventId;
-  if (!isMobile || isAlreadySelected) {
-    openPanel({ locationId, eventId });
-  } else {
-    // setSelectedItem({ locationId, eventId });
-    selectedItemStore.setState({
-      ...(locationId !== undefined ? { locationId: locationId } : {}),
-      ...(eventId !== undefined ? { eventId: eventId } : {}),
-      hideSelectedItem: false,
-    });
-  }
-  const location = clientUtils.location.getLocationMarkersSparse
-    .getData()
-    ?.find((marker) => marker.id === locationId);
-  if (typeof location?.lat === "number" && typeof location?.lon === "number") {
-    setView({ lat: location.lat, lng: location.lon });
-  }
+  const location = await queryClientUtils.location.getLocationWorkoutData.fetch(
+    {
+      locationId,
+    },
+  );
+  if (!location) return;
+
+  const modifiedLocation = mapStore.get("modifiedLocationMarkers")[locationId];
+
+  const lat = modifiedLocation?.lat ?? location.location.lat;
+  const lon = modifiedLocation?.lng ?? location.location.lon;
+  if (lat === null || lon === null) return;
+
+  setSelectedItem({
+    locationId,
+    eventId,
+    showPanel: !touchDevice || isAlreadySelected,
+  });
+  setView({ lat, lng: lon, zoom: 15 });
 };

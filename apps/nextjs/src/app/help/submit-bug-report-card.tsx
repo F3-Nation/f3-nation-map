@@ -2,9 +2,9 @@
 
 import * as React from "react";
 
-import type { FeedbackSchema } from "@f3/shared/app/constants";
-import { feedbackSchema } from "@f3/shared/app/constants";
-import { Button } from "@f3/ui/button";
+import type { FeedbackSchema } from "@acme/shared/app/constants";
+import { feedbackSchema } from "@acme/shared/app/constants";
+import { Button } from "@acme/ui/button";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@f3/ui/card";
+} from "@acme/ui/card";
 import {
   Form,
   FormField,
@@ -20,16 +20,16 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
+} from "@acme/ui/form";
+import { Input } from "@acme/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@f3/ui/select";
-import { Textarea } from "@f3/ui/textarea";
+} from "@acme/ui/select";
+import { Textarea } from "@acme/ui/textarea";
 
 import { api } from "~/trpc/react";
 

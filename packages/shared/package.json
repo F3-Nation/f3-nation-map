@@ -1,5 +1,5 @@
 {
-  "name": "@f3/shared",
+  "name": "@acme/shared",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -20,9 +20,9 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@f3/eslint-config": "workspace:^0.2.0",
-    "@f3/prettier-config": "workspace:^0.1.0",
-    "@f3/tsconfig": "workspace:^0.1.0",
+    "@acme/eslint-config": "workspace:^0.2.0",
+    "@acme/prettier-config": "workspace:^0.1.0",
+    "@acme/tsconfig": "workspace:^0.1.0",
     "@types/node": "^20.11.13",
     "eslint": "^8.56.0",
     "typescript": "^5.3.3"
@@ -30,8 +30,8 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@f3/eslint-config/base"
+      "@acme/eslint-config/base"
     ]
   },
-  "prettier": "@f3/prettier-config"
+  "prettier": "@acme/prettier-config"
 }

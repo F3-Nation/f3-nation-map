@@ -1,51 +1,7 @@
 import { z } from "zod";
 
-import type { GroupedMapData, LeafletWorkoutData } from "@f3/shared/app/types";
-import { isDDD } from "@f3/shared/app/types";
-
+import type { DayOfWeek } from "./enums";
 import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "./constants";
-
-export function groupMarkersByLocation(_mapData: LeafletWorkoutData[]) {
-  // Object to hold the results, with lat-lng as key
-  const groupedMarkers: Record<string, GroupedMapData> = {};
-
-  _mapData.forEach((marker) => {
-    // Create a unique key based on latitude and longitude
-    const locationKey = `${marker.Latitude},${marker.Longitude}`;
-
-    // If this is the first time we've seen this location, initialize it
-    if (!groupedMarkers[locationKey]) {
-      groupedMarkers[locationKey] = {
-        id: locationKey,
-        Location: marker.Location,
-        Latitude: parseFloat(marker.Latitude),
-        Longitude: parseFloat(marker.Longitude),
-        Image: marker.Image,
-        Name: marker.Name.toString(),
-        Region: marker.Region,
-        Website: marker.Website,
-        Groups: [],
-      };
-    }
-
-    // Add the group (day of the week) and time to the location
-    groupedMarkers[locationKey]?.Groups.push({
-      WorkoutName: marker.Name.toString(),
-      "Day of week": isDDD(marker.Group) ? marker.Group : "Monday",
-      Time: marker.Time,
-      Type: marker.Type,
-      Notes: marker.Notes.toString(),
-      "Marker Icon": marker["Marker Icon"],
-      "Marker Color": marker["Marker Color"],
-      "Icon Color": marker["Icon Color"],
-      "Custom Size": marker["Custom Size"],
-      Description: marker.Description,
-    });
-  });
-
-  // Convert the results back to an array
-  return Object.values(groupedMarkers);
-}
 
 export function zoomToRadius(zoom: number): number {
   // Clamp zoom between 4 and 20
@@ -103,3 +59,45 @@ export const dateOrIso = z.union([
   z.date(),
   z.string().refine(isISODate, { message: "Not a valid ISO string date " }),
 ]);
+
+export const dayOfWeekToShortDayOfWeek = (dayOfWeek: DayOfWeek): string => {
+  switch (dayOfWeek) {
+    case "sunday":
+      return "Su";
+    case "monday":
+      return "M";
+    case "tuesday":
+      return "Tu";
+    case "wednesday":
+      return "W";
+    case "thursday":
+      return "Th";
+    case "friday":
+      return "F";
+    case "saturday":
+      return "Sa";
+    default:
+      return "Su";
+  }
+};
+
+export const getReadableDayOfWeek = (dayOfWeek: DayOfWeek | null) => {
+  if (!dayOfWeek) {
+    return null;
+  }
+  return dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+};
+
+export const convertHH_mmToHHmm = (value: string) => {
+  if (!value || value.length !== 5) {
+    return "";
+  }
+  return value.replace(":", "");
+};
+
+export const convertHHmmToHH_mm = (value: string) => {
+  if (!value || value.length !== 4) {
+    return "";
+  }
+  return value.slice(0, 2) + ":" + value.slice(2, 4);
+};

@@ -1,19 +1,17 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import isNumber from "lodash/isNumber";
 
-import { isProduction, RERENDER_LOGS } from "@f3/shared/common/constants";
-import { onlyUnique } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
+import { isProduction, RERENDER_LOGS } from "@acme/shared/common/constants";
+import { cn } from "@acme/ui";
 
 import type { LocationMarkerWithDistance } from "./filtered-map-results-provider";
-import { isTouchDevice } from "~/utils/is-touch-device";
 import { setView } from "~/utils/set-view";
 import { appStore } from "~/utils/store/app";
 import { searchStore } from "~/utils/store/search";
 import {
-  openPanel,
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
@@ -35,61 +33,84 @@ export const NearbyLocationItem = (props: {
   const { item } = props;
   const isSelected = item.id === locationId;
 
-  const name = item.events
-    .map((event) => event.name)
-    .filter(onlyUnique)
-    .join(", ");
+  const handleClick = useCallback(
+    ({
+      locationId,
+      eventId,
+      clearSearch,
+    }: {
+      locationId: number;
+      eventId: number | null;
+      clearSearch: boolean;
+    }) => {
+      // Open panel first so that the centering to the marker is offset if needed
+      setTimeout(() => {
+        setSelectedItem({
+          locationId,
+          eventId,
+          showPanel: true,
+        });
+      }, 250);
+      if (item.lat !== null && item.lon !== null) {
+        setView({ lat: item.lat, lng: item.lon });
+        // prevent the next mouse enter from triggering a change
+        appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
+      }
+      if (clearSearch) {
+        searchStore.setState({ shouldShowResults: false });
+        searchBarRef.current?.blur();
+      }
+    },
+    [item, searchBarRef],
+  );
+
+  const handleHover = useCallback(
+    ({
+      locationId,
+      eventId,
+    }: {
+      locationId: number;
+      eventId: number | null;
+    }) => {
+      setSelectedItem({
+        locationId,
+        eventId,
+        showPanel: false,
+      });
+    },
+    [],
+  );
+
+  const name = item.aoName;
   return (
     <button
       className={cn(
         "text-left text-sm text-foreground",
-        "relative w-full max-w-[450px] cursor-pointer px-2 py-2",
+        "relative w-full cursor-pointer px-2 py-2",
         "bg-background",
         { "bg-muted": isSelected },
       )}
-      onMouseEnter={() => {
-        const isMobile = isTouchDevice();
-        // This is the click for mobile
-
-        setSelectedItem({
+      // @RollOver (SoCo - St. Louis) & @Mr. Roboto (New Bern, NC) had issues with the mouse events we were using here
+      // Likely everything needs to be condensed to onClick and onMouseEnter for handleClick and handleHover
+      // Dell Precision Notebook
+      onClick={(e) => {
+        handleClick({
+          locationId: item.id,
+          eventId: null,
+          clearSearch: true,
+        });
+        e.stopPropagation();
+      }}
+      onMouseEnter={(e) => {
+        if (ignoreNextNearbyItemMouseEnter) {
+          appStore.setState({ ignoreNextNearbyItemMouseEnter: false });
+          return;
+        }
+        handleHover({
           locationId: item.id,
           eventId: null,
         });
-
-        if (isMobile) {
-          searchBarRef.current?.blur();
-          if (item.lat !== null && item.lon !== null) {
-            setView({ lat: item.lat, lng: item.lon });
-          }
-          searchStore.setState({ shouldShowResults: false });
-        } else {
-          // Log to know if this was due to a mouse movement or element adjustment
-          if (ignoreNextNearbyItemMouseEnter) {
-            appStore.setState({ ignoreNextNearbyItemMouseEnter: false });
-            return;
-          }
-        }
-      }}
-      onFocus={() => {
-        console.log("onMouseEnter NearbyLocationItem", item);
-        setSelectedItem({
-          locationId: item.id,
-          eventId: item.events[0]?.id,
-        });
-      }}
-      onClick={() => {
-        console.log("onClick NearbyLocationItem", item);
-        // Open panel first so that the centering to the marker is offset if needed
-        openPanel({ locationId: item.id });
-        if (item.lat !== null && item.lon !== null) {
-          setView({ lat: item.lat, lng: item.lon });
-          setSelectedItem({
-            locationId: null,
-            eventId: null,
-          });
-          // prevent the next mouse enter from triggering a change
-          appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
-        }
+        e.stopPropagation();
       }}
     >
       <div className="flex flex-row items-stretch gap-1">
@@ -120,20 +141,26 @@ export const NearbyLocationItem = (props: {
             ) : null}
           </div>
           <div className="flex flex-row flex-wrap gap-x-2 gap-y-1 ">
-            {item.events
-              .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
-              .map((event) => {
-                return (
-                  <EventChip
-                    event={event}
-                    key={event.id}
-                    location={item}
-                    size="small"
-                    hideName
-                    selected={event.id === eventId && item.id === locationId}
-                  />
-                );
-              })}
+            {item.events.map((event) => {
+              return (
+                <EventChip
+                  event={event}
+                  key={event.id}
+                  location={item}
+                  size="small"
+                  hideName
+                  selected={event.id === eventId && item.id === locationId}
+                  onClick={(e) => {
+                    handleClick({
+                      locationId: item.id,
+                      eventId: event.id,
+                      clearSearch: false,
+                    });
+                    e?.stopPropagation();
+                  }}
+                />
+              );
+            })}
           </div>
           {item.locationDescription ? (
             <Link

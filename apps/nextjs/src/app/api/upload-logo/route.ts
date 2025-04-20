@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleAuth } from "google-auth-library";
 
-import { env } from "@f3/env";
+import { env } from "@acme/env";
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +19,10 @@ export async function POST(request: Request) {
     // Initialize Google Auth
     const auth = new GoogleAuth({
       credentials: {
-        private_key: env.GOOGLE_LOGO_BUCKET_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        private_key: env.GOOGLE_LOGO_BUCKET_PRIVATE_KEY.replace(
+          /\\\n/g,
+          "\n",
+        ).replace(/\\n/g, "\n"),
         client_email: env.GOOGLE_LOGO_BUCKET_CLIENT_EMAIL,
       },
       scopes: ["https://www.googleapis.com/auth/cloud-platform"],

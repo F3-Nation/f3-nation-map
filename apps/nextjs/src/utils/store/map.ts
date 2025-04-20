@@ -1,42 +1,69 @@
-import type { LatLng, LatLngBounds, LatLngLiteral, Map } from "leaflet";
-import type { MutableRefObject } from "react";
-import { createRef } from "react";
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@acme/shared/app/constants";
+import { ZustandStore } from "@acme/shared/common/classes";
 
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@f3/shared/app/constants";
-import { ZustandStore } from "@f3/shared/common/classes";
+export type NearbyLocationCenterType =
+  | "self"
+  | "search"
+  | "manual-update"
+  | "default"
+  | "click"
+  | "random";
 
 const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   zoom: DEFAULT_ZOOM,
   userGpsLocation: null as { latitude: number; longitude: number } | null,
+  userGpsLocationStatus: "loading" as "loading" | "success" | "error" | "idle",
+  userGpsLocationPermissions: "prompt" as PermissionState,
+
   userInitialIpLocation: null as {
     latitude: number;
     longitude: number;
   } | null,
-  bounds: null as LatLngBounds | null,
-  center: null as LatLng | null,
-  ref: createRef<Map>() as MutableRefObject<Map | null>,
-  // This is updated in the map listener on pan and is used to convert latlng to container point - definitely a hack
-  placeResultArea: null as string | null,
-  placeResultLocation: null as LatLngLiteral | null,
-  updateLocation: null as LatLngLiteral | null,
-  nearbyLocationCenter: {
+  // bounds: null as google.maps.LatLngBoundsLiteral | null,
+  center: {
     lat: DEFAULT_CENTER[0],
     lng: DEFAULT_CENTER[1],
-  } as LatLngLiteral & { name?: string },
-  tiles: "street" as "satellite" | "street",
+  } as google.maps.LatLngLiteral,
+  map: null as google.maps.Map | null,
+  projection: null as google.maps.MapCanvasProjection | null,
+  // This is updated in the map listener on pan and is used to convert latlng to container point - definitely a hack
+  placeResultArea: null as string | null,
+  placeResultLocation: null as google.maps.LatLngLiteral | null,
+  updateLocation: null as google.maps.LatLngLiteral | null,
+  nearbyLocationCenter: {
+    lat: null as google.maps.LatLngLiteral["lat"] | null,
+    lng: null as google.maps.LatLngLiteral["lng"] | null,
+    name: null as string | null,
+    type: "default" as NearbyLocationCenterType,
+  },
+  modifiedLocationMarkers: {} as Record<number, { lat: number; lng: number }>,
+  tiles: "street" as "street" | "hybrid",
+  event: "idle" as "idle" | "drag" | "zoom",
+  tilesLoaded: false,
   showDebug: false,
   loaded: false,
-  dragging: false,
   hasMovedMap: false,
+  // This allows us to be precise with zoom level when clicking on a cluster
+  fractionalZoom: false,
+  hasTriedInitialShowUserLocation: false,
 };
+
+export type MapStoreState = typeof initialState;
 
 export const mapStore = new ZustandStore({
   initialState,
   persistOptions: {
     name: "map-store",
-    version: 1,
-    persistedKeys: [],
+    version: 2,
+    persistedKeys: ["center", "zoom"],
     getStorage: () => localStorage,
+    onRehydrateStorage: (state) => {
+      console.log("onRehydrateStorage map", state);
+      if (state?.center != undefined && state?.zoom != undefined) {
+        console.log("onRehydrateStorage map hasMovedMap", state.hasMovedMap);
+        mapStore.setState({ hasMovedMap: true });
+      }
+    },
   },
 });

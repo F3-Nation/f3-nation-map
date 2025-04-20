@@ -147,6 +147,13 @@ export const convertCase = ({
 }): string => {
   const fromCase = fromCaseRaw ?? getCase(str);
   switch (fromCase) {
+    case Case.LowerCase:
+      switch (toCase) {
+        case Case.TitleCase:
+          return str[0]?.toUpperCase() + str.slice(1);
+        default:
+          throw new Error(`Cannot convert ${fromCase} to ${toCase}`);
+      }
     case Case.CamelCase:
       switch (toCase) {
         case Case.PascalCase:

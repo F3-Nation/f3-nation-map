@@ -1,92 +1,64 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useWindowSize } from "@react-hook/window-size";
+import { useMap } from "@vis.gl/react-google-maps";
 import { Minus, Plus } from "lucide-react";
 
-import { SIDEBAR_WIDTH } from "@f3/shared/app/constants";
-import { cn } from "@f3/ui";
-
-import { useMapRef } from "./map-ref-provider";
+import { cn } from "@acme/ui";
 
 export const ZoomButtons = () => {
-  const { mapRef } = useMapRef();
-  const [width] = useWindowSize();
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  useEffect(() => {
-    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
-  }, []);
-
-  const triggerSmoothZoom = useCallback(
-    (direction: "in" | "out") => {
-      if (mapRef.current) {
-        const map = mapRef.current;
-        const center = map.getCenter();
-        const containerPoint = map.latLngToContainerPoint(center);
-        const x =
-          width >= 1024 ? SIDEBAR_WIDTH + containerPoint.x : containerPoint.x;
-        const y = containerPoint.y;
-
-        if (isTouchDevice) {
-          const map = mapRef.current;
-          const overlayPane = map.getPane("overlayPane");
-          const currentZoom = map.getZoom();
-          const zoomChange = direction === "in" ? 1 : -1;
-          const newZoom = currentZoom + zoomChange;
-
-          overlayPane && (overlayPane.style.display = "none");
-          map.setZoom(newZoom, {
-            animate: true,
-            duration: 0.25, // Adjust this value to control the animation speed
-          });
-          setTimeout(() => {
-            overlayPane && (overlayPane.style.display = "block");
-          }, 300); // Slightly longer than the animation duration to ensure it completes
-        } else {
-          const wheelEvent = new WheelEvent("wheel", {
-            deltaY: direction === "in" ? -333 : 333,
-            clientX: x,
-            clientY: y,
-          });
-          mapRef.current?.getContainer().dispatchEvent(wheelEvent);
-        }
-      }
-    },
-    [mapRef, width, isTouchDevice],
-  );
-
-  return (
-    <>
-      <div className="overflow-hidden rounded-md shadow dark:border">
+  const map = useMap();
+  return !map ? null : (
+    <div className="flex flex-col lg:mx-2.5">
+      <div className="flex flex-col overflow-hidden bg-white shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]">
+        {/* First button */}
         <button
+          draggable="false"
+          aria-label="Settings"
+          title="Settings"
+          type="button"
           className={cn(
-            "pointer-events-auto flex size-[36px] items-center justify-center bg-background text-black",
-            "hover:bg-accent",
+            "cursor-pointer appearance-none",
+            "relative block",
+            "h-10 w-10",
+            "m-0 border-0 p-0",
+            "user-select-none",
+            "flex items-center justify-center",
           )}
-          onClick={(e) => {
-            triggerSmoothZoom("in");
-            e.stopPropagation();
-            e.preventDefault();
+          onClick={() => {
+            const zoom = map.getZoom();
+            if (zoom == null) return;
+            map.setZoom(zoom + 1);
           }}
         >
-          <Plus size={16} className="text-foreground" />
+          <Plus strokeWidth={1.75} className={cn("size-7 text-[#666]")} />
         </button>
-        <div className="h-[1px] w-full bg-accent" />
+
+        {/* Dividing line that doesn't go full width */}
+        <div className="mx-auto w-6 border-t border-gray-300"></div>
+
+        {/* Second button */}
         <button
-          onClick={(e) => {
-            triggerSmoothZoom("out");
-            e.stopPropagation();
-            e.preventDefault();
-          }}
+          draggable="false"
+          aria-label="Second Action"
+          title="Second Action"
+          type="button"
           className={cn(
-            "pointer-events-auto flex size-[36px] items-center justify-center bg-background text-black",
-            "hover:bg-accent",
+            "cursor-pointer appearance-none",
+            "relative block",
+            "h-10 w-10",
+            "m-0 border-0 p-0",
+            "user-select-none",
+            "flex items-center justify-center",
           )}
+          onClick={() => {
+            const zoom = map.getZoom();
+            if (zoom == null) return;
+            map.setZoom(zoom - 1);
+          }}
         >
-          <Minus size={16} className="text-foreground" />
+          <Minus strokeWidth={1.75} className={cn("size-7 text-[#666]")} />
         </button>
       </div>
-    </>
+    </div>
   );
 };

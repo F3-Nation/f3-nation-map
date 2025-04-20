@@ -1,5 +1,5 @@
-import { SnapPoint } from "@f3/shared/app/constants";
-import { ZustandStore } from "@f3/shared/common/classes";
+import { SnapPoint } from "@acme/shared/app/constants";
+import { ZustandStore } from "@acme/shared/common/classes";
 
 const initialState = {
   snap: SnapPoint["pt-150px"],

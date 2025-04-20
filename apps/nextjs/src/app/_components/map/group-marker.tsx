@@ -1,158 +1,196 @@
-"use client";
-
-import { memo } from "react";
-import L from "leaflet";
-import isNumber from "lodash/isNumber";
-import ReactDOMServer from "react-dom/server";
-import { Marker } from "react-leaflet";
-
-import { SHORT_DAY_ORDER } from "@f3/shared/app/constants";
-import { safeParseInt } from "@f3/shared/common/functions";
-import { cn } from "@f3/ui";
-
-import type { SparseF3Marker } from "~/utils/types";
-import { groupMarkerClick } from "~/utils/actions/group-marker-click";
-import { isTouchDevice } from "~/utils/is-touch-device";
+import { useCallback } from "react";
 import {
-  clearSelectedItem,
+  AdvancedMarker,
+  AdvancedMarkerAnchorPoint,
+  useAdvancedMarkerRef,
+} from "@vis.gl/react-google-maps";
+
+import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
+import { cn } from "@acme/ui";
+
+import { groupMarkerClick } from "~/utils/actions/group-marker-click";
+import { appStore } from "~/utils/store/app";
+import { mapStore } from "~/utils/store/map";
+import {
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
+import { useTouchDevice } from "~/utils/touch-device-provider";
+import { useFilteredMapResults } from "../map/filtered-map-results-provider";
 
-export const MemoGroupMarker = memo(
-  ({ group, show }: { group: SparseF3Marker; show: boolean }) => {
-    const { lat, lon, events, id } = group;
-    if (!show || lat === null || lon === null) return null;
-    return (
-      <Marker
-        position={[lat, lon]}
-        eventHandlers={{
-          mouseout: () => {
-            if (isTouchDevice()) return;
-            if (selectedItemStore.get("locationId") !== id) return;
-            clearSelectedItem();
-          },
+interface TreeMarkerProps {
+  position: google.maps.LatLngLiteral;
+  featureId: string;
+  onMarkerClick?: (
+    marker: google.maps.marker.AdvancedMarkerElement,
+    featureId: string,
+  ) => void;
+}
 
-          // Main feature is a mouseover
-          mouseover: (e) => {
-            if (isTouchDevice()) return;
-            const eventIdString = Array.from(
-              (e.originalEvent.target as HTMLDivElement)?.classList,
-            )
-              // Use a class name to find the event id
-              .find((className) => className.startsWith("leaflet-eventid-"))
-              ?.split("-")[2];
-            const eventId = safeParseInt(eventIdString);
-            // Only send eventId if it is a valid number
-            setSelectedItem({
-              locationId: id,
-              ...(isNumber(eventId) ? { eventId } : {}),
-            });
-          },
-          // Use mousemove to update the selected item
-          mousemove: (e) => {
-            if (isTouchDevice()) return;
-            if (selectedItemStore.get("locationId") !== id) return;
-            const eventIdString = Array.from(
-              (e.originalEvent.target as HTMLDivElement)?.classList,
-            )
-              // Use a class name to find the event id
-              .find((className) => className.startsWith("leaflet-eventid-"))
-              ?.split("-")[2];
-            const eventId = safeParseInt(eventIdString);
-            if (
-              selectedItemStore.get("eventId") === eventId ||
-              eventId === undefined
-            )
-              return;
-            // Only send eventId if it is a valid number
-            setSelectedItem({
-              ...(isNumber(eventId) ? { eventId } : {}),
-            });
-          },
-          click: (e) => {
-            const eventIdString = Array.from(
-              (e.originalEvent.target as HTMLDivElement)?.classList,
-            )
-              // Use a class name to find the event id
-              .find((className) => className.startsWith("leaflet-eventid-"))
-              ?.split("-")[2];
-            const eventId = safeParseInt(eventIdString);
-            groupMarkerClick({ locationId: id, eventId });
-          },
-        }}
-        icon={L.divIcon({
-          iconSize: [events.length * 30 + 4, 34],
-          iconAnchor: [(events.length * 30 + 4) / 2, 34 + 15],
-          className: "",
-          html: ReactDOMServer.renderToString(
-            <div className="flex flex-col">
-              <div
-                className="flex flex-row rounded-full ring-[1px] ring-gray-700"
-                style={{ zIndex: 1 }}
+export const FeatureMarker = ({
+  position: _position,
+  featureId,
+}: TreeMarkerProps) => {
+  const mode = appStore.use.mode();
+  const { filteredLocationMarkers } = useFilteredMapResults();
+  const selectedLocationId = selectedItemStore.use.locationId();
+  const selectedEventId = selectedItemStore.use.eventId();
+  const panelLocationId = selectedItemStore.use.panelLocationId();
+  const panelEventId = selectedItemStore.use.panelEventId();
+  const { isTouchDevice: touchDevice } = useTouchDevice();
+  const [markerRef] = useAdvancedMarkerRef();
+  const id = Number(featureId);
+  const modifiedLocation = mapStore.useBoundStore(
+    (s) => s.modifiedLocationMarkers[id],
+  );
+  const position = modifiedLocation ?? _position;
+  // const position = _position;
+
+  const events = filteredLocationMarkers?.find(
+    (marker) => marker.id === id,
+  )?.events;
+  const isCurrentSelectedLocation = selectedLocationId === id;
+  const isCurrentPanelLocation = panelLocationId === id;
+  const noSelectedEvent = selectedEventId == null;
+  const noSelectedPanelEvent = panelEventId == null;
+
+  const handleClick = useCallback(
+    ({ locationId, eventId }: { locationId: number; eventId?: number }) => {
+      void groupMarkerClick({
+        locationId,
+        ...(eventId == null ? {} : { eventId }),
+      });
+    },
+    [],
+  );
+
+  const handleHover = useCallback(
+    ({ locationId, eventId }: { locationId: number; eventId?: number }) => {
+      setSelectedItem({ locationId, eventId, showPanel: false });
+    },
+    [],
+  );
+
+  const handleDragEnd = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      e.stop();
+      const lat = e.latLng?.lat();
+      const lng = e.latLng?.lng();
+
+      if (!lat || !lng) return;
+
+      mapStore.setState({
+        modifiedLocationMarkers: {
+          ...mapStore.get("modifiedLocationMarkers"),
+          [id]: { lat, lng },
+        },
+      });
+    },
+    [id],
+  );
+
+  return !events?.length ? null : (
+    <AdvancedMarker
+      ref={markerRef}
+      draggable={mode === "edit"}
+      position={position}
+      anchorPoint={AdvancedMarkerAnchorPoint.BOTTOM}
+      className={"marker feature"}
+      onDragEnd={handleDragEnd}
+      onClick={(e) => {
+        // There are some places on the icon where the button is not clicked
+        // but the marker is clicked (bottom left and right corners)
+        // This is also necessary for mobile edit mode clicks
+        const eventId = events.find(
+          (event) => event.id === selectedEventId,
+        )?.id;
+        handleClick({
+          locationId: id,
+          eventId: eventId ?? events[0]?.id,
+        });
+
+        // Must call stop to prevent the map from being clicked
+        e.stop();
+      }}
+      zIndex={
+        isCurrentSelectedLocation ? 1002 : isCurrentPanelLocation ? 1001 : 1000
+      }
+    >
+      <div className="relative flex flex-col">
+        <div
+          className={cn("flex flex-row rounded-full ring-[1px] ring-gray-700")}
+          style={{ zIndex: 1, width: `${events.length * 30 + 4}px` }}
+        >
+          {events.map((event, eventIdx, eventArray) => {
+            const isCurrentPanelLocation = panelLocationId === id;
+            const isCurrentPanelEvent = panelEventId === event.id;
+            const isCurrentSelectedEvent = selectedEventId === event.id;
+            const dotw = event.dayOfWeek;
+            const isStart = eventIdx === 0;
+            const isEnd = eventIdx === eventArray.length - 1;
+            const dayText = dotw ? dayOfWeekToShortDayOfWeek(dotw) : null;
+            return (
+              <button
+                key={id + "-" + event.id}
+                onClick={(e) => {
+                  handleClick({ locationId: id, eventId: event.id });
+                  e.stopPropagation();
+                }}
+                onMouseEnter={(e) => {
+                  handleHover({ locationId: id, eventId: event.id });
+                  e.stopPropagation();
+                }}
+                className={cn(
+                  "flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
+                  "border-l-2 border-r-2",
+                  `google-eventid-${event.id}`,
+                  {
+                    "rounded-r-full": isEnd,
+                    "rounded-l-full": isStart,
+                    "border-red-600 dark:border-red-400":
+                      isCurrentSelectedEvent ||
+                      (isCurrentSelectedLocation && noSelectedEvent),
+                    "border-red-600 bg-red-600 font-bold dark:bg-red-400":
+                      // On mobile we always use the background
+                      (touchDevice && isCurrentSelectedEvent) ||
+                      isCurrentPanelEvent ||
+                      (isCurrentPanelLocation && noSelectedPanelEvent),
+                  },
+                )}
               >
-                {...events
-                  .sort((a, b) => (a.dayOfWeek ?? 0) - (b.dayOfWeek ?? 0))
-                  .map((marker, markerIdx, markerArray) => {
-                    const dotw = marker.dayOfWeek;
-                    const isStart = markerIdx === 0;
-                    const isEnd = markerIdx === markerArray.length - 1;
-                    const dayText = dotw !== null ? SHORT_DAY_ORDER[dotw] : 0;
-                    return (
-                      <button
-                        key={markerIdx + "-" + id}
-                        className={cn(
-                          "flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
-                          "border-l-2 border-r-2",
-                          // Use a class name to find the event id
-                          `leaflet-eventid-${marker.id}`,
-                          {
-                            "rounded-r-full": isEnd,
-                            "rounded-l-full": isStart,
-                          },
-                        )}
-                      >
-                        {dayText}
-                      </button>
-                    );
-                  })}
-              </div>
-              <svg
-                viewBox="0 0 40 40"
-                className="-mt-[10.5px] w-[28px] self-center"
-                style={{ zIndex: 0 }}
-              >
-                {/* Line */}
-                <path
-                  className={cn("fill-foreground")}
-                  d={
-                    events.length === 1
-                      ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
-                      : "M34 14.5 L26 24.249 Q20 34.641 14 24.249 L6 14.5"
-                  }
-                  stroke="none"
-                />
-                <path
-                  d={
-                    events.length === 1
-                      ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
-                      : "M34 15 L26 24.249 Q20 34.641 14 24.249 L6 15"
-                  }
-                  stroke="background"
-                  strokeWidth={0.5}
-                  fill="none"
-                />
-              </svg>
-            </div>,
-          ),
-        })}
-      ></Marker>
-    );
-  },
-  (prev, next) =>
-    prev.show === next.show &&
-    prev.group.id === next.group.id &&
-    prev.group.events.length === next.group.events.length,
-);
-
-MemoGroupMarker.displayName = "MemoGroupMarker";
+                {dayText}
+              </button>
+            );
+          })}
+        </div>
+        <svg
+          viewBox="0 0 40 40"
+          className="-mt-[10.5px] w-[28px] self-center"
+          style={{ zIndex: 0 }}
+        >
+          <path
+            className={cn("fill-foreground", {
+              "fill-[#dc2626] dark:fill-[#f87171]": false,
+            })}
+            d={
+              events.length === 1
+                ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
+                : "M34 14.5 L26 24.249 Q20 34.641 14 24.249 L6 14.5"
+            }
+            stroke="none"
+          />
+          <path
+            d={
+              events.length === 1
+                ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
+                : "M34 15 L26 24.249 Q20 34.641 14 24.249 L6 15"
+            }
+            stroke="background"
+            strokeWidth={0.5}
+            fill="none"
+          />
+        </svg>
+      </div>
+    </AdvancedMarker>
+  );
+};

@@ -1,153 +1,124 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { TRPCClientError } from "@trpc/client";
 import gte from "lodash/gte";
-import { Controller } from "react-hook-form";
+import { useSession } from "next-auth/react";
 import { v4 as uuid } from "uuid";
-import { z } from "zod";
 
-import { DAY_ORDER, Z_INDEX } from "@f3/shared/app/constants";
-import { Button } from "@f3/ui/button";
+import { Z_INDEX } from "@acme/shared/app/constants";
+import {
+  convertHH_mmToHHmm,
+  convertHHmmToHH_mm,
+} from "@acme/shared/app/functions";
+import { isTruthy } from "@acme/shared/common/functions";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@f3/ui/dialog";
-import { Form, useForm } from "@f3/ui/form";
-import { Input } from "@f3/ui/input";
-import { ControlledSelect } from "@f3/ui/select";
-import { Spinner } from "@f3/ui/spinner";
-import { Textarea } from "@f3/ui/textarea";
-import { toast } from "@f3/ui/toast";
+} from "@acme/ui/dialog";
+import { Form } from "@acme/ui/form";
+import { Spinner } from "@acme/ui/spinner";
+import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
-import { uploadLogo } from "~/utils/image/upload-logo";
+import { isProd } from "~/trpc/util";
+import { useUpdateLocationForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
-import { closeModal, useModalStore } from "~/utils/store/modal";
-import { VirtualizedCombobox } from "../virtualized-combobox";
+import { closeModal } from "~/utils/store/modal";
+import {
+  DevLoadTestData,
+  FormDebugData,
+  LocationEventForm,
+} from "../forms/location-event-form";
 
-export const UpdateLocationModal = () => {
+export const UpdateLocationModal = ({
+  data,
+}: {
+  data: DataType[ModalType.UPDATE_LOCATION];
+}) => {
+  const router = useRouter();
+  const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { open, data: rawData } = useModalStore();
-  const { mutateAsync: updateLocation } =
-    api.location.updateLocation.useMutation();
 
-  const data = rawData as DataType[ModalType.UPDATE_LOCATION];
+  const { mutateAsync: submitUpdateRequest } =
+    api.request.submitUpdateRequest.useMutation();
 
-  const form = useForm({
-    schema: z.object({
-      id: z.string(),
-      workoutName: z.string().min(1, { message: "Workout name is required" }),
-      workoutWebsite: z.string().nullable(),
-      aoLogo: z.string(),
-      eventId: z.number(),
-      locationId: z.number(),
-      regionId: z.number().refine((value) => value !== -1, {
-        message: "Please select a region",
-      }),
-      email: z.string().email({
-        message: "Invalid email address",
-      }),
-      lat: z.number(),
-      lng: z.number(),
-      startTime: z.string().regex(/^\d{2}:\d{2}$/, {
-        message: "Start time must be in 24hr format (HH:MM)",
-      }),
-      endTime: z.string().regex(/^\d{2}:\d{2}$/, {
-        message: "End time must be in 24hr format (HH:MM)",
-      }),
-      dayOfWeek: z.string(),
-      type: z.string(),
-      eventDescription: z
-        .string()
-        .min(1, { message: "Description is required" }),
-      locationAddress: z.string().min(1, {
-        message: "Location address is required",
-      }),
-      badImage: z.boolean().default(false),
-    }),
+  const form = useUpdateLocationForm({
     defaultValues: {
-      workoutName: "",
-      workoutWebsite: "",
-      aoLogo: "",
-      eventId: -1,
-      locationId: -1,
-      locationAddress: "",
-      regionId: -1,
-      email: appStore.get("myEmail"),
-      startTime: "",
-      endTime: "",
-      dayOfWeek: "",
-      type: "",
-      eventDescription: "",
-      badImage: false,
+      locationCountry: "United States",
     },
     mode: "onBlur",
   });
 
-  // Get data information
   const formRegionId = form.watch("regionId");
-  const formEventId = form.watch("eventId");
-  const formId = form.watch("id");
-
-  const lat = data.lat;
-  const lng = data.lng;
-  const mode = data.mode;
-
-  // Get form values
-  const { data: regions } = api.location.getRegions.useQuery();
-  const { data: locationEvents } = api.location.getRegionAos.useQuery(
-    { regionId: formRegionId ?? -1 },
-    { enabled: formRegionId !== null },
+  const { data: canEditRegion } = api.request.canEditRegion.useQuery(
+    { orgId: formRegionId },
+    { enabled: !!formRegionId && formRegionId !== -1 },
   );
+
+  const { data: session } = useSession();
+  const { data: eventTypes } = api.event.types.useQuery();
 
   const onSubmit = form.handleSubmit(
     async (values) => {
-      if (values.badImage && !!values.aoLogo) {
-        form.setError("aoLogo", {
-          message: "Invalid image URL",
-        });
-        return;
+      try {
+        console.log("onSubmit values", values);
+        setIsSubmitting(true);
+        if (values.badImage && !!values.aoLogo) {
+          form.setError("aoLogo", { message: "Invalid image URL" });
+          throw new Error("Invalid image URL");
+        }
+        appStore.setState({ myEmail: values.submittedBy });
+
+        const updateRequestData = {
+          ...values,
+          eventStartTime: convertHH_mmToHHmm(values.eventStartTime ?? ""),
+          eventEndTime: convertHH_mmToHHmm(values.eventEndTime ?? ""),
+          eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
+        };
+
+        const result = await submitUpdateRequest(updateRequestData);
+        if (result.status === "pending") {
+          toast.success(
+            "Request submitted. An admin will review your submission soon.",
+          );
+        } else if (result.status === "rejected") {
+          toast.error("Failed to submit update request");
+          throw new Error("Failed to submit update request");
+        } else if (result.status === "approved") {
+          void utils.invalidate();
+          toast.success("Update request automatically applied");
+          router.refresh();
+        }
+
+        closeModal();
+      } catch (error) {
+        console.error(error);
+        if (!(error instanceof TRPCClientError)) {
+          toast.error("Failed to submit update request");
+          return;
+        }
+
+        if (error.message.includes("End time must be after start time")) {
+          form.setError("eventEndTime", {
+            message: "End time must be after start time",
+          });
+          toast.error("End time must be after start time");
+          throw new Error("End time must be after start time");
+        } else {
+          toast.error("Failed to submit update request");
+        }
+      } finally {
+        setIsSubmitting(false);
       }
-      setIsSubmitting(true);
-      console.log(values);
-      appStore.setState({ myEmail: values.email });
-      await updateLocation({
-        id: values.id,
-        orgId: values.regionId,
-        eventName: values.workoutName,
-        submittedBy: appStore.get("myEmail"),
-        locationId: data.locationId,
-        eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
-        eventTypes:
-          values.type === "Bootcamp"
-            ? [{ id: 1, name: "Bootcamp" }]
-            : values.type === "Ruck"
-              ? [{ id: 2, name: "Ruck" }]
-              : values.type === "Run"
-                ? [{ id: 3, name: "Run" }]
-                : values.type === "Swim"
-                  ? [{ id: 4, name: "Swim" }]
-                  : [],
-        eventTag: null,
-        eventStartTime: values.startTime ? values.startTime + ":00" : null,
-        eventEndTime: values.endTime ? values.endTime + ":00" : null,
-        eventDayOfWeek: values.dayOfWeek,
-        eventDescription: values.eventDescription,
-        locationDescription: values.locationAddress,
-        locationLat: values.lat,
-        locationLng: values.lng,
-      });
-      toast.success(
-        "Request submitted. Please check your email to validate your submission.",
-      );
-      setIsSubmitting(false);
-      closeModal();
     },
     (errors) => {
       // Get all error messages
-      const errorMessages = Object.entries(errors)
+      const errorMessages = Object.entries(errors as { message: string }[])
         .map(([field, error]) => {
           if (error?.message) {
             return `${field}: ${error.message}`;
@@ -169,30 +140,57 @@ export const UpdateLocationModal = () => {
   );
 
   useEffect(() => {
-    form.reset({
-      id: uuid(),
-      regionId: data.regionId ?? -1,
-      eventId: data.eventId ?? -1,
-      locationId: data.locationId ?? -1,
-      workoutName: data.workoutName ?? "",
-      workoutWebsite: data.workoutWebsite ?? "",
-      aoLogo: data.aoLogo ?? "",
-      locationAddress: data.locationAddress ?? "",
-      lat: data.lat ?? 0,
-      lng: data.lng ?? 0,
-      startTime: data.startTime?.slice(0, 5) ?? "05:30",
-      endTime: data.endTime?.slice(0, 5) ?? "06:15",
-      dayOfWeek:
-        typeof data.dayOfWeek === "number" ? DAY_ORDER[data.dayOfWeek] : "",
-      type: data.types?.[0]?.name ?? "Bootcamp",
-      eventDescription: data.eventDescription ?? "",
-      email: appStore.get("myEmail"),
-    });
-  }, [data, form]);
+    form.setValue("id", uuid());
+    form.setValue("requestType", data.requestType);
+    if (data.regionId != null && data.regionId !== -1) {
+      form.setValue("regionId", data.regionId);
+    } else {
+      // @ts-expect-error -- must remove regionId from form
+      form.setValue("regionId", null);
+    }
+
+    form.setValue("locationId", data.locationId ?? null);
+    form.setValue("locationAddress", data.locationAddress ?? "");
+    form.setValue("locationAddress2", data.locationAddress2 ?? "");
+    form.setValue("locationCity", data.locationCity ?? "");
+    form.setValue("locationState", data.locationState ?? "");
+    form.setValue("locationZip", data.locationZip ?? "");
+    form.setValue("locationCountry", data.locationCountry ?? "");
+    form.setValue("locationLat", data.lat);
+    form.setValue("locationLng", data.lng);
+    form.setValue("locationDescription", data.locationDescription ?? "");
+
+    form.setValue("aoId", data.aoId ?? null);
+    form.setValue("aoName", data.aoName ?? "");
+    form.setValue("aoLogo", data.aoLogo ?? "");
+
+    form.setValue("eventId", data.eventId ?? null);
+    form.setValue("eventName", data.workoutName ?? "");
+    // startTime: convertHHmmToHH_mm(event?.startTime ?? ""),
+    // endTime: convertHHmmToHH_mm(event?.endTime ?? ""),
+    form.setValue("eventStartTime", convertHHmmToHH_mm(data.startTime ?? ""));
+    form.setValue("eventEndTime", convertHHmmToHH_mm(data.endTime ?? ""));
+    form.setValue("eventDescription", data.eventDescription ?? "");
+    if (data.dayOfWeek) {
+      form.setValue("eventDayOfWeek", data.dayOfWeek);
+    } else {
+      // @ts-expect-error -- must remove dayOfWeek from form
+      form.setValue("eventDayOfWeek", null);
+    }
+    form.setValue(
+      "eventTypeIds",
+      data.types
+        ?.map((type) => eventTypes?.find((t) => t.name === type)?.id)
+        .filter(isTruthy) ?? [],
+    );
+    form.setValue("eventDescription", data.eventDescription ?? "");
+
+    form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
+  }, [data, eventTypes, form, session?.email]);
 
   return (
     <Dialog
-      open={open}
+      open={true}
       onOpenChange={() => {
         closeModal();
       }}
@@ -202,288 +200,25 @@ export const UpdateLocationModal = () => {
         className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
       >
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-6">
+          {/* Need 1px padding to prevent clipping of text boxes */}
+          <form
+            className="w-[inherit] overflow-x-hidden p-[1px]"
+            onSubmit={onSubmit}
+          >
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
-                {mode === "edit-event"
+                {data.requestType === "edit"
                   ? "Edit Event"
-                  : mode === "new-location"
+                  : data.requestType === "create_location"
                     ? "New Location"
                     : "New Event"}
-                <p className="text-sm text-muted-foreground">
-                  {lat?.toFixed(5)}, {lng?.toFixed(5)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Form ID: {formId}
-                </p>
+                {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Region
-                </div>
-                <VirtualizedCombobox
-                  buttonClassName="w-full rounded-md py-3 font-normal"
-                  hideSearchIcon
-                  key={formRegionId?.toString()}
-                  // disabled if we got this from the data param
-                  disabled={typeof data.regionId === "number"}
-                  options={
-                    regions
-                      ?.map((region) => ({
-                        label: region.name,
-                        value: region.id.toString(),
-                      }))
-                      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-                  }
-                  value={formRegionId?.toString()}
-                  onSelect={(item) => {
-                    const region = regions?.find(
-                      (region) => region.id.toString() === item,
-                    );
-                    form.setValue("regionId", region?.id ?? -1);
-                  }}
-                  searchPlaceholder="Select"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.regionId?.message}
-                </p>
-              </div>
-              {typeof data.eventId === "number" && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Event
-                  </div>
-                  <VirtualizedCombobox
-                    buttonClassName="w-full rounded-md py-3 font-normal"
-                    // disabled if we got this from the data param
-                    disabled={typeof data.eventId === "number"}
-                    hideSearchIcon
-                    key={formEventId?.toString()}
-                    options={[
-                      {
-                        label: "New event",
-                        value: "-1",
-                      },
-                      ...(locationEvents
-                        ?.map((location) => ({
-                          label: location.events.name,
-                          value: location.events.id.toString(),
-                        }))
-                        .sort((a, b) => a.label.localeCompare(b.label)) ?? []),
-                    ]}
-                    value={formEventId?.toString()}
-                    onSelect={(item) => {
-                      const location = locationEvents?.find(
-                        (location) => location.events.id.toString() === item,
-                      );
-                      form.setValue("eventId", location?.events.id ?? -1);
-                    }}
-                    searchPlaceholder={
-                      !formRegionId
-                        ? "Select a region first"
-                        : locationEvents?.length === 0
-                          ? "No events found"
-                          : "Select"
-                    }
-                  />
-                </div>
-              )}
+            <LocationEventForm />
 
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Workout Name
-                </div>
-                <Input
-                  {...form.register("workoutName")}
-                  disabled={formRegionId === null}
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.workoutName?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Workout Website
-                </div>
-                <Input
-                  {...form.register("workoutWebsite")}
-                  disabled={formRegionId === null}
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.workoutWebsite?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  AO Logo
-                </div>
-                <Controller
-                  control={form.control}
-                  name="aoLogo"
-                  render={({ field: { onChange, value } }) => {
-                    return (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            console.log("files", e.target.files);
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-
-                            const blob640 = await scaleAndCropImage(
-                              file,
-                              640,
-                              640,
-                            );
-                            if (!blob640) return;
-                            const url640 = await uploadLogo({
-                              file: blob640,
-                              regionId: formRegionId,
-                              requestId: formId,
-                            });
-                            onChange(url640);
-                            const blob64 = await scaleAndCropImage(
-                              file,
-                              64,
-                              64,
-                            );
-                            if (blob64) {
-                              void uploadLogo({
-                                file: blob64,
-                                regionId: formRegionId,
-                                requestId: formId,
-                                size: 64,
-                              });
-                            }
-                          }}
-                          disabled={formRegionId <= -1 || formRegionId === null}
-                          className="flex-1"
-                        />
-                        {value && (
-                          <DebouncedImage
-                            src={value}
-                            onImageFail={() => form.setValue("badImage", true)}
-                            onImageSuccess={() =>
-                              form.setValue("badImage", false)
-                            }
-                          />
-                        )}
-                      </div>
-                    );
-                  }}
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.aoLogo?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Location Address
-                </div>
-                <Input
-                  {...form.register("locationAddress")}
-                  disabled={formRegionId === null}
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.locationAddress?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Start Time (24hr format)
-                </div>
-                <Input {...form.register("startTime")} />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.startTime?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  End Time (24hr format)
-                </div>
-                <Input {...form.register("endTime")} />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.endTime?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Day of Week
-                </div>
-                <ControlledSelect
-                  control={form.control}
-                  name="dayOfWeek"
-                  options={DAY_ORDER.map((day) => ({
-                    label: day,
-                    value: day,
-                  }))}
-                  placeholder="Select a day of the week"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.dayOfWeek?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Type
-                </div>
-                <ControlledSelect
-                  control={form.control}
-                  name="type"
-                  options={["Bootcamp", "Ruck", "Run", "Swim"].map((type) => ({
-                    label: type,
-                    value: type,
-                  }))}
-                  placeholder="Select a day of the week"
-                />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.type?.message}
-                </p>
-              </div>
-
-              <div className="space-y-2 sm:col-span-2">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Workout Description
-                </div>
-                <Textarea {...form.register("eventDescription")} />
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.eventDescription?.message}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">
-                Your Email
-              </div>
-              <Input
-                {...form.register("email")}
-                disabled={formRegionId === null}
-              />
-              <p className="text-xs text-destructive">
-                {form.formState.errors.email?.message}
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => closeModal()}
-              >
-                Cancel
-              </Button>
+            <div className="mt-4 flex flex-col items-stretch justify-end gap-2">
               <Button
                 type="button"
                 className="bg-blue-600 text-white hover:bg-blue-600/80"
@@ -497,6 +232,21 @@ export const UpdateLocationModal = () => {
                   "Save Changes"
                 )}
               </Button>
+              {canEditRegion ? (
+                <div className="mb-2 text-center text-xs text-destructive">
+                  Since you can edit this region, these changes will be
+                  reflected immediately
+                </div>
+              ) : null}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => closeModal()}
+              >
+                Cancel
+              </Button>
+              {!isProd && <DevLoadTestData />}
             </div>
           </form>
         </Form>
@@ -504,37 +254,3 @@ export const UpdateLocationModal = () => {
     </Dialog>
   );
 };
-
-function DebouncedImage({
-  src,
-  onImageFail,
-  onImageSuccess,
-}: {
-  src: string;
-  onImageFail: () => void;
-  onImageSuccess: () => void;
-}) {
-  const [loading, setLoading] = useState(true);
-  const [image, setImage] = useState<string | null>(null);
-  useEffect(() => {
-    setLoading(true);
-    const timeout = setTimeout(() => {
-      setLoading(false);
-      setImage(src);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [src]);
-  return loading ? (
-    <div className="size-8 animate-pulse rounded-md bg-gray-200" />
-  ) : image ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={image}
-      width={32}
-      height={32}
-      alt="AO Logo"
-      onError={onImageFail}
-      onLoad={onImageSuccess}
-    />
-  ) : null;
-}

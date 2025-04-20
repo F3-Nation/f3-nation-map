@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react";
 import { useState } from "react";
 
-import { cn } from "@f3/ui";
+import { cn } from "@acme/ui";
 
 import { env } from "~/env";
 import { mapStore } from "~/utils/store/map";

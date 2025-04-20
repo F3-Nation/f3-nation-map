@@ -5,11 +5,17 @@ import type { Control, FieldValues, Path, PathValue } from "react-hook-form";
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
-import { Controller } from "react-hook-form";
 
-import { Z_INDEX } from "@f3/shared/app/constants";
+import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { cn } from ".";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./form";
 
 type ControlledSelectProps<T extends FieldValues> = Omit<
   SelectProps,
@@ -39,7 +45,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       className,
     )}
     {...props}
@@ -173,34 +179,37 @@ const ControlledSelect = <T extends FieldValues>(
 ) => {
   const { control, name, ...rest } = props;
   return (
-    <Controller
+    <FormField
       control={control}
       name={name}
-      render={({ field, fieldState }) => {
+      render={({ field }) => {
         return (
-          <>
-            <Select
-              value={field.value}
-              onValueChange={(value) => {
-                if (value) {
-                  field.onChange(value);
-                }
-              }}
-              {...rest}
-            >
-              <SelectTrigger id={`${name}`} aria-label={props.label}>
-                <SelectValue placeholder={props.placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {props.options?.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-destructive">{fieldState.error?.message}</p>
-          </>
+          <FormItem>
+            <FormLabel>{props.label}</FormLabel>
+            <FormControl>
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  if (value) {
+                    field.onChange(value);
+                  }
+                }}
+                {...rest}
+              >
+                <SelectTrigger id={`${name}`} aria-label={props.label}>
+                  <SelectValue placeholder={props.placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.options?.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         );
       }}
     />

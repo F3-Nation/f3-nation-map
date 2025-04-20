@@ -1,5 +1,5 @@
-import { cn } from "@f3/ui";
-import { CardDescription, CardHeader, CardTitle } from "@f3/ui/card";
+import { cn } from "@acme/ui";
+import { CardDescription, CardHeader, CardTitle } from "@acme/ui/card";
 
 import type { F3LocationMapSearchResult } from "~/utils/types";
 import { isTouchDevice } from "~/utils/is-touch-device";
@@ -7,10 +7,7 @@ import { setView } from "~/utils/set-view";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { searchStore } from "~/utils/store/search";
-import {
-  selectedItemStore,
-  setSelectedItem,
-} from "~/utils/store/selected-item";
+import { setSelectedItem } from "~/utils/store/selected-item";
 import { ImageWithFallback } from "../image-with-fallback";
 
 export const onClickPlaceRowF3Location = (
@@ -19,10 +16,6 @@ export const onClickPlaceRowF3Location = (
   console.log("onClickPlaceRowF3", result);
   searchStore.setState({ shouldShowResults: false });
   appStore.setState({ ignoreNextNearbyItemMouseEnter: true });
-  selectedItemStore.setState({
-    panelLocationId: null,
-    panelEventId: null,
-  });
   const latitude = result.destination.lat;
   const longitude = result.destination.lng;
   if (typeof latitude === "number" && typeof longitude === "number") {
@@ -31,6 +24,7 @@ export const onClickPlaceRowF3Location = (
         lat: latitude,
         lng: longitude,
         name: result.header,
+        type: "search",
       },
     });
     setView({ lat: latitude, lng: longitude });
@@ -39,6 +33,7 @@ export const onClickPlaceRowF3Location = (
       setSelectedItem({
         locationId: result.destination.item.locationId,
         eventId: result.destination.item.id,
+        showPanel: false,
       });
     }, 250);
   }
@@ -55,13 +50,14 @@ export const PlaceRowF3Location = ({
     <button
       className="w-full"
       onMouseOver={() => {
-        const isMobile = isTouchDevice();
-        if (isMobile) {
+        const touchDevice = isTouchDevice();
+        if (touchDevice) {
           onClickPlaceRowF3Location(result);
         } else {
           setSelectedItem({
             locationId: result.destination.item.locationId,
             eventId: result.destination.item.id,
+            showPanel: false,
           });
         }
       }}
@@ -69,6 +65,7 @@ export const PlaceRowF3Location = ({
         setSelectedItem({
           locationId: result.destination.item.locationId,
           eventId: result.destination.item.id,
+          showPanel: false,
         });
       }}
       onClick={() => {
