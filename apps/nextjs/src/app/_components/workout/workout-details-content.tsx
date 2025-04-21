@@ -30,13 +30,13 @@ import { WorkoutDetailsSkeleton } from "../modal/workout-details-skeleton";
 
 export interface WorkoutDetailsContentProps {
   locationId: number;
-  selectedEventId: number | null;
+  providedEventId: number | null;
   chipSize: "small" | "medium" | "large";
 }
 
 export const WorkoutDetailsContent = ({
   locationId,
-  selectedEventId,
+  providedEventId,
   chipSize,
 }: WorkoutDetailsContentProps) => {
   const router = useRouter();
@@ -47,6 +47,11 @@ export const WorkoutDetailsContent = ({
       { locationId },
       { enabled: locationId >= 0 },
     );
+
+  const selectedEventId = useMemo(() => {
+    if (providedEventId) return providedEventId;
+    return results?.location.events?.[0]?.id ?? null;
+  }, [providedEventId, results]);
 
   const mode = appStore.use.mode();
 

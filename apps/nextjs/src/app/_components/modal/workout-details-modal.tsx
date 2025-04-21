@@ -44,7 +44,7 @@ export const WorkoutDetailsModal = ({
         <WorkoutDetailsContent
           // Need to provide a fallback for selectedEventId
           locationId={locationId}
-          selectedEventId={modalEventId}
+          providedEventId={modalEventId}
           chipSize={isLarge ? "large" : isMedium ? "medium" : "large"}
         />
 

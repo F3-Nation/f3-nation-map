@@ -1,7 +1,7 @@
 import { ZustandStore } from "@acme/shared/common/classes";
 import { isDevelopment } from "@acme/shared/common/constants";
 
-import { isTouchDevice } from "../is-touch-device";
+import { appStore } from "./app";
 import { ModalType, openModal } from "./modal";
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -65,7 +65,7 @@ export const setSelectedItem = (item: {
     console.log("setSelectedItem called by:", callerInfo, "with params:", item);
   }
 
-  const touchDevice = isTouchDevice();
+  const isMobileDeviceWidth = appStore.get("isMobileDeviceWidth");
   const newSelectedItemStore: Partial<SelectedItemStore> = {
     hideSelectedItem: false,
   };
@@ -75,8 +75,8 @@ export const setSelectedItem = (item: {
     newSelectedItemStore.locationId = item.locationId;
   if (item.eventId !== undefined) newSelectedItemStore.eventId = item.eventId;
 
-  if (touchDevice) {
-    // on touch device always have panelIds as null
+  if (isMobileDeviceWidth) {
+    // on mobile width always have panelIds as null
     newSelectedItemStore.panelLocationId = null;
     newSelectedItemStore.panelEventId = null;
   } else if (item.showPanel) {
