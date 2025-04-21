@@ -8,7 +8,6 @@ import { Z_INDEX } from "@acme/shared/app/constants";
 
 import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { mapStore } from "~/utils/store/map";
-import { CountryZoomButton } from "./map/country-zoom-button";
 import { DebugInfo } from "./map/debug-info";
 import { DesktopFilterButtons } from "./map/desktop-filter-buttons";
 import { DesktopLocationPanelContent } from "./map/desktop-location-panel-content";
@@ -59,10 +58,7 @@ export const MapLayoutItems = () => {
       {isDesktopWidth ? (
         <>
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-            <CountryZoomButton className="-mb-[6px]" />
-          </MapControl>
-          <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-            <SettingsButton className="mb-1" />
+            <SettingsButton className="-mb-[6px]" />
           </MapControl>
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
             <UserLocationIcon className="mb-1" />
@@ -80,10 +76,7 @@ export const MapLayoutItems = () => {
       ) : (
         <>
           <MapControl position={ControlPosition.RIGHT_TOP}>
-            <CountryZoomButton className="-mt-[6px] mr-[10px]" />
-          </MapControl>
-          <MapControl position={ControlPosition.RIGHT_TOP}>
-            <SettingsButton className="mr-[10px] mt-1" />
+            <SettingsButton className="-mt-[6px] mr-[10px]" />
           </MapControl>
           <MapControl position={ControlPosition.RIGHT_TOP}>
             <UserLocationIcon className="mr-[10px] mt-1" />

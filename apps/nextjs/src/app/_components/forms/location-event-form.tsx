@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import lt from "lodash/lt";
+import { X } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { z } from "zod";
 
@@ -427,7 +428,7 @@ export const LocationEventForm = ({
             name="aoLogo"
             render={({ field: { onChange, value } }) => {
               return (
-                <div className="flex flex-col items-center gap-2 min-[320px]:flex-row">
+                <div className="grid grid-cols-[1fr_64px] items-center">
                   <Input
                     type="file"
                     accept="image/*"
@@ -462,12 +463,21 @@ export const LocationEventForm = ({
                     className="flex-1"
                   />
                   {value && (
-                    <DebouncedImage
-                      src={value}
-                      alt="AO Logo"
-                      onImageFail={() => form.setValue("badImage", true)}
-                      onImageSuccess={() => form.setValue("badImage", false)}
-                    />
+                    <button
+                      type="button"
+                      className="relative size-16 cursor-pointer"
+                      onClick={() => onChange("")}
+                    >
+                      <DebouncedImage
+                        src={value}
+                        alt="AO Logo"
+                        onImageFail={() => form.setValue("badImage", true)}
+                        onImageSuccess={() => form.setValue("badImage", false)}
+                      />
+                      <div className="absolute -top-1 right-[-1px] flex size-5 items-center justify-center rounded-full bg-red-500 text-white">
+                        <X className="size-3" />
+                      </div>
+                    </button>
                   )}
                 </div>
               );

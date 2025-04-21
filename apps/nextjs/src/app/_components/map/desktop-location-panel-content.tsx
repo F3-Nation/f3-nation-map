@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useWindowWidth } from "@react-hook/window-size";
 import { X } from "lucide-react";
 
@@ -10,27 +9,17 @@ import { WorkoutDetailsContent } from "../workout/workout-details-content";
 export const DesktopLocationPanelContent = () => {
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
-
-  const open = panelLocationId !== null;
-  const locationId = panelLocationId ?? -1;
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(
-    panelEventId,
-  );
   const width = useWindowWidth();
   const isLarge = width > Number(BreakPoints.LG);
   const isMedium = width > Number(BreakPoints.MD);
 
-  useEffect(() => {
-    setSelectedEventId(panelEventId);
-  }, [panelEventId]);
-
-  if (!open) return null;
+  if (!panelLocationId) return null;
 
   return (
     <div className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow dark:border">
       <WorkoutDetailsContent
-        locationId={locationId}
-        selectedEventId={selectedEventId}
+        locationId={panelLocationId}
+        providedEventId={panelEventId}
         chipSize={isLarge ? "large" : isMedium ? "medium" : "small"}
       />
 

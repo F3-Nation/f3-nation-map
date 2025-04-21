@@ -328,7 +328,11 @@ export const locationRouter = createTRPCRouter({
           .join(", ")
           .replace(/, ,/g, ",") // Clean up any double commas
           .replace(/,\s*$/, ""), // Remove trailing comma
-        events,
+        events: events.sort(
+          (a, b) =>
+            DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
+            DayOfWeek.indexOf(b.dayOfWeek ?? "sunday"),
+        ),
       };
 
       return { location: locationWithEvents };

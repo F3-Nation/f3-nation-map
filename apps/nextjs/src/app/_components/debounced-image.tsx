@@ -21,13 +21,13 @@ export function DebouncedImage({
     return () => clearTimeout(timeout);
   }, [src]);
   return loading ? (
-    <div className="size-8 animate-pulse rounded-md bg-gray-200" />
+    <div className="size-16 animate-pulse rounded-md bg-gray-200" />
   ) : image ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={image}
-      width={32}
-      height={32}
+      width={64}
+      height={64}
       alt={alt}
       onError={onImageFail}
       onLoad={onImageSuccess}
