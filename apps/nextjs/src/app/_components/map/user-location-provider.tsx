@@ -11,7 +11,6 @@ import {
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
-import { getRandomLocation } from "~/utils/random-location";
 import { setView } from "~/utils/set-view";
 import { mapStore } from "~/utils/store/map";
 
@@ -35,7 +34,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   const setPermissions = (permissionState: PermissionState) => {
     mapStore.setState({ userGpsLocationPermissions: permissionState });
   };
-  const setStatus = (status: "loading" | "error" | "success") => {
+  const setStatus = (status: "loading" | "error" | "success" | "idle") => {
     mapStore.setState({ userGpsLocationStatus: status });
   };
 
@@ -54,9 +53,6 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         setPermissions(permissionState);
         if (permissionState === "denied") {
           setStatus("error");
-          setNearbyToRandomLocation({
-            onlyIfNoNearbyLocation: true,
-          });
           return;
         }
 
@@ -92,9 +88,6 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         USER_LOCATION_LOGS &&
           console.error("Error navigating to user location", error);
         setStatus("error");
-        setNearbyToRandomLocation({
-          onlyIfNoNearbyLocation: true,
-        });
       }
     },
     [],
@@ -113,10 +106,6 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
       if (!position) {
         const geoLocation = await getGeolocationPosition({
           timeout: 10000,
-        }).catch(() => {
-          setNearbyToRandomLocation({
-            onlyIfNoNearbyLocation: true,
-          });
         });
         if (!geoLocation) return;
         position = {
@@ -137,9 +126,13 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // React recommendation is to make async fn then call it in useEffect
-    void loadLocationAndUpdateMap().finally(() => {
-      setStatus("success");
-    });
+    void loadLocationAndUpdateMap()
+      .then(() => {
+        setStatus("success");
+      })
+      .catch(() => {
+        setStatus("error");
+      });
   }, []);
 
   return (
@@ -153,33 +146,6 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </UserLocationContext.Provider>
   );
-};
-
-const setNearbyToRandomLocation = (params?: {
-  onlyIfNoNearbyLocation?: boolean;
-}) => {
-  if (params?.onlyIfNoNearbyLocation) {
-    const nearbyLocation = mapStore.get("nearbyLocationCenter");
-    if (nearbyLocation.lat != null || nearbyLocation.lng != null) {
-      return;
-    }
-  }
-
-  const randomLocation = getRandomLocation();
-  USER_LOCATION_LOGS && console.log("randomLocation", randomLocation);
-  if (
-    typeof randomLocation?.lat === "number" &&
-    typeof randomLocation?.lon === "number"
-  ) {
-    mapStore.setState({
-      nearbyLocationCenter: {
-        lat: randomLocation.lat,
-        lng: randomLocation.lon,
-        name: "random",
-        type: "random",
-      },
-    });
-  }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -209,6 +175,7 @@ const getGeolocationPermission = (): Promise<PermissionState> => {
 const getGeolocationPosition = (
   options?: PositionOptions,
 ): Promise<GeolocationPosition> => {
+  mapStore.setState({ userGpsLocationStatus: "loading" });
   return new Promise((resolve, reject) => {
     USER_LOCATION_LOGS && console.log("getCurrentPositionPromise");
     navigator.geolocation.getCurrentPosition(
@@ -216,6 +183,7 @@ const getGeolocationPosition = (
         USER_LOCATION_LOGS &&
           console.log("getCurrentPositionPromise", { position });
         mapStore.setState({
+          userGpsLocationStatus: "success",
           userGpsLocation: {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -226,6 +194,7 @@ const getGeolocationPosition = (
       (error) => {
         USER_LOCATION_LOGS &&
           console.log("getCurrentPositionPromise", { error });
+        mapStore.setState({ userGpsLocationStatus: "error" });
         reject(error);
       },
       {

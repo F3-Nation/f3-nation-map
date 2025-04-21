@@ -1,5 +1,6 @@
 import { cn } from "@acme/ui";
 
+import { isProd } from "~/trpc/util";
 import { useUserLocation } from "../map/user-location-provider";
 
 export const UserLocationContent = (params?: {
@@ -28,6 +29,11 @@ export const UserLocationContent = (params?: {
         >
           Request location permissions
         </button>
+      ) : null}
+      {!isProd ? (
+        <p className="text-xs text-muted-foreground">
+          {permissions}, {status}
+        </p>
       ) : null}
     </div>
   );
