@@ -555,6 +555,10 @@ export async function insertData(data: {
     })
     .returning({ id: schema.orgs.id });
 
+  await db.execute(
+    sql`SELECT setval(pg_get_serial_sequence('orgs', 'id'), COALESCE((SELECT MAX(id) FROM orgs), 0) + 1, false)`,
+  );
+
   const { workoutData, regionData } = data;
 
   // Clean up sectors

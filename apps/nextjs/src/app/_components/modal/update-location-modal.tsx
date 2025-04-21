@@ -98,8 +98,13 @@ export const UpdateLocationModal = ({
         closeModal();
       } catch (error) {
         console.error(error);
-        if (!(error instanceof TRPCClientError)) {
+        if (!(error instanceof Error)) {
           toast.error("Failed to submit update request");
+          return;
+        }
+
+        if (!(error instanceof TRPCClientError)) {
+          toast.error(error.message);
           return;
         }
 

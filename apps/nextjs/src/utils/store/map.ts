@@ -13,7 +13,7 @@ const initialState = {
   // selectedItem: null as (GroupedMapData & WorkoutData) | null,
   zoom: DEFAULT_ZOOM,
   userGpsLocation: null as { latitude: number; longitude: number } | null,
-  userGpsLocationStatus: "loading" as "loading" | "success" | "error" | "idle",
+  userGpsLocationStatus: "idle" as "loading" | "success" | "error" | "idle",
   userGpsLocationPermissions: "prompt" as PermissionState,
 
   userInitialIpLocation: null as {

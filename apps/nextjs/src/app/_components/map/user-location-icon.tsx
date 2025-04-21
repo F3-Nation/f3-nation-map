@@ -55,7 +55,10 @@ export const UserLocationIcon = ({
             >
               <LocateFixed
                 strokeWidth={1.75}
-                className={cn("size-7 text-[#666]")} // Matching the Settings icon style
+                className={cn("size-7", {
+                  "text-gray-300": permissions === "denied",
+                  "text-gray-500": permissions !== "denied",
+                })} // Matching the Settings icon style
               />
             </div>
           </div>

@@ -2,11 +2,16 @@
 
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect } from "react";
+import { useWindowSize } from "@react-hook/window-size";
 
+import { BreakPoints } from "@acme/shared/app/constants";
 import { ZustandStore } from "@acme/shared/common/classes";
+
+import { appStore } from "./store/app";
 
 interface TouchDeviceContextType {
   isTouchDevice: boolean;
+  isMobileDeviceWidth: boolean;
 }
 
 const TouchDeviceContext = createContext<TouchDeviceContextType | undefined>(
@@ -29,6 +34,14 @@ export const touchState = new ZustandStore({
 
 export function TouchDeviceProvider({ children }: { children: ReactNode }) {
   const isTouchDevice = touchState.use.isTouchDevice();
+  const isMobileDeviceWidth = appStore.use.isMobileDeviceWidth();
+  const [width] = useWindowSize();
+
+  useEffect(() => {
+    appStore.setState({
+      isMobileDeviceWidth: width < Number(BreakPoints.LG),
+    });
+  }, [width]);
 
   useEffect(() => {
     // Check if we're in a browser environment
@@ -66,7 +79,7 @@ export function TouchDeviceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <TouchDeviceContext.Provider value={{ isTouchDevice }}>
+    <TouchDeviceContext.Provider value={{ isTouchDevice, isMobileDeviceWidth }}>
       {children}
     </TouchDeviceContext.Provider>
   );
