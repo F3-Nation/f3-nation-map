@@ -1,6 +1,14 @@
 import { useCallback } from "react";
 import Link from "next/link";
-import { CircleHelp, Eye, Moon, Pencil, QrCode, Sun } from "lucide-react";
+import {
+  ArrowRight,
+  CircleHelp,
+  Eye,
+  Moon,
+  Pencil,
+  QrCode,
+  Sun,
+} from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
@@ -318,7 +326,18 @@ export default function SettingsModal() {
               Revalidate map
             </button>
           ) : null}
+
           <div className="flex flex-col items-center justify-center gap-4">
+            <div className="flex items-center gap-1">
+              <Link
+                className="text-sm text-primary underline hover:text-primary/80"
+                target="_blank"
+                href={"https://forms.gle/8AR4JCK3txSVr1Xy7"}
+              >
+                Request admin access
+              </Link>
+              <ArrowRight className="size-3 text-primary" />
+            </div>
             <Link
               className="flex w-full flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
               target="_blank"
