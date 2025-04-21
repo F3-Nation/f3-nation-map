@@ -230,9 +230,11 @@ export const useOpenModal = () => {
   return modals[modals.length - 1];
 };
 
-export const closeModal = (open?: boolean, type?: ModalType) => {
+export const closeModal = (open?: boolean, type?: ModalType | "all") => {
   const modals = modalStore.get("modals");
-  if (type) {
+  if (type === "all") {
+    modalStore.setState({ modals: [] });
+  } else if (type) {
     const lessModals = modals.filter((m) => m.type !== type);
     modalStore.setState({
       modals: lessModals,

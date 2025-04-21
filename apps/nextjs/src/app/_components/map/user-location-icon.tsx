@@ -38,7 +38,7 @@ export const UserLocationIcon = ({
               "cursor-pointer appearance-none overflow-hidden",
               "relative block",
               "h-10 w-10", // 40px x 40px
-              "bg-white",
+              "bg-background",
               "m-0 border-0 p-0",
               "user-select-none",
               "shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]", // Google Maps shadow
@@ -56,8 +56,8 @@ export const UserLocationIcon = ({
               <LocateFixed
                 strokeWidth={1.75}
                 className={cn("size-7", {
-                  "text-gray-300": permissions === "denied",
-                  "text-gray-500": permissions !== "denied",
+                  "text-muted": permissions === "denied",
+                  "text-muted-foreground": permissions !== "denied",
                 })} // Matching the Settings icon style
               />
             </div>

@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { BOONE_CENTER, Z_INDEX } from "@acme/shared/app/constants";
 import { cn } from "@acme/ui";
-import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -50,7 +49,7 @@ export function AboutMapModal() {
             <button
               className="text-foreground underline underline-offset-2"
               onClick={() => {
-                closeModal();
+                closeModal(undefined, "all");
                 setView({ lat: BOONE_CENTER[0], lng: BOONE_CENTER[1] });
               }}
             >
@@ -62,30 +61,6 @@ export function AboutMapModal() {
             Shout out to Tackle — IT Director extraordinaire — and all the
             people of F3 IT for making this happen!
           </p>
-          <div className="rounded-lg bg-black/5 p-4">
-            <p className="text-center font-medium">
-              Support more F3 tech improvements here:
-            </p>
-            <div className="h-3" />
-            <Link
-              target="_blank"
-              href="https://ko-fi.com/f3nationmtndev"
-              className="block w-full transition-transform hover:scale-[1.02]"
-            >
-              <Button
-                variant="primary"
-                className="h-auto w-full gap-3 bg-black px-6 py-3 hover:bg-black/90"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/mtndevf3_close.png"
-                  alt="Mountain Dev F3"
-                  className="h-12 w-auto"
-                />
-                <span className="text-lg font-semibold">Support F3 Tech</span>
-              </Button>
-            </Link>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
