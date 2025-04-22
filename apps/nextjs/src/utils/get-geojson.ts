@@ -15,7 +15,7 @@ export const getGeojson = (filteredLocationMarkers: SparseF3Marker[]) => {
         geometry: { type: "Point", coordinates: [marker.lon, marker.lat] },
         properties: {
           name: marker.aoName,
-          address: marker.locationDescription,
+          address: marker.fullAddress,
           logo: marker.logo,
         },
       });

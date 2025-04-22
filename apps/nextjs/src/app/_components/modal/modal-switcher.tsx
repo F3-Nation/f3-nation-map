@@ -19,6 +19,7 @@ import AdminSectorsModal from "./admin-sectors-modal";
 import AdminUsersModal from "./admin-users-modal";
 import AdminWorkoutsModal from "./admin-workouts-modal";
 import DeleteModal from "./delete-modal";
+import { FullImageModal } from "./full-image-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
 import { QRCodeModal } from "./qr-code-modal";
@@ -106,6 +107,8 @@ export default function ModalSwitcher() {
       return <QRCodeModal data={data as DataType[ModalType.QR_CODE]} />;
     case ModalType.ABOUT_MAP:
       return <AboutMapModal />;
+    case ModalType.FULL_IMAGE:
+      return <FullImageModal data={data as DataType[ModalType.FULL_IMAGE]} />;
     default:
       return null;
   }

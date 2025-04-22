@@ -128,7 +128,7 @@ export const NearbyLocationItem = (props: {
         {/* Use flex-col to stack items vertically */}
         <div className="flex w-full flex-col items-stretch justify-start overflow-hidden">
           <div className="flex w-full flex-1 flex-row items-center justify-between">
-            <div className="line-clamp-1 pt-0 text-lg font-bold leading-6">
+            <div className="-mt-[4px] line-clamp-1 pt-0 text-base font-bold leading-6">
               {name}
             </div>
             {isNumber(item.distance) ? (
@@ -162,13 +162,13 @@ export const NearbyLocationItem = (props: {
               );
             })}
           </div>
-          {item.locationDescription ? (
+          {item.fullAddress ? (
             <Link
-              href={`https://maps.google.com/?q=${encodeURIComponent(item.locationDescription)}`}
+              href={`https://maps.google.com/?q=${encodeURIComponent(item.fullAddress)}`}
               target="_blank"
-              className="underline"
+              className="mt-[2px] underline"
             >
-              <p className="line-clamp-1">{item.locationDescription}</p>
+              <p className="line-clamp-1 text-xs">{item.fullAddress}</p>
             </Link>
           ) : null}
           {/* {item.events[0]?.description ? (

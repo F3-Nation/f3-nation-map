@@ -334,10 +334,43 @@ describe("all editor routers", () => {
       ).rejects.toThrow();
     });
 
-    it("should get ao workout data", async () => {
+    it("should fail to get location due to missing events", async () => {
       if (!createdLocationId) {
         throw new Error("Created location ID is undefined");
       }
+      await expect(
+        caller.location.getLocationWorkoutData({
+          locationId: createdLocationId,
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("should get ao workout data after adding events", async () => {
+      if (!createdLocationId) {
+        throw new Error("Created location ID is undefined");
+      }
+
+      const eventData = {
+        name: "Test Event",
+        isActive: true,
+        aoId: TEST_REGION_2_ORG_ID,
+        locationId: createdLocationId,
+        dayOfWeek: "monday" as DayOfWeek,
+        highlight: false,
+        startDate: dayjs().format("YYYY-MM-DD"),
+        startTime: "0600",
+        endTime: "0700",
+        email: "test@event.com",
+        description: "Test Event Description",
+        eventTypeId: 1,
+        regionId: TEST_REGION_2_ORG_ID,
+      };
+      const eventResult = await caller.event.crupdate(eventData);
+      expect(eventResult).toBeDefined();
+      if (!eventResult) {
+        throw new Error("Event result is undefined");
+      }
+
       const result = await caller.location.getLocationWorkoutData({
         locationId: createdLocationId,
       });
@@ -378,7 +411,8 @@ describe("all editor routers", () => {
         expect(result.location.fullAddress).toContain("123 Test St");
         expect(result.location.fullAddress).toContain("Test City");
         expect(result.location.fullAddress).toContain("TS");
-        expect(result.location.fullAddress).toContain("12345");
+        // We've removed the zip code from the full address
+        // expect(result.location.fullAddress).toContain("12345");
 
         // Check top-level events array
         expect(Array.isArray(result.location.events)).toBe(true);

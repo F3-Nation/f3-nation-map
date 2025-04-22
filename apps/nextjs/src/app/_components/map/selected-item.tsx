@@ -59,15 +59,15 @@ export const SelectedItem = (props: {
           <div className="flex flex-shrink-0 flex-col items-center">
             <ImageWithFallback
               src={
-                selectedLocation.regionLogo
-                  ? selectedLocation.regionLogo
+                selectedLocation.parentLogo
+                  ? selectedLocation.parentLogo
                   : "/f3_logo.png"
               }
               fallbackSrc="/f3_logo.png"
               loading="lazy"
               width={64}
               height={64}
-              alt={selectedLocation.regionLogo ?? "F3 logo"}
+              alt={selectedLocation.parentLogo ?? "F3 logo"}
               className="rounded-lg bg-black"
             />
           </div>
@@ -84,14 +84,14 @@ export const SelectedItem = (props: {
                 />
               </div>
             </div>
-            {selectedLocation.locationDescription ? (
+            {selectedLocation.fullAddress ? (
               <Link
                 // href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation.locationDescription)}`}
-                href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.locationDescription)}`}
+                href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.fullAddress)}`}
                 target="_blank"
-                className="line-clamp-1 underline"
+                className="mt-[2px] line-clamp-1 text-xs underline"
               >
-                {selectedLocation.locationDescription}
+                {selectedLocation.fullAddress}
               </Link>
             ) : null}
             <div>
