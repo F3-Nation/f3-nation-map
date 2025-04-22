@@ -15,7 +15,7 @@ export interface SparseF3Marker {
   lon: number | null;
   logo?: string | null;
   aoName: string | null;
-  locationDescription: string | null;
+  fullAddress: string | null;
   events: {
     id: number;
     name: string;

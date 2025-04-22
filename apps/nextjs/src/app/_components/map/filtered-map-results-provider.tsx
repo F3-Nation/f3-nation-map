@@ -58,7 +58,7 @@ export const FilteredMapResultsProvider = (params: {
           logo: location[2],
           lat: location[3],
           lon: location[4],
-          description: location[5],
+          fullAddress: location[5],
           events: location[6].map((event) => {
             return {
               id: event[0],
@@ -82,7 +82,7 @@ export const FilteredMapResultsProvider = (params: {
         {
           lat: number | null;
           lon: number | null;
-          description: string | null;
+          fullAddress: string | null;
         }
       >,
     );
@@ -92,8 +92,7 @@ export const FilteredMapResultsProvider = (params: {
         ...location,
         lat: locationIdToLatLng[location.id]?.lat ?? null,
         lon: locationIdToLatLng[location.id]?.lon ?? null,
-        locationDescription:
-          locationIdToLatLng[location.id]?.description ?? null,
+        fullAddress: locationIdToLatLng[location.id]?.fullAddress ?? null,
       };
     });
   }, [mapEventAndLocationData]);
