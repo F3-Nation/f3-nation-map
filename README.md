@@ -74,3 +74,8 @@ pnpm run release
 ```
 
 This will proceed to an interactive CLI prompt to bump versions in the `package.json`, `apps/nextjs/package.json` and `tooling/release-it/package.json` files and also an option to directly create a new release commit and tag.
+
+# PgBouncer
+
+- this app uses a GCE instance to run PgBouncer in the f3data project
+- gcloud compute ssh f3data-pgbouncer-vm --project f3data
