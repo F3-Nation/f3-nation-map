@@ -22,7 +22,8 @@ export const Header = () => {
       <div className="flex flex-col">
         <div className="text-3xl font-bold">Nation Map</div>
         <div className="text-sm text-muted-foreground">
-          Report an issue or request a feature
+          We want to continually improve the map, so please let us know about
+          any issues or ideas you have
         </div>
       </div>
     </div>

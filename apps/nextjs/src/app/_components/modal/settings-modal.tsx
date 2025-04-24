@@ -2,8 +2,6 @@ import { useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  Bug,
-  CircleHelp,
   Eye,
   Info,
   LockKeyholeOpen,
@@ -344,18 +342,6 @@ export default function SettingsModal() {
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-sm font-bold text-muted-foreground">Info</p>
-            <Link
-              className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
-              target="_blank"
-              href={"/help"}
-            >
-              <CircleHelp className="size-4" />
-              <span className="text-xs">Map Help</span>
-              <span className="text-xs">/</span>
-              <Bug className="size-4" />
-              <span className="text-xs">Feedback</span>
-              <ArrowRight className="size-3 text-foreground" />
-            </Link>
             <button
               className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
               onClick={() => {
@@ -363,17 +349,17 @@ export default function SettingsModal() {
               }}
             >
               <Info className="size-4" />
-              <span className="text-xs">About this map</span>
+              <span className="text-xs">About</span>
             </button>
-            <Link
+            <button
               className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
-              target="_blank"
-              href={"https://f3nation.com/about-f3"}
+              onClick={() => {
+                openModal(ModalType.MAP_HELP);
+              }}
             >
               <MessageCircleQuestion className="size-4" />
-              <span className="text-xs">F3 FAQs</span>
-              <ArrowRight className="size-3 text-foreground" />
-            </Link>
+              <span className="text-xs">Help</span>
+            </button>
           </div>
           <VersionInfo className="text-center text-xs text-foreground/60" />
         </div>

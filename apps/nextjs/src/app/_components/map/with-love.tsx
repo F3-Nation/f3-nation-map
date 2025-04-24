@@ -18,6 +18,16 @@ export default function WithLove() {
             About this map
           </span>
         </button>{" "}
+        <button
+          className="text-foreground underline underline-offset-2"
+          onClick={() => {
+            openModal(ModalType.MAP_HELP);
+          }}
+        >
+          <span className="cursor-pointer text-blue-600 underline underline-offset-2">
+            Help
+          </span>
+        </button>
       </div>
     </div>
   );
