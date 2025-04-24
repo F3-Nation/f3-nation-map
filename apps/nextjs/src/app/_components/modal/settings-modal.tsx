@@ -1,6 +1,22 @@
 import { useCallback } from "react";
 import Link from "next/link";
-import { CircleHelp, Eye, Moon, Pencil, QrCode, Sun } from "lucide-react";
+import {
+  ArrowRight,
+  Bug,
+  CircleHelp,
+  Eye,
+  Info,
+  LockKeyholeOpen,
+  LogIn,
+  LogOut,
+  MessageCircleQuestion,
+  Moon,
+  Pencil,
+  QrCode,
+  RefreshCcw,
+  Shield,
+  Sun,
+} from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
@@ -62,7 +78,7 @@ export default function SettingsModal() {
           <DialogTitle className="text-center">Settings</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col justify-start space-y-4 px-4 text-left">
-          <div>
+          <div className="flex flex-col gap-1">
             <p className="text-sm font-bold text-muted-foreground">
               Current location
             </p>
@@ -85,7 +101,7 @@ export default function SettingsModal() {
               </div>
             </div>
           </div>
-          <div>
+          <div className="flex flex-col gap-1">
             <p className="text-sm font-bold text-muted-foreground">Map tiles</p>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -128,7 +144,7 @@ export default function SettingsModal() {
               </button>
             </div>
           </div>
-          <div>
+          <div className="flex flex-col gap-1">
             <p className="text-sm font-bold text-muted-foreground">Mode</p>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -160,13 +176,13 @@ export default function SettingsModal() {
                 <span className="text-xs">Edit</span>
               </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {mode === "view"
                 ? "(Default) View mode - View and filter workouts"
                 : "Edit mode - Submit requests to add or edit workouts"}
             </p>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-1">
             <p className="text-sm font-bold text-muted-foreground">Theme</p>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -212,127 +228,151 @@ export default function SettingsModal() {
               </button> */}
             </div>
           </div>
-          {!session ? (
-            <>
-              <Link href={"/api/auth/signin"}>
-                <button
-                  className={cn(
-                    "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
-                    "text-center text-sm",
-                    "w-full",
-                  )}
-                >
-                  Sign in
-                </button>
-              </Link>
-              {!isProd && (isDevelopment || showDebug) ? (
-                <button
-                  className={cn(
-                    "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
-                    "text-center text-sm",
-                    "w-full",
-                  )}
-                  onClick={() => {
-                    signIn("dev-mode", {
-                      email: "admin@mountaindev.com",
-                      redirect: true,
-                    }).catch((error: unknown) => {
-                      console.log("DevModeSignIn", { error });
-                      toast.error("Failed to sign in. Use regular sign in.");
-                    });
-                  }}
-                >
-                  Sign in (Dev Mode)
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <div>
-                <p className="text-sm font-bold text-muted-foreground">
-                  Signed in as
-                  <span className="ml-1 font-semibold text-primary">
-                    {session.email}
-                  </span>
-                </p>
-                {// Keep the nullish check on roles for legacy sessions that did not have roles
-                session.roles?.map((role) => (
-                  <p
-                    key={`${role.orgId}-${role.roleName}`}
-                    className="text-xs text-gray-500"
-                  >
-                    {role.orgName} ({role.roleName})
-                  </p>
-                ))}
-              </div>
-              {session.roles?.some((role) =>
-                ["admin", "editor"].includes(role.roleName),
-              ) && (
-                <Link href={"/admin"}>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-bold text-muted-foreground">Access</p>
+            {!session ? (
+              <>
+                <Link href={"/api/auth/signin"}>
                   <button
                     className={cn(
-                      "flex flex-col items-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
-                      "text-center text-sm",
-                      "w-full",
+                      "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
                     )}
-                    onClick={() => {
-                      closeModal();
-                    }}
                   >
-                    Admin Portal
+                    <LogIn className="size-4" />
+                    <span className="text-xs">Sign in</span>
                   </button>
                 </Link>
-              )}
-              <Link href={"/api/auth/signout"}>
-                <button
-                  className={cn(
-                    "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
-                    "text-center text-sm",
-                    "w-full",
-                  )}
-                >
-                  Sign out
-                </button>
-              </Link>
-            </div>
-          )}
-          {isNationAdmin ? (
-            <button
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-md bg-primary p-2 text-white shadow-sm hover:bg-primary/90",
-                "text-center text-sm",
-                "w-full",
-              )}
-              onClick={() => {
-                void vanillaApi.nation.revalidate
-                  .mutate()
-                  .then(() => {
-                    toast.success("Nation revalidated");
-                  })
-                  .catch((error: unknown) => {
-                    console.log("RevalidateNation", { error });
-                    toast.error("Failed to revalidate Nation");
-                  });
-              }}
-            >
-              Revalidate map
-            </button>
-          ) : null}
-          <div className="flex flex-col items-center justify-center gap-4">
+                {!isProd && (isDevelopment || showDebug) ? (
+                  <button
+                    className={cn(
+                      "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
+                    )}
+                    onClick={() => {
+                      signIn("dev-mode", {
+                        email: "admin@mountaindev.com",
+                        redirect: true,
+                      }).catch((error: unknown) => {
+                        console.log("DevModeSignIn", { error });
+                        toast.error("Failed to sign in. Use regular sign in.");
+                      });
+                    }}
+                  >
+                    <LogIn className="size-4" />
+                    <span className="text-xs">Sign in (Dev Mode)</span>
+                  </button>
+                ) : null}
+              </>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div>
+                  <p className="text-sm font-bold text-muted-foreground">
+                    Signed in as
+                    <span className="ml-1 font-semibold text-primary">
+                      {session.email}
+                    </span>
+                  </p>
+                  {// Keep the nullish check on roles for legacy sessions that did not have roles
+                  session.roles?.map((role) => (
+                    <p
+                      key={`${role.orgId}-${role.roleName}`}
+                      className="text-xs text-gray-500"
+                    >
+                      {role.orgName} ({role.roleName})
+                    </p>
+                  ))}
+                </div>
+                {session.roles?.some((role) =>
+                  ["admin", "editor"].includes(role.roleName),
+                ) && (
+                  <Link href={"/admin"}>
+                    <button
+                      className={cn(
+                        "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
+                      )}
+                      onClick={() => {
+                        closeModal();
+                      }}
+                    >
+                      <Shield className="size-4" />
+                      <span className="text-xs">Admin Portal</span>
+                    </button>
+                  </Link>
+                )}
+                <Link href={"/api/auth/signout"}>
+                  <button
+                    className={cn(
+                      "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
+                    )}
+                  >
+                    <LogOut className="size-4" />
+                    <span className="text-xs">Sign out</span>
+                  </button>
+                </Link>
+              </div>
+            )}
+            {isNationAdmin ? (
+              <button
+                className={cn(
+                  "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
+                )}
+                onClick={() => {
+                  void vanillaApi.nation.revalidate
+                    .mutate()
+                    .then(() => {
+                      toast.success("Nation revalidated");
+                    })
+                    .catch((error: unknown) => {
+                      console.log("RevalidateNation", { error });
+                      toast.error("Failed to revalidate Nation");
+                    });
+                }}
+              >
+                <RefreshCcw className="size-4" />
+                <span className="text-xs">Revalidate map</span>
+              </button>
+            ) : null}
+
             <Link
-              className="flex w-full flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
+              className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
+              target="_blank"
+              href={"https://forms.gle/8AR4JCK3txSVr1Xy7"}
+            >
+              <LockKeyholeOpen className="size-4" />
+              <span className="text-xs">Request admin access</span>
+              <ArrowRight className="size-3 text-foreground" />
+            </Link>
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-bold text-muted-foreground">Info</p>
+            <Link
+              className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
               target="_blank"
               href={"/help"}
             >
-              <CircleHelp className="size-5" />
-              <span className="text-xs">Help / Feedback</span>
+              <CircleHelp className="size-4" />
+              <span className="text-xs">Map Help</span>
+              <span className="text-xs">/</span>
+              <Bug className="size-4" />
+              <span className="text-xs">Feedback</span>
+              <ArrowRight className="size-3 text-foreground" />
             </Link>
+            <button
+              className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
+              onClick={() => {
+                openModal(ModalType.ABOUT_MAP);
+              }}
+            >
+              <Info className="size-4" />
+              <span className="text-xs">About this map</span>
+            </button>
             <Link
-              className="text-sm text-primary underline hover:text-primary/80"
+              className="flex w-full flex-row items-center justify-center gap-2 rounded-md bg-card p-2 shadow-sm hover:bg-accent"
               target="_blank"
               href={"https://f3nation.com/about-f3"}
             >
-              FAQs
+              <MessageCircleQuestion className="size-4" />
+              <span className="text-xs">F3 FAQs</span>
+              <ArrowRight className="size-3 text-foreground" />
             </Link>
           </div>
           <VersionInfo className="text-center text-xs text-foreground/60" />

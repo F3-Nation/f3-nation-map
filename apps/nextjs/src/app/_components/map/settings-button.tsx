@@ -18,7 +18,7 @@ export const SettingsButton = ({ className }: { className?: string }) => {
           "cursor-pointer appearance-none overflow-hidden",
           "relative block",
           "h-10 w-10", // 40px x 40px
-          "bg-white",
+          "bg-background",
           "m-0 border-0 p-0",
           "user-select-none",
           "shadow-[0_1px_4px_-1px_rgba(0,0,0,0.3)]", // Google Maps shadow
@@ -32,7 +32,7 @@ export const SettingsButton = ({ className }: { className?: string }) => {
       >
         <Settings
           strokeWidth={1.75}
-          className={cn("size-7 text-[#666]")} // 28px x 28px with gray color
+          className={cn("size-7 text-muted-foreground")} // 28px x 28px with gray color
         />
       </button>
     </div>

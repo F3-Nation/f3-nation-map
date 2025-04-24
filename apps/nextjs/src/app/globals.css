@@ -34,7 +34,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 84% 60%;
-    --primary-foreground: 337 65.5% 17.1%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
@@ -56,4 +56,18 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
+}
+
+div.gmnoprint > div > button.gm-control-active {
+  background: none hsl(var(--background)) !important;
+}
+
+/* (1) This must be before the next div.gmnoprint > div for the zoom buttons */
+div.gmnoprint div {
+  background: none hsl(var(--muted)) !important;
+}
+
+/* (2) This must be before the next div.gmnoprint > div for the zoom buttons */
+div.gmnoprint > div {
+  background: none hsl(var(--background)) !important;
 }

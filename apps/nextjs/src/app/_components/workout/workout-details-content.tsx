@@ -155,15 +155,28 @@ export const WorkoutDetailsContent = ({
     <>
       <div className="flex flex-row flex-wrap items-center justify-start gap-x-2">
         <div className="flex flex-shrink-0 flex-col items-center">
-          <ImageWithFallback
-            src={location?.regionLogo ? location.regionLogo : "/f3_logo.png"}
-            fallbackSrc="/f3_logo.png"
-            loading="lazy"
-            width={64}
-            height={64}
-            alt={location?.regionLogo ?? "F3 logo"}
-            className="rounded-lg bg-black"
-          />
+          <button
+            className="cursor-pointer"
+            onClick={() =>
+              openModal(ModalType.FULL_IMAGE, {
+                title: `${location.parentName} logo`,
+                src: location.parentLogo ?? "/f3_logo.png",
+                fallbackSrc: "/f3_logo.png",
+                alt: location.parentLogo ?? "F3 logo",
+              })
+            }
+          >
+            <ImageWithFallback
+              key={location.parentLogo}
+              src={location.parentLogo ?? "/f3_logo.png"}
+              fallbackSrc="/f3_logo.png"
+              loading="lazy"
+              width={64}
+              height={64}
+              alt={location.parentLogo ?? "F3 logo"}
+              className="rounded-lg bg-black"
+            />
+          </button>
         </div>
         <div className="line-clamp-2 flex-1 text-left text-2xl font-bold leading-6 sm:text-4xl">
           {event?.name ?? "Workout Information"}

@@ -166,6 +166,7 @@ const ProvidedGoogleMapComponent = memo(
         }}
       >
         <Map
+          backgroundColor={resolvedTheme === "dark" ? "#111" : "#fff"}
           mapId={mapTiles?.mapId}
           mapTypeId={mapTiles?.mapTypeId}
           styles={mapTiles?.styles}

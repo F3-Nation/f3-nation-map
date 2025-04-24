@@ -3,10 +3,13 @@
 import type { ComponentProps } from "react";
 import { useState } from "react";
 
+import { cn } from "@acme/ui";
+
 export const ImageWithFallback = ({
   src,
   fallbackSrc,
   onError,
+  className,
   ...props
 }: ComponentProps<"img"> & {
   fallbackSrc?: ComponentProps<"img">["src"];
@@ -21,6 +24,7 @@ export const ImageWithFallback = ({
         setHasError(true);
         onError?.(err);
       }}
+      className={cn("bg-black", className)}
       {...props}
     />
   );

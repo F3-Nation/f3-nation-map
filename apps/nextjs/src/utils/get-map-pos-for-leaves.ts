@@ -5,6 +5,8 @@ import { bound } from "@acme/shared/common/functions";
 import { adjustBounds } from "~/utils/adjust-bounds";
 import { getBoundsOfLeaves } from "~/utils/get-bounds-of-leaves";
 
+const DEFAULT_ZOOM = 5;
+
 export const getMapPosForLeaves = (params: {
   leaves: Feature<Point>[];
   map: google.maps.Map;
@@ -21,7 +23,7 @@ export const getMapPosForLeaves = (params: {
   });
 
   const currentBounds = map.getBounds() ?? new google.maps.LatLngBounds();
-  const currentZoom = map.getZoom() ?? 0;
+  const currentZoom = map.getZoom() ?? DEFAULT_ZOOM;
 
   const ne = adjustedBounds.getNorthEast();
   const sw = adjustedBounds.getSouthWest();
@@ -36,8 +38,8 @@ export const getMapPosForLeaves = (params: {
 
   const currentNe = currentBounds.getNorthEast();
   const currentSw = currentBounds.getSouthWest();
-  const currentLatSpan = currentNe.lat() - currentSw.lat();
-  const currentLngSpan = currentNe.lng() - currentSw.lng();
+  const currentLatSpan = Math.abs(currentNe.lat() - currentSw.lat());
+  const currentLngSpan = Math.abs(currentNe.lng() - currentSw.lng());
 
   // Calculate zoom offset based on span ratios
   const latZoomOffset = Math.log2(latSpan / currentLatSpan);
@@ -52,7 +54,7 @@ export const getMapPosForLeaves = (params: {
 
   // It seems that fractional zoom is applied automatically
   // const zoom = IS_FRACTIONAL_ZOOM_ENABLED ? zoomValue : Math.floor(zoomValue);
-  const zoom = zoomValue;
+  const zoom = Number.isNaN(zoomValue) ? DEFAULT_ZOOM : zoomValue;
 
   return { center, zoom };
 };

@@ -123,7 +123,11 @@ export const locationRouter = createTRPCRouter({
           logo: aoOrg.logoUrl,
           lat: schema.locations.latitude,
           lon: schema.locations.longitude,
-          locationDescription: schema.locations.description,
+          locationAddress: schema.locations.addressStreet,
+          locationAddress2: schema.locations.addressStreet2,
+          locationCity: schema.locations.addressCity,
+          locationState: schema.locations.addressState,
+          locationCountry: schema.locations.addressCountry,
         },
         events: {
           id: schema.events.id,
@@ -169,7 +173,24 @@ export const locationRouter = createTRPCRouter({
           acc[location.id] = {
             ...location,
             name: location.name ?? "",
-            description: location.locationDescription ?? "",
+            // description: location.locationDescription ?? "",
+            fullAddress: [
+              location.locationAddress,
+              location.locationAddress2,
+              location.locationCity,
+              location.locationState,
+              ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
+                location.locationCountry
+                  ?.toLowerCase()
+                  .replace(/(\.| )/g, "") ?? "",
+              )
+                ? ""
+                : location.locationCountry,
+            ]
+              .filter(Boolean) // Remove empty/null/undefined values
+              .join(", ")
+              .replace(/, ,/g, ",") // Clean up any double commas
+              .replace(/,\s*$/, ""), // Remove trailing comma
             lat: location.lat,
             lon: location.lon,
             events: [],
@@ -190,7 +211,7 @@ export const locationRouter = createTRPCRouter({
           logo: string | null;
           lat: number;
           lon: number;
-          description: string;
+          fullAddress: string;
           events: Omit<
             NonNullable<(typeof locationsAndEvents)[number]["events"]>,
             "locationId"
@@ -207,7 +228,7 @@ export const locationRouter = createTRPCRouter({
       locationEvent.logo,
       locationEvent.lat,
       locationEvent.lon,
-      locationEvent.description,
+      locationEvent.fullAddress,
       locationEvent.events
         .sort(
           (a, b) =>
@@ -231,65 +252,66 @@ export const locationRouter = createTRPCRouter({
       const parentOrg = aliasedTable(schema.orgs, "parent_org");
       const regionOrg = aliasedTable(schema.orgs, "region_org");
 
-      const [location] = await ctx.db
+      const results = await ctx.db
         .select({
-          id: schema.locations.id,
-          name: schema.locations.name,
-          description: schema.locations.description,
-          lat: schema.locations.latitude,
-          lon: schema.locations.longitude,
-          orgId: schema.locations.orgId,
-          locationMeta: schema.locations.meta,
-          locationAddress: schema.locations.addressStreet,
-          locationAddress2: schema.locations.addressStreet2,
-          locationCity: schema.locations.addressCity,
-          locationState: schema.locations.addressState,
-          locationZip: schema.locations.addressZip,
-          locationCountry: schema.locations.addressCountry,
-          isActive: schema.locations.isActive,
-          created: schema.locations.created,
-          updated: schema.locations.updated,
-          locationDescription: schema.locations.description,
-          regionId: regionOrg.id,
-          regionName: regionOrg.name,
-          regionLogo: regionOrg.logoUrl,
-          regionWebsite: regionOrg.website,
-          regionType: regionOrg.orgType,
+          location: {
+            id: schema.locations.id,
+            name: schema.locations.name,
+            description: schema.locations.description,
+            lat: schema.locations.latitude,
+            lon: schema.locations.longitude,
+            orgId: schema.locations.orgId,
+            locationMeta: schema.locations.meta,
+            locationAddress: schema.locations.addressStreet,
+            locationAddress2: schema.locations.addressStreet2,
+            locationCity: schema.locations.addressCity,
+            locationState: schema.locations.addressState,
+            locationZip: schema.locations.addressZip,
+            locationCountry: schema.locations.addressCountry,
+            isActive: schema.locations.isActive,
+            created: schema.locations.created,
+            updated: schema.locations.updated,
+            locationDescription: schema.locations.description,
+            parentId: parentOrg.id,
+            parentLogo: parentOrg.logoUrl,
+            parentName: parentOrg.name,
+            regionId: regionOrg.id,
+            regionName: regionOrg.name,
+            regionLogo: regionOrg.logoUrl,
+            regionWebsite: regionOrg.website,
+            regionType: regionOrg.orgType,
+          },
+          event: {
+            id: schema.events.id,
+            name: schema.events.name,
+            description: schema.events.description,
+            dayOfWeek: schema.events.dayOfWeek,
+            startTime: schema.events.startTime,
+            endTime: schema.events.endTime,
+            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
+            aoId: parentOrg.id,
+            aoLogo: parentOrg.logoUrl,
+            aoWebsite: parentOrg.website,
+            aoName: parentOrg.name,
+          },
         })
         .from(schema.locations)
-        .leftJoin(regionOrg, eq(schema.locations.orgId, regionOrg.id))
-        .where(eq(schema.locations.id, input.locationId));
-
-      if (!location) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Location not found",
-        });
-      }
-
-      const events = await ctx.db
-        .select({
-          id: schema.events.id,
-          name: schema.events.name,
-          description: schema.events.description,
-          dayOfWeek: schema.events.dayOfWeek,
-          startTime: schema.events.startTime,
-          endTime: schema.events.endTime,
-          types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
-          aoId: parentOrg.id,
-          aoLogo: parentOrg.logoUrl,
-          aoWebsite: parentOrg.website,
-          aoName: parentOrg.name,
-        })
-        .from(schema.events)
+        .innerJoin(
+          schema.events,
+          eq(schema.locations.id, schema.events.locationId),
+        )
         .leftJoin(parentOrg, eq(schema.events.orgId, parentOrg.id))
         .leftJoin(
           regionOrg,
-          and(
-            eq(regionOrg.orgType, "region"),
-            or(
+          or(
+            and(
               eq(schema.events.orgId, regionOrg.id),
+              eq(regionOrg.orgType, "region"),
+            ),
+            and(
+              eq(parentOrg.orgType, "ao"),
               eq(parentOrg.parentId, regionOrg.id),
+              eq(regionOrg.orgType, "region"),
             ),
           ),
         )
@@ -301,11 +323,23 @@ export const locationRouter = createTRPCRouter({
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
-        .where(eq(schema.events.locationId, input.locationId))
-        .groupBy(schema.events.id, parentOrg.id, regionOrg.id);
+        .where(eq(schema.locations.id, input.locationId))
+        .groupBy(
+          schema.locations.id,
+          schema.events.id,
+          parentOrg.id,
+          regionOrg.id,
+        );
 
-      if (location.lat == null || location.lon == null) {
-        return null;
+      const location = results[0]?.location;
+      const events = results.map((r) => r.event);
+
+      console.log("location", location);
+      if (location?.lat == null || location?.lon == null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Location not found",
+        });
       }
 
       const locationWithEvents = {
@@ -317,9 +351,9 @@ export const locationRouter = createTRPCRouter({
           location.locationAddress2,
           location.locationCity,
           location.locationState,
-          location.locationZip,
-          ["us", "usa", "united states", "united states of america"].includes(
-            location.locationCountry?.toLowerCase().replace(/(.| )/g, "") ?? "",
+          ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
+            location.locationCountry?.toLowerCase().replace(/(\.| )/g, "") ??
+              "",
           )
             ? ""
             : location.locationCountry,
