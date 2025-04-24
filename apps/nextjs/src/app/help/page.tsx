@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
@@ -15,9 +16,17 @@ export default async function HelpPage() {
           <Header />
         </Suspense>
         <div>
-          Welcome to Nation Map's support portal. We're committed to
-          continuously improving the map and appreciate your feedback about any
-          issues you encounter or ideas you have for improvements
+          Here is the{" "}
+          <Link
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline"
+            href="https://github.com/F3-Nation/f3-nation-map/issues"
+          >
+            F3 Nation Map's github repo
+          </Link>{" "}
+          if you'd like to contribute or report an issue directly. Otherwise,
+          please use the form below.
         </div>
         <SubmitBugReportCard />
         <div>

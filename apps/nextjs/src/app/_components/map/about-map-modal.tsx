@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CircleHelp } from "lucide-react";
 
 import { BOONE_CENTER, Z_INDEX } from "@acme/shared/app/constants";
 import { cn } from "@acme/ui";
@@ -12,7 +13,7 @@ import {
 } from "@acme/ui/dialog";
 
 import { setView } from "~/utils/set-view";
-import { closeModal } from "~/utils/store/modal";
+import { closeModal, ModalType, openModal } from "~/utils/store/modal";
 
 export function AboutMapModal() {
   return (
@@ -22,15 +23,17 @@ export function AboutMapModal() {
         className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[400px]`)}
       >
         <DialogHeader>
-          <DialogTitle>About This Map</DialogTitle>
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            About This Map
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <p>
+        <div className="space-y-6 py-6">
+          <p className="leading-relaxed text-muted-foreground">
             This map was built with ❤️️️ by{" "}
             <Link
               target="_blank"
               href="https://linkedin.com/in/declan-nishiyama"
-              className="text-blue-600 underline underline-offset-2"
+              className="font-medium text-primary hover:underline"
             >
               Spuds
             </Link>{" "}
@@ -38,16 +41,16 @@ export function AboutMapModal() {
             <Link
               target="_blank"
               href="https://mountaindev.com"
-              className="text-blue-600 underline underline-offset-2"
+              className="font-medium text-primary hover:underline"
             >
               Mountain Dev
             </Link>
             , a full stack development studio
           </p>
-          <p>
+          <p className="leading-relaxed text-muted-foreground">
             He's in{" "}
             <button
-              className="text-foreground underline underline-offset-2"
+              className="font-medium text-primary hover:underline"
               onClick={() => {
                 closeModal(undefined, "all");
                 setView({ lat: BOONE_CENTER[0], lng: BOONE_CENTER[1] });
@@ -57,11 +60,20 @@ export function AboutMapModal() {
             </button>{" "}
             and created this map to give back to the community.
           </p>
-          <p>
+          <p className="leading-relaxed text-muted-foreground">
             Shout out to Tackle — IT Director extraordinaire — and all the
             people of F3 IT for making this happen!
           </p>
         </div>
+        <button
+          className="group flex w-full flex-row items-center justify-center gap-2.5 rounded-lg bg-primary/10 p-3 font-medium transition-colors hover:bg-primary/20"
+          onClick={() => {
+            openModal(ModalType.MAP_HELP);
+          }}
+        >
+          <CircleHelp className="size-4 text-primary" />
+          <span className="text-sm text-primary">Need Help?</span>
+        </button>
       </DialogContent>
     </Dialog>
   );
