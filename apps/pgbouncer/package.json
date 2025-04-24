@@ -1,0 +1,17 @@
+{
+  "name": "@acme/pgbouncer",
+  "version": "1.0.0",
+  "description": "PgBouncer connection pooler for Google Cloud SQL",
+  "scripts": {
+    "build-and-deploy": "pnpm with-env ./deploy.sh",
+    "test:local": "pnpm with-env ./test-connection.sh local",
+    "test:gcp": "pnpm with-env ./test-connection.sh gcp",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "dotenv-cli": "^7.3.0"
+  },
+  "devDependencies": {
+    "pgcli": "^4.0.1"
+  }
+}

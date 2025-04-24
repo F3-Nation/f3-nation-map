@@ -1,0 +1,50 @@
+steps:
+  # Debug step
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        echo "Debug: DOPPLER_TOKEN available: ${_DOPPLER_TOKEN:0:5}..."
+    secretEnv: ["_DOPPLER_TOKEN"]
+
+  # Build step with correct secret handling
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        docker build \
+          --build-arg "DOPPLER_TOKEN=$$_DOPPLER_TOKEN" \
+          -t gcr.io/pin-mastery/pgbouncer \
+          -f apps/pgbouncer/Dockerfile \
+          apps/pgbouncer
+    secretEnv: ["_DOPPLER_TOKEN"]
+
+  # Push step
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/pin-mastery/pgbouncer"]
+
+  # Deploy to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "pgbouncer"
+      - "--image"
+      - "gcr.io/pin-mastery/pgbouncer"
+      - "--region"
+      - "us-central1"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--port"
+      - "6432"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/233824588998/secrets/DOPPLER_TOKEN/versions/latest
+      env: "_DOPPLER_TOKEN"
