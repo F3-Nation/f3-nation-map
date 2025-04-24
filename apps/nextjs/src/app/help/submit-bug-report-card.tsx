@@ -58,10 +58,8 @@ export const SubmitBugReportCard = () => {
     <Form {...form}>
       <Card>
         <CardHeader>
-          <CardTitle>Report an issue</CardTitle>
-          <CardDescription>
-            What area are you having problems with?
-          </CardDescription>
+          <CardTitle>Send us a message</CardTitle>
+          <CardDescription>What would you like to tell us?</CardDescription>
         </CardHeader>
         <CardContent className="grid">
           <div className="grid sm:grid-cols-1">

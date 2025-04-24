@@ -7,6 +7,7 @@ import { BreakPoints } from "@acme/shared/app/constants";
 import type { DataType } from "~/utils/store/modal";
 import { ModalType, useOpenModal } from "~/utils/store/modal";
 import { AboutMapModal } from "../map/about-map-modal";
+import { MapHelpModal } from "../map/map-help-modal";
 import AdminAOsModal from "./admin-aos-modal";
 import AdminAreasModal from "./admin-areas-modal";
 import AdminDeleteModal from "./admin-delete-modal";
@@ -109,6 +110,8 @@ export default function ModalSwitcher() {
       return <AboutMapModal />;
     case ModalType.FULL_IMAGE:
       return <FullImageModal data={data as DataType[ModalType.FULL_IMAGE]} />;
+    case ModalType.MAP_HELP:
+      return <MapHelpModal />;
     default:
       return null;
   }

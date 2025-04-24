@@ -3,12 +3,14 @@
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { cn } from "@acme/ui";
 
+import { api } from "~/trpc/react";
 import { mapStore } from "~/utils/store/map";
 import { useFilteredMapResults } from "./filtered-map-results-provider";
 
 export const DebugInfo = () => {
   const zoom = mapStore.use.zoom();
   const center = mapStore.use.center();
+  const { data: workoutCount } = api.location.getWorkoutCount.useQuery();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
   return (
@@ -22,7 +24,10 @@ export const DebugInfo = () => {
       <div className="m-0 p-0">
         Center: {center?.lat.toFixed(5)}, {center?.lng.toFixed(5)}
       </div>
-      <div className="m-0 p-0">Workouts: {filteredLocationMarkers?.length}</div>
+      <div className="m-0 p-0">Workouts: {workoutCount?.count}</div>
+      <div className="m-0 p-0">
+        Locations: {filteredLocationMarkers?.length}
+      </div>
     </div>
   );
 };
