@@ -230,7 +230,12 @@ export default function SettingsModal() {
             <p className="text-sm font-bold text-muted-foreground">Access</p>
             {!session ? (
               <>
-                <Link href={"/api/auth/signin"}>
+                <Link
+                  href={"/api/auth/signin"}
+                  onClick={() => {
+                    closeModal();
+                  }}
+                >
                   <button
                     className={cn(
                       "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
@@ -296,7 +301,12 @@ export default function SettingsModal() {
                     </button>
                   </Link>
                 )}
-                <Link href={"/api/auth/signout"}>
+                <Link
+                  href={"/api/auth/signout"}
+                  onClick={() => {
+                    closeModal();
+                  }}
+                >
                   <button
                     className={cn(
                       "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",

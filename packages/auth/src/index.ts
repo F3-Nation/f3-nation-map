@@ -9,23 +9,31 @@ import type { UserRole } from "@acme/shared/app/enums";
 import { db } from "@acme/db/client";
 import { orgs } from "@acme/db/schema/schema";
 import { env } from "@acme/env";
+import { normalizeEmail } from "@acme/shared/common/functions";
 
 import { MDPGDrizzleAdapter } from "./MDPgDrizzleAdapter";
-import { sendVerificationRequest } from "./sendVerificationRequest";
+import { sendVerificationRequest } from "./utils";
 
 export type { Session } from "next-auth";
 
 const isProd = env.NEXT_PUBLIC_CHANNEL === "prod";
 
-const providers: Provider[] = [
-  Email({
-    id: "email", // needed to allow signIn("email")
-    name: "Email", // Changes text on default sign in button
-    server: env.EMAIL_SERVER,
-    from: env.EMAIL_FROM,
-    sendVerificationRequest,
-  }),
-];
+const emailProvider = Email({
+  id: "email", // needed to allow signIn("email")
+  name: "Email", // Changes text on default sign in button
+  server: env.EMAIL_SERVER,
+  from: env.EMAIL_FROM,
+  sendVerificationRequest,
+  normalizeIdentifier: normalizeEmail,
+});
+
+// Needed for auth util operations
+export const localEmailProvider = {
+  ...emailProvider,
+  ...emailProvider.options,
+};
+
+const providers: Provider[] = [emailProvider];
 
 if (!isProd) {
   providers.push(
@@ -72,6 +80,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // https://github.com/nextauthjs/next-auth/issues/9819#issuecomment-1912903196
   basePath: "/api/auth",
   trustHost: true,
+  pages: {
+    signIn: "/auth/sign-in",
+    verifyRequest: "/auth/verify-request",
+    signOut: "/auth/sign-out",
+  },
   providers,
   callbacks: {
     async jwt({ token, user, trigger, session }) {
