@@ -23,7 +23,6 @@ export default function VerifyRequestPage() {
             width={150}
             height={50}
             className="h-full object-contain"
-            objectFit="contain"
           />
 
           <p className="mb-6 mt-4 text-lg leading-8 text-foreground">

@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { sendVerifyEmail } from "@acme/auth/utils";
+import { sendVerifyEmail } from "@acme/auth/lib/utils";
 import { eq, schema } from "@acme/db";
 import { ErrorMessage } from "@acme/shared/common/enums";
 import { normalizeEmail } from "@acme/shared/common/functions";

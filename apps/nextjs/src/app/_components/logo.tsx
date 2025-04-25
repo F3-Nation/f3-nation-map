@@ -11,15 +11,14 @@ import { Responsive } from "~/utils/responsive";
 const LOGO_CHANGE_OFFSET = 50;
 export const Logo = () => {
   return (
-    <Link href={`/dashboard`}>
+    <Link href={`/`}>
       <Responsive maxWidth={BreakPoints.MD + LOGO_CHANGE_OFFSET}>
         <Image
           src={`/f3_logo.png`}
           alt="F3 Nation Logo"
           width={150}
           height={50}
-          className="h-full object-contain"
-          objectFit="contain"
+          className="h-full w-auto object-contain"
         />
       </Responsive>
       <Responsive minWidth={BreakPoints.MD + LOGO_CHANGE_OFFSET}>
@@ -28,8 +27,7 @@ export const Logo = () => {
           alt="F3 Nation Logo"
           width={200}
           height={50}
-          className="h-full object-contain"
-          objectFit="contain"
+          className="h-full w-auto object-contain"
         />
       </Responsive>
     </Link>

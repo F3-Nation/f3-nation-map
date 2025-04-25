@@ -20,6 +20,7 @@ import { useTheme } from "next-themes";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { isDevelopment } from "@acme/shared/common/constants";
+import { ProviderId } from "@acme/shared/common/enums";
 import { cn } from "@acme/ui";
 import {
   Dialog,
@@ -251,7 +252,7 @@ export default function SettingsModal() {
                       "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
                     )}
                     onClick={() => {
-                      signIn("dev-mode", {
+                      signIn(ProviderId.DEV_MODE, {
                         email: "admin@mountaindev.com",
                         redirect: true,
                       }).catch((error: unknown) => {

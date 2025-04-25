@@ -14,7 +14,7 @@ import { schema } from "@acme/db";
 import { env } from "@acme/env";
 import { isProduction } from "@acme/shared/common/constants";
 
-import { localEmailProvider } from "./index";
+import { localEmailProvider } from "./email-provider";
 
 // Real tokens are in the urls, the hashed is in the database
 export const hashToken = (token: string) =>
