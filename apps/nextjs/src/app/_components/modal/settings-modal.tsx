@@ -20,6 +20,7 @@ import { useTheme } from "next-themes";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { isDevelopment } from "@acme/shared/common/constants";
+import { ProviderId } from "@acme/shared/common/enums";
 import { cn } from "@acme/ui";
 import {
   Dialog,
@@ -230,7 +231,12 @@ export default function SettingsModal() {
             <p className="text-sm font-bold text-muted-foreground">Access</p>
             {!session ? (
               <>
-                <Link href={"/api/auth/signin"}>
+                <Link
+                  href={"/api/auth/signin"}
+                  onClick={() => {
+                    closeModal();
+                  }}
+                >
                   <button
                     className={cn(
                       "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
@@ -246,7 +252,7 @@ export default function SettingsModal() {
                       "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
                     )}
                     onClick={() => {
-                      signIn("dev-mode", {
+                      signIn(ProviderId.DEV_MODE, {
                         email: "admin@mountaindev.com",
                         redirect: true,
                       }).catch((error: unknown) => {
@@ -296,7 +302,12 @@ export default function SettingsModal() {
                     </button>
                   </Link>
                 )}
-                <Link href={"/api/auth/signout"}>
+                <Link
+                  href={"/api/auth/signout"}
+                  onClick={() => {
+                    closeModal();
+                  }}
+                >
                   <button
                     className={cn(
                       "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
