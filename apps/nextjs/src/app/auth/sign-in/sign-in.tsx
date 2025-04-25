@@ -85,8 +85,7 @@ const AuthForm = () => {
 
   const form = useForm({
     schema: SignInFormSchema,
-    // mode: "all",
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: { email },
   });
   const { control, formState, getFieldState, setError, getValues } = form;
