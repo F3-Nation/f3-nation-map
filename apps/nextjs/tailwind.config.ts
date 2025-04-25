@@ -19,6 +19,9 @@ export default {
       spacing: {
         360: `${SIDEBAR_WIDTH}px`,
       },
+      screens: {
+        xs: "480px",
+      },
     },
   },
 } satisfies Config;

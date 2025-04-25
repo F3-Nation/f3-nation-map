@@ -18,6 +18,7 @@ export const env = createEnv({
     GOOGLE_LOGO_BUCKET_CLIENT_EMAIL: z.string().min(1),
     GOOGLE_LOGO_BUCKET_BUCKET_NAME: z.string().min(1),
     TEST_DATABASE_URL: z.string().min(1),
+    API_KEY: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),

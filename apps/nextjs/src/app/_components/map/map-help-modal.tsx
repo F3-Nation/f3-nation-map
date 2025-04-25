@@ -81,10 +81,9 @@ export function MapHelpModal() {
                       <Image
                         src={video.thumbnail}
                         alt={video.title}
-                        className="rounded-md"
+                        className="rounded-md object-contain"
                         width={60}
                         height={40}
-                        objectFit="contain"
                       />
                       <Link
                         href={video.url}
