@@ -45,7 +45,15 @@ export function MapHelpModal() {
           <DialogTitle className="text-2xl">Map Help & Feedback</DialogTitle>
           <DialogDescription>
             We want to continually improve the map, so please let us know about
-            any issues or ideas you have
+            any issues or ideas you have. Check out the{" "}
+            <Link
+              href="https://github.com/F3-Nation/f3-nation-map/issues"
+              target="_blank"
+              className="text-blue-500 hover:underline"
+            >
+              F3 Map github repo
+            </Link>{" "}
+            to see the code, planned features, and existing issues.
           </DialogDescription>
         </DialogHeader>
 
