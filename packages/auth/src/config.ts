@@ -69,6 +69,7 @@ export const authConfig: NextAuthConfig = {
     signIn: "/auth/sign-in",
     verifyRequest: "/auth/verify-request",
     signOut: "/auth/sign-out",
+    error: "/auth/error",
   },
   providers,
   callbacks: {

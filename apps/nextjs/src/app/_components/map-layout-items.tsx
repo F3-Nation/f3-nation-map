@@ -45,9 +45,9 @@ export const MapLayoutItems = () => {
       <Projection />
       <MapProvider />
       <GeolocationMarker />
-      <DesktopLocationPanel>
+      <DesktopLocationPanelContainer>
         <DesktopLocationPanelContent />
-      </DesktopLocationPanel>
+      </DesktopLocationPanelContainer>
       <DesktopSelectedItem />
 
       <MapControl
@@ -103,7 +103,7 @@ export const MapLayoutItems = () => {
   );
 };
 
-const DesktopLocationPanel = (props: ComponentProps<"div">) => (
+const DesktopLocationPanelContainer = (props: ComponentProps<"div">) => (
   <div
     style={{ zIndex: Z_INDEX.LOCATION_PANEL }}
     // max-w-md must match to MAX_DESKTOP_WORKOUT_PANEL_WIDTH

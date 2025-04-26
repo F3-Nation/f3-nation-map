@@ -8,6 +8,15 @@
       "command": "pnpm dev",
       "cwd": "${workspaceFolder}/apps/nextjs/",
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Playwright Tests",
+      "console": "integratedTerminal",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": ["test", "${file}"],
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

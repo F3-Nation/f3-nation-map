@@ -26,7 +26,7 @@
     "google-spreadsheet": "^3.3.0",
     "handlebars": "^4.7.8",
     "lodash": "^4.17.21",
-    "nodemailer": "^6.9.13",
+    "nodemailer": "^6.10.0",
     "superjson": "2.2.1",
     "trpc-openapi": "^1.2.0",
     "zod": "^3.24.1"
