@@ -1,22 +1,13 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { memo, useEffect, useState } from "react";
 import { useWindowSize } from "@react-hook/window-size";
 import { APIProvider, ControlPosition, Map } from "@vis.gl/react-google-maps";
 
-import {
-  BreakPoints,
-  DEFAULT_CENTER,
-  SIDEBAR_WIDTH,
-} from "@acme/shared/app/constants";
-import { safeParseFloat, safeParseInt } from "@acme/shared/common/functions";
+import { BreakPoints, SIDEBAR_WIDTH } from "@acme/shared/app/constants";
 import { useTheme } from "@acme/ui/theme";
-import { toast } from "@acme/ui/toast";
 
-import type { RouterOutputs } from "~/trpc/types";
 import { env } from "~/env";
-import { api } from "~/trpc/react";
 import { useIsMobileWidth } from "~/utils/hooks/use-is-mobile-width";
 import { useUpdateLocSearchParams } from "~/utils/hooks/use-update-loc-search-params";
 import { appStore } from "~/utils/store/app";
@@ -25,6 +16,7 @@ import { closePanel, setSelectedItem } from "~/utils/store/selected-item";
 import { MapEventListener } from "../map-event-listener";
 import { MapLayoutItems } from "../map-layout-items";
 import { ClusteredMarkers } from "../marker-clusters/clustered-markers";
+import { useInitialLocation } from "./initial-location-provider";
 import { PlaceResultIconPane } from "./place-result-icon-pane";
 import { UpdatePane } from "./update-pane";
 
@@ -65,58 +57,12 @@ const MAP_CONFIGS: MapConfig[] = [
 ];
 
 export const GoogleMapComponent = () => {
-  const utils = api.useUtils();
-  const router = useRouter();
-  const pathname = usePathname();
-  const hasRedirectedForQueryParams = useRef(false);
-
-  const searchParams = useSearchParams();
-  const queryLat = safeParseFloat(searchParams?.get("lat"));
-  const queryLon = safeParseFloat(
-    searchParams?.get("lon") ?? searchParams?.get("lng"),
-  );
-  const queryZoom = safeParseFloat(searchParams?.get("zoom"));
-  const queryLocationId = safeParseInt(searchParams?.get("locationId"));
-  const queryEventId = safeParseInt(searchParams?.get("eventId"));
-  const searchParamsRef = useRef(searchParams?.get("error"));
-
-  useEffect(() => {
-    const error = searchParamsRef.current;
-    if (error === "invalid-submission") {
-      toast.error("Invalid submission");
-      searchParamsRef.current = null;
-      if (pathname) {
-        router.replace(pathname, { scroll: false });
-      }
-    }
-  }, [pathname, router]);
-
-  // This needs to just be an onload thing TODO
-  useEffect(() => {
-    if (
-      queryLocationId != null &&
-      queryEventId != null &&
-      !hasRedirectedForQueryParams.current
-    ) {
-      hasRedirectedForQueryParams.current = true;
-      setSelectedItem({
-        locationId: Number(queryLocationId),
-        eventId: Number(queryEventId),
-        showPanel: true,
-      });
-    }
-  }, [queryLocationId, queryEventId]);
-
+  const { initialCenter, initialZoom } = useInitialLocation();
   return (
     <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_API_KEY}>
       <ProvidedGoogleMapComponent
-        defaultZoom={getDefaultZoom({ queryZoom: queryZoom })}
-        defaultCenter={getDefaultCenter({
-          locationData: utils.location.getMapEventAndLocationData.getData(),
-          queryLat,
-          queryLon,
-          queryLocationId,
-        })}
+        defaultZoom={initialZoom}
+        defaultCenter={initialCenter}
       />
     </APIProvider>
   );
@@ -219,42 +165,7 @@ const ProvidedGoogleMapComponent = memo(
 
 ProvidedGoogleMapComponent.displayName = "ProvidedGoogleMapComponent";
 
-const getDefaultCenter = ({
-  queryLat,
-  queryLon,
-  queryLocationId,
-  locationData,
-}: {
-  queryLat: number | undefined;
-  queryLon: number | undefined;
-  queryLocationId: number | undefined;
-  locationData:
-    | RouterOutputs["location"]["getMapEventAndLocationData"]
-    | undefined
-    | null;
-}) => {
-  const locationLatLng = locationData?.find(
-    (location) => location[0] === queryLocationId,
-  );
-  const lat = locationLatLng?.[3];
-  const lon = locationLatLng?.[4];
-  const center = mapStore.get("center");
-
-  return lat != null && lon != null
-    ? { lat, lng: lon }
-    : queryLat != null && queryLon != null
-      ? { lat: queryLat, lng: queryLon }
-      : center
-        ? center
-        : { lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] };
-};
-
 const UrlUpdater = () => {
   useUpdateLocSearchParams();
   return null;
-};
-
-const getDefaultZoom = ({ queryZoom }: { queryZoom: number | undefined }) => {
-  const zoom = mapStore.get("zoom");
-  return queryZoom ?? zoom;
 };

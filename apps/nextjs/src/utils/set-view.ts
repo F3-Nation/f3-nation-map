@@ -1,4 +1,5 @@
 import { CLOSE_ZOOM } from "@acme/shared/app/constants";
+import { isDevelopment } from "@acme/shared/common/constants";
 
 import { isTouchDevice } from "./is-touch-device";
 import { mapStore } from "./store/map";
@@ -15,6 +16,14 @@ export const setView = ({
   zoom?: number;
   options?: { animate?: boolean; onlyIfNotMovedMap?: boolean };
 }) => {
+  if (isDevelopment) {
+    const stackTrace = new Error().stack;
+    const callerInfo =
+      stackTrace?.split("\n")[2]?.trim().split("/").slice(-1)[0] ??
+      "Unknown caller";
+    console.log("setView called by:", callerInfo);
+  }
+
   if (_options?.onlyIfNotMovedMap && mapStore.get("hasMovedMap")) {
     console.log("Not redirecting because we've moved the map");
     return;

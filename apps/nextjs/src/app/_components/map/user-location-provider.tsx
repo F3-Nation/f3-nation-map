@@ -9,7 +9,7 @@ import {
   useRef,
 } from "react";
 
-import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { isDevelopment, RERENDER_LOGS } from "@acme/shared/common/constants";
 
 import { setView } from "~/utils/set-view";
 import { mapStore } from "~/utils/store/map";
@@ -25,6 +25,7 @@ const UserLocationContext = createContext<{
 });
 
 const USER_LOCATION_LOGS = false as boolean;
+const USE_FAKE_LOCATION = false as boolean;
 
 export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
   RERENDER_LOGS && console.log("UserLocationProvider rerender");
@@ -104,9 +105,7 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
       let position = mapStore.get("userGpsLocation");
 
       if (!position) {
-        const geoLocation = await getGeolocationPosition({
-          timeout: 10000,
-        });
+        const geoLocation = await getGeolocationPosition({ timeout: 10000 });
         if (!geoLocation) return;
         position = {
           latitude: geoLocation.coords.latitude,
@@ -114,8 +113,13 @@ export const UserLocationProvider = ({ children }: { children: ReactNode }) => {
         };
       }
 
-      if (position && !hasTriedInitialShowUserLocation.current) {
+      if (
+        position &&
+        !hasTriedInitialShowUserLocation.current &&
+        mapStore.get("didSetQueryParamLocation") === false
+      ) {
         hasTriedInitialShowUserLocation.current = true;
+
         setView({
           lat: position.latitude,
           lng: position.longitude,
@@ -172,9 +176,41 @@ const getGeolocationPermission = (): Promise<PermissionState> => {
   });
 };
 
+const getFakeGeolocationPosition = (
+  _options?: PositionOptions,
+): Promise<GeolocationPosition> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const position = {
+        coords: {
+          latitude: 37.774929,
+          longitude: -122.419418,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      };
+      mapStore.setState({
+        userGpsLocationStatus: "success",
+        userGpsLocation: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        },
+      });
+      resolve(position);
+    }, 1000);
+  });
+};
 const getGeolocationPosition = (
   options?: PositionOptions,
 ): Promise<GeolocationPosition> => {
+  if (isDevelopment && USE_FAKE_LOCATION) {
+    console.log("getGeolocationPosition fake location");
+    return getFakeGeolocationPosition(options);
+  }
   mapStore.setState({ userGpsLocationStatus: "loading" });
   return new Promise((resolve, reject) => {
     USER_LOCATION_LOGS && console.log("getCurrentPositionPromise");
@@ -198,9 +234,9 @@ const getGeolocationPosition = (
         reject(error);
       },
       {
-        timeout: options?.timeout ?? Infinity,
+        timeout: options?.timeout ?? 1000 * 60, // 1 minute
         enableHighAccuracy: options?.enableHighAccuracy ?? false,
-        maximumAge: options?.maximumAge ?? Infinity,
+        maximumAge: options?.maximumAge ?? 1000 * 60 * 60 * 24 * 30, // 30 days
       },
     );
   });

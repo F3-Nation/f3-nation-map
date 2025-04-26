@@ -31,12 +31,12 @@ const initialState = {
   placeResultArea: null as string | null,
   placeResultLocation: null as google.maps.LatLngLiteral | null,
   updateLocation: null as google.maps.LatLngLiteral | null,
-  nearbyLocationCenter: {
-    lat: null as google.maps.LatLngLiteral["lat"] | null,
-    lng: null as google.maps.LatLngLiteral["lng"] | null,
-    name: null as string | null,
-    type: "default" as NearbyLocationCenterType,
-  },
+  nearbyLocationCenter: null as {
+    lat: google.maps.LatLngLiteral["lat"];
+    lng: google.maps.LatLngLiteral["lng"];
+    name: string | null;
+    type: NearbyLocationCenterType;
+  } | null,
   modifiedLocationMarkers: {} as Record<number, { lat: number; lng: number }>,
   tiles: "street" as "street" | "hybrid",
   event: "idle" as "idle" | "drag" | "zoom",
@@ -47,6 +47,7 @@ const initialState = {
   // This allows us to be precise with zoom level when clicking on a cluster
   fractionalZoom: false,
   hasTriedInitialShowUserLocation: false,
+  didSetQueryParamLocation: false,
 };
 
 export type MapStoreState = typeof initialState;
