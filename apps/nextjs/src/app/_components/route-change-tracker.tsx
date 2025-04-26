@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { trackPageView } from "~/utils/analytics/functions";
 
-export default function RouteChangeTracker() {
+export const RouteChangeTracker = () => {
+  return (
+    <Suspense fallback={null}>
+      <SuspendedRouteChangeTracker />
+    </Suspense>
+  );
+};
+
+const SuspendedRouteChangeTracker = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -19,4 +27,4 @@ export default function RouteChangeTracker() {
   }, [pathname, searchParams]);
 
   return null;
-}
+};
