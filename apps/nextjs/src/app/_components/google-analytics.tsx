@@ -12,7 +12,7 @@ import { env } from "~/env";
  * It is used to track user interactions with the website.
  * It is used to track user interactions with the website.
  */
-export default function GoogleAnalytics() {
+export const GoogleAnalytics = () => {
   useEffect(() => {
     if (!env.NEXT_PUBLIC_GA_MEASUREMENT_ID) {
       return;
@@ -32,4 +32,4 @@ export default function GoogleAnalytics() {
       src={`https://www.googletagmanager.com/gtag/js?id=${env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
     />
   ) : null;
-}
+};
