@@ -2,6 +2,7 @@ import { useWindowWidth } from "@react-hook/window-size";
 import { X } from "lucide-react";
 
 import { BreakPoints } from "@acme/shared/app/constants";
+import { TestId } from "@acme/shared/common/enums";
 
 import { closePanel, selectedItemStore } from "~/utils/store/selected-item";
 import { WorkoutDetailsContent } from "../workout/workout-details-content";
@@ -16,7 +17,10 @@ export const DesktopLocationPanelContent = () => {
   if (!panelLocationId) return null;
 
   return (
-    <div className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow dark:border">
+    <div
+      data-testid={TestId.PANEL}
+      className="pointer-events-auto relative flex flex-col rounded-lg bg-background p-4 shadow dark:border"
+    >
       <WorkoutDetailsContent
         locationId={panelLocationId}
         providedEventId={panelEventId}

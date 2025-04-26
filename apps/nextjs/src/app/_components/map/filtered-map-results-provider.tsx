@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
-import type { RouterOutputs } from "@acme/api";
 import { DEFAULT_CENTER } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
@@ -34,19 +33,17 @@ const FilteredMapResultsContext = createContext<{
   allLocationMarkersWithLatLngAndFilterData: undefined,
 });
 
-export const FilteredMapResultsProvider = (params: {
-  mapEventAndLocationData: RouterOutputs["location"]["getMapEventAndLocationData"];
-  children: ReactNode;
-}) => {
+export const FilteredMapResultsProvider = (params: { children: ReactNode }) => {
   RERENDER_LOGS && console.log("FilteredMapResultsProvider rerender");
   const nearbyLocationCenter = mapStore.use.nearbyLocationCenter();
   const { data: mapEventAndLocationData } =
-    api.location.getMapEventAndLocationData.useQuery(undefined, {
-      initialData: params.mapEventAndLocationData,
-    });
+    api.location.getMapEventAndLocationData.useQuery();
 
   const filters = filterStore.useBoundStore();
 
+  /**
+   * Get the location markers with the lat and lng and filter data
+   */
   const allLocationMarkersWithLatLngAndFilterData = useMemo(() => {
     if (!mapEventAndLocationData) return undefined;
 
@@ -97,6 +94,9 @@ export const FilteredMapResultsProvider = (params: {
     });
   }, [mapEventAndLocationData]);
 
+  /**
+   * Filter the location markers by the filters
+   */
   const filteredLocationMarkers = useMemo(() => {
     if (!allLocationMarkersWithLatLngAndFilterData) return undefined;
 
@@ -107,6 +107,9 @@ export const FilteredMapResultsProvider = (params: {
     return filteredLocationMarkers;
   }, [allLocationMarkersWithLatLngAndFilterData, filters]);
 
+  /**
+   * Sort the location markers by distance to the nearby location center
+   */
   const locationOrderedLocationMarkers = useMemo(() => {
     if (!filteredLocationMarkers || !nearbyLocationCenter) {
       return undefined;
@@ -124,10 +127,12 @@ export const FilteredMapResultsProvider = (params: {
       },
     );
 
-    return locationMarkersWithDistances.sort((a, b) => {
-      if (a.distance === null || b.distance === null) return 0;
-      return a.distance - b.distance;
-    });
+    const sortedLocationMarkersWithDistances =
+      locationMarkersWithDistances.sort((a, b) => {
+        if (a.distance === null || b.distance === null) return 0;
+        return a.distance - b.distance;
+      });
+    return sortedLocationMarkersWithDistances;
   }, [nearbyLocationCenter, filteredLocationMarkers]);
 
   return (

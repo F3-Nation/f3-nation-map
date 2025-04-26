@@ -24,7 +24,6 @@ export const sendOtpVerificationRequestServer: NodemailerConfig["sendVerificatio
         apiKey: env.API_KEY,
         identifier,
         url,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         server: provider.server,
         from: provider.from,
         token,

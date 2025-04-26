@@ -18,8 +18,8 @@ export const NearbyLocationUpdateButton = () => {
       latLngToMeters(
         center?.lat,
         center?.lng,
-        nearbyLocationCenter.lat,
-        nearbyLocationCenter.lng,
+        nearbyLocationCenter?.lat,
+        nearbyLocationCenter?.lng,
       ) > 1000
     ); // one km
   }, [center, nearbyLocationCenter]);

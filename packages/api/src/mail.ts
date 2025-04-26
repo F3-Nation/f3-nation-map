@@ -13,12 +13,10 @@ import type { feedbackSchema } from "./router/feedback";
 const isLocalDevelopment = process.env.NODE_ENV !== "production";
 export enum Templates {
   feedbackForm = "feedback-form",
-  validateSubmission = "validate-submission",
 }
 
 export const DefaultSubject: { [key in Templates]?: string } = {
   [Templates.feedbackForm]: "Feedback Form",
-  [Templates.validateSubmission]: "Validate your submission",
 };
 
 export const DefaultTo: { [key in Templates]?: string | string[] } = {
@@ -29,18 +27,6 @@ export enum UnsubGroup {}
 
 export interface TemplateType {
   [Templates.feedbackForm]: z.infer<typeof feedbackSchema>;
-  [Templates.validateSubmission]: {
-    token: string;
-    submissionId: string;
-    regionName: string;
-    eventName: string;
-    address: string;
-    startTime: string;
-    endTime: string;
-    dayOfWeek: string;
-    types: string;
-    url: string;
-  };
 }
 
 type TemplateMessage<T extends Templates> = TemplateType[T] & {

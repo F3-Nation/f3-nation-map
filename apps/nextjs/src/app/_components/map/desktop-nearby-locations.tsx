@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { TestId } from "@acme/shared/common/enums";
 import { cn } from "@acme/ui";
 
 import { latLngToMeters } from "~/utils/lat-lng-to-meters";
@@ -30,8 +31,8 @@ export const DesktopNearbyLocations = ({
       latLngToMeters(
         center?.lat,
         center?.lng,
-        nearbyLocationCenter.lat,
-        nearbyLocationCenter.lng,
+        nearbyLocationCenter?.lat,
+        nearbyLocationCenter?.lng,
       ) > 1000
     ); // one km
   }, [center, nearbyLocationCenter]);
@@ -69,7 +70,10 @@ export const DesktopNearbyLocations = ({
         ref={nearbyLocationScrollRef}
         {...rest}
       >
-        <div className="flex flex-col justify-center divide-y divide-solid">
+        <div
+          className="flex flex-col justify-center divide-y divide-solid"
+          data-testid={TestId.NEARBY_LOCATIONS}
+        >
           {!locationOrderedLocationMarkers ? (
             Array.from({ length: 6 }).map((_, index) => (
               <DesktopNearbyLocationItemSkeleton key={index} />

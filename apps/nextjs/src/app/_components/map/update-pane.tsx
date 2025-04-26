@@ -2,6 +2,7 @@ import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { MapPinPlusInside } from "lucide-react";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { TestId } from "@acme/shared/common/enums";
 
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
@@ -43,7 +44,10 @@ export const UpdatePane = () => {
             }}
             position={updateLocation}
           >
-            <MapPinPlusInside className="size-8 fill-blue-500 text-foreground dark:fill-blue-600" />
+            <MapPinPlusInside
+              data-testid={TestId.UPDATE_PANE_MARKER}
+              className="size-8 fill-blue-500 text-foreground dark:fill-blue-600"
+            />
           </AdvancedMarker>
         </>
       ) : null}

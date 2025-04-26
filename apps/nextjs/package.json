@@ -1,6 +1,6 @@
 {
   "name": "@acme/nextjs",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,11 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm with-env vitest --run",
     "test:watch": "pnpm with-env vitest -w",
+    "test:e2e": "pnpm with-env playwright test",
+    "test:e2e:staging": "pnpm with-env playwright test --config=playwright.staging.config.ts",
+    "test:e2e:debug": "pnpm with-env playwright test --debug",
+    "test:e2e:ui": "pnpm with-env playwright test --ui",
+    "test:e2e:report": "pnpm with-env playwright show-report",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
@@ -64,6 +69,7 @@
     "@acme/eslint-config": "workspace:^0.2.0",
     "@acme/prettier-config": "workspace:^0.1.0",
     "@acme/tsconfig": "workspace:*",
+    "@playwright/test": "^1.52.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^15.0.2",
     "@types/dompurify": "^3.0.5",

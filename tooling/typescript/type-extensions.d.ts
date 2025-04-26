@@ -269,3 +269,10 @@ declare global {
     export default content;
   }
 }
+
+declare global {
+  interface Window {
+    dataLayer: [string, unknown][];
+    gtag: (type: "event" | "config", event: string, params: unknown) => void;
+  }
+}

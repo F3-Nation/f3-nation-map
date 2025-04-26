@@ -56,3 +56,6 @@ yarn-error.log*
 
 # db exports
 .data
+
+# playwright
+test-results/

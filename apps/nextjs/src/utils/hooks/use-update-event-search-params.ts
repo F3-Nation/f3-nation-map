@@ -6,13 +6,13 @@ export const useUpdateEventSearchParams = (
   eventId: number | null,
 ) => {
   const router = useRouter();
-  const lastLocationId = useRef(locationId);
-  const lastEventId = useRef(eventId);
+  const lastLocationId = useRef<number | null>(null);
+  const lastEventId = useRef<number | null>(null);
   const searchParams = useSearchParams();
 
   // Update the search params when the panel is open
   useEffect(() => {
-    if (locationId == null || eventId == null) return;
+    if (locationId == null) return;
 
     if (
       lastLocationId.current === locationId &&
@@ -27,7 +27,9 @@ export const useUpdateEventSearchParams = (
     const params = new URLSearchParams(searchParams?.toString());
 
     // Set the map position parameters
-    params.set("eventId", eventId.toString());
+    if (eventId != null) {
+      params.set("eventId", eventId.toString());
+    }
     params.set("locationId", locationId.toString());
 
     // Remove eventId and locationId parameters if they exist
