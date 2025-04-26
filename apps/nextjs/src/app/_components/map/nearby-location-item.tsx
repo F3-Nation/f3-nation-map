@@ -166,7 +166,7 @@ export const NearbyLocationItem = (props: {
             <Link
               href={`https://maps.google.com/?q=${encodeURIComponent(item.fullAddress)}`}
               target="_blank"
-              className="mt-[2px] underline"
+              className="mt-[2px] w-fit underline"
             >
               <p className="line-clamp-1 text-xs">{item.fullAddress}</p>
             </Link>

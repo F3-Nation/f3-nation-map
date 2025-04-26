@@ -96,7 +96,7 @@ export const SelectedItem = (props: {
                 // href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation.locationDescription)}`}
                 href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.fullAddress)}`}
                 target="_blank"
-                className="mt-[2px] line-clamp-1 text-xs underline"
+                className="mt-[2px] line-clamp-1 w-fit text-xs underline"
               >
                 {selectedLocation.fullAddress}
               </Link>
