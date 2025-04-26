@@ -14,10 +14,12 @@ import "~/app/globals.css";
 
 import { TooltipProvider } from "@acme/ui/tooltip";
 
+import GoogleAnalytics from "~/app/_components/google-analytics";
+import { UserLocationProvider } from "~/app/_components/map/user-location-provider";
+import ModalSwitcher from "~/app/_components/modal/modal-switcher";
+import { ShadCnContainer } from "~/app/_components/shad-cn-container-ref";
 import { KeyPressProvider } from "~/utils/key-press/provider";
-import { UserLocationProvider } from "./_components/map/user-location-provider";
-import ModalSwitcher from "./_components/modal/modal-switcher";
-import { ShadCnContainer } from "./_components/shad-cn-container-ref";
+import RouteChangeTracker from "./_components/route-change-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -52,6 +54,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           GeistMono.variable,
         )}
       >
+        <GoogleAnalytics />
+        <RouteChangeTracker />
         <DataProvider>
           <ElementProvider>{props.children}</ElementProvider>
         </DataProvider>
