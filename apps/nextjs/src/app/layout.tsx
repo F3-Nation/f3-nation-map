@@ -14,12 +14,12 @@ import "~/app/globals.css";
 
 import { TooltipProvider } from "@acme/ui/tooltip";
 
-import GoogleAnalytics from "~/app/_components/google-analytics";
+import { GoogleAnalytics } from "~/app/_components/google-analytics";
 import { UserLocationProvider } from "~/app/_components/map/user-location-provider";
-import ModalSwitcher from "~/app/_components/modal/modal-switcher";
+import { ModalSwitcher } from "~/app/_components/modal/modal-switcher";
 import { ShadCnContainer } from "~/app/_components/shad-cn-container-ref";
 import { KeyPressProvider } from "~/utils/key-press/provider";
-import RouteChangeTracker from "./_components/route-change-tracker";
+import { RouteChangeTracker } from "./_components/route-change-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL(

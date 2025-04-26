@@ -29,7 +29,7 @@ import { UpdateLocationModal } from "./update-location-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
 import { WorkoutDetailsModal } from "./workout-details-modal";
 
-export default function ModalSwitcher() {
+export const ModalSwitcher = () => {
   const modal = useOpenModal();
   const { type, data } = modal ?? {};
   const [width] = useWindowSize();
@@ -115,4 +115,4 @@ export default function ModalSwitcher() {
     default:
       return null;
   }
-}
+};
