@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useRef } from "react";
+import { createContext, Suspense, useContext, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -32,6 +32,14 @@ const InitialLocationContext = createContext<{
 });
 
 export const InitialLocationProvider = (params: { children: ReactNode }) => {
+  return (
+    <Suspense>
+      <SuspendedInitialLocationProvider {...params} />
+    </Suspense>
+  );
+};
+
+const SuspendedInitialLocationProvider = (params: { children: ReactNode }) => {
   const utils = api.useUtils();
   const searchParams = useSearchParams();
   const queryLat = safeParseFloat(searchParams?.get("lat"));
