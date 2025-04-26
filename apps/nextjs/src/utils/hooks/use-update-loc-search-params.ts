@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { mapStore } from "../store/map";
@@ -11,6 +11,7 @@ export const useUpdateLocSearchParams = () => {
   const zoom = mapStore.use.zoom();
   const panelLocationId = selectedItemStore.use.panelLocationId();
   const panelEventId = selectedItemStore.use.panelEventId();
+  const lastCenter = useRef(center);
 
   // Update the search params when the panel is open
   useEffect(() => {
@@ -22,6 +23,15 @@ export const useUpdateLocSearchParams = () => {
     ) {
       return;
     }
+
+    // If the center hasn't changed, don't update the search params
+    if (
+      center.lat === lastCenter.current.lat &&
+      center.lng === lastCenter.current.lng
+    ) {
+      return;
+    }
+    lastCenter.current = center;
 
     const params = new URLSearchParams(searchParams?.toString());
 

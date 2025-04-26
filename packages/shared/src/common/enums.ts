@@ -67,3 +67,15 @@ export enum ProviderId {
   DEV_MODE = "dev-mode",
   OTP = "otp",
 }
+
+export enum TestId {
+  MAP = "map",
+  PANEL = "panel",
+  NEARBY_LOCATIONS = "nearby-locations",
+  GEOLOCATION_MARKER = "geolocation-marker",
+  UPDATE_PANE_MARKER = "update-pane-marker",
+  MAP_SEARCHBOX_INPUT = "map-searchbox-input",
+  MAP_SEARCHBOX_POPOVER_CONTENT_DESKTOP = "map-searchbox-popover-content-desktop",
+  SELECTED_ITEM_MOBILE = "selected-item-mobile",
+  SELECTED_ITEM_DESKTOP = "selected-item-desktop",
+}

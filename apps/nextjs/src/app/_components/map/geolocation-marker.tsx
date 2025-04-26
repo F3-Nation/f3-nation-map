@@ -4,6 +4,7 @@ import {
 } from "@vis.gl/react-google-maps";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { TestId } from "@acme/shared/common/enums";
 
 import { mapStore } from "~/utils/store/map";
 
@@ -19,7 +20,12 @@ export const GeolocationMarker = () => {
       }}
       zIndex={Z_INDEX.GEOLOCATION_MARKER}
     >
-      <svg width="40" height="40" viewBox="0 0 40 40">
+      <svg
+        data-testid={TestId.GEOLOCATION_MARKER}
+        width="40"
+        height="40"
+        viewBox="0 0 40 40"
+      >
         {/* Larger transparent blue circle for accuracy/range indication */}
         <circle cx="20" cy="20" r="18" fill="#4285F4" fillOpacity="0.2" />
         {/* Main blue dot */}

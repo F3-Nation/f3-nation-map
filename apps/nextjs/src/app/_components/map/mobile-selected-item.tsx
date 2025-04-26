@@ -21,6 +21,7 @@ export const MobileSelectedItem = () => {
         <SelectedItemSkeleton />
       ) : (
         <SelectedItem
+          device="mobile"
           selectedLocation={selectedLocation}
           selectedEvent={selectedEvent}
           hideCloseButton

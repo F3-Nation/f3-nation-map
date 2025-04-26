@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Maximize2, X } from "lucide-react";
 
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { TestId } from "@acme/shared/common/enums";
 import { cn } from "@acme/ui";
 
 import type { F3Marker } from "~/utils/types";
@@ -17,19 +18,25 @@ import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "./event-chip";
 
 export const SelectedItem = (props: {
+  device: "mobile" | "desktop";
   selectedLocation: F3Marker["location"];
   selectedEvent: F3Marker["location"]["events"][number];
   hideCloseButton?: boolean;
 }) => {
   RERENDER_LOGS && console.log("SelectedItem rerender");
 
-  const { hideCloseButton, selectedLocation, selectedEvent } = props;
+  const { device, hideCloseButton, selectedLocation, selectedEvent } = props;
 
   // TODO: Styles need to be cleaned up a little and I need to come back as a perfectionist to make sure everything looks beautiful
 
   return (
     <>
       <button
+        data-testid={
+          device === "mobile"
+            ? TestId.SELECTED_ITEM_MOBILE
+            : TestId.SELECTED_ITEM_DESKTOP
+        }
         className={cn(
           "text-left",
           "pointer-events-auto relative w-full lg:w-[450px]",

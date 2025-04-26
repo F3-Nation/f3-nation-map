@@ -9,6 +9,7 @@ import {
   SIDEBAR_WIDTH,
   Z_INDEX,
 } from "@acme/shared/app/constants";
+import { TestId } from "@acme/shared/common/enums";
 import { cn } from "@acme/ui";
 import { Checkbox } from "@acme/ui/checkbox";
 import { Input } from "@acme/ui/input";
@@ -103,6 +104,7 @@ export function MapSearchBox({
         <Popover open={isFocused}>
           <PopoverTrigger className="w-full">
             <Input
+              data-testid={TestId.MAP_SEARCHBOX_INPUT}
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown") {
                   setFocusedIndex((prev) =>
@@ -179,6 +181,7 @@ export function MapSearchBox({
             </div>
           </PopoverTrigger>
           <PopoverContent
+            data-testid={TestId.MAP_SEARCHBOX_POPOVER_CONTENT_DESKTOP}
             onOpenAutoFocus={(e) => e.preventDefault()}
             className={cn("h-[400px] overflow-scroll p-0")}
             style={{

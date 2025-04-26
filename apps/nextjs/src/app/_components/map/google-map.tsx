@@ -5,6 +5,7 @@ import { useWindowSize } from "@react-hook/window-size";
 import { APIProvider, ControlPosition, Map } from "@vis.gl/react-google-maps";
 
 import { BreakPoints, SIDEBAR_WIDTH } from "@acme/shared/app/constants";
+import { TestId } from "@acme/shared/common/enums";
 import { useTheme } from "@acme/ui/theme";
 
 import { env } from "~/env";
@@ -112,6 +113,7 @@ const ProvidedGoogleMapComponent = memo(
         }}
       >
         <Map
+          data-testid={TestId.MAP}
           backgroundColor={resolvedTheme === "dark" ? "#111" : "#fff"}
           mapId={mapTiles?.mapId}
           mapTypeId={mapTiles?.mapTypeId}

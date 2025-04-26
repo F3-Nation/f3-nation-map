@@ -61,10 +61,6 @@ export const mapStore = new ZustandStore({
     getStorage: () => localStorage,
     onRehydrateStorage: (state) => {
       console.log("onRehydrateStorage map", state);
-      if (state?.center != undefined && state?.zoom != undefined) {
-        console.log("onRehydrateStorage map hasMovedMap", state.hasMovedMap);
-        mapStore.setState({ hasMovedMap: true });
-      }
     },
   },
 });
