@@ -42,7 +42,6 @@ export const regionRouter = createTRPCRouter({
 
     return regions;
   }),
-
   byId: editorProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -54,7 +53,6 @@ export const regionRouter = createTRPCRouter({
         );
       return { ...region };
     }),
-
   crupdate: editorProcedure
     .input(RegionInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {

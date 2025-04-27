@@ -184,7 +184,7 @@ export const LowBandwidthF3Marker = z.tuple([
   z.string().nullable(), // location logo
   z.number(), // location lat
   z.number(), // location lon
-  z.string(), // location description
+  z.string().nullable(), // location full address
   z
     .tuple([
       z.number(), // event id

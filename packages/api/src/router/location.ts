@@ -15,6 +15,7 @@ import {
   sql,
 } from "@acme/db";
 import { DayOfWeek } from "@acme/shared/app/enums";
+import { getFullAddress } from "@acme/shared/app/functions";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema, SortingSchema } from "@acme/validators";
 
@@ -173,24 +174,7 @@ export const locationRouter = createTRPCRouter({
           acc[location.id] = {
             ...location,
             name: location.name ?? "",
-            // description: location.locationDescription ?? "",
-            fullAddress: [
-              location.locationAddress,
-              location.locationAddress2,
-              location.locationCity,
-              location.locationState,
-              ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
-                location.locationCountry
-                  ?.toLowerCase()
-                  .replace(/(\.| )/g, "") ?? "",
-              )
-                ? ""
-                : location.locationCountry,
-            ]
-              .filter(Boolean) // Remove empty/null/undefined values
-              .join(", ")
-              .replace(/, ,/g, ",") // Clean up any double commas
-              .replace(/,\s*$/, ""), // Remove trailing comma
+            fullAddress: getFullAddress(location),
             lat: location.lat,
             lon: location.lon,
             events: [],
@@ -211,7 +195,7 @@ export const locationRouter = createTRPCRouter({
           logo: string | null;
           lat: number;
           lon: number;
-          fullAddress: string;
+          fullAddress: string | null;
           events: Omit<
             NonNullable<(typeof locationsAndEvents)[number]["events"]>,
             "locationId"
@@ -346,22 +330,7 @@ export const locationRouter = createTRPCRouter({
         ...location,
         lat: location.lat,
         lon: location.lon,
-        fullAddress: [
-          location.locationAddress,
-          location.locationAddress2,
-          location.locationCity,
-          location.locationState,
-          ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
-            location.locationCountry?.toLowerCase().replace(/(\.| )/g, "") ??
-              "",
-          )
-            ? ""
-            : location.locationCountry,
-        ]
-          .filter(Boolean) // Remove empty/null/undefined values
-          .join(", ")
-          .replace(/, ,/g, ",") // Clean up any double commas
-          .replace(/,\s*$/, ""), // Remove trailing comma
+        fullAddress: getFullAddress(location),
         events: events.sort(
           (a, b) =>
             DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -

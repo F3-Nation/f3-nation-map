@@ -43,7 +43,8 @@ export const eventRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        !input?.statuses?.length || input.statuses.length === IsActiveStatus.length
+        !input?.statuses?.length ||
+          input.statuses.length === IsActiveStatus.length
           ? undefined
           : input.statuses.includes("active")
             ? eq(schema.events.isActive, true)
@@ -313,6 +314,44 @@ export const eventRouter = createTRPCRouter({
     }),
   types: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.select().from(schema.eventTypes);
+  }),
+  eventIdToRegionNameLookup: publicProcedure.query(async ({ ctx }) => {
+    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const parentOrg = aliasedTable(schema.orgs, "parent_org");
+    const result = await ctx.db
+      .select({
+        eventId: schema.events.id,
+        regionName: regionOrg.name,
+      })
+      .from(schema.events)
+      .leftJoin(parentOrg, eq(schema.events.orgId, parentOrg.id))
+      .leftJoin(
+        regionOrg,
+        or(
+          and(
+            eq(schema.events.orgId, regionOrg.id),
+            eq(regionOrg.orgType, "region"),
+          ),
+          and(
+            eq(parentOrg.orgType, "ao"),
+            eq(parentOrg.parentId, regionOrg.id),
+            eq(regionOrg.orgType, "region"),
+          ),
+        ),
+      )
+      .groupBy(schema.events.id, regionOrg.id);
+
+    const lookup = result.reduce(
+      (acc, curr) => {
+        if (curr.regionName) {
+          acc[curr.eventId] = curr.regionName;
+        }
+        return acc;
+      },
+      {} as Record<number, string>,
+    );
+
+    return lookup;
   }),
   delete: editorProcedure
     .input(z.object({ id: z.number() }))

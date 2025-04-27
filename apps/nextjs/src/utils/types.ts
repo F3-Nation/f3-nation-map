@@ -70,6 +70,7 @@ export interface F3LocationMapSearchResult {
       types: string[];
     };
     placeId: null;
+    regionName: string | null;
   };
 }
 

@@ -162,21 +162,15 @@ export const NearbyLocationItem = (props: {
               );
             })}
           </div>
-          {item.fullAddress ? (
-            <Link
-              href={`https://maps.google.com/?q=${encodeURIComponent(item.fullAddress)}`}
-              target="_blank"
-              className="mt-[2px] w-fit underline"
-            >
-              <p className="line-clamp-1 text-xs">{item.fullAddress}</p>
-            </Link>
-          ) : null}
-          {/* {item.events[0]?.description ? (
-            <div className="line-clamp-2">
-              <span className="font-semibold">Notes: </span>
-              {item.events[0]?.description}
-            </div>
-          ) : null} */}
+          <Link
+            href={`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lon}`}
+            target="_blank"
+            className="mt-[2px] w-fit underline"
+          >
+            <p className="line-clamp-1 text-xs">
+              {item.fullAddress ?? "Directions"}
+            </p>
+          </Link>
         </div>
       </div>
     </button>

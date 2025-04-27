@@ -101,3 +101,29 @@ export const convertHHmmToHH_mm = (value: string) => {
   }
   return value.slice(0, 2) + ":" + value.slice(2, 4);
 };
+
+export const getFullAddress = (location: {
+  locationAddress?: string | null;
+  locationAddress2?: string | null;
+  locationCity?: string | null;
+  locationState?: string | null;
+  locationCountry?: string | null;
+}) => {
+  return (
+    [
+      location.locationAddress,
+      location.locationAddress2,
+      location.locationCity,
+      location.locationState,
+      ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
+        location.locationCountry?.toLowerCase().replace(/(\.| )/g, "") ?? "",
+      )
+        ? ""
+        : location.locationCountry,
+    ]
+      .filter(Boolean) // Remove empty/null/undefined values
+      .join(", ")
+      .replace(/, ,/g, ",") // Clean up any double commas
+      .replace(/,\s*$/, "") || null
+  ); // Remove trailing comma
+};
