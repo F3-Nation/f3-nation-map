@@ -4,6 +4,9 @@ export type UserRole = (typeof UserRole)[number];
 export const UserStatus = ["active", "inactive"] as const;
 export type UserStatus = (typeof UserStatus)[number];
 
+export const IsActiveStatus = ["active", "inactive"] as const;
+export type IsActiveStatus = (typeof IsActiveStatus)[number];
+
 export const RegionRole = ["user", "editor", "admin"] as const;
 export type RegionRole = (typeof RegionRole)[number];
 

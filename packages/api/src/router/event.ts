@@ -13,6 +13,7 @@ import {
   schema,
   sql,
 } from "@acme/db";
+import { IsActiveStatus } from "@acme/shared/app/enums";
 import { EventInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -27,6 +28,7 @@ export const eventRouter = createTRPCRouter({
           pageIndex: z.number().optional(),
           pageSize: z.number().optional(),
           searchTerm: z.string().optional(),
+          statuses: z.enum(["active", "inactive"]).array().optional(),
           sorting: z
             .array(z.object({ id: z.string(), desc: z.boolean() }))
             .optional(),
@@ -41,7 +43,11 @@ export const eventRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        eq(schema.events.isActive, true),
+        !input?.statuses?.length || input.statuses.length === IsActiveStatus.length
+          ? undefined
+          : input.statuses.includes("active")
+            ? eq(schema.events.isActive, true)
+            : eq(schema.events.isActive, false),
         input?.searchTerm
           ? or(
               ilike(schema.events.name, `%${input?.searchTerm}%`),
