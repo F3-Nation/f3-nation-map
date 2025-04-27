@@ -96,16 +96,16 @@ export const WorkoutDetailsContent = ({
         location?.regionName ? (
           <p key="regionName">{location.regionName}</p>
         ) : null,
-        location?.fullAddress ? (
-          <Link
-            key="fullAddress"
-            href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
-            target="_blank"
-            className="underline"
-          >
-            {location.fullAddress}
-          </Link>
-        ) : null,
+        <Link
+          key="fullAddress"
+          // href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
+          href={`https://www.google.com/maps/search/?api=1&query=${location?.lat ?? 0},${location?.lon ?? 0}`}
+          target="_blank"
+          className="underline"
+        >
+          {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
+          {location?.fullAddress || "Directions"}
+        </Link>,
         location?.locationDescription ? (
           <p
             key="locationDescription"
