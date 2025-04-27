@@ -1,9 +1,11 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
+import { useCallback, useMemo, useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { IsActiveStatus } from "@acme/shared/app/enums";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -15,21 +17,88 @@ import { MDTable } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { AreaFilter } from "./area-filter";
+import { RegionIsActiveFilter } from "./region-is-active-filter";
+import { SectorFilter } from "./sector-filter";
+
+type Sector = RouterOutputs["sector"]["all"][number];
+type Area = RouterOutputs["area"]["all"][number];
 
 export const RegionsTable = ({
   regions,
 }: {
   regions: RouterOutputs["region"]["all"];
 }) => {
+  const [selectedSectors, setSelectedSectors] = useState<Sector[]>([]);
+  const [selectedAreas, setSelectedAreas] = useState<Area[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
+    "active",
+  ]);
+
+  const filteredRegions = useMemo(() => {
+    return regions.filter((region) => {
+      return (
+        selectedStatuses.includes(region.isActive ? "active" : "inactive") &&
+        (!selectedSectors.length ||
+          selectedSectors.some((s) => s.name === region.sector)) &&
+        (!selectedAreas.length ||
+          selectedAreas.some((a) => a.name === region.area))
+      );
+    });
+  }, [regions, selectedStatuses, selectedSectors, selectedAreas]);
+
+  const handleStatusSelect = useCallback((status: IsActiveStatus) => {
+    setSelectedStatuses((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      }
+      return [...prev, status];
+    });
+  }, []);
+
+  const handleSectorSelect = useCallback((sector: Sector) => {
+    setSelectedSectors((prev) => {
+      if (prev.includes(sector)) {
+        return prev.filter((s) => s !== sector);
+      }
+      return [...prev, sector];
+    });
+  }, []);
+
+  const handleAreaSelect = useCallback((area: Area) => {
+    setSelectedAreas((prev) => {
+      if (prev.includes(area)) {
+        return prev.filter((a) => a !== area);
+      }
+      return [...prev, area];
+    });
+  }, []);
+
   return (
     <MDTable
-      data={regions}
+      data={filteredRegions}
       cellClassName="p-1"
-      paginationOptions={{ pageSize: 20 }}
+      paginationOptions={{ pageSize: 20, pageSizeOptions: [10, 20, 50, 100] }}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_REGIONS, { id: row.original.id });
       }}
+      filterComponent={
+        <>
+          <SectorFilter
+            onSectorSelect={handleSectorSelect}
+            selectedSectors={selectedSectors}
+          />
+          <AreaFilter
+            onAreaSelect={handleAreaSelect}
+            selectedAreas={selectedAreas}
+          />
+          <RegionIsActiveFilter
+            onStatusSelect={handleStatusSelect}
+            selectedStatuses={selectedStatuses}
+          />
+        </>
+      }
       // rowClassName={(row) => {
       //   if (row.original.submitterValidated === true) {
       //     return "opacity-30";
