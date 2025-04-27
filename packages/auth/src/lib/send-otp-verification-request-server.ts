@@ -21,7 +21,7 @@ export const sendOtpVerificationRequestServer: NodemailerConfig["sendVerificatio
     const result = await fetch(`${protocol}${host}/api/otp${search}`, {
       method: "POST",
       body: JSON.stringify({
-        apiKey: env.API_KEY,
+        apiKey: env.SUPER_ADMIN_API_KEY,
         identifier,
         url,
         server: provider.server,
