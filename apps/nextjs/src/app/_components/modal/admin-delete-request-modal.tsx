@@ -26,7 +26,9 @@ export default function AdminDeleteRequestModal({
 }: {
   data: DataType[ModalType.ADMIN_DELETE_REQUEST];
 }) {
-  const { data: regions } = api.region.all.useQuery();
+  const { data: regions } = api.org.all.useQuery({
+    orgTypes: ["region"],
+  });
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: request } = api.request.byId.useQuery({ id: requestData.id });
@@ -130,7 +132,7 @@ export default function AdminDeleteRequestModal({
                 </p>
                 <p>
                   <span className="font-medium">Region:</span>{" "}
-                  {regions?.find((r) => r.id === request.regionId)?.name ??
+                  {regions?.orgs.find((r) => r.id === request.regionId)?.name ??
                     "N/A"}
                 </p>
                 <p>

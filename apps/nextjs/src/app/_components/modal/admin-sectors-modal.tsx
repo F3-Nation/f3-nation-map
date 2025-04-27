@@ -44,8 +44,11 @@ export default function AdminSectorsModal({
   data: DataType[ModalType.ADMIN_SECTORS];
 }) {
   const utils = api.useUtils();
-  const { data: sector } = api.sector.byId.useQuery({ id: data.id ?? -1 });
-  const { data: nations } = api.nation.all.useQuery();
+  const { data: sector } = api.org.byId.useQuery({
+    id: data.id ?? -1,
+    orgType: "sector",
+  });
+  const { data: nations } = api.org.all.useQuery({ orgTypes: ["nation"] });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,9 +89,9 @@ export default function AdminSectorsModal({
     });
   }, [form, sector]);
 
-  const crupdateSector = api.sector.crupdate.useMutation({
+  const crupdateSector = api.org.crupdate.useMutation({
     onSuccess: async () => {
-      await utils.sector.invalidate();
+      await utils.org.invalidate();
       closeModal();
       toast.success("Successfully updated sector");
       router.refresh();
@@ -186,7 +189,7 @@ export default function AdminSectorsModal({
                           <SelectValue placeholder="Select a nation" />
                         </SelectTrigger>
                         <SelectContent>
-                          {nations
+                          {nations?.orgs
                             ?.slice()
                             .sort((a, b) => a.name.localeCompare(b.name))
                             .map((nation) => (

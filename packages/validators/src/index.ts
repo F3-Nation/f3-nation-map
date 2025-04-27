@@ -76,7 +76,8 @@ export const NationInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
   email: (s) => s.email({ message: "Invalid email format" }),
   parentId: z.null({ message: "Must not have a parent" }).optional(),
-}).omit({ orgType: true });
+  orgType: z.literal("nation"),
+});
 export const NationSelectSchema = createSelectSchema(orgs);
 
 // SECTOR SCHEMA
@@ -86,7 +87,8 @@ export const SectorInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("sector"),
+});
 export const SectorSelectSchema = createSelectSchema(orgs);
 
 // AREA SCHEMA
@@ -96,7 +98,8 @@ export const AreaInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("area"),
+});
 export const AreaSelectSchema = createSelectSchema(orgs);
 
 // REGION SCHEMA
@@ -106,7 +109,8 @@ export const RegionInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("region"),
+});
 export const RegionSelectSchema = createSelectSchema(orgs);
 
 // AO SCHEMA
@@ -116,8 +120,19 @@ export const AOInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("ao"),
+});
 export const AOSelectSchema = createSelectSchema(orgs);
+
+// ORG SCHEMA
+export const OrgInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  parentId: z
+    .number({ message: "Must have a parent" })
+    .nonnegative({ message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
+export const OrgSelectSchema = createSelectSchema(orgs);
 
 export const DeleteRequestSchema = z.object({
   eventId: z.number(),

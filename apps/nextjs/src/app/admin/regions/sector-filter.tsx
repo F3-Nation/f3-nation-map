@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import type { RouterOutputs } from "~/trpc/types";
 import { api } from "~/trpc/react";
 
-type Sector = RouterOutputs["sector"]["all"][number];
+type Sector = RouterOutputs["org"]["all"]["orgs"][number];
 
 export const SectorFilter = ({
   onSectorSelect,
@@ -24,7 +24,7 @@ export const SectorFilter = ({
   onSectorSelect: (sector: Sector) => void;
   selectedSectors: Sector[];
 }) => {
-  const { data: sectors } = api.sector.all.useQuery();
+  const { data: sectors } = api.org.all.useQuery({ orgTypes: ["sector"] });
   const [open, setOpen] = useState(false);
 
   return (
@@ -48,7 +48,7 @@ export const SectorFilter = ({
             <CommandInput placeholder="Search statuses..." />
             <CommandEmpty>No statuses found.</CommandEmpty>
             <CommandGroup>
-              {sectors?.map((sector) => (
+              {sectors?.orgs.map((sector) => (
                 <CommandItem
                   key={sector.id}
                   value={sector.name}

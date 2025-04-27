@@ -89,12 +89,12 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      const aoResult = await caller.ao.crupdate(aoData);
+      const aoResult = await caller.org.crupdate(aoData);
       if (!aoResult) {
         throw new Error("AO result is undefined");
       }
       createdAoId = aoResult.id;
-      const result = await caller.ao.byId({ id: aoResult.id });
+      const result = await caller.org.byId({ id: aoResult.id, orgType: "ao" });
       expect(result).toBeDefined();
     });
 
@@ -102,18 +102,22 @@ describe("all editor routers", () => {
       if (!createdAoId) {
         throw new Error("Created AO ID is undefined");
       }
-      await expect(caller.ao.delete({ id: createdAoId })).rejects.toThrow();
+      await expect(
+        caller.org.delete({ id: createdAoId, orgType: "ao" }),
+      ).rejects.toThrow();
     });
 
     it("should fail to delete ao due to insufficient permissions", async () => {
       if (!createdAoId) {
         throw new Error("Created AO ID is undefined");
       }
-      await expect(caller.ao.delete({ id: createdAoId })).rejects.toThrow();
+      await expect(
+        caller.org.delete({ id: createdAoId, orgType: "ao" }),
+      ).rejects.toThrow();
     });
 
     it("should get all aos", async () => {
-      const result = await caller.ao.all();
+      const result = await caller.org.all({ orgTypes: ["ao"] });
       expect(result).toBeDefined();
     });
   });
@@ -121,7 +125,7 @@ describe("all editor routers", () => {
   // Area Router Tests
   describe("area router", () => {
     it("should get all areas", async () => {
-      const result = await caller.area.all();
+      const result = await caller.org.all({ orgTypes: ["area"] });
       expect(result).toBeDefined();
     });
 
@@ -141,12 +145,12 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      await expect(caller.area.crupdate(areaData)).rejects.toThrow();
+      await expect(caller.org.crupdate(areaData)).rejects.toThrow();
     });
 
     it("should delete area", async () => {
       await expect(
-        caller.area.delete({ id: TEST_AREA_ORG_ID }),
+        caller.org.delete({ id: TEST_AREA_ORG_ID, orgType: "area" }),
       ).rejects.toThrow();
     });
   });
@@ -178,7 +182,7 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      const aoResult = await caller.ao.crupdate(aoData);
+      const aoResult = await caller.org.crupdate(aoData);
       expect(aoResult).toBeDefined();
 
       if (!aoResult) {
@@ -441,12 +445,12 @@ describe("all editor routers", () => {
   // Nation Router Tests
   describe("nation router", () => {
     it("should get all nations", async () => {
-      const result = await caller.nation.all();
+      const result = await caller.org.all({ orgTypes: ["nation"] });
       expect(result).toBeDefined();
     });
 
     it("should get all orgs", async () => {
-      const result = await caller.nation.allOrgs();
+      const result = await caller.org.all({ orgTypes: ["nation"] });
       expect(result).toBeDefined();
     });
 
@@ -468,7 +472,7 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      await expect(caller.nation.crupdate(nationData)).rejects.toThrow();
+      await expect(caller.org.crupdate(nationData)).rejects.toThrow();
     });
   });
 
@@ -483,12 +487,15 @@ describe("all editor routers", () => {
   // Region Router Tests
   describe("region router", () => {
     it("should get all regions", async () => {
-      const result = await caller.region.all();
+      const result = await caller.org.all({ orgTypes: ["region"] });
       expect(result).toBeDefined();
     });
 
     it("should get region by id", async () => {
-      const result = await caller.region.byId({ id: TEST_REGION_2_ORG_ID });
+      const result = await caller.org.byId({
+        id: TEST_REGION_2_ORG_ID,
+        orgType: "region",
+      });
       expect(result).toBeDefined();
     });
 
@@ -510,11 +517,11 @@ describe("all editor routers", () => {
         meta: { key: "value" },
       };
       // Try to create a new region
-      await expect(caller.region.crupdate(regionData)).rejects.toThrow();
+      await expect(caller.org.crupdate(regionData)).rejects.toThrow();
 
       // Try to modify an existing region they don't have access to
       await expect(
-        caller.region.crupdate({
+        caller.org.crupdate({
           ...regionData,
           id: TEST_REGION_3_ORG_ID, // Different region than editor has access to
         }),
@@ -523,7 +530,7 @@ describe("all editor routers", () => {
 
     it("should fail to delete region", async () => {
       await expect(
-        caller.region.delete({ id: TEST_REGION_2_ORG_ID }),
+        caller.org.delete({ id: TEST_REGION_2_ORG_ID, orgType: "region" }),
       ).rejects.toThrow();
     });
   });
@@ -756,7 +763,7 @@ describe("all editor routers", () => {
         parentId: TEST_NATION_ORG_ID,
       };
 
-      await expect(caller.sector.crupdate(sectorData)).rejects.toThrow();
+      await expect(caller.org.crupdate(sectorData)).rejects.toThrow();
     });
 
     it("should fail to update and get sector by id", async () => {
@@ -776,17 +783,17 @@ describe("all editor routers", () => {
         meta: { key: "value" },
         parentId: TEST_NATION_ORG_ID,
       };
-      await expect(caller.sector.crupdate(sectorData)).rejects.toThrow();
+      await expect(caller.org.crupdate(sectorData)).rejects.toThrow();
     });
 
     it("should fail to delete sector", async () => {
       await expect(
-        caller.sector.delete({ id: TEST_SECTOR_ORG_ID }),
+        caller.org.delete({ id: TEST_SECTOR_ORG_ID, orgType: "sector" }),
       ).rejects.toThrow();
     });
 
     it("should get all sectors", async () => {
-      const result = await caller.sector.all();
+      const result = await caller.org.all({ orgTypes: ["sector"] });
       expect(result).toBeDefined();
     });
   });

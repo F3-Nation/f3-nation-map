@@ -50,9 +50,10 @@ export const LocationEventForm = ({
 
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
-  const { data: aos } = api.ao.all.useQuery();
+  const { data: allAoData } = api.org.all.useQuery({ orgTypes: ["ao"] });
   const { data: locations } = api.location.all.useQuery();
   const { data: eventTypes } = api.event.types.useQuery();
+  const aos = useMemo(() => allAoData?.orgs, [allAoData]);
 
   const sortedRegionLocationOptions = useMemo(() => {
     return locations?.locations
@@ -79,7 +80,7 @@ export const LocationEventForm = ({
 
   const sortedRegionAoOptions = useMemo(() => {
     return (
-      aos?.aos
+      aos
         ?.filter((a) => !formRegionId || a.parentId === formRegionId)
         ?.map((ao) => ({
           label: `${ao.name} (${ao.region})`,
@@ -392,7 +393,7 @@ export const LocationEventForm = ({
               options={sortedRegionAoOptions}
               value={formAoId?.toString()}
               onSelect={(item) => {
-                const ao = aos?.aos?.find((ao) => ao.id.toString() === item);
+                const ao = aos?.find((ao) => ao.id.toString() === item);
                 if (ao) {
                   form.setValue("aoId", ao.id);
                   form.setValue("aoName", ao.name);

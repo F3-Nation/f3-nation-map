@@ -50,7 +50,7 @@ export default function AdminLocationsModal({
 }) {
   const utils = api.useUtils();
   const { data: location } = api.location.byId.useQuery({ id: data.id ?? -1 });
-  const { data: regions } = api.region.all.useQuery();
+  const { data: regions } = api.org.all.useQuery({ orgTypes: ["region"] });
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -211,7 +211,7 @@ export default function AdminLocationsModal({
                           <VirtualizedCombobox
                             value={field.value?.toString()}
                             options={
-                              regions?.map((region) => ({
+                              regions?.orgs?.map((region) => ({
                                 value: region.id.toString(),
                                 label: region.name,
                               })) ?? []
@@ -472,7 +472,8 @@ export default function AdminLocationsModal({
                             form.setValue("name", "Fake Location");
                             form.setValue(
                               "regionId",
-                              regions?.find((r) => r.name === "Boone")?.id ?? 1,
+                              regions?.orgs?.find((r) => r.name === "Boone")
+                                ?.id ?? 1,
                             );
                             form.setValue("email", "fake@example.com");
                             form.setValue("latitude", "37.7749");

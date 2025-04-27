@@ -6,7 +6,7 @@ import { AddSectorButton } from "./[id]/add-sector-button";
 import { SectorsTable } from "./sectors-table";
 
 const SectorsPage = async () => {
-  const sectors = await api.sector.all();
+  const { orgs: sectors } = await api.org.all({ orgTypes: ["sector"] });
 
   return (
     <Layout>
@@ -18,7 +18,7 @@ const SectorsPage = async () => {
           </div>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex  w-full  flex-col overflow-auto">
+          <div className="flex w-full flex-col overflow-hidden">
             <SectorsTable sectors={sectors} />
           </div>
         </Suspense>

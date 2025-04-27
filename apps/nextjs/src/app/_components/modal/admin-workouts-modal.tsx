@@ -71,9 +71,9 @@ export default function AdminWorkoutsModal({
   data: DataType[ModalType.ADMIN_EVENTS];
 }) {
   const utils = api.useUtils();
-  const { data: regions } = api.region.all.useQuery();
+  const { data: regions } = api.org.all.useQuery({ orgTypes: ["region"] });
   const { data: locations } = api.location.all.useQuery();
-  const { data: aos } = api.ao.all.useQuery();
+  const { data: aos } = api.org.all.useQuery({ orgTypes: ["ao"] });
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
   const { data: eventTypes } = api.event.types.useQuery();
   const router = useRouter();
@@ -229,7 +229,7 @@ export default function AdminWorkoutsModal({
                       <VirtualizedCombobox
                         value={field.value?.toString()}
                         options={
-                          regions?.map((region) => ({
+                          regions?.orgs?.map((region) => ({
                             value: region.id.toString(),
                             label: region.name,
                           })) ?? []
@@ -255,7 +255,7 @@ export default function AdminWorkoutsModal({
                   control={form.control}
                   name="aoId"
                   render={({ field }) => {
-                    const filteredAOs = aos?.aos.filter(
+                    const filteredAOs = aos?.orgs.filter(
                       (ao) => ao.parentId === form.watch("regionId"),
                     );
                     return (
@@ -267,7 +267,7 @@ export default function AdminWorkoutsModal({
                             const aoId = safeParseInt(value);
                             field.onChange(aoId);
 
-                            const selectedAO = aos?.aos.find(
+                            const selectedAO = aos?.orgs.find(
                               (ao) => ao.id === aoId,
                             );
                             if (!selectedAO) {

@@ -1,6 +1,9 @@
+"use client";
+
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
+import { IsActiveStatus } from "@acme/shared/app/enums";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -12,19 +15,13 @@ import {
 } from "@acme/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 
-import type { RouterOutputs } from "~/trpc/types";
-import { api } from "~/trpc/react";
-
-type Area = RouterOutputs["org"]["all"]["orgs"][number];
-
-export const AreaFilter = ({
-  onAreaSelect,
-  selectedAreas,
+export const LocationIsActiveFilter = ({
+  onStatusSelect,
+  selectedStatuses,
 }: {
-  onAreaSelect: (area: Area) => void;
-  selectedAreas: Area[];
+  onStatusSelect: (status: IsActiveStatus) => void;
+  selectedStatuses: IsActiveStatus[];
 }) => {
-  const { data: areas } = api.org.all.useQuery({ orgTypes: ["area"] });
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,9 +34,9 @@ export const AreaFilter = ({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {selectedAreas.length > 0
-              ? `${selectedAreas.length} area${selectedAreas.length > 1 ? "s" : ""} selected`
-              : "Filter by area"}
+            {selectedStatuses.length > 0
+              ? `${selectedStatuses.length} status${selectedStatuses.length > 1 ? "es" : ""} selected`
+              : "Filter by status"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -48,23 +45,23 @@ export const AreaFilter = ({
             <CommandInput placeholder="Search statuses..." />
             <CommandEmpty>No statuses found.</CommandEmpty>
             <CommandGroup>
-              {areas?.orgs.map((area) => (
+              {IsActiveStatus.map((status) => (
                 <CommandItem
-                  key={area.id}
-                  value={area.name}
+                  key={status}
+                  value={status}
                   onSelect={() => {
-                    onAreaSelect(area);
+                    onStatusSelect(status as IsActiveStatus);
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      selectedAreas.includes(area)
+                      selectedStatuses.includes(status as IsActiveStatus)
                         ? "opacity-100"
                         : "opacity-0",
                     )}
                   />
-                  {area.name}
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
                 </CommandItem>
               ))}
             </CommandGroup>

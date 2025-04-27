@@ -96,7 +96,7 @@ export const WorkoutDetailsContent = ({
             What: event?.types.join(", "),
             Where: [
               location.regionName ? (
-                <p key="regionName">{location.regionName}</p>
+                <p key="regionName">F3 {location.regionName}</p>
               ) : null,
               <Link
                 key="fullAddress"
@@ -104,9 +104,9 @@ export const WorkoutDetailsContent = ({
                 target="_blank"
                 className="underline"
               >
-                {location?.fullAddress ?? "Directions"}
+                {location.fullAddress ?? "Directions"}
               </Link>,
-              location?.locationDescription ? (
+              location.locationDescription ? (
                 <p
                   key="locationDescription"
                   className="text-sm text-muted-foreground"
@@ -116,7 +116,7 @@ export const WorkoutDetailsContent = ({
               ) : null,
             ].filter(isTruthy),
             When: event ? getWhenFromWorkout(event) : "",
-            Website: location?.regionWebsite ? (
+            Website: location.regionWebsite ? (
               <Link
                 href={location.regionWebsite}
                 target="_blank"
@@ -135,17 +135,17 @@ export const WorkoutDetailsContent = ({
     () =>
       location
         ? {
-            Name: location?.regionName,
-            Website: location?.regionWebsite ? (
+            Name: location.regionName ? `F3 ${location.regionName}` : null,
+            Website: location.regionWebsite ? (
               <Link
-                href={location?.regionWebsite}
+                href={location.regionWebsite}
                 target="_blank"
                 className="underline"
               >
                 {location.regionWebsite}
               </Link>
             ) : null,
-            Logo: location?.regionLogo,
+            Logo: location.regionLogo,
           }
         : {},
     [location],

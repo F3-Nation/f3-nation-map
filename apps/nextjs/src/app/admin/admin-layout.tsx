@@ -83,8 +83,8 @@ const Layout = ({
               <Image src="/f3_logo.png" alt="F3" width={100} height={100} />
             </div>
             <AdminNavLinks
-              className="flex flex-col gap-3"
-              linkClassName="mb-3 flex flex-row items-center gap-3 rounded-lg px-3 py-3"
+              className="flex flex-col"
+              linkClassName="flex flex-row items-center gap-3 rounded-lg px-3 py-4"
             />
           </div>
         </div>

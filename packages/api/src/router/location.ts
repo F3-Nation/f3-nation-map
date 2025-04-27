@@ -14,7 +14,7 @@ import {
   schema,
   sql,
 } from "@acme/db";
-import { DayOfWeek } from "@acme/shared/app/enums";
+import { DayOfWeek, IsActiveStatus } from "@acme/shared/app/enums";
 import { getFullAddress } from "@acme/shared/app/functions";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema, SortingSchema } from "@acme/validators";
@@ -38,6 +38,7 @@ export const locationRouter = createTRPCRouter({
           pageIndex: z.number().optional(),
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
+          statuses: z.enum(IsActiveStatus).array().optional(),
         })
         .optional(),
     )
@@ -48,7 +49,12 @@ export const locationRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        eq(schema.locations.isActive, true),
+        !input?.statuses?.length ||
+          input.statuses.length === IsActiveStatus.length
+          ? undefined
+          : input.statuses.includes("active")
+            ? eq(schema.locations.isActive, true)
+            : eq(schema.locations.isActive, false),
         input?.searchTerm
           ? or(
               ilike(schema.locations.name, `%${input?.searchTerm}%`),

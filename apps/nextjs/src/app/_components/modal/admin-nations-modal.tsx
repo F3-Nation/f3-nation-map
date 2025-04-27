@@ -44,7 +44,10 @@ export default function AdminNationsModal({
   data: DataType[ModalType.ADMIN_NATIONS];
 }) {
   const utils = api.useUtils();
-  const { data: nation } = api.nation.byId.useQuery({ id: data.id ?? -1 });
+  const { data: nation } = api.org.byId.useQuery({
+    id: data.id ?? -1,
+    orgType: "nation",
+  });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,9 +86,9 @@ export default function AdminNationsModal({
     });
   }, [form, nation]);
 
-  const crupdateNation = api.nation.crupdate.useMutation({
+  const crupdateNation = api.org.crupdate.useMutation({
     onSuccess: async () => {
-      await utils.nation.invalidate();
+      await utils.org.invalidate();
       closeModal();
       toast.success("Successfully updated nation");
       router.refresh();
@@ -116,7 +119,10 @@ export default function AdminNationsModal({
               async (data) => {
                 setIsSubmitting(true);
                 try {
-                  await crupdateNation.mutateAsync(data);
+                  await crupdateNation.mutateAsync({
+                    ...data,
+                    parentId: undefined,
+                  });
                 } catch (error) {
                   toast.error("Failed to update nation");
                   console.error(error);

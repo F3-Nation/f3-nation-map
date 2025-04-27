@@ -32,25 +32,20 @@ export default function AdminDeleteModal({
 
   switch (data.type) {
     case DeleteType.NATION:
-      mutation = vanillaApi.nation.delete.mutate;
-      break;
     case DeleteType.SECTOR:
-      mutation = vanillaApi.sector.delete.mutate;
-      break;
     case DeleteType.AREA:
-      mutation = vanillaApi.area.delete.mutate;
-      break;
     case DeleteType.REGION:
-      mutation = vanillaApi.region.delete.mutate;
-      break;
     case DeleteType.AO:
-      mutation = vanillaApi.ao.delete.mutate;
+      mutation = vanillaApi.org.delete.mutate;
       break;
     case DeleteType.EVENT:
       mutation = vanillaApi.event.delete.mutate;
       break;
     case DeleteType.USER:
       mutation = vanillaApi.user.delete.mutate;
+      break;
+    case DeleteType.LOCATION:
+      mutation = vanillaApi.location.delete.mutate;
       break;
     default:
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
@@ -66,25 +61,20 @@ export default function AdminDeleteModal({
 
         switch (data.type) {
           case DeleteType.NATION:
-            void utils.nation.invalidate();
-            break;
           case DeleteType.SECTOR:
-            void utils.sector.invalidate();
-            break;
           case DeleteType.AREA:
-            void utils.area.invalidate();
-            break;
           case DeleteType.REGION:
-            void utils.region.invalidate();
-            break;
           case DeleteType.AO:
-            void utils.ao.invalidate();
+            void utils.org.invalidate();
             break;
           case DeleteType.EVENT:
             void utils.event.invalidate();
             break;
           case DeleteType.USER:
             void utils.user.invalidate();
+            break;
+          case DeleteType.LOCATION:
+            void utils.location.invalidate();
             break;
           default:
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

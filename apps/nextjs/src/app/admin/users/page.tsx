@@ -15,7 +15,7 @@ const UsersPage = async () => {
           </div>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex  w-full  flex-col overflow-auto">
+          <div className="flex w-full flex-col overflow-hidden">
             <UserTable />
           </div>
         </Suspense>

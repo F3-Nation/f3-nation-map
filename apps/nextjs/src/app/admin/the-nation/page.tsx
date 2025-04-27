@@ -5,7 +5,7 @@ import Layout from "../admin-layout";
 import { NationsTable } from "./nations-table";
 
 const NationsPage = async () => {
-  const nations = await api.nation.all();
+  const { orgs: nations } = await api.org.all({ orgTypes: ["nation"] });
 
   return (
     <Layout>
@@ -14,7 +14,7 @@ const NationsPage = async () => {
           <h1 className="text-2xl font-bold">Nations</h1>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex  w-full  flex-col overflow-auto">
+          <div className="flex w-full flex-col overflow-hidden">
             <NationsTable nations={nations} />
           </div>
         </Suspense>
