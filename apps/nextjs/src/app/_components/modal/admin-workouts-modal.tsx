@@ -101,6 +101,7 @@ export default function AdminWorkoutsModal({
       meta: {
         mapSeed: event?.meta?.mapSeed ?? false,
       },
+      description: event?.description ?? "",
     });
   }, [form, event]);
 
