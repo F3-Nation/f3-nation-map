@@ -341,7 +341,7 @@ describe("all admin routers", () => {
       const nations = await caller.org.all({ orgTypes: ["nation"] });
       console.log("nations", nations);
     });
-    
+
     it("should get all orgs", async () => {
       const result = await caller.org.all({
         pageSize: 999999,

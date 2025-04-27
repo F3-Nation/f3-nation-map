@@ -83,7 +83,7 @@ export const LocationEventForm = ({
       aos
         ?.filter((a) => !formRegionId || a.parentId === formRegionId)
         ?.map((ao) => ({
-          label: `${ao.name} (${ao.region})`,
+          label: `${ao.name} (${ao.parentOrgName})`,
           value: ao.id.toString(),
         }))
         ?.sort((a, b) => a.label.localeCompare(b.label)) ?? []

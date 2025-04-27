@@ -2,7 +2,7 @@ import { initTRPC } from "@trpc/server";
 import dayjs from "dayjs";
 import { describe, expect, it, vi } from "vitest";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { DayOfWeek, OrgType } from "@acme/shared/app/enums";
 import { db } from "@acme/db/client";
 import {
   TEST_ADMIN_USER_ID,
@@ -76,7 +76,7 @@ describe("all editor routers", () => {
     it("should create and get ao by id", async () => {
       const aoData = {
         name: "Test AO",
-        orgType: "ao",
+        orgType: "ao" as OrgType,
         isActive: true,
         parentId: TEST_REGION_2_ORG_ID,
         email: "test@ao.com",
@@ -132,7 +132,7 @@ describe("all editor routers", () => {
     it("should create and get area by id", async () => {
       const areaData = {
         name: "Test Area",
-        orgType: "area",
+        orgType: "area" as OrgType,
         isActive: true,
         parentId: TEST_SECTOR_ORG_ID,
         email: "test@area.com",
@@ -169,7 +169,7 @@ describe("all editor routers", () => {
     it("should create and get event by id", async () => {
       const aoData = {
         name: "Test AO",
-        orgType: "ao",
+        orgType: "ao" as OrgType,
         isActive: true,
         parentId: TEST_REGION_2_ORG_ID,
         email: "test@ao.com",
@@ -460,7 +460,7 @@ describe("all editor routers", () => {
       const nationData = {
         id: TEST_NATION_ORG_ID,
         name,
-        orgType: "nation",
+        orgType: "nation" as OrgType,
         isActive: true,
         email: "test@nation.com",
         description: "Test Nation Description",
@@ -494,7 +494,7 @@ describe("all editor routers", () => {
     it("should get region by id", async () => {
       const result = await caller.org.byId({
         id: TEST_REGION_2_ORG_ID,
-        orgType: "region",
+        orgType: "region" as OrgType,
       });
       expect(result).toBeDefined();
     });
@@ -503,7 +503,7 @@ describe("all editor routers", () => {
       const regionData = {
         id: TEST_REGION_1_ORG_ID,
         name: "Test Region 3",
-        orgType: "region",
+        orgType: "region" as OrgType,
         isActive: true,
         parentId: TEST_SECTOR_ORG_ID,
         email: "test@region3.com",
@@ -751,7 +751,7 @@ describe("all editor routers", () => {
     it("should fail to create and get sector by id", async () => {
       const sectorData = {
         name: "Test Sector",
-        orgType: "sector",
+        orgType: "sector" as OrgType,
         isActive: true,
         email: "test@sector.com",
         description: "Test Sector Description",
@@ -770,7 +770,7 @@ describe("all editor routers", () => {
       const sectorData = {
         id: TEST_SECTOR_ORG_ID,
         name: "Test Sector",
-        orgType: "sector",
+        orgType: "sector" as OrgType,
         isActive: true,
         email: "test@sector.com",
         description: "Test Sector Description",

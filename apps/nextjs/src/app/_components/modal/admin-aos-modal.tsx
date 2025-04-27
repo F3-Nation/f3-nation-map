@@ -74,6 +74,7 @@ export default function AdminAOsModal({
       instagram: ao?.instagram ?? null,
       lastAnnualReview: ao?.lastAnnualReview ?? null,
       meta: ao?.meta ?? null,
+      orgType: "ao",
     });
   }, [form, ao]);
 
