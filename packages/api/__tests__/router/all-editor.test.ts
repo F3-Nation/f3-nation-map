@@ -433,7 +433,7 @@ describe("all editor routers", () => {
           expect(event.startTime).toBe("0600");
           expect(event.endTime).toBe("0700");
           expect(event.description).toBe("Test Event Description");
-          expect(Array.isArray(event.types)).toBe(true);
+          expect(Array.isArray(event.eventTypes)).toBe(true);
 
           // Check parent fields
           expect(event.aoId).toBe(MY_REGION_ID);

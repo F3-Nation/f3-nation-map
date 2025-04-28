@@ -143,7 +143,18 @@ export const locationRouter = createTRPCRouter({
           startTime: schema.events.startTime,
           endTime: schema.events.endTime,
           name: schema.events.name,
-          types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
+          eventTypes: sql<{ id: number; name: string }[]>`COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'id', ${schema.eventTypes.id},
+                'name', ${schema.eventTypes.name}
+              )
+            )
+            FILTER (
+              WHERE ${schema.eventTypes.id} IS NOT NULL
+            ),
+            '[]'
+          )`,
         },
       })
       .from(schema.locations)
@@ -230,7 +241,7 @@ export const locationRouter = createTRPCRouter({
           event.name,
           event.dayOfWeek,
           event.startTime,
-          event.types,
+          event.eventTypes,
         ]),
     ]);
 
@@ -278,7 +289,18 @@ export const locationRouter = createTRPCRouter({
             dayOfWeek: schema.events.dayOfWeek,
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
-            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
+            eventTypes: sql<{ id: number; name: string }[]>`COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'id', ${schema.eventTypes.id},
+                'name', ${schema.eventTypes.name}
+              )
+            )
+            FILTER (
+              WHERE ${schema.eventTypes.id} IS NOT NULL
+            ),
+            '[]'
+          )`,
             aoId: parentOrg.id,
             aoLogo: parentOrg.logoUrl,
             aoWebsite: parentOrg.website,

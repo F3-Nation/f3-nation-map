@@ -49,7 +49,7 @@ export const eventDefaults = {
   startTime: "0530",
   endTime: "0615",
   dayOfWeek: null,
-  types: ["Bootcamp"],
+  eventTypeIds: [1],
   eventDescription: "",
   aoId: null,
 };
@@ -97,7 +97,7 @@ export const eventAndLocationToUpdateRequest = ({
     startTime: event?.startTime ?? null,
     endTime: event?.endTime ?? null,
     dayOfWeek: event?.dayOfWeek ?? null,
-    types: event?.types ?? [],
+    eventTypeIds: event?.eventTypes.map((type) => type.id) ?? [],
     eventDescription: event?.description ?? null,
     locationId: location.id,
     locationAddress: location.locationAddress,
@@ -134,7 +134,7 @@ export interface DataType {
     startTime: string | null;
     endTime: string | null;
     dayOfWeek: DayOfWeek | null;
-    types: string[];
+    eventTypeIds: number[];
     eventDescription: string | null;
     locationAddress: string | null;
     locationAddress2: string | null;

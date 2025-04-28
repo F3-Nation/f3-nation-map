@@ -11,7 +11,6 @@ import {
   convertHH_mmToHHmm,
   convertHHmmToHH_mm,
 } from "@acme/shared/app/functions";
-import { isTruthy } from "@acme/shared/common/functions";
 import { Button } from "@acme/ui/button";
 import {
   Dialog,
@@ -182,12 +181,7 @@ export const UpdateLocationModal = ({
       // @ts-expect-error -- must remove dayOfWeek from form
       form.setValue("eventDayOfWeek", null);
     }
-    form.setValue(
-      "eventTypeIds",
-      data.types
-        ?.map((type) => eventTypes?.find((t) => t.name === type)?.id)
-        .filter(isTruthy) ?? [],
-    );
+    form.setValue("eventTypeIds", data.eventTypeIds);
     form.setValue("eventDescription", data.eventDescription ?? "");
 
     form.setValue("submittedBy", session?.email || appStore.get("myEmail"));

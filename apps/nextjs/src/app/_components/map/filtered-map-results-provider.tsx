@@ -62,7 +62,7 @@ export const FilteredMapResultsProvider = (params: { children: ReactNode }) => {
               name: event[1],
               dayOfWeek: event[2],
               startTime: event[3],
-              types: event[4],
+              eventTypes: event[4],
             };
           }),
         };

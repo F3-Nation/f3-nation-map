@@ -93,7 +93,7 @@ export const WorkoutDetailsContent = ({
                 ) : null}
               </>
             ),
-            What: event?.types.join(", "),
+            What: event?.eventTypes.map((type) => type.name).join(", "),
             Where: [
               location.regionName ? (
                 <p key="regionName">F3 {location.regionName}</p>
@@ -228,7 +228,7 @@ export const WorkoutDetailsContent = ({
                 dayOfWeek: event.dayOfWeek,
                 startTime: event.startTime,
                 endTime: event.endTime,
-                types: event.types,
+                eventTypes: event.eventTypes,
               }}
               location={{
                 lat: results.location.lat,

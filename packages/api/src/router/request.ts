@@ -677,8 +677,9 @@ export const applyUpdateRequest = async (
   }
 
   // EVENT
+  let eventId: number;
   if (updateRequest.eventId != undefined) {
-    await ctx.db
+    const [_updated] = await ctx.db
       .update(schema.events)
       .set({
         name: updateRequest.eventName,
@@ -700,7 +701,13 @@ export const applyUpdateRequest = async (
         meta: updateRequest.eventMeta,
         email: updateRequest.eventContactEmail,
       })
-      .where(eq(schema.events.id, updateRequest.eventId));
+      .where(eq(schema.events.id, updateRequest.eventId))
+      .returning();
+
+    if (!_updated) {
+      throw new Error("Failed to update event");
+    }
+    eventId = _updated.id;
   } else {
     console.log("inserting event", updateRequest);
     const newEvent: typeof schema.events.$inferInsert = {
@@ -731,17 +738,20 @@ export const applyUpdateRequest = async (
     if (!_inserted) {
       throw new Error("Failed to insert event");
     }
-
-    await ctx.db
-      .delete(schema.eventsXEventTypes)
-      .where(eq(schema.eventsXEventTypes.eventId, _inserted.id));
-    await ctx.db.insert(schema.eventsXEventTypes).values(
-      updateRequest.eventTypeIds?.map((id) => ({
-        eventId: _inserted.id,
-        eventTypeId: id,
-      })) ?? [],
-    );
+    eventId = _inserted.id;
   }
+
+  // Update event types
+  await ctx.db
+    .delete(schema.eventsXEventTypes)
+    .where(eq(schema.eventsXEventTypes.eventId, eventId));
+
+  await ctx.db.insert(schema.eventsXEventTypes).values(
+    updateRequest.eventTypeIds?.map((id) => ({
+      eventId,
+      eventTypeId: id,
+    })) ?? [],
+  );
 
   revalidatePath("/");
   return {

@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { InferInsertModel } from "@acme/db";
-import { count, eq, inArray, schema } from "@acme/db";
+import { count, eq, inArray, isNull, or, schema } from "@acme/db";
 import { EventTypeInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -33,7 +33,10 @@ export const eventTypeRouter = createTRPCRouter({
         )
         .where(
           input?.orgIds?.length
-            ? inArray(schema.eventTypes.specificOrgId, input?.orgIds)
+            ? or(
+                isNull(schema.eventTypes.specificOrgId),
+                inArray(schema.eventTypes.specificOrgId, input?.orgIds),
+              )
             : undefined,
         )
         .groupBy(schema.eventTypes.id, schema.orgs.name);

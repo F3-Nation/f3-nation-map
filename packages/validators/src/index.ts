@@ -214,7 +214,7 @@ export const LowBandwidthF3Marker = z.tuple([
       z.string(), // event name
       z.enum(DayOfWeek).nullable(), // event day of week
       z.string().nullable(), // event start time
-      z.array(z.string()), // event types
+      z.array(z.object({ id: z.number(), name: z.string() })), // event types
     ])
     .array(),
 ]);

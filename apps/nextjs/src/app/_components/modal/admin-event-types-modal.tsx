@@ -49,9 +49,7 @@ export default function AdminEventTypesModal({
     { id: data.id ?? -1 },
     { enabled: !!data.id },
   );
-  const { data: orgs } = api.org.all.useQuery({
-    orgTypes: ["region", "area", "sector", "nation"],
-  });
+  const { data: orgs } = api.org.all.useQuery({ orgTypes: ["region"] });
   const sortedOrgs = useMemo(() => {
     return orgs?.orgs.sort((a, b) => {
       return a.orgType.localeCompare(b.orgType) || a.name.localeCompare(b.name);

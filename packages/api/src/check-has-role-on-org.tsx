@@ -5,6 +5,8 @@ import { aliasedTable, eq, schema } from "@acme/db";
 import type { Context } from "./trpc";
 import { isProd, isTestMode } from "./utils";
 
+const ALLOW_MTNDEV_OVERRIDE = false as boolean;
+
 export const checkHasRoleOnOrg = async ({
   session,
   orgId,
@@ -31,7 +33,10 @@ export const checkHasRoleOnOrg = async ({
   );
 
   // F3 Nation
-  if (session.email === "declan@mountaindev.com" || (!isProd && !isTestMode)) {
+  if (
+    session.email === "declan@mountaindev.com" ||
+    (!isProd && !isTestMode && ALLOW_MTNDEV_OVERRIDE)
+  ) {
     const nations = await db
       .select()
       .from(schema.orgs)

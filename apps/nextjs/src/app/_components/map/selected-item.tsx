@@ -100,7 +100,7 @@ export const SelectedItem = (props: {
             </Link>
             <div>
               <span className="font-semibold">Type: </span>
-              {selectedEvent.types.join(", ")}
+              {selectedEvent.eventTypes.map((type) => type.name).join(", ")}
             </div>
             {selectedEvent.description ? (
               <p className="leading-4">
