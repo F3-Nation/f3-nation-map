@@ -226,7 +226,7 @@ describe("all admin routers", () => {
         backblast: "Backblast",
         backblastTs: dayjs().unix(),
         meta: { key: "value" },
-        eventTypeId: 1,
+        eventTypeIds: [1],
       };
       const eventResult = await caller.event.crupdate(eventData);
       expect(eventResult).toBeDefined();

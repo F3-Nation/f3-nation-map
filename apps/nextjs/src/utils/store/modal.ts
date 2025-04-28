@@ -22,6 +22,7 @@ export enum ModalType {
   ADMIN_AREAS = "ADMIN_AREAS",
   ADMIN_REGIONS = "ADMIN_REGIONS",
   ADMIN_AOS = "ADMIN_AOS",
+  ADMIN_EVENT_TYPES = "ADMIN_EVENT_TYPES",
   ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
   DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
   ADMIN_DELETE_REQUEST = "ADMIN_DELETE_REQUEST",
@@ -36,6 +37,7 @@ export enum DeleteType {
   LOCATION = "LOCATION",
   AO = "AO",
   EVENT = "EVENT",
+  EVENT_TYPE = "EVENT_TYPE",
   REGION = "REGION",
   SECTOR = "SECTOR",
   NATION = "NATION",
@@ -200,6 +202,9 @@ export interface DataType {
     alt: string;
   };
   [ModalType.MAP_HELP]: null;
+  [ModalType.ADMIN_EVENT_TYPES]: {
+    id?: number | null;
+  };
 }
 
 export interface Modal<T extends ModalType> {

@@ -209,6 +209,13 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Submitted by is required");
       }
 
+      const [existingEvent] = input.eventId
+        ? await ctx.db
+            .select()
+            .from(schema.events)
+            .where(eq(schema.events.id, input.eventId))
+        : [];
+
       const canEditRegion = ctx.session
         ? await checkHasRoleOnOrg({
             orgId: input.regionId,
@@ -218,8 +225,22 @@ export const requestRouter = createTRPCRouter({
           })
         : null;
 
+      const canEditEvent =
+        ctx.session && existingEvent?.orgId
+          ? await checkHasRoleOnOrg({
+              orgId: existingEvent.orgId,
+              session: ctx.session,
+              db: ctx.db,
+              roleName: "editor",
+            })
+          : null;
+
       // Immediately update if user has permission
-      if (canEditRegion?.success && ctx.session?.user?.email) {
+      if (
+        canEditRegion?.success &&
+        canEditEvent?.success &&
+        ctx.session?.user?.email
+      ) {
         const result = await applyDeleteRequest(ctx, {
           ...input,
           reviewedBy: ctx.session?.user?.email,
@@ -261,6 +282,44 @@ export const requestRouter = createTRPCRouter({
         }
       }
 
+      const [existingEvent] = input.eventId
+        ? await ctx.db
+            .select()
+            .from(schema.events)
+            .where(eq(schema.events.id, input.eventId))
+        : [null];
+
+      const canEditEvent =
+        existingEvent === null
+          ? { success: true }
+          : ctx.session && existingEvent?.orgId
+            ? await checkHasRoleOnOrg({
+                orgId: existingEvent.orgId,
+                session: ctx.session,
+                db: ctx.db,
+                roleName: "editor",
+              })
+            : { success: false };
+
+      const [existingLocation] = input.locationId
+        ? await ctx.db
+            .select()
+            .from(schema.locations)
+            .where(eq(schema.locations.id, input.locationId))
+        : [null];
+
+      const canEditLocation =
+        existingLocation === null
+          ? { success: true }
+          : ctx.session && existingLocation?.orgId
+            ? await checkHasRoleOnOrg({
+                orgId: existingLocation.orgId,
+                session: ctx.session,
+                db: ctx.db,
+                roleName: "editor",
+              })
+            : { success: false };
+
       const canEditRegion = ctx.session
         ? await checkHasRoleOnOrg({
             orgId: input.regionId,
@@ -268,10 +327,15 @@ export const requestRouter = createTRPCRouter({
             db: ctx.db,
             roleName: "editor",
           })
-        : null;
+        : { success: false };
 
       // Immediately update if user has permission
-      if (canEditRegion?.success && ctx.session?.user?.email) {
+      if (
+        canEditRegion.success &&
+        canEditEvent.success &&
+        canEditLocation.success &&
+        ctx.session?.user?.email
+      ) {
         const result = await applyUpdateRequest(ctx, {
           ...input,
           reviewedBy: ctx.session?.user?.email,

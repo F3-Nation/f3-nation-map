@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   events,
+  eventTypes,
   locations,
   orgs,
   updateRequests,
@@ -37,6 +38,10 @@ export const EmailAuthSchema = UserInsertSchema.pick({
 export const LocationInsertSchema = createInsertSchema(locations);
 export const LocationSelectSchema = createSelectSchema(locations);
 
+// EVENT TYPE SCHEMA
+export const EventTypeInsertSchema = createInsertSchema(eventTypes);
+export const EventTypeSelectSchema = createSelectSchema(eventTypes);
+
 // EVENT SCHEMA
 export const EventInsertSchema = createInsertSchema(events, {
   name: (s) => s.min(1, { message: "Name is required" }),
@@ -57,7 +62,10 @@ export const EventInsertSchema = createInsertSchema(events, {
   .extend({
     regionId: z.number(),
     aoId: z.number(),
-    eventTypeId: z.number().min(1, { message: "Event type is required" }),
+    eventTypeIds: z
+      .number()
+      .array()
+      .min(1, { message: "Event type is required" }),
   })
   .omit({
     orgId: true,

@@ -434,6 +434,13 @@ export const locationRouter = createTRPCRouter({
   crupdate: editorProcedure
     .input(LocationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const [existingLocation] = input.id
+        ? await ctx.db
+            .select()
+            .from(schema.locations)
+            .where(eq(schema.locations.id, input.id))
+        : [];
+
       if (!input.orgId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -441,7 +448,7 @@ export const locationRouter = createTRPCRouter({
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: input.orgId,
+        orgId: existingLocation?.orgId ?? input.orgId,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",

@@ -228,7 +228,7 @@ describe("all editor routers", () => {
         backblast: "Backblast",
         backblastTs: dayjs().unix(),
         meta: { key: "value" },
-        eventTypeId: 1,
+        eventTypeIds: [1],
       };
       const eventResult = await caller.event.crupdate(eventData);
       expect(eventResult).toBeDefined();
@@ -263,7 +263,7 @@ describe("all editor routers", () => {
         backblast: "Backblast",
         backblastTs: dayjs().unix(),
         meta: { key: "value" },
-        eventTypeId: 1,
+        eventTypeIds: [1],
       };
       await expect(caller.event.crupdate(eventData)).rejects.toThrow();
     });
@@ -369,7 +369,7 @@ describe("all editor routers", () => {
         endTime: "0700",
         email: "test@event.com",
         description: "Test Event Description",
-        eventTypeId: 1,
+        eventTypeIds: [1],
         regionId: MY_REGION_ID,
       };
       const eventResult = await caller.event.crupdate(eventData);
@@ -618,7 +618,7 @@ describe("all editor routers", () => {
       }
 
       const requestData = {
-        id: "123e4567-e89b-12d3-a456-426614174000",
+        id: "123e4567-e89b-12d3-a456-426614174001",
         regionId: MY_REGION_ID, // Attempt to move this event to my region  - Should fail since it didn't start in my region
         eventId: eventNotInMyRegion.id,
         eventTypeIds: [1],

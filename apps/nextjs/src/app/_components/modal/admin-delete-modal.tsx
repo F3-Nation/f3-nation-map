@@ -41,6 +41,9 @@ export default function AdminDeleteModal({
     case DeleteType.EVENT:
       mutation = vanillaApi.event.delete.mutate;
       break;
+    case DeleteType.EVENT_TYPE:
+      mutation = vanillaApi.eventType.delete.mutate;
+      break;
     case DeleteType.USER:
       mutation = vanillaApi.user.delete.mutate;
       break;
@@ -77,7 +80,6 @@ export default function AdminDeleteModal({
             void utils.location.invalidate();
             break;
           default:
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new Error(`Invalid delete type: ${data.type}`);
         }
         router.refresh();

@@ -6,6 +6,7 @@ import {
   MapPin,
   PersonStanding,
   SquareChartGantt,
+  Turtle,
   User,
 } from "lucide-react";
 
@@ -60,15 +61,21 @@ export const AdminNavLinks = ({
       type: "section",
     },
     {
-      href: routes.admin.locations.__path,
-      icon: MapPin,
-      label: "Locations",
+      href: routes.admin.eventTypes.__path,
+      icon: Turtle,
+      label: "Event types",
       type: "link",
     },
     {
       href: routes.admin.workouts.__path,
       icon: PersonStanding,
       label: "Events",
+      type: "link",
+    },
+    {
+      href: routes.admin.locations.__path,
+      icon: MapPin,
+      label: "Locations",
       type: "link",
     },
     {

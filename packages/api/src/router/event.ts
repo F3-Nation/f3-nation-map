@@ -252,6 +252,13 @@ export const eventRouter = createTRPCRouter({
   crupdate: editorProcedure
     .input(EventInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const [existingEvent] = input.id
+        ? await ctx.db
+            .select()
+            .from(schema.events)
+            .where(eq(schema.events.id, input.id))
+        : [];
+
       const orgIdToCheck = input.aoId ?? input.regionId;
       if (!orgIdToCheck) {
         throw new TRPCError({
@@ -260,7 +267,7 @@ export const eventRouter = createTRPCRouter({
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: orgIdToCheck,
+        orgId: existingEvent?.orgId ?? orgIdToCheck,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",
@@ -272,7 +279,7 @@ export const eventRouter = createTRPCRouter({
         });
       }
 
-      const { eventTypeId, meta, ...eventData } = input;
+      const { eventTypeIds, meta, ...eventData } = input;
       const eventToUpdate: typeof schema.events.$inferInsert = {
         ...eventData,
         orgId: input.aoId,
@@ -302,15 +309,17 @@ export const eventRouter = createTRPCRouter({
       }
 
       // Handle event type in join table
-      if (eventTypeId) {
+      if (eventTypeIds) {
         await ctx.db
           .delete(schema.eventsXEventTypes)
           .where(eq(schema.eventsXEventTypes.eventId, result.id));
 
-        await ctx.db.insert(schema.eventsXEventTypes).values({
-          eventId: result.id,
-          eventTypeId,
-        });
+        await ctx.db.insert(schema.eventsXEventTypes).values(
+          eventTypeIds.map((eventTypeId) => ({
+            eventId: result.id,
+            eventTypeId,
+          })),
+        );
       }
 
       return result;
