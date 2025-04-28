@@ -21,7 +21,7 @@ export interface SparseF3Marker {
     name: string;
     dayOfWeek: DayOfWeek | null;
     startTime: string | null;
-    types: string[];
+    eventTypes: { id: number; name: string }[];
   }[];
 }
 
@@ -67,9 +67,10 @@ export interface F3LocationMapSearchResult {
       name: string;
       dayOfWeek: DayOfWeek | null;
       startTime: string | null;
-      types: string[];
+      eventTypes: { id: number; name: string }[];
     };
     placeId: null;
+    regionName: string | null;
   };
 }
 

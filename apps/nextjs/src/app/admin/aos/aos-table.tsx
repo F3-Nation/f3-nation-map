@@ -21,14 +21,15 @@ import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 export const AOsTable = () => {
   const { pagination, setPagination } = usePagination();
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: aos } = api.ao.all.useQuery({
+  const { data: aos } = api.org.all.useQuery({
+    orgTypes: ["ao"],
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     searchTerm: searchTerm,
   });
   return (
     <MDTable
-      data={aos?.aos}
+      data={aos?.orgs}
       containerClassName="max-w-full"
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
@@ -51,7 +52,7 @@ export const AOsTable = () => {
 };
 
 const columns: TableOptions<
-  RouterOutputs["ao"]["all"]["aos"][number]
+  RouterOutputs["org"]["all"]["orgs"][number]
 >["columns"] = [
   {
     accessorKey: "name",

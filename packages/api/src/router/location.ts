@@ -14,7 +14,8 @@ import {
   schema,
   sql,
 } from "@acme/db";
-import { DayOfWeek } from "@acme/shared/app/enums";
+import { DayOfWeek, IsActiveStatus } from "@acme/shared/app/enums";
+import { getFullAddress } from "@acme/shared/app/functions";
 import { isTruthy } from "@acme/shared/common/functions";
 import { LocationInsertSchema, SortingSchema } from "@acme/validators";
 
@@ -37,6 +38,7 @@ export const locationRouter = createTRPCRouter({
           pageIndex: z.number().optional(),
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
+          statuses: z.enum(IsActiveStatus).array().optional(),
         })
         .optional(),
     )
@@ -47,7 +49,12 @@ export const locationRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        eq(schema.locations.isActive, true),
+        !input?.statuses?.length ||
+          input.statuses.length === IsActiveStatus.length
+          ? undefined
+          : input.statuses.includes("active")
+            ? eq(schema.locations.isActive, true)
+            : eq(schema.locations.isActive, false),
         input?.searchTerm
           ? or(
               ilike(schema.locations.name, `%${input?.searchTerm}%`),
@@ -136,7 +143,18 @@ export const locationRouter = createTRPCRouter({
           startTime: schema.events.startTime,
           endTime: schema.events.endTime,
           name: schema.events.name,
-          types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
+          eventTypes: sql<{ id: number; name: string }[]>`COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'id', ${schema.eventTypes.id},
+                'name', ${schema.eventTypes.name}
+              )
+            )
+            FILTER (
+              WHERE ${schema.eventTypes.id} IS NOT NULL
+            ),
+            '[]'
+          )`,
         },
       })
       .from(schema.locations)
@@ -173,24 +191,7 @@ export const locationRouter = createTRPCRouter({
           acc[location.id] = {
             ...location,
             name: location.name ?? "",
-            // description: location.locationDescription ?? "",
-            fullAddress: [
-              location.locationAddress,
-              location.locationAddress2,
-              location.locationCity,
-              location.locationState,
-              ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
-                location.locationCountry
-                  ?.toLowerCase()
-                  .replace(/(\.| )/g, "") ?? "",
-              )
-                ? ""
-                : location.locationCountry,
-            ]
-              .filter(Boolean) // Remove empty/null/undefined values
-              .join(", ")
-              .replace(/, ,/g, ",") // Clean up any double commas
-              .replace(/,\s*$/, ""), // Remove trailing comma
+            fullAddress: getFullAddress(location),
             lat: location.lat,
             lon: location.lon,
             events: [],
@@ -211,7 +212,7 @@ export const locationRouter = createTRPCRouter({
           logo: string | null;
           lat: number;
           lon: number;
-          fullAddress: string;
+          fullAddress: string | null;
           events: Omit<
             NonNullable<(typeof locationsAndEvents)[number]["events"]>,
             "locationId"
@@ -240,7 +241,7 @@ export const locationRouter = createTRPCRouter({
           event.name,
           event.dayOfWeek,
           event.startTime,
-          event.types,
+          event.eventTypes,
         ]),
     ]);
 
@@ -288,7 +289,18 @@ export const locationRouter = createTRPCRouter({
             dayOfWeek: schema.events.dayOfWeek,
             startTime: schema.events.startTime,
             endTime: schema.events.endTime,
-            types: sql<string[]>`json_agg(${schema.eventTypes.name})`,
+            eventTypes: sql<{ id: number; name: string }[]>`COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'id', ${schema.eventTypes.id},
+                'name', ${schema.eventTypes.name}
+              )
+            )
+            FILTER (
+              WHERE ${schema.eventTypes.id} IS NOT NULL
+            ),
+            '[]'
+          )`,
             aoId: parentOrg.id,
             aoLogo: parentOrg.logoUrl,
             aoWebsite: parentOrg.website,
@@ -346,22 +358,7 @@ export const locationRouter = createTRPCRouter({
         ...location,
         lat: location.lat,
         lon: location.lon,
-        fullAddress: [
-          location.locationAddress,
-          location.locationAddress2,
-          location.locationCity,
-          location.locationState,
-          ["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(
-            location.locationCountry?.toLowerCase().replace(/(\.| )/g, "") ??
-              "",
-          )
-            ? ""
-            : location.locationCountry,
-        ]
-          .filter(Boolean) // Remove empty/null/undefined values
-          .join(", ")
-          .replace(/, ,/g, ",") // Clean up any double commas
-          .replace(/,\s*$/, ""), // Remove trailing comma
+        fullAddress: getFullAddress(location),
         events: events.sort(
           (a, b) =>
             DayOfWeek.indexOf(a.dayOfWeek ?? "sunday") -
@@ -459,6 +456,13 @@ export const locationRouter = createTRPCRouter({
   crupdate: editorProcedure
     .input(LocationInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const [existingLocation] = input.id
+        ? await ctx.db
+            .select()
+            .from(schema.locations)
+            .where(eq(schema.locations.id, input.id))
+        : [];
+
       if (!input.orgId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -466,7 +470,7 @@ export const locationRouter = createTRPCRouter({
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: input.orgId,
+        orgId: existingLocation?.orgId ?? input.orgId,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",

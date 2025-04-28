@@ -5,6 +5,7 @@ import { AddAOButton } from "./[id]/add-ao-button";
 import { AOsTable } from "./aos-table";
 
 const AOPage = async () => {
+  // Don't get the aos on the server here since there are so many
   return (
     <Layout>
       <div className="flex w-full  flex-col">
@@ -15,7 +16,7 @@ const AOPage = async () => {
           </div>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex  w-full  flex-col overflow-auto">
+          <div className="flex w-full flex-col overflow-hidden">
             <AOsTable />
           </div>
         </Suspense>

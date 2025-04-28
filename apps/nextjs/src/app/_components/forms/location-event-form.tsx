@@ -9,14 +9,8 @@ import { Case } from "@acme/shared/common/enums";
 import { convertCase, isTruthy } from "@acme/shared/common/functions";
 import { Button } from "@acme/ui/button";
 import { Input } from "@acme/ui/input";
-import {
-  ControlledSelect,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/select";
+import { MultiSelect } from "@acme/ui/multi-select";
+import { ControlledSelect } from "@acme/ui/select";
 import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { RequestInsertSchema } from "@acme/validators";
@@ -47,12 +41,16 @@ export const LocationEventForm = ({
   const formRegionId = form.watch("regionId");
   const formLocationId = form.watch("locationId");
   const formAoId = form.watch("aoId");
+  console.log("form eventTypeIds", form.getValues().eventTypeIds);
 
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
-  const { data: aos } = api.ao.all.useQuery();
+  const { data: allAoData } = api.org.all.useQuery({ orgTypes: ["ao"] });
   const { data: locations } = api.location.all.useQuery();
-  const { data: eventTypes } = api.event.types.useQuery();
+  const { data: eventTypes } = api.eventType.all.useQuery({
+    orgIds: formRegionId ? [formRegionId] : [],
+  });
+  const aos = useMemo(() => allAoData?.orgs, [allAoData]);
 
   const sortedRegionLocationOptions = useMemo(() => {
     return locations?.locations
@@ -79,10 +77,10 @@ export const LocationEventForm = ({
 
   const sortedRegionAoOptions = useMemo(() => {
     return (
-      aos?.aos
+      aos
         ?.filter((a) => !formRegionId || a.parentId === formRegionId)
         ?.map((ao) => ({
-          label: `${ao.name} (${ao.region})`,
+          label: `${ao.name} (${ao.parentOrgName})`,
           value: ao.id.toString(),
         }))
         ?.sort((a, b) => a.label.localeCompare(b.label)) ?? []
@@ -146,7 +144,7 @@ export const LocationEventForm = ({
 
         <div className="space-y-2">
           <div className="text-sm font-medium text-muted-foreground">
-            Event Type
+            Event Types
           </div>
           <Controller
             control={form.control}
@@ -154,29 +152,21 @@ export const LocationEventForm = ({
             render={({ field, fieldState }) => {
               return (
                 <div>
-                  <Select
-                    value={field.value?.[0]?.toString()}
-                    onValueChange={(value) => {
-                      if (value) {
-                        field.onChange(
-                          eventTypes
-                            ?.filter((type) => type.id.toString() === value)
-                            .map((type) => type.id),
-                        );
-                      }
-                    }}
-                  >
-                    <SelectTrigger id={`eventTypes`} aria-label="Event Type">
-                      <SelectValue placeholder="Select an event type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventTypes?.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiSelect
+                    hideSelectAll
+                    defaultValue={(field.value ?? []).map(String)}
+                    value={(field.value ?? []).map(String)}
+                    options={
+                      eventTypes?.eventTypes.map((type) => ({
+                        label: type.name,
+                        value: type.id.toString(),
+                      })) ?? []
+                    }
+                    onValueChange={(values) =>
+                      field.onChange(values.map(Number))
+                    }
+                    placeholder="Select event types"
+                  />
                   {fieldState.error && (
                     <p className="text-xs text-destructive">
                       You must select at least one event type
@@ -392,7 +382,7 @@ export const LocationEventForm = ({
               options={sortedRegionAoOptions}
               value={formAoId?.toString()}
               onSelect={(item) => {
-                const ao = aos?.aos?.find((ao) => ao.id.toString() === item);
+                const ao = aos?.find((ao) => ao.id.toString() === item);
                 if (ao) {
                   form.setValue("aoId", ao.id);
                   form.setValue("aoName", ao.name);

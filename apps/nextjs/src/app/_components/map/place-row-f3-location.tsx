@@ -88,7 +88,12 @@ export const PlaceRowF3Location = ({
         />
         <div className="flex-4 text-start">
           <CardTitle>{result.header}</CardTitle>
-          <CardDescription className="line-clamp-1">Workout</CardDescription>
+          <CardDescription className="line-clamp-1">
+            Workout
+            {result.destination.regionName ? (
+              <span> (F3 {result.destination.regionName})</span>
+            ) : null}
+          </CardDescription>
         </div>
       </CardHeader>
     </button>

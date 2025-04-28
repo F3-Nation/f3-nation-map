@@ -325,7 +325,7 @@ export default function SettingsModal() {
                   "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
                 )}
                 onClick={() => {
-                  void vanillaApi.nation.revalidate
+                  void vanillaApi.org.revalidate
                     .mutate()
                     .then(() => {
                       toast.success("Nation revalidated");

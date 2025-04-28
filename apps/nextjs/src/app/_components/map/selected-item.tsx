@@ -91,19 +91,16 @@ export const SelectedItem = (props: {
                 />
               </div>
             </div>
-            {selectedLocation.fullAddress ? (
-              <Link
-                // href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation.locationDescription)}`}
-                href={`https://maps.google.com/?q=${encodeURIComponent(selectedLocation.fullAddress)}`}
-                target="_blank"
-                className="mt-[2px] line-clamp-1 text-xs underline"
-              >
-                {selectedLocation.fullAddress}
-              </Link>
-            ) : null}
+            <Link
+              href={`https://www.google.com/maps/search/?api=1&query=${selectedLocation.lat},${selectedLocation.lon}`}
+              target="_blank"
+              className="mt-[2px] line-clamp-1 w-fit text-xs underline"
+            >
+              {selectedLocation.fullAddress ?? "Directions"}
+            </Link>
             <div>
               <span className="font-semibold">Type: </span>
-              {selectedEvent.types.join(", ")}
+              {selectedEvent.eventTypes.map((type) => type.name).join(", ")}
             </div>
             {selectedEvent.description ? (
               <p className="leading-4">

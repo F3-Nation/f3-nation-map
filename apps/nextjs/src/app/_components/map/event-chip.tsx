@@ -16,7 +16,6 @@ import { setSelectedItem } from "~/utils/store/selected-item";
 import BootSvgComponent from "../SVGs/boot-camp";
 import RuckSvgComponent from "../SVGs/ruck";
 import RunSvgComponent from "../SVGs/run";
-import SwimSvgComponent from "../SVGs/swim";
 
 export const EventChip = (props: {
   variant?: "interactive" | "non-interactive";
@@ -30,7 +29,7 @@ export const EventChip = (props: {
     endTime?: string | null;
     id: number;
     locationId?: number | null;
-    types: string[];
+    eventTypes: { id: number; name: string }[];
   };
   location: {
     id: number | null;
@@ -141,16 +140,27 @@ export const EventChip = (props: {
         {size === "small" || !duration ? null : ` (${duration}m)`}
       </div>
       <div>
-        {event.types.includes("Bootcamp") ? (
+        {event.eventTypes.some((et) => et.name === "Bootcamp") ? (
           <BootSvgComponent height={iconSize} width={iconSize} />
-        ) : event.types.includes("Swimming") ? (
-          <SwimSvgComponent height={iconSize} width={iconSize} />
-        ) : event.types.includes("Ruck") ? (
+        ) : event.eventTypes.some((et) => et.name === "Ruck") ? (
           <RuckSvgComponent height={iconSize} width={iconSize} />
-        ) : event.types.includes("Run") ? (
+        ) : event.eventTypes.some((et) => et.name === "Run") ? (
           <RunSvgComponent height={iconSize} width={iconSize} />
         ) : null}
       </div>
+      {/* Show a +badge if there are more than 1 event type */}
+      {event.eventTypes.length > 1 ? (
+        <div
+          className={cn(
+            "flex size-3 items-center justify-center rounded-full bg-background text-foreground",
+            { "-ml-4 -mt-3 size-4 text-sm": size === "large" },
+            { "-ml-[10px] -mt-[6px] size-3 text-xs ": size === "medium" },
+            { "-ml-[8px] -mt-[6px] size-[10px] text-xs ": size === "small" },
+          )}
+        >
+          +
+        </div>
+      ) : null}
     </div>
   );
 };

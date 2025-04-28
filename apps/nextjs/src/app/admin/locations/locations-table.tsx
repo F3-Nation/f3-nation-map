@@ -2,25 +2,50 @@
 
 import type { TableOptions } from "@tanstack/react-table";
 import { useState } from "react";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { IsActiveStatus } from "@acme/shared/app/enums";
 import type { SortingSchema } from "@acme/validators";
+import { Button } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
-import { ModalType, openModal } from "~/utils/store/modal";
+import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { LocationIsActiveFilter } from "./location-is-active-table";
 
 export const LocationsTable = () => {
   const { pagination, setPagination } = usePagination();
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingSchema>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
+    "active",
+  ]);
   const { data: locations } = api.location.all.useQuery({
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     searchTerm: searchTerm,
     sorting: sorting,
+    statuses: selectedStatuses,
   });
+
+  const handleStatusSelect = (status: IsActiveStatus) => {
+    setSelectedStatuses((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      } else {
+        return [...prev, status];
+      }
+    });
+  };
+
   return (
     <MDTable
       searchTerm={searchTerm}
@@ -37,11 +62,12 @@ export const LocationsTable = () => {
       setPagination={setPagination}
       sorting={sorting}
       setSorting={setSorting}
-      // rowClassName={(row) => {
-      //   if (row.original.submitterValidated === true) {
-      //     return "opacity-30";
-      //   }
-      // }}
+      filterComponent={
+        <LocationIsActiveFilter
+          onStatusSelect={handleStatusSelect}
+          selectedStatuses={selectedStatuses}
+        />
+      }
     />
   );
 };
@@ -135,5 +161,34 @@ const columns: TableOptions<
     meta: { name: "Created At" },
     header: Header,
     cell: Cell,
+  },
+  {
+    id: "id",
+    enableHiding: false,
+    cell: ({ row }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <DotsHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                  id: Number(row.original.id),
+                  type: DeleteType.LOCATION,
+                });
+              }}
+            >
+              <div>Delete</div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];

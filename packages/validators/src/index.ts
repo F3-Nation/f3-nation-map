@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   events,
+  eventTypes,
   locations,
   orgs,
   updateRequests,
@@ -37,6 +38,10 @@ export const EmailAuthSchema = UserInsertSchema.pick({
 export const LocationInsertSchema = createInsertSchema(locations);
 export const LocationSelectSchema = createSelectSchema(locations);
 
+// EVENT TYPE SCHEMA
+export const EventTypeInsertSchema = createInsertSchema(eventTypes);
+export const EventTypeSelectSchema = createSelectSchema(eventTypes);
+
 // EVENT SCHEMA
 export const EventInsertSchema = createInsertSchema(events, {
   name: (s) => s.min(1, { message: "Name is required" }),
@@ -57,7 +62,10 @@ export const EventInsertSchema = createInsertSchema(events, {
   .extend({
     regionId: z.number(),
     aoId: z.number(),
-    eventTypeId: z.number().min(1, { message: "Event type is required" }),
+    eventTypeIds: z
+      .number()
+      .array()
+      .min(1, { message: "Event type is required" }),
   })
   .omit({
     orgId: true,
@@ -76,7 +84,8 @@ export const NationInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
   email: (s) => s.email({ message: "Invalid email format" }),
   parentId: z.null({ message: "Must not have a parent" }).optional(),
-}).omit({ orgType: true });
+  orgType: z.literal("nation"),
+});
 export const NationSelectSchema = createSelectSchema(orgs);
 
 // SECTOR SCHEMA
@@ -86,7 +95,8 @@ export const SectorInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("sector"),
+});
 export const SectorSelectSchema = createSelectSchema(orgs);
 
 // AREA SCHEMA
@@ -96,7 +106,8 @@ export const AreaInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("area"),
+});
 export const AreaSelectSchema = createSelectSchema(orgs);
 
 // REGION SCHEMA
@@ -106,7 +117,8 @@ export const RegionInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("region"),
+});
 export const RegionSelectSchema = createSelectSchema(orgs);
 
 // AO SCHEMA
@@ -116,8 +128,19 @@ export const AOInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-}).omit({ orgType: true });
+  orgType: z.literal("ao"),
+});
 export const AOSelectSchema = createSelectSchema(orgs);
+
+// ORG SCHEMA
+export const OrgInsertSchema = createInsertSchema(orgs, {
+  name: (s) => s.min(1, { message: "Name is required" }),
+  parentId: z
+    .number({ message: "Must have a parent" })
+    .nonnegative({ message: "Invalid selection" }),
+  email: (s) => s.email({ message: "Invalid email format" }),
+});
+export const OrgSelectSchema = createSelectSchema(orgs);
 
 export const DeleteRequestSchema = z.object({
   eventId: z.number(),
@@ -184,14 +207,14 @@ export const LowBandwidthF3Marker = z.tuple([
   z.string().nullable(), // location logo
   z.number(), // location lat
   z.number(), // location lon
-  z.string(), // location description
+  z.string().nullable(), // location full address
   z
     .tuple([
       z.number(), // event id
       z.string(), // event name
       z.enum(DayOfWeek).nullable(), // event day of week
       z.string().nullable(), // event start time
-      z.array(z.string()), // event types
+      z.array(z.object({ id: z.number(), name: z.string() })), // event types
     ])
     .array(),
 ]);

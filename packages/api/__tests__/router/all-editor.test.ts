@@ -2,7 +2,8 @@ import { initTRPC } from "@trpc/server";
 import dayjs from "dayjs";
 import { describe, expect, it, vi } from "vitest";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { DayOfWeek, OrgType } from "@acme/shared/app/enums";
+import { schema } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   TEST_ADMIN_USER_ID,
@@ -28,12 +29,14 @@ interface User {
   roles: { orgId: number; orgName: string; roleName: string }[];
 }
 
+const MY_REGION_ID = TEST_REGION_2_ORG_ID;
+
 const editorUser = {
   id: TEST_EDITOR_USER_ID,
   email: "editor@test.com",
   roles: [
     {
-      orgId: TEST_REGION_2_ORG_ID,
+      orgId: MY_REGION_ID,
       orgName: "Test Region 2",
       roleName: "editor",
     },
@@ -76,9 +79,9 @@ describe("all editor routers", () => {
     it("should create and get ao by id", async () => {
       const aoData = {
         name: "Test AO",
-        orgType: "ao",
+        orgType: "ao" as OrgType,
         isActive: true,
-        parentId: TEST_REGION_2_ORG_ID,
+        parentId: MY_REGION_ID,
         email: "test@ao.com",
         description: "Test AO Description",
         logoUrl: "https://example.com/logo.png",
@@ -89,12 +92,12 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      const aoResult = await caller.ao.crupdate(aoData);
+      const aoResult = await caller.org.crupdate(aoData);
       if (!aoResult) {
         throw new Error("AO result is undefined");
       }
       createdAoId = aoResult.id;
-      const result = await caller.ao.byId({ id: aoResult.id });
+      const result = await caller.org.byId({ id: aoResult.id, orgType: "ao" });
       expect(result).toBeDefined();
     });
 
@@ -102,18 +105,22 @@ describe("all editor routers", () => {
       if (!createdAoId) {
         throw new Error("Created AO ID is undefined");
       }
-      await expect(caller.ao.delete({ id: createdAoId })).rejects.toThrow();
+      await expect(
+        caller.org.delete({ id: createdAoId, orgType: "ao" }),
+      ).rejects.toThrow();
     });
 
     it("should fail to delete ao due to insufficient permissions", async () => {
       if (!createdAoId) {
         throw new Error("Created AO ID is undefined");
       }
-      await expect(caller.ao.delete({ id: createdAoId })).rejects.toThrow();
+      await expect(
+        caller.org.delete({ id: createdAoId, orgType: "ao" }),
+      ).rejects.toThrow();
     });
 
     it("should get all aos", async () => {
-      const result = await caller.ao.all();
+      const result = await caller.org.all({ orgTypes: ["ao"] });
       expect(result).toBeDefined();
     });
   });
@@ -121,14 +128,14 @@ describe("all editor routers", () => {
   // Area Router Tests
   describe("area router", () => {
     it("should get all areas", async () => {
-      const result = await caller.area.all();
+      const result = await caller.org.all({ orgTypes: ["area"] });
       expect(result).toBeDefined();
     });
 
     it("should create and get area by id", async () => {
       const areaData = {
         name: "Test Area",
-        orgType: "area",
+        orgType: "area" as OrgType,
         isActive: true,
         parentId: TEST_SECTOR_ORG_ID,
         email: "test@area.com",
@@ -141,12 +148,12 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      await expect(caller.area.crupdate(areaData)).rejects.toThrow();
+      await expect(caller.org.crupdate(areaData)).rejects.toThrow();
     });
 
     it("should delete area", async () => {
       await expect(
-        caller.area.delete({ id: TEST_AREA_ORG_ID }),
+        caller.org.delete({ id: TEST_AREA_ORG_ID, orgType: "area" }),
       ).rejects.toThrow();
     });
   });
@@ -165,9 +172,9 @@ describe("all editor routers", () => {
     it("should create and get event by id", async () => {
       const aoData = {
         name: "Test AO",
-        orgType: "ao",
+        orgType: "ao" as OrgType,
         isActive: true,
-        parentId: TEST_REGION_2_ORG_ID,
+        parentId: MY_REGION_ID,
         email: "test@ao.com",
         description: "Test AO Description",
         logoUrl: "https://example.com/logo.png",
@@ -178,7 +185,7 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      const aoResult = await caller.ao.crupdate(aoData);
+      const aoResult = await caller.org.crupdate(aoData);
       expect(aoResult).toBeDefined();
 
       if (!aoResult) {
@@ -206,7 +213,7 @@ describe("all editor routers", () => {
         isActive: true,
         aoId,
         locationId,
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "0600",
@@ -221,7 +228,7 @@ describe("all editor routers", () => {
         backblast: "Backblast",
         backblastTs: dayjs().unix(),
         meta: { key: "value" },
-        eventTypeId: 1,
+        eventTypeIds: [1],
       };
       const eventResult = await caller.event.crupdate(eventData);
       expect(eventResult).toBeDefined();
@@ -241,7 +248,7 @@ describe("all editor routers", () => {
         isActive: true,
         aoId,
         locationId,
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "06:00", // HH:mm
@@ -256,7 +263,7 @@ describe("all editor routers", () => {
         backblast: "Backblast",
         backblastTs: dayjs().unix(),
         meta: { key: "value" },
-        eventTypeId: 1,
+        eventTypeIds: [1],
       };
       await expect(caller.event.crupdate(eventData)).rejects.toThrow();
     });
@@ -301,7 +308,7 @@ describe("all editor routers", () => {
       const locationData = {
         name: "Test Location",
         isActive: true,
-        orgId: TEST_REGION_2_ORG_ID,
+        orgId: MY_REGION_ID,
         aoName: "Test AO",
         email: "test@location.com",
         description: "Test Location Description",
@@ -353,7 +360,7 @@ describe("all editor routers", () => {
       const eventData = {
         name: "Test Event",
         isActive: true,
-        aoId: TEST_REGION_2_ORG_ID,
+        aoId: MY_REGION_ID,
         locationId: createdLocationId,
         dayOfWeek: "monday" as DayOfWeek,
         highlight: false,
@@ -362,8 +369,8 @@ describe("all editor routers", () => {
         endTime: "0700",
         email: "test@event.com",
         description: "Test Event Description",
-        eventTypeId: 1,
-        regionId: TEST_REGION_2_ORG_ID,
+        eventTypeIds: [1],
+        regionId: MY_REGION_ID,
       };
       const eventResult = await caller.event.crupdate(eventData);
       expect(eventResult).toBeDefined();
@@ -397,10 +404,10 @@ describe("all editor routers", () => {
         expect(result.location.locationDescription).toBe(
           "Test Location Description",
         );
-        expect(result.location.orgId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.orgId).toBe(MY_REGION_ID);
 
         // Check Region fields
-        expect(result.location.regionId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.regionId).toBe(MY_REGION_ID);
         expect(result.location.regionLogo).toBeDefined();
         expect(result.location.regionWebsite).toBeDefined();
         expect(result.location.regionName).toBeDefined();
@@ -426,10 +433,10 @@ describe("all editor routers", () => {
           expect(event.startTime).toBe("0600");
           expect(event.endTime).toBe("0700");
           expect(event.description).toBe("Test Event Description");
-          expect(Array.isArray(event.types)).toBe(true);
+          expect(Array.isArray(event.eventTypes)).toBe(true);
 
           // Check parent fields
-          expect(event.aoId).toBe(TEST_REGION_2_ORG_ID);
+          expect(event.aoId).toBe(MY_REGION_ID);
           expect(event.aoLogo).toBeDefined();
           expect(event.aoWebsite).toBeDefined();
           expect(event.aoName).toBeDefined();
@@ -441,12 +448,12 @@ describe("all editor routers", () => {
   // Nation Router Tests
   describe("nation router", () => {
     it("should get all nations", async () => {
-      const result = await caller.nation.all();
+      const result = await caller.org.all({ orgTypes: ["nation"] });
       expect(result).toBeDefined();
     });
 
     it("should get all orgs", async () => {
-      const result = await caller.nation.allOrgs();
+      const result = await caller.org.all({ orgTypes: ["nation"] });
       expect(result).toBeDefined();
     });
 
@@ -456,7 +463,7 @@ describe("all editor routers", () => {
       const nationData = {
         id: TEST_NATION_ORG_ID,
         name,
-        orgType: "nation",
+        orgType: "nation" as OrgType,
         isActive: true,
         email: "test@nation.com",
         description: "Test Nation Description",
@@ -468,7 +475,7 @@ describe("all editor routers", () => {
         lastAnnualReview: dayjs().toISOString(),
         meta: { key: "value" },
       };
-      await expect(caller.nation.crupdate(nationData)).rejects.toThrow();
+      await expect(caller.org.crupdate(nationData)).rejects.toThrow();
     });
   });
 
@@ -483,12 +490,15 @@ describe("all editor routers", () => {
   // Region Router Tests
   describe("region router", () => {
     it("should get all regions", async () => {
-      const result = await caller.region.all();
+      const result = await caller.org.all({ orgTypes: ["region"] });
       expect(result).toBeDefined();
     });
 
     it("should get region by id", async () => {
-      const result = await caller.region.byId({ id: TEST_REGION_2_ORG_ID });
+      const result = await caller.org.byId({
+        id: MY_REGION_ID,
+        orgType: "region" as OrgType,
+      });
       expect(result).toBeDefined();
     });
 
@@ -496,7 +506,7 @@ describe("all editor routers", () => {
       const regionData = {
         id: TEST_REGION_1_ORG_ID,
         name: "Test Region 3",
-        orgType: "region",
+        orgType: "region" as OrgType,
         isActive: true,
         parentId: TEST_SECTOR_ORG_ID,
         email: "test@region3.com",
@@ -510,11 +520,11 @@ describe("all editor routers", () => {
         meta: { key: "value" },
       };
       // Try to create a new region
-      await expect(caller.region.crupdate(regionData)).rejects.toThrow();
+      await expect(caller.org.crupdate(regionData)).rejects.toThrow();
 
       // Try to modify an existing region they don't have access to
       await expect(
-        caller.region.crupdate({
+        caller.org.crupdate({
           ...regionData,
           id: TEST_REGION_3_ORG_ID, // Different region than editor has access to
         }),
@@ -523,7 +533,7 @@ describe("all editor routers", () => {
 
     it("should fail to delete region", async () => {
       await expect(
-        caller.region.delete({ id: TEST_REGION_2_ORG_ID }),
+        caller.org.delete({ id: MY_REGION_ID, orgType: "region" }),
       ).rejects.toThrow();
     });
   });
@@ -537,7 +547,7 @@ describe("all editor routers", () => {
 
     it("should check can edit region", async () => {
       const result = await caller.request.canEditRegion({
-        orgId: TEST_REGION_2_ORG_ID,
+        orgId: MY_REGION_ID,
       });
       expect(result).toBeDefined();
     });
@@ -570,10 +580,75 @@ describe("all editor routers", () => {
       expect(result.status).toBe("pending");
     });
 
+    it("should create a new request for an existing event into my own region that is not auto approved", async () => {
+      const [newLoc] = await db
+        .insert(schema.locations)
+        .values({
+          name: "Test Location",
+          description: "Test Location Description",
+          orgId: TEST_REGION_1_ORG_ID,
+          isActive: true,
+          latitude: 40.7128,
+          longitude: -74.006,
+        })
+        .returning();
+
+      if (!newLoc) {
+        throw new Error("Failed to create new location");
+      }
+
+      const [eventNotInMyRegion] = await db
+        .insert(schema.events)
+        .values({
+          name: "Test Event Not In My Region",
+          description: "Test Event Description Not In My Region",
+          dayOfWeek: "monday" as DayOfWeek,
+          startTime: "0600",
+          endTime: "0700",
+          orgId: TEST_REGION_1_ORG_ID,
+          locationId: newLoc.id,
+          isActive: true,
+          highlight: false,
+          startDate: dayjs().format("YYYY-MM-DD"),
+        })
+        .returning();
+
+      if (!eventNotInMyRegion) {
+        throw new Error("Failed to create event not in my region");
+      }
+
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174001",
+        regionId: MY_REGION_ID, // Attempt to move this event to my region  - Should fail since it didn't start in my region
+        eventId: eventNotInMyRegion.id,
+        eventTypeIds: [1],
+        eventName: "Test Event Request",
+        eventDescription: "Test Event Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        eventMeta: { key: "value" },
+        requestType: "edit" as const,
+      };
+
+      const result = await caller.request.submitUpdateRequest(requestData);
+      expect(result).toBeDefined();
+      expect(result.status).toBe("pending");
+    });
+
     it("should create a new request that is auto approved", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174001",
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Auto Approved Event",
         eventDescription: "Auto Approved Event Description",
@@ -601,7 +676,7 @@ describe("all editor routers", () => {
     it("should fail to create a new request with an invalid event start time", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174002",
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Invalid Start Time Event",
         eventDescription: "Test Description",
@@ -628,7 +703,7 @@ describe("all editor routers", () => {
     it("should fail to create a new request with an invalid event end time", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174003",
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Invalid End Time Event",
         eventDescription: "Test Description",
@@ -744,7 +819,7 @@ describe("all editor routers", () => {
     it("should fail to create and get sector by id", async () => {
       const sectorData = {
         name: "Test Sector",
-        orgType: "sector",
+        orgType: "sector" as OrgType,
         isActive: true,
         email: "test@sector.com",
         description: "Test Sector Description",
@@ -756,14 +831,14 @@ describe("all editor routers", () => {
         parentId: TEST_NATION_ORG_ID,
       };
 
-      await expect(caller.sector.crupdate(sectorData)).rejects.toThrow();
+      await expect(caller.org.crupdate(sectorData)).rejects.toThrow();
     });
 
     it("should fail to update and get sector by id", async () => {
       const sectorData = {
         id: TEST_SECTOR_ORG_ID,
         name: "Test Sector",
-        orgType: "sector",
+        orgType: "sector" as OrgType,
         isActive: true,
         email: "test@sector.com",
         description: "Test Sector Description",
@@ -776,17 +851,17 @@ describe("all editor routers", () => {
         meta: { key: "value" },
         parentId: TEST_NATION_ORG_ID,
       };
-      await expect(caller.sector.crupdate(sectorData)).rejects.toThrow();
+      await expect(caller.org.crupdate(sectorData)).rejects.toThrow();
     });
 
     it("should fail to delete sector", async () => {
       await expect(
-        caller.sector.delete({ id: TEST_SECTOR_ORG_ID }),
+        caller.org.delete({ id: TEST_SECTOR_ORG_ID, orgType: "sector" }),
       ).rejects.toThrow();
     });
 
     it("should get all sectors", async () => {
-      const result = await caller.sector.all();
+      const result = await caller.org.all({ orgTypes: ["sector"] });
       expect(result).toBeDefined();
     });
   });

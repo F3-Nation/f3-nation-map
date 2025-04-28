@@ -80,70 +80,74 @@ export const WorkoutDetailsContent = ({
   }, [event?.id, location?.id]);
 
   const workoutFields = useMemo(
-    () => ({
-      Name: (
-        <>
-          {event?.name}
-          {!isProd ? (
-            <p className="text-xs text-muted-foreground">
-              event: {event?.id}; loc: {location?.id}
-            </p>
-          ) : null}
-        </>
-      ),
-      What: event?.types.join(", "),
-      Where: [
-        location?.regionName ? (
-          <p key="regionName">{location.regionName}</p>
-        ) : null,
-        location?.fullAddress ? (
-          <Link
-            key="fullAddress"
-            href={`https://maps.google.com/?q=${encodeURIComponent(location?.fullAddress)}`}
-            target="_blank"
-            className="underline"
-          >
-            {location.fullAddress}
-          </Link>
-        ) : null,
-        location?.locationDescription ? (
-          <p
-            key="locationDescription"
-            className="text-sm text-muted-foreground"
-          >
-            {location.locationDescription}
-          </p>
-        ) : null,
-      ].filter(isTruthy),
-      When: event ? getWhenFromWorkout(event) : "",
-      Website: location?.regionWebsite ? (
-        <Link
-          href={location.regionWebsite}
-          target="_blank"
-          className="underline"
-        >
-          {location.regionWebsite}
-        </Link>
-      ) : null,
-      Notes: event?.description ? textLink(event.description) : null,
-    }),
+    () =>
+      event && location
+        ? {
+            Name: (
+              <>
+                {event.name}
+                {!isProd ? (
+                  <p className="text-xs text-muted-foreground">
+                    event: {event.id}; loc: {location.id}
+                  </p>
+                ) : null}
+              </>
+            ),
+            What: event?.eventTypes.map((type) => type.name).join(", "),
+            Where: [
+              location.regionName ? (
+                <p key="regionName">F3 {location.regionName}</p>
+              ) : null,
+              <Link
+                key="fullAddress"
+                href={`https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lon}`}
+                target="_blank"
+                className="underline"
+              >
+                {location.fullAddress ?? "Directions"}
+              </Link>,
+              location.locationDescription ? (
+                <p
+                  key="locationDescription"
+                  className="text-sm text-muted-foreground"
+                >
+                  {location.locationDescription}
+                </p>
+              ) : null,
+            ].filter(isTruthy),
+            When: event ? getWhenFromWorkout(event) : "",
+            Website: location.regionWebsite ? (
+              <Link
+                href={location.regionWebsite}
+                target="_blank"
+                className="underline"
+              >
+                {location.regionWebsite}
+              </Link>
+            ) : null,
+            Notes: event?.description ? textLink(event.description) : null,
+          }
+        : {},
     [event, location],
   );
 
   const regionFields = useMemo(
-    () => ({
-      Name: location?.regionName,
-      Website: location?.regionWebsite ? (
-        <Link
-          href={location?.regionWebsite}
-          target="_blank"
-          className="underline"
-        >
-          {location.regionWebsite}
-        </Link>
-      ) : null,
-      Logo: location?.regionLogo,
-    }),
+    () =>
+      location
+        ? {
+            Name: location.regionName ? `F3 ${location.regionName}` : null,
+            Website: location.regionWebsite ? (
+              <Link
+                href={location.regionWebsite}
+                target="_blank"
+                className="underline"
+              >
+                {location.regionWebsite}
+              </Link>
+            ) : null,
+            Logo: location.regionLogo,
+          }
+        : {},
     [location],
   );
 
@@ -224,7 +228,7 @@ export const WorkoutDetailsContent = ({
                 dayOfWeek: event.dayOfWeek,
                 startTime: event.startTime,
                 endTime: event.endTime,
-                types: event.types,
+                eventTypes: event.eventTypes,
               }}
               location={{
                 lat: results.location.lat,

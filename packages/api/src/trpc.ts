@@ -14,6 +14,7 @@ import { ZodError } from "zod";
 import type { Session } from "@acme/auth";
 import { auth } from "@acme/auth";
 import { db } from "@acme/db/client";
+import { env } from "@acme/env";
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
@@ -38,6 +39,8 @@ export const createTRPCContext = async (opts: {
   const source = opts.headers?.get("x-trpc-source") ?? "unknown";
   const xRealIp = opts.headers?.get("x-real-ip") ?? "unknown";
   const xForwardedFor = opts.headers?.get("x-forwarded-for") ?? "unknown";
+  const apiKey = opts.headers?.get("x-api-key") ?? "unknown";
+  const apiKeyStatus = apiKey === env.SUPER_ADMIN_API_KEY ? "valid" : "invalid";
 
   const ip = xForwardedFor ?? xRealIp;
 
@@ -54,6 +57,7 @@ export const createTRPCContext = async (opts: {
     session,
     ip,
     db,
+    apiKeyStatus,
   };
 };
 
@@ -139,6 +143,13 @@ export const editorProcedure = protectedProcedure.use(({ ctx, next }) => {
 export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   const isAdmin = ctx.session?.roles?.some((r) => r.roleName === "admin");
   if (!isAdmin) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
+});
+
+export const apiKeyProcedure = publicProcedure.use(({ ctx, next }) => {
+  if (ctx.apiKeyStatus !== "valid") {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({ ctx });

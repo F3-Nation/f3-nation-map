@@ -38,9 +38,9 @@ export default function UserMutate({
 }) {
   const router = useRouter();
   const utils = api.useUtils();
-  const { data: regions } = api.region.all.useQuery();
+  const { data: regions } = api.org.all.useQuery({ orgTypes: ["region"] });
   const sortedRegions = useMemo(() => {
-    return regions?.sort((a, b) => a.name.localeCompare(b.name)) ?? [];
+    return regions?.orgs.sort((a, b) => a.name.localeCompare(b.name)) ?? [];
   }, [regions]);
 
   const form = useForm({

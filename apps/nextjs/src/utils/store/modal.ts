@@ -22,6 +22,7 @@ export enum ModalType {
   ADMIN_AREAS = "ADMIN_AREAS",
   ADMIN_REGIONS = "ADMIN_REGIONS",
   ADMIN_AOS = "ADMIN_AOS",
+  ADMIN_EVENT_TYPES = "ADMIN_EVENT_TYPES",
   ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
   DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
   ADMIN_DELETE_REQUEST = "ADMIN_DELETE_REQUEST",
@@ -33,8 +34,10 @@ export enum ModalType {
 export enum DeleteType {
   USER = "USER",
   AREA = "AREA",
+  LOCATION = "LOCATION",
   AO = "AO",
   EVENT = "EVENT",
+  EVENT_TYPE = "EVENT_TYPE",
   REGION = "REGION",
   SECTOR = "SECTOR",
   NATION = "NATION",
@@ -46,7 +49,7 @@ export const eventDefaults = {
   startTime: "0530",
   endTime: "0615",
   dayOfWeek: null,
-  types: ["Bootcamp"],
+  eventTypeIds: [1],
   eventDescription: "",
   aoId: null,
 };
@@ -94,7 +97,7 @@ export const eventAndLocationToUpdateRequest = ({
     startTime: event?.startTime ?? null,
     endTime: event?.endTime ?? null,
     dayOfWeek: event?.dayOfWeek ?? null,
-    types: event?.types ?? [],
+    eventTypeIds: event?.eventTypes.map((type) => type.id) ?? [],
     eventDescription: event?.description ?? null,
     locationId: location.id,
     locationAddress: location.locationAddress,
@@ -131,7 +134,7 @@ export interface DataType {
     startTime: string | null;
     endTime: string | null;
     dayOfWeek: DayOfWeek | null;
-    types: string[];
+    eventTypeIds: number[];
     eventDescription: string | null;
     locationAddress: string | null;
     locationAddress2: string | null;
@@ -199,6 +202,9 @@ export interface DataType {
     alt: string;
   };
   [ModalType.MAP_HELP]: null;
+  [ModalType.ADMIN_EVENT_TYPES]: {
+    id?: number | null;
+  };
 }
 
 export interface Modal<T extends ModalType> {

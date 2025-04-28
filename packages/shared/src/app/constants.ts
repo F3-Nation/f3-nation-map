@@ -179,6 +179,10 @@ export const routes = {
       __path: "/admin/locations",
       __auth: "editor",
     },
+    eventTypes: {
+      __path: "/admin/event-types",
+      __auth: "editor",
+    },
     workouts: {
       __path: "/admin/workouts",
       __auth: "editor",

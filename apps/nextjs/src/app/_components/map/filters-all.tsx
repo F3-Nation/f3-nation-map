@@ -23,7 +23,6 @@ import csaupSvgComponent from "../SVGs/csaup";
 import gteSvgComponent from "../SVGs/gte";
 import RuckSvgComponent from "../SVGs/ruck";
 import RunSvgComponent from "../SVGs/run";
-import SwimSvgComponent from "../SVGs/swim";
 
 // Defining items for the filter options with their names and corresponding SVG components or image paths.
 
@@ -103,13 +102,6 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
       img: RunSvgComponent,
       onClick: () => {
         handleTypeClick("Run");
-      },
-    },
-    {
-      name: "Swim" as const,
-      img: SwimSvgComponent,
-      onClick: () => {
-        handleTypeClick("Swim");
       },
     },
   ];
