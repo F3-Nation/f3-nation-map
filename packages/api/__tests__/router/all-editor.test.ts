@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { describe, expect, it, vi } from "vitest";
 
 import type { DayOfWeek, OrgType } from "@acme/shared/app/enums";
+import { schema } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   TEST_ADMIN_USER_ID,
@@ -28,12 +29,14 @@ interface User {
   roles: { orgId: number; orgName: string; roleName: string }[];
 }
 
+const MY_REGION_ID = TEST_REGION_2_ORG_ID;
+
 const editorUser = {
   id: TEST_EDITOR_USER_ID,
   email: "editor@test.com",
   roles: [
     {
-      orgId: TEST_REGION_2_ORG_ID,
+      orgId: MY_REGION_ID,
       orgName: "Test Region 2",
       roleName: "editor",
     },
@@ -78,7 +81,7 @@ describe("all editor routers", () => {
         name: "Test AO",
         orgType: "ao" as OrgType,
         isActive: true,
-        parentId: TEST_REGION_2_ORG_ID,
+        parentId: MY_REGION_ID,
         email: "test@ao.com",
         description: "Test AO Description",
         logoUrl: "https://example.com/logo.png",
@@ -171,7 +174,7 @@ describe("all editor routers", () => {
         name: "Test AO",
         orgType: "ao" as OrgType,
         isActive: true,
-        parentId: TEST_REGION_2_ORG_ID,
+        parentId: MY_REGION_ID,
         email: "test@ao.com",
         description: "Test AO Description",
         logoUrl: "https://example.com/logo.png",
@@ -210,7 +213,7 @@ describe("all editor routers", () => {
         isActive: true,
         aoId,
         locationId,
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "0600",
@@ -245,7 +248,7 @@ describe("all editor routers", () => {
         isActive: true,
         aoId,
         locationId,
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         highlight: false,
         startDate: dayjs().format("YYYY-MM-DD"),
         startTime: "06:00", // HH:mm
@@ -305,7 +308,7 @@ describe("all editor routers", () => {
       const locationData = {
         name: "Test Location",
         isActive: true,
-        orgId: TEST_REGION_2_ORG_ID,
+        orgId: MY_REGION_ID,
         aoName: "Test AO",
         email: "test@location.com",
         description: "Test Location Description",
@@ -357,7 +360,7 @@ describe("all editor routers", () => {
       const eventData = {
         name: "Test Event",
         isActive: true,
-        aoId: TEST_REGION_2_ORG_ID,
+        aoId: MY_REGION_ID,
         locationId: createdLocationId,
         dayOfWeek: "monday" as DayOfWeek,
         highlight: false,
@@ -367,7 +370,7 @@ describe("all editor routers", () => {
         email: "test@event.com",
         description: "Test Event Description",
         eventTypeId: 1,
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
       };
       const eventResult = await caller.event.crupdate(eventData);
       expect(eventResult).toBeDefined();
@@ -401,10 +404,10 @@ describe("all editor routers", () => {
         expect(result.location.locationDescription).toBe(
           "Test Location Description",
         );
-        expect(result.location.orgId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.orgId).toBe(MY_REGION_ID);
 
         // Check Region fields
-        expect(result.location.regionId).toBe(TEST_REGION_2_ORG_ID);
+        expect(result.location.regionId).toBe(MY_REGION_ID);
         expect(result.location.regionLogo).toBeDefined();
         expect(result.location.regionWebsite).toBeDefined();
         expect(result.location.regionName).toBeDefined();
@@ -433,7 +436,7 @@ describe("all editor routers", () => {
           expect(Array.isArray(event.types)).toBe(true);
 
           // Check parent fields
-          expect(event.aoId).toBe(TEST_REGION_2_ORG_ID);
+          expect(event.aoId).toBe(MY_REGION_ID);
           expect(event.aoLogo).toBeDefined();
           expect(event.aoWebsite).toBeDefined();
           expect(event.aoName).toBeDefined();
@@ -493,7 +496,7 @@ describe("all editor routers", () => {
 
     it("should get region by id", async () => {
       const result = await caller.org.byId({
-        id: TEST_REGION_2_ORG_ID,
+        id: MY_REGION_ID,
         orgType: "region" as OrgType,
       });
       expect(result).toBeDefined();
@@ -530,7 +533,7 @@ describe("all editor routers", () => {
 
     it("should fail to delete region", async () => {
       await expect(
-        caller.org.delete({ id: TEST_REGION_2_ORG_ID, orgType: "region" }),
+        caller.org.delete({ id: MY_REGION_ID, orgType: "region" }),
       ).rejects.toThrow();
     });
   });
@@ -544,7 +547,7 @@ describe("all editor routers", () => {
 
     it("should check can edit region", async () => {
       const result = await caller.request.canEditRegion({
-        orgId: TEST_REGION_2_ORG_ID,
+        orgId: MY_REGION_ID,
       });
       expect(result).toBeDefined();
     });
@@ -577,10 +580,75 @@ describe("all editor routers", () => {
       expect(result.status).toBe("pending");
     });
 
+    it("should create a new request for an existing event into my own region that is not auto approved", async () => {
+      const [newLoc] = await db
+        .insert(schema.locations)
+        .values({
+          name: "Test Location",
+          description: "Test Location Description",
+          orgId: TEST_REGION_1_ORG_ID,
+          isActive: true,
+          latitude: 40.7128,
+          longitude: -74.006,
+        })
+        .returning();
+
+      if (!newLoc) {
+        throw new Error("Failed to create new location");
+      }
+
+      const [eventNotInMyRegion] = await db
+        .insert(schema.events)
+        .values({
+          name: "Test Event Not In My Region",
+          description: "Test Event Description Not In My Region",
+          dayOfWeek: "monday" as DayOfWeek,
+          startTime: "0600",
+          endTime: "0700",
+          orgId: TEST_REGION_1_ORG_ID,
+          locationId: newLoc.id,
+          isActive: true,
+          highlight: false,
+          startDate: dayjs().format("YYYY-MM-DD"),
+        })
+        .returning();
+
+      if (!eventNotInMyRegion) {
+        throw new Error("Failed to create event not in my region");
+      }
+
+      const requestData = {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        regionId: MY_REGION_ID, // Attempt to move this event to my region  - Should fail since it didn't start in my region
+        eventId: eventNotInMyRegion.id,
+        eventTypeIds: [1],
+        eventName: "Test Event Request",
+        eventDescription: "Test Event Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        eventMeta: { key: "value" },
+        requestType: "edit" as const,
+      };
+
+      const result = await caller.request.submitUpdateRequest(requestData);
+      expect(result).toBeDefined();
+      expect(result.status).toBe("pending");
+    });
+
     it("should create a new request that is auto approved", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174001",
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Auto Approved Event",
         eventDescription: "Auto Approved Event Description",
@@ -608,7 +676,7 @@ describe("all editor routers", () => {
     it("should fail to create a new request with an invalid event start time", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174002",
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Invalid Start Time Event",
         eventDescription: "Test Description",
@@ -635,7 +703,7 @@ describe("all editor routers", () => {
     it("should fail to create a new request with an invalid event end time", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174003",
-        regionId: TEST_REGION_2_ORG_ID,
+        regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Invalid End Time Event",
         eventDescription: "Test Description",

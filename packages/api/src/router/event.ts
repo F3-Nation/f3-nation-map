@@ -37,7 +37,7 @@ export const eventRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const regionOrg = aliasedTable(schema.orgs, "region_org");
-      const aoOrg = aliasedTable(schema.orgs, "ao_org");
+      const parentOrg = aliasedTable(schema.orgs, "parent_org");
       const limit = input?.pageSize ?? 10;
       const offset = (input?.pageIndex ?? 0) * limit;
       const usePagination =
@@ -61,8 +61,8 @@ export const eventRouter = createTRPCRouter({
         switch (sorting.id) {
           case "regions":
             return direction(regionOrg.name);
-          case "location":
-            return direction(aoOrg.name);
+          case "parent":
+            return direction(parentOrg.name);
           case "status":
             return direction(schema.events.isActive);
           case "dayOfWeek":
@@ -79,7 +79,7 @@ export const eventRouter = createTRPCRouter({
         name: schema.events.name,
         description: schema.events.description,
         isActive: schema.events.isActive,
-        location: aoOrg.name,
+        parent: parentOrg.name,
         locationId: schema.events.locationId,
         startDate: schema.events.startDate,
         dayOfWeek: schema.events.dayOfWeek,
@@ -87,15 +87,15 @@ export const eventRouter = createTRPCRouter({
         endTime: schema.events.endTime,
         email: schema.events.email,
         created: schema.events.created,
-        aos: sql<{ aoId: number; aoName: string }[]>`COALESCE(
+        parents: sql<{ aoId: number; aoName: string }[]>`COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
-            'aoId', ${aoOrg.id}, 
-            'aoName', ${aoOrg.name}
+            'parentId', ${parentOrg.id}, 
+            'parentName', ${parentOrg.name}
           )
         ) 
         FILTER (
-          WHERE ${aoOrg.id} IS NOT NULL
+          WHERE ${parentOrg.id} IS NOT NULL
         ), 
         '[]'
       )`,
@@ -130,8 +130,11 @@ export const eventRouter = createTRPCRouter({
           eq(schema.locations.id, schema.events.locationId),
         )
         .leftJoin(
-          aoOrg,
-          and(eq(aoOrg.orgType, "ao"), eq(aoOrg.id, schema.events.orgId)),
+          parentOrg,
+          and(
+            eq(parentOrg.orgType, "ao"),
+            eq(parentOrg.id, schema.events.orgId),
+          ),
         )
         .leftJoin(
           regionOrg,
@@ -140,11 +143,11 @@ export const eventRouter = createTRPCRouter({
             or(
               eq(regionOrg.id, schema.locations.orgId),
               eq(regionOrg.id, schema.events.orgId),
-              eq(regionOrg.id, aoOrg.parentId),
+              eq(regionOrg.id, parentOrg.parentId),
             ),
           ),
         )
-        .groupBy(schema.events.id, aoOrg.id, regionOrg.id)
+        .groupBy(schema.events.id, parentOrg.id, regionOrg.id)
         .where(where);
 
       const events = usePagination
