@@ -1,6 +1,5 @@
 "use client";
 
-import { env } from "process";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleHelp } from "lucide-react";
@@ -39,6 +38,7 @@ import { LocationInsertSchema } from "@acme/validators";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
+import { isProd } from "~/trpc/util";
 import { closeModal } from "~/utils/store/modal";
 import { GoogleMapSimple } from "../map/google-map-simple";
 import { VirtualizedCombobox } from "../virtualized-combobox";
@@ -462,7 +462,7 @@ export default function AdminLocationsModal({
                       </Button>
                     </div>
                   </div>
-                  {env.NEXT_PUBLIC_CHANNEL !== "prod" && (
+                  {!isProd && (
                     <div className="mb-4 w-full px-2">
                       <div className="flex space-x-4 pt-4">
                         <Button
