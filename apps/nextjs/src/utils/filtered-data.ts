@@ -16,7 +16,7 @@ export const filterData = <
     events: {
       dayOfWeek: DayOfWeek | null;
       startTime: string | null;
-      types: string[];
+      eventTypes: { id: number; name: string }[];
     }[];
   },
 >(
@@ -61,13 +61,19 @@ export const filterData = <
 
       // Check if at least one of the selected type filters matches the station's type
       const includeThisLocationMarkerOnType =
-        (!filters.Bootcamp || event.types.includes("Bootcamp")) &&
-        (!filters.Run || event.types.includes("Run")) &&
-        (!filters.Ruck || event.types.includes("Ruck")) &&
-        (!filters.Swim || event.types.includes("Swimming")) &&
-        (!filters.CSAUPs || event.types.includes("CSAUPs")) &&
-        (!filters.Convergence || event.types.includes("Convergence")) &&
-        (!filters.GTE || event.types.includes("GTE"));
+        (!filters.Bootcamp ||
+          event.eventTypes.some((type) => type.name === "Bootcamp")) &&
+        (!filters.Run ||
+          event.eventTypes.some((type) => type.name === "Run")) &&
+        (!filters.Ruck ||
+          event.eventTypes.some((type) => type.name === "Ruck")) &&
+        (!filters.Swim ||
+          event.eventTypes.some((type) => type.name === "Swimming")) &&
+        (!filters.CSAUPs ||
+          event.eventTypes.some((type) => type.name === "CSAUPs")) &&
+        (!filters.Convergence ||
+          event.eventTypes.some((type) => type.name === "Convergence")) &&
+        (!filters.GTE || event.eventTypes.some((type) => type.name === "GTE"));
 
       // // Check if the after time filter matches the station's end time
       let includeThisLocationMarkerOnTime = true;

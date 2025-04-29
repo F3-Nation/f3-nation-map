@@ -436,63 +436,53 @@ export async function insertDatabaseStructure(
     .insert(schema.eventTypes)
     .values([
       {
-        id: 1,
         name: EventTypes.Bootcamp,
         acronym: "BC",
         eventCategory: "first_f",
       },
       {
-        id: 2,
         name: EventTypes.Run,
         acronym: "RU",
         eventCategory: "first_f",
       },
       {
-        id: 3,
         name: EventTypes.Ruck,
         acronym: "RK",
         eventCategory: "first_f",
       },
       {
-        id: 4,
         name: EventTypes.QSource,
         acronym: "QS",
         eventCategory: "third_f",
       },
       {
-        id: 5,
         name: EventTypes.Swimming,
         acronym: "SW",
         eventCategory: "first_f",
       },
 
       {
-        id: 6,
         name: EventTypes.Mobility,
         acronym: "MB",
         eventCategory: "first_f",
       },
       {
-        id: 7,
         name: EventTypes.Bike,
         acronym: "BK",
         eventCategory: "first_f",
       },
 
       {
-        id: 8,
         name: EventTypes.Gear,
         acronym: "GR",
         eventCategory: "first_f",
       },
       {
-        id: 9,
         name: EventTypes["Wild Card"],
         acronym: "WC",
         eventCategory: "first_f",
       },
       {
-        id: 10,
         name: EventTypes.Sports,
         acronym: "SP",
         eventCategory: "first_f",
@@ -540,7 +530,6 @@ export async function insertData(data: {
   const insertedNation = await db
     .insert(schema.orgs)
     .values({
-      id: 1,
       name: "F3 Nation",
       isActive: true,
       orgType: "nation",

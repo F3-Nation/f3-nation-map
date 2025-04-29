@@ -1,10 +1,11 @@
 "use client";
 
 import type { SortingState, TableOptions } from "@tanstack/react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { IsActiveStatus } from "@acme/shared/app/enums";
 import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
 import { Button } from "@acme/ui/button";
 import {
@@ -18,17 +19,33 @@ import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { WorkoutIsActiveFilter } from "./workout-is-active-table";
 
 export const WorkoutsTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { pagination, setPagination } = usePagination();
+  const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
+    "active",
+  ]);
   const [searchTerm, setSearchTerm] = useState("");
   const { data: workouts } = api.event.all.useQuery({
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     searchTerm: searchTerm,
     sorting: sorting,
+    statuses: selectedStatuses,
   });
+
+  const handleStatusSelect = useCallback((status: IsActiveStatus) => {
+    setSelectedStatuses((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      } else {
+        return [...prev, status];
+      }
+    });
+  }, []);
+
   return (
     <MDTable
       data={workouts?.events}
@@ -45,6 +62,12 @@ export const WorkoutsTable = () => {
       setSearchTerm={setSearchTerm}
       sorting={sorting}
       setSorting={setSorting}
+      filterComponent={
+        <WorkoutIsActiveFilter
+          onStatusSelect={handleStatusSelect}
+          selectedStatuses={selectedStatuses}
+        />
+      }
     />
   );
 };

@@ -44,8 +44,13 @@ export default function AdminAreasModal({
   data: DataType[ModalType.ADMIN_AREAS];
 }) {
   const utils = api.useUtils();
-  const { data: area } = api.area.byId.useQuery({ id: data.id ?? -1 });
-  const { data: sectors } = api.sector.all.useQuery();
+  const { data: area } = api.org.byId.useQuery({
+    id: data.id ?? -1,
+    orgType: "area",
+  });
+  const { data: sectors } = api.org.all.useQuery({
+    orgTypes: ["sector"],
+  });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,9 +93,9 @@ export default function AdminAreasModal({
     });
   }, [form, area]);
 
-  const crupdateArea = api.area.crupdate.useMutation({
+  const crupdateArea = api.org.crupdate.useMutation({
     onSuccess: async () => {
-      await utils.area.invalidate();
+      await utils.org.invalidate();
       closeModal();
       toast.success("Successfully updated area");
       router.refresh();
@@ -187,7 +192,7 @@ export default function AdminAreasModal({
                           <SelectValue placeholder="Select a sector" />
                         </SelectTrigger>
                         <SelectContent>
-                          {sectors
+                          {sectors?.orgs
                             ?.slice()
                             .sort((a, b) => a.name.localeCompare(b.name))
                             .map((sector) => (

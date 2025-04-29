@@ -41,6 +41,8 @@ export const TextSearchResultsProvider = ({
   children: React.ReactNode;
   regionsWithLocationData: RouterOutputs["location"]["getRegionsWithLocation"];
 }) => {
+  const { data: eventIdToRegionNameLookup } =
+    api.event.eventIdToRegionNameLookup.useQuery();
   const isMobileWidth = useIsMobileWidth();
   RERENDER_LOGS && console.log("TextSearchResultsProvider rerender");
   const { data: regions } = api.location.getRegionsWithLocation.useQuery(
@@ -116,6 +118,7 @@ export const TextSearchResultsProvider = ({
               logo: location.logo ?? "",
               item: { ...event, locationId: location.id },
               placeId: null,
+              regionName: eventIdToRegionNameLookup?.[event.id] ?? null,
             },
           };
           return searchResult;
@@ -145,7 +148,7 @@ export const TextSearchResultsProvider = ({
         })) ?? [],
       );
     });
-  }, [filteredLocationMarkers, regions, text]);
+  }, [filteredLocationMarkers, regions, text, eventIdToRegionNameLookup]);
 
   const combinedResults = useMemo(
     () =>

@@ -13,6 +13,7 @@ import {
   schema,
   sql,
 } from "@acme/db";
+import { IsActiveStatus } from "@acme/shared/app/enums";
 import { EventInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
@@ -27,6 +28,7 @@ export const eventRouter = createTRPCRouter({
           pageIndex: z.number().optional(),
           pageSize: z.number().optional(),
           searchTerm: z.string().optional(),
+          statuses: z.enum(["active", "inactive"]).array().optional(),
           sorting: z
             .array(z.object({ id: z.string(), desc: z.boolean() }))
             .optional(),
@@ -35,13 +37,18 @@ export const eventRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const regionOrg = aliasedTable(schema.orgs, "region_org");
-      const aoOrg = aliasedTable(schema.orgs, "ao_org");
+      const parentOrg = aliasedTable(schema.orgs, "parent_org");
       const limit = input?.pageSize ?? 10;
       const offset = (input?.pageIndex ?? 0) * limit;
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        eq(schema.events.isActive, true),
+        !input?.statuses?.length ||
+          input.statuses.length === IsActiveStatus.length
+          ? undefined
+          : input.statuses.includes("active")
+            ? eq(schema.events.isActive, true)
+            : eq(schema.events.isActive, false),
         input?.searchTerm
           ? or(
               ilike(schema.events.name, `%${input?.searchTerm}%`),
@@ -54,8 +61,8 @@ export const eventRouter = createTRPCRouter({
         switch (sorting.id) {
           case "regions":
             return direction(regionOrg.name);
-          case "location":
-            return direction(aoOrg.name);
+          case "parent":
+            return direction(parentOrg.name);
           case "status":
             return direction(schema.events.isActive);
           case "dayOfWeek":
@@ -72,7 +79,7 @@ export const eventRouter = createTRPCRouter({
         name: schema.events.name,
         description: schema.events.description,
         isActive: schema.events.isActive,
-        location: aoOrg.name,
+        parent: parentOrg.name,
         locationId: schema.events.locationId,
         startDate: schema.events.startDate,
         dayOfWeek: schema.events.dayOfWeek,
@@ -80,15 +87,15 @@ export const eventRouter = createTRPCRouter({
         endTime: schema.events.endTime,
         email: schema.events.email,
         created: schema.events.created,
-        aos: sql<{ aoId: number; aoName: string }[]>`COALESCE(
+        parents: sql<{ aoId: number; aoName: string }[]>`COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
-            'aoId', ${aoOrg.id}, 
-            'aoName', ${aoOrg.name}
+            'parentId', ${parentOrg.id}, 
+            'parentName', ${parentOrg.name}
           )
         ) 
         FILTER (
-          WHERE ${aoOrg.id} IS NOT NULL
+          WHERE ${parentOrg.id} IS NOT NULL
         ), 
         '[]'
       )`,
@@ -123,8 +130,11 @@ export const eventRouter = createTRPCRouter({
           eq(schema.locations.id, schema.events.locationId),
         )
         .leftJoin(
-          aoOrg,
-          and(eq(aoOrg.orgType, "ao"), eq(aoOrg.id, schema.events.orgId)),
+          parentOrg,
+          and(
+            eq(parentOrg.orgType, "ao"),
+            eq(parentOrg.id, schema.events.orgId),
+          ),
         )
         .leftJoin(
           regionOrg,
@@ -133,11 +143,11 @@ export const eventRouter = createTRPCRouter({
             or(
               eq(regionOrg.id, schema.locations.orgId),
               eq(regionOrg.id, schema.events.orgId),
-              eq(regionOrg.id, aoOrg.parentId),
+              eq(regionOrg.id, parentOrg.parentId),
             ),
           ),
         )
-        .groupBy(schema.events.id, aoOrg.id, regionOrg.id)
+        .groupBy(schema.events.id, parentOrg.id, regionOrg.id)
         .where(where);
 
       const events = usePagination
@@ -242,6 +252,13 @@ export const eventRouter = createTRPCRouter({
   crupdate: editorProcedure
     .input(EventInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
+      const [existingEvent] = input.id
+        ? await ctx.db
+            .select()
+            .from(schema.events)
+            .where(eq(schema.events.id, input.id))
+        : [];
+
       const orgIdToCheck = input.aoId ?? input.regionId;
       if (!orgIdToCheck) {
         throw new TRPCError({
@@ -250,7 +267,7 @@ export const eventRouter = createTRPCRouter({
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: orgIdToCheck,
+        orgId: existingEvent?.orgId ?? orgIdToCheck,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",
@@ -262,7 +279,7 @@ export const eventRouter = createTRPCRouter({
         });
       }
 
-      const { eventTypeId, meta, ...eventData } = input;
+      const { eventTypeIds, meta, ...eventData } = input;
       const eventToUpdate: typeof schema.events.$inferInsert = {
         ...eventData,
         orgId: input.aoId,
@@ -292,21 +309,61 @@ export const eventRouter = createTRPCRouter({
       }
 
       // Handle event type in join table
-      if (eventTypeId) {
+      if (eventTypeIds) {
         await ctx.db
           .delete(schema.eventsXEventTypes)
           .where(eq(schema.eventsXEventTypes.eventId, result.id));
 
-        await ctx.db.insert(schema.eventsXEventTypes).values({
-          eventId: result.id,
-          eventTypeId,
-        });
+        await ctx.db.insert(schema.eventsXEventTypes).values(
+          eventTypeIds.map((eventTypeId) => ({
+            eventId: result.id,
+            eventTypeId,
+          })),
+        );
       }
 
       return result;
     }),
   types: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.select().from(schema.eventTypes);
+  }),
+  eventIdToRegionNameLookup: publicProcedure.query(async ({ ctx }) => {
+    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const parentOrg = aliasedTable(schema.orgs, "parent_org");
+    const result = await ctx.db
+      .select({
+        eventId: schema.events.id,
+        regionName: regionOrg.name,
+      })
+      .from(schema.events)
+      .leftJoin(parentOrg, eq(schema.events.orgId, parentOrg.id))
+      .leftJoin(
+        regionOrg,
+        or(
+          and(
+            eq(schema.events.orgId, regionOrg.id),
+            eq(regionOrg.orgType, "region"),
+          ),
+          and(
+            eq(parentOrg.orgType, "ao"),
+            eq(parentOrg.parentId, regionOrg.id),
+            eq(regionOrg.orgType, "region"),
+          ),
+        ),
+      )
+      .groupBy(schema.events.id, regionOrg.id);
+
+    const lookup = result.reduce(
+      (acc, curr) => {
+        if (curr.regionName) {
+          acc[curr.eventId] = curr.regionName;
+        }
+        return acc;
+      },
+      {} as Record<number, string>,
+    );
+
+    return lookup;
   }),
   delete: editorProcedure
     .input(z.object({ id: z.number() }))

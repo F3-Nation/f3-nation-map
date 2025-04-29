@@ -47,8 +47,11 @@ export default function AdminAOsModal({
   data: DataType[ModalType.ADMIN_AOS];
 }) {
   const utils = api.useUtils();
-  const { data: ao } = api.ao.byId.useQuery({ id: data.id ?? -1 });
-  const { data: regions } = api.region.all.useQuery();
+  const { data: ao } = api.org.byId.useQuery({
+    id: data.id ?? -1,
+    orgType: "ao",
+  });
+  const { data: regions } = api.org.all.useQuery({ orgTypes: ["region"] });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,10 +74,11 @@ export default function AdminAOsModal({
       instagram: ao?.instagram ?? null,
       lastAnnualReview: ao?.lastAnnualReview ?? null,
       meta: ao?.meta ?? null,
+      orgType: "ao",
     });
   }, [form, ao]);
 
-  const crupdateAO = api.ao.crupdate.useMutation();
+  const crupdateAO = api.org.crupdate.useMutation();
 
   return (
     <Dialog open={true} onOpenChange={() => closeModal()}>
@@ -94,7 +98,7 @@ export default function AdminAOsModal({
                 await crupdateAO
                   .mutateAsync(data)
                   .then(() => {
-                    void utils.ao.invalidate();
+                    void utils.org.invalidate();
                     closeModal();
                     toast.success("Successfully updated ao");
                     router.refresh();
@@ -163,10 +167,12 @@ export default function AdminAOsModal({
                       <VirtualizedCombobox
                         value={field.value?.toString()}
                         options={
-                          regions?.map((region) => ({
-                            value: region.id.toString(),
-                            label: region.name,
-                          })) ?? []
+                          regions?.orgs
+                            .filter((org) => org.orgType === "region")
+                            .map((region) => ({
+                              value: region.id.toString(),
+                              label: region.name,
+                            })) ?? []
                         }
                         searchPlaceholder="Select a region"
                         onSelect={(value) => {
@@ -375,8 +381,9 @@ export default function AdminAOsModal({
                         form.setValue("name", "Fake AO");
                         form.setValue(
                           "parentId",
-                          regions?.[Math.floor(Math.random() * regions.length)]
-                            ?.id ?? -1,
+                          regions?.orgs?.[
+                            Math.floor(Math.random() * regions?.orgs.length)
+                          ]?.id ?? -1,
                         );
                         form.setValue("website", "https://fakeao.com");
                         form.setValue("email", "fakeao@example.com");

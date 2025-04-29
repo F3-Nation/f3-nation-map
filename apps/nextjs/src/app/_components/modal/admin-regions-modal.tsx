@@ -49,8 +49,11 @@ export default function AdminRegionsModal({
   data: DataType[ModalType.ADMIN_REGIONS];
 }) {
   const utils = api.useUtils();
-  const { data: region } = api.region.byId.useQuery({ id: data.id ?? -1 });
-  const { data: areas } = api.area.all.useQuery();
+  const { data: region } = api.org.byId.useQuery({
+    id: data.id ?? -1,
+    orgType: "region",
+  });
+  const { data: areas } = api.org.all.useQuery({ orgTypes: ["area"] });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -96,9 +99,9 @@ export default function AdminRegionsModal({
     });
   }, [form, region]);
 
-  const crupdateRegion = api.region.crupdate.useMutation({
+  const crupdateRegion = api.org.crupdate.useMutation({
     onSuccess: async () => {
-      await utils.region.invalidate();
+      await utils.org.invalidate();
       closeModal();
       toast.success("Successfully updated region");
       router.refresh();
@@ -210,7 +213,7 @@ export default function AdminRegionsModal({
                           <SelectValue placeholder="Select an area" />
                         </SelectTrigger>
                         <SelectContent>
-                          {areas
+                          {areas?.orgs
                             ?.slice()
                             .sort((a, b) => a.name.localeCompare(b.name))
                             .map((area) => (

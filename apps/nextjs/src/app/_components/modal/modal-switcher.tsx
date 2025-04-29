@@ -12,6 +12,7 @@ import AdminAOsModal from "./admin-aos-modal";
 import AdminAreasModal from "./admin-areas-modal";
 import AdminDeleteModal from "./admin-delete-modal";
 import AdminDeleteRequestModal from "./admin-delete-request-modal";
+import AdminEventTypesModal from "./admin-event-types-modal";
 import AdminLocationsModal from "./admin-locations-modal";
 import AdminNationsModal from "./admin-nations-modal";
 import AdminRegionsModal from "./admin-regions-modal";
@@ -65,6 +66,12 @@ export const ModalSwitcher = () => {
     case ModalType.ADMIN_EVENTS:
       return (
         <AdminWorkoutsModal data={data as DataType[ModalType.ADMIN_EVENTS]} />
+      );
+    case ModalType.ADMIN_EVENT_TYPES:
+      return (
+        <AdminEventTypesModal
+          data={data as DataType[ModalType.ADMIN_EVENT_TYPES]}
+        />
       );
     case ModalType.ADMIN_LOCATIONS:
       return (

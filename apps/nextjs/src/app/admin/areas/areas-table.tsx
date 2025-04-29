@@ -19,7 +19,7 @@ import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 export const AreasTable = ({
   areas,
 }: {
-  areas: RouterOutputs["area"]["all"];
+  areas: RouterOutputs["org"]["all"]["orgs"];
 }) => {
   return (
     <MDTable
@@ -39,7 +39,9 @@ export const AreasTable = ({
   );
 };
 
-const columns: TableOptions<RouterOutputs["area"]["all"][number]>["columns"] = [
+const columns: TableOptions<
+  RouterOutputs["org"]["all"]["orgs"][number]
+>["columns"] = [
   {
     accessorKey: "name",
     meta: { name: "Area" },

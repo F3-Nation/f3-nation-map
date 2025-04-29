@@ -42,7 +42,6 @@ export const regionRouter = createTRPCRouter({
 
     return regions;
   }),
-
   byId: editorProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -54,11 +53,17 @@ export const regionRouter = createTRPCRouter({
         );
       return { ...region };
     }),
-
   crupdate: editorProcedure
     .input(RegionInsertSchema.partial({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      const orgIdToCheck = input.id ?? input.parentId;
+      const [existingRegion] = input.id
+        ? await ctx.db
+            .select()
+            .from(schema.orgs)
+            .where(eq(schema.orgs.id, input.id))
+        : [];
+
+      const orgIdToCheck = existingRegion?.id ?? input.parentId;
       if (!orgIdToCheck) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -66,7 +71,7 @@ export const regionRouter = createTRPCRouter({
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: orgIdToCheck,
+        orgId: existingRegion?.id ?? orgIdToCheck,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",

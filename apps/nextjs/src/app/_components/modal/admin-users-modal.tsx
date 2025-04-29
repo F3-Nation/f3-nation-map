@@ -52,7 +52,9 @@ export default function UserModal({
   const { data: session, update } = useSession();
   const utils = api.useUtils();
   const { data: user } = api.user.byId.useQuery({ id: data.id ?? -1 });
-  const { data: orgs } = api.nation.allOrgs.useQuery();
+  const { data: orgs } = api.org.all.useQuery({
+    orgTypes: ["region", "area", "sector", "nation"], // not ao
+  });
   const router = useRouter();
 
   const form = useForm({
@@ -321,7 +323,7 @@ export default function UserModal({
                               <VirtualizedCombobox
                                 value={roleEntry.orgId.toString()}
                                 options={
-                                  orgs?.map((region) => ({
+                                  orgs?.orgs.map((region) => ({
                                     value: region.id.toString(),
                                     label: `${region.name} (${region.orgType})`,
                                   })) ?? []

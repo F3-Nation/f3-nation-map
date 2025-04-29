@@ -6,7 +6,7 @@ import { AddAreaButton } from "./[id]/add-area-button";
 import { AreasTable } from "./areas-table";
 
 const AreasPage = async () => {
-  const areas = await api.area.all();
+  const { orgs: areas } = await api.org.all({ orgTypes: ["area"] });
 
   return (
     <Layout>
@@ -18,7 +18,7 @@ const AreasPage = async () => {
           </div>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex  w-full  flex-col overflow-auto">
+          <div className="flex w-full flex-col overflow-hidden">
             <AreasTable areas={areas} />
           </div>
         </Suspense>

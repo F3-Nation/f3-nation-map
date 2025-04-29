@@ -57,7 +57,10 @@ const EventInsertForm = EventInsertSchema.extend({
   endTime: z.string().regex(/^\d{2}:\d{2}$/, {
     message: "End time must be in 24hr format (HH:mm)",
   }),
-  eventTypeId: z.string().min(1, { message: "Event type is required" }),
+  eventTypeIds: z
+    .number()
+    .array()
+    .min(1, { message: "Event type is required" }),
   startDate: z.string().min(1, { message: "Start date is required" }),
   dayOfWeek: z.enum(DayOfWeek, {
     message: "Day of week is required",
@@ -71,9 +74,9 @@ export default function AdminWorkoutsModal({
   data: DataType[ModalType.ADMIN_EVENTS];
 }) {
   const utils = api.useUtils();
-  const { data: regions } = api.region.all.useQuery();
+  const { data: regions } = api.org.all.useQuery({ orgTypes: ["region"] });
   const { data: locations } = api.location.all.useQuery();
-  const { data: aos } = api.ao.all.useQuery();
+  const { data: aos } = api.org.all.useQuery({ orgTypes: ["ao"] });
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
   const { data: eventTypes } = api.event.types.useQuery();
   const router = useRouter();
@@ -97,10 +100,11 @@ export default function AdminWorkoutsModal({
       highlight: event?.highlight ?? false,
       regionId: event?.regions?.[0]?.regionId ?? undefined,
       aoId: event?.aos?.[0]?.aoId ?? undefined,
-      eventTypeId: event?.eventTypes?.[0]?.eventTypeId?.toString() ?? undefined,
+      eventTypeIds: event?.eventTypes?.map((et) => et.eventTypeId),
       meta: {
         mapSeed: event?.meta?.mapSeed ?? false,
       },
+      description: event?.description ?? "",
     });
   }, [form, event]);
 
@@ -122,10 +126,12 @@ export default function AdminWorkoutsModal({
 
   const onSubmit = async (data: EventInsertFormType) => {
     // Validate times
-    const eventTypeId = safeParseInt(data.eventTypeId);
-    if (!eventTypeId) {
-      form.setError("eventTypeId", { message: "Event type is required" });
-      toast.error("Event type is required");
+    const eventTypeIds = data.eventTypeIds;
+    if (!eventTypeIds.length) {
+      form.setError("eventTypeIds", {
+        message: "At least one event type is required",
+      });
+      toast.error("At least one event type is required");
       return;
     }
 
@@ -160,7 +166,6 @@ export default function AdminWorkoutsModal({
     try {
       await crupdateEvent.mutateAsync({
         ...data,
-        eventTypeId,
         startTime: convertHH_mmToHHmm(startTime),
         endTime: convertHH_mmToHHmm(endTime),
       });
@@ -229,7 +234,7 @@ export default function AdminWorkoutsModal({
                       <VirtualizedCombobox
                         value={field.value?.toString()}
                         options={
-                          regions?.map((region) => ({
+                          regions?.orgs?.map((region) => ({
                             value: region.id.toString(),
                             label: region.name,
                           })) ?? []
@@ -255,7 +260,7 @@ export default function AdminWorkoutsModal({
                   control={form.control}
                   name="aoId"
                   render={({ field }) => {
-                    const filteredAOs = aos?.aos.filter(
+                    const filteredAOs = aos?.orgs.filter(
                       (ao) => ao.parentId === form.watch("regionId"),
                     );
                     return (
@@ -267,7 +272,7 @@ export default function AdminWorkoutsModal({
                             const aoId = safeParseInt(value);
                             field.onChange(aoId);
 
-                            const selectedAO = aos?.aos.find(
+                            const selectedAO = aos?.orgs.find(
                               (ao) => ao.id === aoId,
                             );
                             if (!selectedAO) {
@@ -418,15 +423,34 @@ export default function AdminWorkoutsModal({
                 />
               </div>
               <div className="mb-4 w-1/2 px-2">
-                <ControlledSelect
+                <FormField
                   control={form.control}
-                  placeholder="Select an event type"
-                  name="eventTypeId"
-                  label="Event Type"
-                  options={eventTypes?.map((type) => ({
-                    value: type.id.toString(),
-                    label: type.name,
-                  }))}
+                  name="eventTypeIds"
+                  render={({ field }) => (
+                    <FormItem key={`eventTypeIds`}>
+                      <FormLabel>Event Types</FormLabel>
+                      <VirtualizedCombobox
+                        value={field.value?.map(String)}
+                        options={
+                          eventTypes?.map((type) => ({
+                            value: type.id.toString(),
+                            label: type.name,
+                          })) ?? []
+                        }
+                        searchPlaceholder="Select event types"
+                        onSelect={(value) => {
+                          if (!Array.isArray(value)) {
+                            toast.error("Invalid event type");
+                            return;
+                          }
+                          const eventTypeIds = value.map(safeParseInt);
+                          field.onChange(eventTypeIds);
+                        }}
+                        isMulti={true}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               <div className="mb-4 w-1/2 px-2">

@@ -102,21 +102,6 @@ export const MobileNearbyLocationsItem = (props: {
               );
             })}
           </div>
-          {/* {searchResult.locationDescription ? (
-            <Link
-              href={`https://maps.google.com/?q=${encodeURIComponent(searchResult.locationDescription)}`}
-              target="_blank"
-              className="underline"
-            >
-              <p className="line-clamp-1">{searchResult.locationDescription}</p>
-            </Link>
-          ) : null}
-          {searchResult.events[0]?.description ? (
-            <div className="line-clamp-2">
-              <span className="font-semibold">Notes: </span>
-              {searchResult.events[0]?.description}
-            </div>
-          ) : null} */}
         </div>
       </div>
     </button>

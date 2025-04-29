@@ -9,7 +9,7 @@ import { sendVerificationRequest } from "./send-verification-request";
 export const POST = async (req: NextRequest) => {
   const { identifier, url, server, from, apiKey, token } =
     (await req.json()) as SendVerificationRequestServerParams;
-  if (apiKey !== env.API_KEY) {
+  if (apiKey !== env.SUPER_ADMIN_API_KEY) {
     return NextResponse.json({ success: false }, { status: 401 });
   }
 
