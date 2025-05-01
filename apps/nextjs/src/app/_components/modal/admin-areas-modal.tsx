@@ -125,7 +125,7 @@ export default function AdminAreasModal({
               async (data) => {
                 setIsSubmitting(true);
                 try {
-                  await crupdateArea.mutateAsync(data);
+                  await crupdateArea.mutateAsync({ ...data, orgType: "area" });
                 } catch (error) {
                   toast.error("Failed to update area");
                   console.error(error);

@@ -74,7 +74,6 @@ export default function AdminAOsModal({
       instagram: ao?.instagram ?? null,
       lastAnnualReview: ao?.lastAnnualReview ?? null,
       meta: ao?.meta ?? null,
-      orgType: "ao",
     });
   }, [form, ao]);
 
@@ -96,7 +95,7 @@ export default function AdminAOsModal({
               async (data) => {
                 setIsSubmitting(true);
                 await crupdateAO
-                  .mutateAsync(data)
+                  .mutateAsync({ ...data, orgType: "ao" })
                   .then(() => {
                     void utils.org.invalidate();
                     closeModal();

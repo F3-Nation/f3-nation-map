@@ -146,7 +146,10 @@ export default function AdminRegionsModal({
               async (data) => {
                 setIsSubmitting(true);
                 try {
-                  await crupdateRegion.mutateAsync(data);
+                  await crupdateRegion.mutateAsync({
+                    ...data,
+                    orgType: "region",
+                  });
                 } catch (error) {
                   toast.error("Failed to update region");
                   console.error(error);
