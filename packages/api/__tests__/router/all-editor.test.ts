@@ -801,6 +801,10 @@ describe("all editor routers", () => {
       const request = await caller.request.submitUpdateRequest(requestData);
       expect(request.status).toBe("pending");
 
+      if (!request.updateRequest.id) {
+        throw new Error("Request ID is undefined");
+      }
+
       // Then reject it
       await callerWithPermissions.request.rejectSubmission({
         id: request.updateRequest.id,

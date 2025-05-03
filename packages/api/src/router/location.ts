@@ -354,7 +354,6 @@ export const locationRouter = createTRPCRouter({
       const location = results[0]?.location;
       const events = results.map((r) => r.event);
 
-      console.log("location", location);
       if (location?.lat == null || location?.lon == null) {
         throw new TRPCError({
           code: "NOT_FOUND",

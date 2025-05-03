@@ -7,6 +7,8 @@ import { isProd, isTestMode } from "./utils";
 
 const ALLOW_MTNDEV_OVERRIDE = false as boolean;
 
+const LOG = false as boolean;
+
 export const checkHasRoleOnOrg = async ({
   session,
   orgId,
@@ -23,14 +25,15 @@ export const checkHasRoleOnOrg = async ({
   roleName: UserRole | null;
   mode: "mtndev-override" | "direct-permission" | "org-admin" | "no-permission";
 }> => {
-  console.log(
-    "Checking if user has role on org",
-    session.id,
-    orgId,
-    roleName,
-    "roles",
-    session.roles,
-  );
+  if (LOG)
+    console.log(
+      "Checking if user has role on org",
+      session.id,
+      orgId,
+      roleName,
+      "roles",
+      session.roles,
+    );
 
   // F3 Nation
   if (
@@ -94,8 +97,6 @@ export const checkHasRoleOnOrg = async ({
     o.level4Id,
     o.level5Id,
   ]) as number[];
-
-  console.log("allAncestorOrgIds", allAncestorOrgIds);
 
   const matchingPermission = session.roles?.find(
     (r) =>

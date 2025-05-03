@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import omit from "lodash/omit";
@@ -6,6 +5,10 @@ import { z } from "zod";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
 import type { EventMeta, UpdateRequestMeta } from "@acme/shared/app/types";
+import type {
+  DeleteRequestResponse,
+  UpdateRequestResponse,
+} from "@acme/validators";
 import {
   aliasedTable,
   and,
@@ -522,31 +525,30 @@ export const requestRouter = createTRPCRouter({
 
 export const applyDeleteRequest = async (
   ctx: Context,
-  updateRequest: Partial<z.infer<typeof RequestInsertSchema>>,
-) => {
-  if (updateRequest.eventId != undefined) {
+  deleteRequest: Partial<z.infer<typeof RequestInsertSchema>>,
+): Promise<DeleteRequestResponse> => {
+  if (deleteRequest.eventId != undefined) {
     await ctx.db
       .update(schema.updateRequests)
       .set({ eventId: null })
-      .where(eq(schema.updateRequests.eventId, updateRequest.eventId));
+      .where(eq(schema.updateRequests.eventId, deleteRequest.eventId));
     await ctx.db
       .delete(schema.eventsXEventTypes)
-      .where(eq(schema.eventsXEventTypes.eventId, updateRequest.eventId));
+      .where(eq(schema.eventsXEventTypes.eventId, deleteRequest.eventId));
     await ctx.db
       .delete(schema.events)
-      .where(eq(schema.events.id, updateRequest.eventId));
-  } else if (updateRequest.locationId != undefined) {
+      .where(eq(schema.events.id, deleteRequest.eventId));
+  } else if (deleteRequest.locationId != undefined) {
     await ctx.db
       .delete(schema.locations)
-      .where(eq(schema.locations.id, updateRequest.locationId));
+      .where(eq(schema.locations.id, deleteRequest.locationId));
   } else {
     throw new Error("Nothing to delete");
   }
 
-  revalidatePath("/");
   return {
     status: "approved" as const,
-    updateRequest: omit(updateRequest, ["token"]),
+    deleteRequest: omit(deleteRequest, ["token"]),
   };
 };
 
@@ -561,14 +563,10 @@ export const applyUpdateRequest = async (
     eventMeta?: EventMeta | null;
     eventDayOfWeek?: DayOfWeek | null;
   },
-): Promise<{
-  status: "approved" | "rejected" | "pending";
-  updateRequest: Omit<typeof schema.updateRequests.$inferSelect, "token">;
-}> => {
+): Promise<UpdateRequestResponse> => {
   // LOCATION
   if (updateRequest.locationId == undefined) {
     // INSERT LOCATION
-    console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
       name: updateRequest.locationName ?? "",
       description: updateRequest.locationDescription ?? "",
@@ -594,7 +592,6 @@ export const applyUpdateRequest = async (
     }
     updateRequest.locationId = location.id;
   } else {
-    console.log("updating location", updateRequest);
     const [location] = await ctx.db
       .update(schema.locations)
       .set({
@@ -662,7 +659,6 @@ export const applyUpdateRequest = async (
     reviewedAt: new Date().toISOString(),
   };
 
-  console.log("inserting update request", updateRequestInsertData);
   const [updated] = await ctx.db
     .insert(schema.updateRequests)
     .values(updateRequestInsertData)
@@ -753,7 +749,6 @@ export const applyUpdateRequest = async (
     })) ?? [],
   );
 
-  revalidatePath("/");
   return {
     status: "approved",
     updateRequest: omit(updated, ["token"]),

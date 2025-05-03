@@ -224,3 +224,17 @@ export const SortingSchema = z
   .array();
 
 export type SortingSchema = z.infer<typeof SortingSchema>;
+
+export const UpdateRequestResponseSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]),
+  updateRequest: createInsertSchema(updateRequests),
+});
+
+export type UpdateRequestResponse = z.infer<typeof UpdateRequestResponseSchema>;
+
+export const DeleteRequestResponseSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]),
+  deleteRequest: createInsertSchema(updateRequests).deepPartial(),
+});
+
+export type DeleteRequestResponse = z.infer<typeof DeleteRequestResponseSchema>;
