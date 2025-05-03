@@ -122,6 +122,7 @@ export default function AdminNationsModal({
                   await crupdateNation.mutateAsync({
                     ...data,
                     parentId: undefined,
+                    orgType: "nation",
                   });
                 } catch (error) {
                   toast.error("Failed to update nation");

@@ -310,7 +310,10 @@ export const locationRouter = createTRPCRouter({
         .from(schema.locations)
         .innerJoin(
           schema.events,
-          eq(schema.locations.id, schema.events.locationId),
+          and(
+            eq(schema.locations.id, schema.events.locationId),
+            eq(schema.events.isActive, true),
+          ),
         )
         .leftJoin(parentOrg, eq(schema.events.orgId, parentOrg.id))
         .leftJoin(
@@ -335,7 +338,12 @@ export const locationRouter = createTRPCRouter({
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
-        .where(eq(schema.locations.id, input.locationId))
+        .where(
+          and(
+            eq(schema.locations.id, input.locationId),
+            eq(schema.events.isActive, true),
+          ),
+        )
         .groupBy(
           schema.locations.id,
           schema.events.id,

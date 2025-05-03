@@ -188,7 +188,6 @@ export const orgRouter = createTRPCRouter({
 
       const orgToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgType: input.orgType,
         meta: {
           ...(input.meta as Record<string, string>),
         },

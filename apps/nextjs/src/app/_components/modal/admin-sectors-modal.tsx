@@ -121,7 +121,10 @@ export default function AdminSectorsModal({
               async (data) => {
                 setIsSubmitting(true);
                 try {
-                  await crupdateSector.mutateAsync(data);
+                  await crupdateSector.mutateAsync({
+                    ...data,
+                    orgType: "sector",
+                  });
                 } catch (error) {
                   toast.error("Failed to update sector");
                   console.error(error);

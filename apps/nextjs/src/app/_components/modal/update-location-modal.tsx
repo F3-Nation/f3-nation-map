@@ -231,7 +231,7 @@ export const UpdateLocationModal = ({
                   "Save Changes"
                 )}
               </Button>
-              {canEditRegion ? (
+              {canEditRegion?.success ? (
                 <div className="mb-2 text-center text-xs text-destructive">
                   Since you can edit this region, these changes will be
                   reflected immediately
