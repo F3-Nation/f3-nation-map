@@ -30,6 +30,7 @@ import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getEditableOrgIdsForUser } from "../get-editable-org-ids";
 import { getSortingColumns } from "../get-sorting-columns";
+import { notifyMapChangeRequest } from "../services/map-request-notification";
 import {
   createTRPCRouter,
   editorProcedure,
@@ -297,6 +298,19 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Unable to create a new request");
       }
 
+      // Notify admins and editors about the new delete request
+      if (request.status === "pending") {
+        try {
+          await notifyMapChangeRequest({
+            db: ctx.db,
+            requestId: request.id,
+          });
+        } catch (error) {
+          console.error("Failed to send notification", { error });
+          // Don't fail the request if notification fails
+        }
+      }
+
       return {
         status: "pending",
         updateRequest: request,
@@ -403,25 +417,18 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Failed to find region");
       }
 
-      // Not sending emails for now
-      // const eventNames = await ctx.db
-      //   .select({ name: schema.eventTypes.name })
-      //   .from(schema.eventTypes)
-      //   .where(inArray(schema.eventTypes.id, input.eventTypeIds ?? []));
-
-      // await mail.sendTemplateMessages(Templates.validateSubmission, {
-      //   to: input.submittedBy,
-      //   submissionId: inserted.id,
-      //   token: inserted.token,
-      //   regionName: region?.name,
-      //   eventName: inserted.eventName,
-      //   address: inserted.locationDescription ?? "",
-      //   startTime: inserted.eventStartTime ?? "",
-      //   endTime: inserted.eventEndTime ?? "",
-      //   dayOfWeek: inserted.eventDayOfWeek ?? "",
-      //   types: eventNames?.map((type) => type.name).join(", ") ?? "",
-      //   url: env.NEXT_PUBLIC_URL,
-      // });
+      // Notify admins and editors about the new request
+      if (inserted.status === "pending") {
+        try {
+          await notifyMapChangeRequest({
+            db: ctx.db,
+            requestId: inserted.id,
+          });
+        } catch (error) {
+          console.error("Failed to send notification", { error });
+          // Don't fail the request if notification fails
+        }
+      }
 
       return {
         status: "pending" as const,

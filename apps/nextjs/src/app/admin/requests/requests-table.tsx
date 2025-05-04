@@ -42,7 +42,7 @@ const requestTableStore = new ZustandStore({
   persistOptions: {
     name: "request-table-store",
     version: 1,
-    persistedKeys: ["searchTerm", "onlyMine", "sorting"],
+    persistedKeys: [],
     getStorage: () => localStorage,
   },
 });
