@@ -392,41 +392,37 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
               </Button>
             </div>
             {/* ability to select the size of the page */}
-            {table.getRowCount() > pagination.pageSize ? (
-              <div className="flex flex-row items-center gap-2">
-                <div className="pointer-events-none flex-shrink-0">
-                  Page size
-                </div>
-                <Select
-                  value={pagination.pageSize.toString()}
-                  onValueChange={(value) => {
-                    const pageSize = safeParseInt(value);
-                    if (pageSize !== undefined) {
-                      table.setPageSize(pageSize);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="mr-2 rounded-md bg-transparent px-1 focus:ring-0">
-                    <SelectValue>
-                      <strong>{pagination.pageSize}</strong>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="z-10" position="popper">
-                    {(paginationOptions?.pageSizeOptions ?? [10, 20, 50])?.map(
-                      (size) => (
-                        <SelectItem
-                          key={size}
-                          className="flex cursor-pointer justify-center rounded-md px-4 py-1 text-lg font-semibold hover:bg-emerald-100"
-                          value={size.toString()}
-                        >
-                          {size}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
+            <div className="flex flex-row items-center gap-2">
+              <div className="pointer-events-none flex-shrink-0">Page size</div>
+              <Select
+                value={pagination.pageSize.toString()}
+                onValueChange={(value) => {
+                  const pageSize = safeParseInt(value);
+                  if (pageSize !== undefined) {
+                    table.setPageSize(pageSize);
+                  }
+                }}
+              >
+                <SelectTrigger className="mr-2 rounded-md bg-transparent px-1 focus:ring-0">
+                  <SelectValue>
+                    <strong>{pagination.pageSize}</strong>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="z-10" position="popper">
+                  {(paginationOptions?.pageSizeOptions ?? [10, 20, 50])?.map(
+                    (size) => (
+                      <SelectItem
+                        key={size}
+                        className="flex cursor-pointer justify-center rounded-md px-4 py-1 text-lg font-semibold hover:bg-emerald-100"
+                        value={size.toString()}
+                      >
+                        {size}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         ) : null}
         {isReloading && (

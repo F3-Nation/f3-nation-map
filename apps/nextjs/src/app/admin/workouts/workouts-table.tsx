@@ -19,11 +19,17 @@ import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { AOSFilter } from "../_components/ao-filter";
+import { RegionFilter } from "../_components/region-filter";
 import { WorkoutIsActiveFilter } from "./workout-is-active-table";
+
+type Org = RouterOutputs["org"]["all"]["orgs"][number];
 
 export const WorkoutsTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { pagination, setPagination } = usePagination();
+  const [selectedRegions, setSelectedRegions] = useState<Org[]>([]);
+  const [selectedAos, setSelectedAos] = useState<Org[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
     "active",
   ]);
@@ -34,6 +40,8 @@ export const WorkoutsTable = () => {
     searchTerm: searchTerm,
     sorting: sorting,
     statuses: selectedStatuses,
+    regionIds: selectedRegions.map((region) => region.id),
+    aoIds: selectedAos.map((ao) => ao.id),
   });
 
   const handleStatusSelect = useCallback((status: IsActiveStatus) => {
@@ -63,10 +71,30 @@ export const WorkoutsTable = () => {
       sorting={sorting}
       setSorting={setSorting}
       filterComponent={
-        <WorkoutIsActiveFilter
-          onStatusSelect={handleStatusSelect}
-          selectedStatuses={selectedStatuses}
-        />
+        <>
+          <AOSFilter
+            onAoSelect={(ao) => {
+              const newAos = selectedAos.includes(ao)
+                ? selectedAos.filter((a) => a !== ao)
+                : [...selectedAos, ao];
+              setSelectedAos(newAos);
+            }}
+            selectedAos={selectedAos}
+          />
+          <RegionFilter
+            onRegionSelect={(region) => {
+              const newRegions = selectedRegions.includes(region)
+                ? selectedRegions.filter((r) => r !== region)
+                : [...selectedRegions, region];
+              setSelectedRegions(newRegions);
+            }}
+            selectedRegions={selectedRegions}
+          />
+          <WorkoutIsActiveFilter
+            onStatusSelect={handleStatusSelect}
+            selectedStatuses={selectedStatuses}
+          />
+        </>
       }
     />
   );
@@ -90,6 +118,17 @@ const columns: TableOptions<
         {cell.row.original.regions
           .map((region) => region.regionName)
           .join(", ")}
+      </Cell>
+    ),
+  },
+  {
+    accessorKey: "ao",
+    meta: { name: "AO" },
+    header: Header,
+    cell: (cell) => (
+      <Cell {...cell}>
+        {/* {cell.row.original.parents.map((ao) => ao.aoName).join(", ")} */}
+        {cell.row.original.parent}
       </Cell>
     ),
   },

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { SortingSchema } from "@acme/validators";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -15,17 +16,25 @@ import {
 import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
+import { RegionFilter } from "~/app/admin/_components/region-filter";
 import { api } from "~/trpc/react";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+
+type Org = RouterOutputs["org"]["all"]["orgs"][number];
 
 export const AOsTable = () => {
   const { pagination, setPagination } = usePagination();
   const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingSchema>([]);
+  const [selectedRegions, setSelectedRegions] = useState<Org[]>([]);
+
   const { data: aos } = api.org.all.useQuery({
     orgTypes: ["ao"],
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     searchTerm: searchTerm,
+    sorting: sorting,
+    parentOrgIds: selectedRegions.map((region) => region.id),
   });
   return (
     <MDTable
@@ -42,11 +51,19 @@ export const AOsTable = () => {
       setPagination={setPagination}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
-      // rowClassName={(row) => {
-      //   if (row.original.submitterValidated === true) {
-      //     return "opacity-30";
-      //   }
-      // }}
+      sorting={sorting}
+      setSorting={setSorting}
+      filterComponent={
+        <RegionFilter
+          onRegionSelect={(region) => {
+            const newRegions = selectedRegions.includes(region)
+              ? selectedRegions.filter((r) => r !== region)
+              : [...selectedRegions, region];
+            setSelectedRegions(newRegions);
+          }}
+          selectedRegions={selectedRegions}
+        />
+      }
     />
   );
 };
@@ -56,18 +73,21 @@ const columns: TableOptions<
 >["columns"] = [
   {
     accessorKey: "name",
-    size: 20,
-    maxSize: 20,
-    minSize: 20,
-    meta: { name: "AO" },
+    meta: { name: "Name" },
     header: Header,
     cell: (cell) => <Cell {...cell} />,
   },
   {
-    accessorKey: "region",
+    accessorKey: "parentOrgName",
     meta: { name: "Region" },
     header: Header,
-    cell: (cell) => <Cell {...cell} />,
+    cell: (cell) => (
+      <Cell>
+        {cell.row.original.parentOrgType === "region"
+          ? cell.row.original.parentOrgName
+          : ""}
+      </Cell>
+    ),
   },
   {
     accessorKey: "isActive",
