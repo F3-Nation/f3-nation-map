@@ -9,6 +9,7 @@ import {
   desc,
   eq,
   ilike,
+  inArray,
   or,
   schema,
   sql,
@@ -16,6 +17,7 @@ import {
 import { IsActiveStatus } from "@acme/shared/app/enums";
 import { EventInsertSchema } from "@acme/validators";
 
+import { getFullAddress } from "../../../shared/src/app/functions";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
@@ -32,6 +34,8 @@ export const eventRouter = createTRPCRouter({
           sorting: z
             .array(z.object({ id: z.string(), desc: z.boolean() }))
             .optional(),
+          regionIds: z.number().array().optional(),
+          aoIds: z.number().array().optional(),
         })
         .optional(),
     )
@@ -55,6 +59,10 @@ export const eventRouter = createTRPCRouter({
               ilike(schema.events.description, `%${input?.searchTerm}%`),
             )
           : undefined,
+        input?.regionIds?.length
+          ? inArray(regionOrg.id, input.regionIds)
+          : undefined,
+        input?.aoIds?.length ? inArray(parentOrg.id, input.aoIds) : undefined,
       );
       const sortedColumns = input?.sorting?.map((sorting) => {
         const direction = sorting.desc ? desc : asc;
@@ -87,6 +95,12 @@ export const eventRouter = createTRPCRouter({
         endTime: schema.events.endTime,
         email: schema.events.email,
         created: schema.events.created,
+        locationName: schema.locations.name,
+        locationAddress: schema.locations.addressStreet,
+        locationAddress2: schema.locations.addressStreet2,
+        locationCity: schema.locations.addressCity,
+        locationState: schema.locations.addressState,
+        locationZip: schema.locations.addressZip,
         parents: sql<{ aoId: number; aoName: string }[]>`COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
@@ -120,6 +134,24 @@ export const eventRouter = createTRPCRouter({
           schema.locations,
           eq(schema.locations.id, schema.events.locationId),
         )
+        .leftJoin(
+          parentOrg,
+          and(
+            eq(parentOrg.orgType, "ao"),
+            eq(parentOrg.id, schema.events.orgId),
+          ),
+        )
+        .leftJoin(
+          regionOrg,
+          and(
+            eq(regionOrg.orgType, "region"),
+            or(
+              eq(regionOrg.id, schema.locations.orgId),
+              eq(regionOrg.id, schema.events.orgId),
+              eq(regionOrg.id, parentOrg.parentId),
+            ),
+          ),
+        )
         .where(where);
 
       const query = ctx.db
@@ -147,14 +179,29 @@ export const eventRouter = createTRPCRouter({
             ),
           ),
         )
-        .groupBy(schema.events.id, parentOrg.id, regionOrg.id)
+        .groupBy(
+          schema.events.id,
+          parentOrg.id,
+          regionOrg.id,
+          schema.locations.name,
+          schema.locations.addressStreet,
+          schema.locations.addressStreet2,
+          schema.locations.addressCity,
+          schema.locations.addressState,
+          schema.locations.addressZip,
+        )
         .where(where);
 
       const events = usePagination
         ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
         : await query;
 
-      return { events, total: eventCount?.count ?? 0 };
+      const eventsWithLocation = events.map((event) => ({
+        ...event,
+        location: getFullAddress(event),
+      }));
+
+      return { events: eventsWithLocation, total: eventCount?.count ?? 0 };
     }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))

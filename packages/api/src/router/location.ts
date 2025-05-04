@@ -262,6 +262,7 @@ export const locationRouter = createTRPCRouter({
             lat: schema.locations.latitude,
             lon: schema.locations.longitude,
             orgId: schema.locations.orgId,
+            locationName: schema.locations.name,
             locationMeta: schema.locations.meta,
             locationAddress: schema.locations.addressStreet,
             locationAddress2: schema.locations.addressStreet2,
@@ -276,6 +277,7 @@ export const locationRouter = createTRPCRouter({
             parentId: parentOrg.id,
             parentLogo: parentOrg.logoUrl,
             parentName: parentOrg.name,
+            parentWebsite: parentOrg.website,
             regionId: regionOrg.id,
             regionName: regionOrg.name,
             regionLogo: regionOrg.logoUrl,
@@ -354,7 +356,6 @@ export const locationRouter = createTRPCRouter({
       const location = results[0]?.location;
       const events = results.map((r) => r.event);
 
-      console.log("location", location);
       if (location?.lat == null || location?.lon == null) {
         throw new TRPCError({
           code: "NOT_FOUND",

@@ -52,6 +52,7 @@ export const eventDefaults = {
   eventTypeIds: [1],
   eventDescription: "",
   aoId: null,
+  aoWebsite: "",
 };
 
 export const locationDefaults = {
@@ -112,6 +113,7 @@ export const eventAndLocationToUpdateRequest = ({
     aoId: event?.aoId ?? null,
     aoName: event?.aoName ?? null,
     aoLogo: event?.aoLogo ?? null,
+    aoWebsite: event?.aoWebsite ?? null,
   };
 };
 
@@ -129,6 +131,7 @@ export interface DataType {
     aoId: number | null;
     aoLogo: string | null;
     aoName: string | null;
+    aoWebsite: string | null;
     lat: number;
     lng: number;
     startTime: string | null;

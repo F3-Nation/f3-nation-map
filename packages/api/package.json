@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./lib/*": "./src/lib/*.ts"
   },
   "license": "MIT",
   "scripts": {
@@ -13,6 +14,7 @@
     "lint": "eslint .",
     "test": "pnpm with-env vitest --run",
     "test:watch": "pnpm with-env vitest -w",
+    "test:org-hierarchy": "pnpm with-env tsx src/scripts/test-org-hierarchy.ts",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },

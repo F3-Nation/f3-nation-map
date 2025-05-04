@@ -618,7 +618,7 @@ describe("all editor routers", () => {
       }
 
       const requestData = {
-        id: "123e4567-e89b-12d3-a456-426614174001",
+        id: "123e4567-e89b-12d3-a456-426614174006",
         regionId: MY_REGION_ID, // Attempt to move this event to my region  - Should fail since it didn't start in my region
         eventId: eventNotInMyRegion.id,
         eventTypeIds: [1],
@@ -647,7 +647,7 @@ describe("all editor routers", () => {
 
     it("should create a new request that is auto approved", async () => {
       const requestData = {
-        id: "123e4567-e89b-12d3-a456-426614174001",
+        id: "123e4567-e89b-12d3-a456-426614174005",
         regionId: MY_REGION_ID,
         eventTypeIds: [1],
         eventName: "Auto Approved Event",
@@ -778,7 +778,7 @@ describe("all editor routers", () => {
     it("should allow us to reject a request", async () => {
       // First create a request
       const requestData = {
-        id: "123e4567-e89b-12d3-a456-426614174005",
+        id: "123e4567-e89b-12d3-a456-426614174007",
         regionId: TEST_REGION_1_ORG_ID,
         eventTypeIds: [1],
         eventName: "Request To Reject",
@@ -800,6 +800,10 @@ describe("all editor routers", () => {
 
       const request = await caller.request.submitUpdateRequest(requestData);
       expect(request.status).toBe("pending");
+
+      if (!request.updateRequest.id) {
+        throw new Error("Request ID is undefined");
+      }
 
       // Then reject it
       await callerWithPermissions.request.rejectSubmission({

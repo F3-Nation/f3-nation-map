@@ -132,6 +132,7 @@ export default function AdminRequestsModal({
       aoId: request.aoId ?? null,
       aoName: request.aoName ?? "",
       aoLogo: request.aoLogo ?? "",
+      aoWebsite: request.aoWebsite ?? "",
       submittedBy: request.submittedBy ?? "",
     });
   }, [request, form, eventTypes]);

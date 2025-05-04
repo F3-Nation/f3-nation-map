@@ -7,7 +7,7 @@ import { AreasTable } from "./areas-table";
 
 const AreasPage = async () => {
   const { orgs: areas } = await api.org.all({ orgTypes: ["area"] });
-
+  const { orgs: sectors } = await api.org.all({ orgTypes: ["sector"] });
   return (
     <Layout>
       <div className="flex w-full  flex-col">
@@ -19,7 +19,7 @@ const AreasPage = async () => {
         </div>
         <Suspense fallback={<div>Loading...</div>}>
           <div className="flex w-full flex-col overflow-hidden">
-            <AreasTable areas={areas} />
+            <AreasTable areas={areas} sectors={sectors} />
           </div>
         </Suspense>
       </div>
