@@ -18,10 +18,12 @@ import {
 } from "~/utils/store/selected-item";
 import { useTouchDevice } from "~/utils/touch-device-provider";
 import { useFilteredMapResults } from "../map/filtered-map-results-provider";
+import { FeaturesClusterMarker } from "../marker-clusters/features-cluster-marker";
 
 interface TreeMarkerProps {
   position: google.maps.LatLngLiteral;
   featureId: string;
+  isClose: boolean;
   onMarkerClick?: (
     marker: google.maps.marker.AdvancedMarkerElement,
     featureId: string,
@@ -31,6 +33,7 @@ interface TreeMarkerProps {
 export const FeatureMarker = ({
   position: _position,
   featureId,
+  isClose,
 }: TreeMarkerProps) => {
   const mode = appStore.use.mode();
   const { filteredLocationMarkers } = useFilteredMapResults();
@@ -90,7 +93,23 @@ export const FeatureMarker = ({
     [id],
   );
 
-  return !events?.length ? null : (
+  return !events?.length ? null : !isClose ? (
+    <FeaturesClusterMarker
+      clusterId={id}
+      position={position}
+      size={1}
+      sizeAsText={"1"}
+      onMarkerClick={() => {
+        const eventId = events.find(
+          (event) => event.id === selectedEventId,
+        )?.id;
+        handleClick({
+          locationId: id,
+          eventId: eventId ?? events[0]?.id,
+        });
+      }}
+    />
+  ) : (
     <AdvancedMarker
       ref={markerRef}
       draggable={mode === "edit"}
