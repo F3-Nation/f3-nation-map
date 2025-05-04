@@ -38,12 +38,12 @@ export const ClusteredMarkers = () => {
 
     return new MarkerClusterer({
       map,
-      // renderer: new CustomRenderer(),
-      // algorithm: new SuperClusterAlgorithm({
-      //   extent: 256, // smaller means more in a cluster
-      //   radius: 64, // Adjust this. smaller means more smaller clusters
-      //   maxZoom: 12,
-      // }),
+      renderer: new CustomRenderer(),
+      algorithm: new SuperClusterAlgorithm({
+        extent: 256, // smaller means more in a cluster
+        radius: 128, // Adjust this. smaller means more smaller clusters
+        maxZoom: 12,
+      }),
     });
   }, [map]);
 
@@ -90,6 +90,36 @@ export const ClusteredMarkers = () => {
 };
 
 class CustomRenderer implements Renderer {
+  render({ count, position }: Cluster, stats: any) {
+    // use d3-interpolateRgb to interpolate between red and blue
+    const color = "black";
+    // create svg url with fill color
+    const svg = window.btoa(`
+<svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<circle cx="120" cy="120" opacity=".8" r="70" />    
+</svg>`);
+    // create marker using svg icon
+    const markerSize = Math.floor(36 + Math.sqrt(count) * 2);
+    const fontSize = Math.floor(Math.max(markerSize / 4, 12));
+    return new google.maps.Marker({
+      position,
+      icon: {
+        url: `data:image/svg+xml;base64,${svg}`,
+        scaledSize: new google.maps.Size(markerSize * 2, markerSize * 2),
+        anchor: new google.maps.Point(markerSize, markerSize),
+      },
+      label: {
+        text: String(count),
+        color: "rgba(255,255,255,0.9)",
+        fontSize: `${fontSize}px`,
+      },
+      // adjust zIndex to be above other markers
+      zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+    });
+  }
+}
+
+class CustomRenderer2 implements Renderer {
   render({ count, position }: Cluster): Marker {
     const container = document.createElement("div");
     const markerSize = Math.floor(36 + Math.sqrt(count) * 2);
