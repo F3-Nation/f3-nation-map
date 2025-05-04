@@ -1,6 +1,9 @@
 import type { Cluster, Marker, Renderer } from "@googlemaps/markerclusterer";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import {
+  MarkerClusterer,
+  SuperClusterAlgorithm,
+} from "@googlemaps/markerclusterer";
 import { useMap } from "@vis.gl/react-google-maps";
 
 import { mapStore } from "~/utils/store/map";
@@ -31,14 +34,20 @@ export const ClusteredMarkers = () => {
   const modifiedLocationMarkers = mapStore.use.modifiedLocationMarkers();
 
   const clusterer = useMemo(() => {
-    console.log("clusterer");
     if (!map) return null;
 
-    return new MarkerClusterer({ map, renderer: new CustomRenderer() });
+    return new MarkerClusterer({
+      map,
+      // renderer: new CustomRenderer(),
+      // algorithm: new SuperClusterAlgorithm({
+      //   extent: 256, // smaller means more in a cluster
+      //   radius: 64, // Adjust this. smaller means more smaller clusters
+      //   maxZoom: 12,
+      // }),
+    });
   }, [map]);
 
   useEffect(() => {
-    console.log("markers", Object.keys(markers).length);
     if (!clusterer) return;
 
     clusterer.clearMarkers();
@@ -60,71 +69,27 @@ export const ClusteredMarkers = () => {
     });
   }, []);
 
-  const memoFilteredLocationMarkers = useMemo(() => {
-    if (!filteredLocationMarkers) return null;
-    return filteredLocationMarkers.map((marker) => {
-      console.log("rendering marker", marker.id);
-      const modifiedLocation = modifiedLocationMarkers[marker.id];
-      const markerPosition =
-        marker.lat != null && marker.lon != null
-          ? { lat: marker.lat, lng: marker.lon }
-          : null;
-      const position = modifiedLocation ?? markerPosition;
-      if (!position) return null;
-      return (
-        <FeatureMarker
-          key={marker.id}
-          featureId={marker.id.toString()}
-          position={position}
-          setMarkerRef={setMarkerRef}
-          events={marker.events}
-        />
-      );
-    });
-  }, [filteredLocationMarkers, modifiedLocationMarkers, setMarkerRef]);
-
-  return memoFilteredLocationMarkers;
+  return filteredLocationMarkers?.map((marker) => {
+    const modifiedLocation = modifiedLocationMarkers[marker.id];
+    const markerPosition =
+      marker.lat != null && marker.lon != null
+        ? { lat: marker.lat, lng: marker.lon }
+        : null;
+    const position = modifiedLocation ?? markerPosition;
+    if (!position) return null;
+    return (
+      <FeatureMarker
+        key={marker.id}
+        featureId={marker.id.toString()}
+        position={position}
+        setMarkerRef={setMarkerRef}
+        events={marker.events}
+      />
+    );
+  });
 };
 
 class CustomRenderer implements Renderer {
-  /**
-   * The default render function for the library used by {@link MarkerClusterer}.
-   *
-   * Currently set to use the following:
-   *
-   * ```typescript
-   * // change color if this cluster has more markers than the mean cluster
-   * const color =
-   *   count > Math.max(10, stats.clusters.markers.mean)
-   *     ? "#ff0000"
-   *     : "#0000ff";
-   *
-   * // create svg url with fill color
-   * const svg = window.btoa(`
-   * <svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
-   *   <circle cx="120" cy="120" opacity=".6" r="70" />
-   *   <circle cx="120" cy="120" opacity=".3" r="90" />
-   *   <circle cx="120" cy="120" opacity=".2" r="110" />
-   *   <circle cx="120" cy="120" opacity=".1" r="130" />
-   * </svg>`);
-   *
-   * // create marker using svg icon
-   * return new google.maps.Marker({
-   *   position,
-   *   icon: {
-   *     url: `data:image/svg+xml;base64,${svg}`,
-   *     scaledSize: new google.maps.Size(45, 45),
-   *   },
-   *   label: {
-   *     text: String(count),
-   *     color: "rgba(255,255,255,0.9)",
-   *     fontSize: "12px",
-   *   },
-   *   // adjust zIndex to be above other markers
-   *   zIndex: 1000 + count,
-   * });
-   * ```
-   */
   render({ count, position }: Cluster): Marker {
     const container = document.createElement("div");
     const markerSize = Math.floor(36 + Math.sqrt(count) * 2);
@@ -167,14 +132,18 @@ class CustomRenderer implements Renderer {
     middleCircle.appendChild(innerCircle);
     container.appendChild(middleCircle);
 
-    const advancedMarker = new google.maps.marker.AdvancedMarkerElement({
+    // Add a wrapper div to fix the centering issue
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "absolute";
+    wrapper.style.top = "50%";
+    wrapper.style.left = "50%";
+    wrapper.style.transform = "translate(-50%, -50%)";
+    wrapper.appendChild(container);
+
+    return new google.maps.marker.AdvancedMarkerElement({
       position,
-      content: container,
+      content: wrapper,
       zIndex: count,
     });
-
-    console.log("renderClusterMarker", { count, markerSize });
-
-    return advancedMarker;
   }
 }
