@@ -92,6 +92,7 @@ export interface MDTableProps<T> {
   totalCount?: number;
   sorting?: SortingState;
   setSorting?: (updaterOrValue: Updater<SortingState>) => void;
+  emptyMessage?: string;
 }
 
 export const MDTable = <T,>(params: MDTableProps<T>) => {
@@ -116,6 +117,7 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     totalCount: totalCountParam,
     sorting: sortingParam,
     setSorting: setSortingParam,
+    emptyMessage,
   } = params;
   // Data state management: if data is undefined, we show a loading state
   const cachedData = useRef(data);
@@ -216,14 +218,18 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
           />
           <div>
             {pagination ? (
-              <>
-                Showing {pagination.pageIndex * pagination.pageSize + 1}-
-                {Math.min(
-                  (pagination.pageIndex + 1) * pagination.pageSize,
-                  table.getRowCount(),
-                )}{" "}
-                of {table.getRowCount().toLocaleString()} {rowsName}
-              </>
+              table.getRowCount() === 0 ? (
+                <>Showing 0 {rowsName}</>
+              ) : (
+                <>
+                  Showing {pagination.pageIndex * pagination.pageSize + 1}-
+                  {Math.min(
+                    (pagination.pageIndex + 1) * pagination.pageSize,
+                    table.getRowCount(),
+                  )}{" "}
+                  of {table.getRowCount().toLocaleString()} {rowsName}
+                </>
+              )
             ) : (
               <>
                 Showing {table.getRowModel().rows?.length ?? 0} of{" "}
@@ -335,9 +341,9 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
               <TableRow>
                 <TableCell
                   colSpan={table.getAllColumns().length}
-                  className="h-24 text-center"
+                  className="h-24 text-left"
                 >
-                  No results.
+                  {emptyMessage ?? "No results."}
                 </TableCell>
               </TableRow>
             )}
@@ -386,41 +392,37 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
               </Button>
             </div>
             {/* ability to select the size of the page */}
-            {table.getRowCount() > pagination.pageSize ? (
-              <div className="flex flex-row items-center gap-2">
-                <div className="pointer-events-none flex-shrink-0">
-                  Page size
-                </div>
-                <Select
-                  value={pagination.pageSize.toString()}
-                  onValueChange={(value) => {
-                    const pageSize = safeParseInt(value);
-                    if (pageSize !== undefined) {
-                      table.setPageSize(pageSize);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="mr-2 rounded-md bg-transparent px-1 focus:ring-0">
-                    <SelectValue>
-                      <strong>{pagination.pageSize}</strong>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="z-10" position="popper">
-                    {(paginationOptions?.pageSizeOptions ?? [10, 20, 50])?.map(
-                      (size) => (
-                        <SelectItem
-                          key={size}
-                          className="flex cursor-pointer justify-center rounded-md px-4 py-1 text-lg font-semibold hover:bg-emerald-100"
-                          value={size.toString()}
-                        >
-                          {size}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
+            <div className="flex flex-row items-center gap-2">
+              <div className="pointer-events-none flex-shrink-0">Page size</div>
+              <Select
+                value={pagination.pageSize.toString()}
+                onValueChange={(value) => {
+                  const pageSize = safeParseInt(value);
+                  if (pageSize !== undefined) {
+                    table.setPageSize(pageSize);
+                  }
+                }}
+              >
+                <SelectTrigger className="mr-2 rounded-md bg-transparent px-1 focus:ring-0">
+                  <SelectValue>
+                    <strong>{pagination.pageSize}</strong>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="z-10" position="popper">
+                  {(paginationOptions?.pageSizeOptions ?? [10, 20, 50])?.map(
+                    (size) => (
+                      <SelectItem
+                        key={size}
+                        className="flex cursor-pointer justify-center rounded-md px-4 py-1 text-lg font-semibold hover:bg-emerald-100"
+                        value={size.toString()}
+                      >
+                        {size}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         ) : null}
         {isReloading && (

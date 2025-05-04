@@ -31,15 +31,16 @@ export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: {
-  headers: Headers | null;
+  headers: Headers | null | Promise<Headers | null>;
   session: Session | null | "none";
 }) => {
+  const headers = await opts.headers;
   const session =
     opts.session === "none" ? null : opts.session ?? (await auth());
-  const source = opts.headers?.get("x-trpc-source") ?? "unknown";
-  const xRealIp = opts.headers?.get("x-real-ip") ?? "unknown";
-  const xForwardedFor = opts.headers?.get("x-forwarded-for") ?? "unknown";
-  const apiKey = opts.headers?.get("x-api-key") ?? "unknown";
+  const source = headers?.get("x-trpc-source") ?? "unknown";
+  const xRealIp = headers?.get("x-real-ip") ?? "unknown";
+  const xForwardedFor = headers?.get("x-forwarded-for") ?? "unknown";
+  const apiKey = headers?.get("x-api-key") ?? "unknown";
   const apiKeyStatus = apiKey === env.SUPER_ADMIN_API_KEY ? "valid" : "invalid";
 
   const ip = xForwardedFor ?? xRealIp;

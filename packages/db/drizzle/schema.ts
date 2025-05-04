@@ -596,6 +596,7 @@ export const updateRequests = pgTable(
     aoId: integer("ao_id"),
     aoName: varchar("ao_name"),
     aoLogo: varchar("ao_logo"),
+    aoWebsite: varchar("ao_website"),
     submittedBy: varchar("submitted_by").notNull(),
     submitterValidated: boolean("submitter_validated"),
     reviewedBy: varchar("reviewed_by"),

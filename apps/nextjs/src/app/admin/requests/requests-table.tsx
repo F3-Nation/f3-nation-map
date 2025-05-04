@@ -1,34 +1,83 @@
 "use client";
 
-import type { TableOptions } from "@tanstack/react-table";
+import type { TableOptions, Updater } from "@tanstack/react-table";
 import { useState } from "react";
 import dayjs from "dayjs";
+import { Check, Filter, X } from "lucide-react";
 
 import type { RouterOutputs } from "@acme/api";
-import type { SortingSchema } from "@acme/validators";
+import { UpdateRequestStatus } from "@acme/shared/app/enums";
+import { ZustandStore } from "@acme/shared/common/classes";
 import { cn } from "@acme/ui";
-import { MDTable, usePagination } from "@acme/ui/md-table";
+import { Badge } from "@acme/ui/badge";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@acme/ui/command";
+import { MDTable } from "@acme/ui/md-table";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
 import { ModalType, openModal } from "~/utils/store/modal";
 
+const initialState = {
+  searchTerm: "",
+  onlyMine: true,
+  statuses: ["pending"] as UpdateRequestStatus[],
+  sorting: [{ id: "created", desc: true }],
+  pagination: {
+    pageIndex: 0,
+    pageSize: 20,
+  },
+};
+
+type RequestTableStore = typeof initialState;
+
+const requestTableStore = new ZustandStore({
+  initialState,
+  persistOptions: {
+    name: "request-table-store",
+    version: 1,
+    persistedKeys: [],
+    getStorage: () => localStorage,
+  },
+});
+
 export const RequestsTable = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingSchema>([
-    // Default to sorting by created at descending
-    { id: "created", desc: true },
-  ]);
-  const { pagination, setPagination } = usePagination();
+  const searchTerm = requestTableStore.use.searchTerm();
+  const onlyMine = requestTableStore.use.onlyMine();
+  const sorting = requestTableStore.use.sorting();
+  const pagination = requestTableStore.use.pagination();
+  const statuses = requestTableStore.use.statuses();
+
   const { data: requests } = api.request.all.useQuery({
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     searchTerm: searchTerm,
     sorting: sorting,
+    onlyMine,
+    statuses,
   });
+
+  const setValue =
+    <T extends keyof RequestTableStore>(key: T) =>
+    (value: Updater<RequestTableStore[T]>) => {
+      const newValue =
+        typeof value === "function"
+          ? value(requestTableStore.getState()[key])
+          : value;
+      requestTableStore.setState({ [key]: newValue });
+    };
+
   return (
     <MDTable
       data={requests?.requests}
+      emptyMessage="No requests for these filters"
+      rowsName="requests"
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
       totalCount={requests?.totalCount}
@@ -46,11 +95,12 @@ export const RequestsTable = () => {
         }`
       }
       searchTerm={searchTerm}
-      setSearchTerm={setSearchTerm}
+      setSearchTerm={setValue("searchTerm")}
       pagination={pagination}
-      setPagination={setPagination}
+      setPagination={setValue("pagination")}
       sorting={sorting}
-      setSorting={setSorting}
+      setSorting={setValue("sorting")}
+      filterComponent={<FilterComponent />}
     />
   );
 };
@@ -448,6 +498,135 @@ const CircleBadge = () => {
   return (
     <div className="flex items-center justify-start">
       <div className="size-3 rounded-full bg-red-500" />
+    </div>
+  );
+};
+
+const FilterComponent = () => {
+  return (
+    <div className="flex gap-2">
+      <StatusFilter />
+    </div>
+  );
+};
+
+const StatusFilter = () => {
+  const [open, setOpen] = useState(false);
+  const statuses = requestTableStore.use.statuses();
+  const onlyMine = requestTableStore.use.onlyMine();
+
+  return (
+    <div className="flex flex-row gap-2">
+      {/* Status dropdown trigger */}
+      <div className="flex flex-wrap gap-1">
+        {statuses.includes("pending") && (
+          <Badge
+            className={cn(
+              "flex items-center gap-1 rounded-full border-transparent bg-yellow-100 px-2 py-1 text-yellow-700 hover:bg-yellow-200",
+            )}
+            onClick={() => {
+              requestTableStore.setState({
+                statuses: statuses.filter((s) => s !== "pending"),
+              });
+            }}
+          >
+            Pending
+            <X className="h-3.5 w-3.5 cursor-pointer" />
+          </Badge>
+        )}
+        {statuses.includes("rejected") && (
+          <Badge
+            className={cn(
+              "flex items-center gap-1 rounded-full border-transparent bg-red-100 px-2 py-1 text-red-700 hover:bg-red-200",
+            )}
+            onClick={() => {
+              requestTableStore.setState({
+                statuses: statuses.filter((s) => s !== "rejected"),
+              });
+            }}
+          >
+            Rejected
+            <X className="h-3.5 w-3.5 cursor-pointer" />
+          </Badge>
+        )}
+        {statuses.includes("approved") && (
+          <Badge
+            className={cn(
+              "flex items-center gap-1 rounded-full border-transparent bg-green-100 px-2 py-1 text-green-700 hover:bg-green-200",
+            )}
+            onClick={() => {
+              requestTableStore.setState({
+                statuses: statuses.filter((s) => s !== "approved"),
+              });
+            }}
+          >
+            Approved
+            <X className="h-3.5 w-3.5 cursor-pointer" />
+          </Badge>
+        )}
+        {onlyMine && (
+          <Badge
+            className="flex items-center gap-1 rounded-full border-transparent bg-blue-100 px-2 py-1 text-blue-700 hover:bg-blue-200"
+            onClick={() => {
+              requestTableStore.setState({ onlyMine: !onlyMine });
+            }}
+          >
+            Only Mine
+            <X className="h-3.5 w-3.5 cursor-pointer" />
+          </Badge>
+        )}
+      </div>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            aria-expanded={open}
+            className="flex size-8 items-center justify-center rounded-full bg-muted shadow-md hover:bg-background/80"
+          >
+            <Filter className="size-5 shrink-0 opacity-50" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder="Search statuses..." />
+            <CommandEmpty>No statuses found.</CommandEmpty>
+            <CommandGroup>
+              {UpdateRequestStatus.map((status) => (
+                <CommandItem
+                  key={status}
+                  value={status}
+                  onSelect={() => {
+                    const newStatuses = statuses.includes(status)
+                      ? statuses.filter((s) => s !== status)
+                      : [...statuses, status];
+                    requestTableStore.setState({ statuses: newStatuses });
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      statuses.includes(status) ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </CommandItem>
+              ))}
+              <CommandItem
+                onSelect={() => {
+                  requestTableStore.setState({ onlyMine: !onlyMine });
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    onlyMine ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                Only Mine
+              </CommandItem>
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

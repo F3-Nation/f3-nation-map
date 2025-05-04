@@ -92,7 +92,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         {props.children}
         {showDevtools && (
           <Suspense fallback={null}>
-            <ReactQueryDevtoolsProduction buttonPosition="bottom-left" />
+            <ReactQueryDevtoolsProduction buttonPosition="bottom-right" />
           </Suspense>
         )}
       </api.Provider>

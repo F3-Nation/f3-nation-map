@@ -1,7 +1,39 @@
+import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
+import type {
+  DeleteRequestResponse,
+  UpdateRequestResponse,
+} from "@acme/validators";
 import { appRouter, createTRPCContext } from "@acme/api";
+import { notifyWebhooks } from "@acme/api/lib/notify-webhooks";
 import { auth } from "@acme/auth";
+
+const updateDataPath = [
+  "event.crupdate",
+  "event.delete",
+  "location.crupdate",
+  "location.delete",
+  "org.crupdate",
+  "org.delete",
+  "request.validateSubmissionByAdmin",
+  "request.validateDeleteByAdmin",
+  "request.validateSubmission",
+];
+
+const conditionalDataPath = [
+  "request.submitUpdateRequest",
+  "request.submitDeleteRequest",
+];
+const REQUEST_FAILED_ERROR = "Request failed";
+const NO_TRPC_ROUTE_ERROR = "No trpc route found";
+
+interface TrpcResponse<
+  T extends UpdateRequestResponse | DeleteRequestResponse,
+> {
+  result: { data: { json: T } };
+}
 
 /**
  * Configure basic CORS headers
@@ -36,6 +68,46 @@ const handler = auth(async (req) => {
       console.error(`>>> tRPC Error on '${path}'`, error);
     },
   });
+
+  try {
+    let didUpdateData = false;
+
+    const trpcRoute = req.url.match(/.*\/api\/trpc\/(.*)$/)?.[1];
+    if (!trpcRoute) throw new Error(NO_TRPC_ROUTE_ERROR);
+
+    if (!response.ok) throw new Error(REQUEST_FAILED_ERROR);
+
+    if (updateDataPath.includes(trpcRoute)) {
+      didUpdateData = true;
+    } else if (conditionalDataPath.includes(trpcRoute)) {
+      const clonedResponse = response.clone();
+      if (trpcRoute === "request.submitUpdateRequest") {
+        const body =
+          (await clonedResponse.json()) as TrpcResponse<UpdateRequestResponse>;
+        const data = body?.result?.data?.json;
+        didUpdateData = data.status === "approved";
+      } else if (trpcRoute === "request.submitDeleteRequest") {
+        const body =
+          (await clonedResponse.json()) as TrpcResponse<DeleteRequestResponse>;
+        const data = body?.result?.data?.json;
+        didUpdateData = data.status === "approved";
+      }
+    }
+
+    if (didUpdateData) {
+      console.log("didUpdateData is true!");
+      after(() => {
+        console.log("revalidating path", "/");
+        revalidatePath("/");
+        void notifyWebhooks();
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (![NO_TRPC_ROUTE_ERROR, REQUEST_FAILED_ERROR].includes(message)) {
+      console.error("Error evaluating response for revalidation", message);
+    }
+  }
 
   setCorsHeaders(response);
   return response;

@@ -3,7 +3,7 @@ import pgConnectionString from "pg-connection-string";
 import postgres from "postgres";
 
 import { env } from "@acme/env";
-import { isProduction, isTest } from "@acme/shared/common/constants";
+import { isTest } from "@acme/shared/common/constants";
 
 import { schema } from "..";
 
@@ -16,7 +16,8 @@ export const getDatabaseNameFromUri = (uri: string) => {
 export const getDbUrl = () => {
   const databaseUrl = isTest ? env.TEST_DATABASE_URL : env.DATABASE_URL;
   const databaseName = getDatabaseNameFromUri(databaseUrl);
-  const useSsl = isProduction || (databaseName?.includes("_prod") ?? false);
+  // Remove SSL to enable PGBouncer to work
+  const useSsl = false; //  isProduction || (databaseName?.includes("_prod") ?? false);
   if (!databaseUrl) throw new Error("DATABASE_URL is not defined");
   return { databaseUrl, useSsl, databaseName };
 };

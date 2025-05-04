@@ -95,9 +95,6 @@ export const WorkoutDetailsContent = ({
             ),
             What: event?.eventTypes.map((type) => type.name).join(", "),
             Where: [
-              location.regionName ? (
-                <p key="regionName">F3 {location.regionName}</p>
-              ) : null,
               <Link
                 key="fullAddress"
                 href={`https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lon}`}
@@ -116,13 +113,13 @@ export const WorkoutDetailsContent = ({
               ) : null,
             ].filter(isTruthy),
             When: event ? getWhenFromWorkout(event) : "",
-            Website: location.regionWebsite ? (
+            Website: location.parentWebsite ? (
               <Link
-                href={location.regionWebsite}
+                href={location.parentWebsite}
                 target="_blank"
                 className="underline"
               >
-                {location.regionWebsite}
+                {location.parentWebsite}
               </Link>
             ) : null,
             Notes: event?.description ? textLink(event.description) : null,

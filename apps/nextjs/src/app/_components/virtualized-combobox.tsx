@@ -161,6 +161,7 @@ interface VirtualizedComboboxProps<T> {
   required?: boolean;
   isMulti?: boolean;
   className?: string;
+  popoverContentAlign?: "start" | "center" | "end";
 }
 
 export function VirtualizedCombobox<T>({
@@ -173,6 +174,7 @@ export function VirtualizedCombobox<T>({
   isMulti,
   disabled,
   className,
+  popoverContentAlign,
 }: VirtualizedComboboxProps<T>) {
   const [open, setOpen] = useState<boolean>(false);
   const [selectedOptions, setSelectedOptions] = useState<string[]>(
@@ -267,7 +269,9 @@ export function VirtualizedCombobox<T>({
           // behind the file input
           zIndex: Z_INDEX.POPOVER_CONTENT,
         }}
-        align={buttonWidth < MIN_WIDTH ? "start" : "center"}
+        align={
+          popoverContentAlign ?? (buttonWidth < MIN_WIDTH ? "start" : "center")
+        }
       >
         <VirtualizedCommand
           options={options}

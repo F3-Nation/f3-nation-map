@@ -1,6 +1,7 @@
 import type Supercluster from "supercluster";
 import { useCallback, useMemo } from "react";
 import { useMap } from "@vis.gl/react-google-maps";
+import { CLOSE_ZOOM } from "node_modules/@acme/shared/src/app/constants";
 
 import type {
   F3ClusterProperties,
@@ -39,6 +40,10 @@ const DataProvidedClusteredMarkers = ({ geojson }: MarkersProps) => {
   // const [width] = useWindowSize();
 
   const map = useMap();
+  const zoom = mapStore.use.zoom();
+  const isClose = useMemo(() => {
+    return zoom >= CLOSE_ZOOM;
+  }, [zoom]);
   const { clusters, getLeaves } = useSupercluster(geojson, superclusterOptions);
   const handleClusterClick = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement, clusterId: number) => {
@@ -94,11 +99,19 @@ const DataProvidedClusteredMarkers = ({ geojson }: MarkersProps) => {
             key={featureId}
             featureId={featureId}
             position={{ lat, lng }}
+            isClose={isClose}
           />
         );
       })}
       {Object.entries(modifiedLocationMarkers).map(([id, marker]) => {
-        return <FeatureMarker key={id} featureId={id} position={marker} />;
+        return (
+          <FeatureMarker
+            key={id}
+            featureId={id}
+            position={marker}
+            isClose={isClose}
+          />
+        );
       })}
     </>
   );

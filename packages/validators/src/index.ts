@@ -84,8 +84,7 @@ export const NationInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
   email: (s) => s.email({ message: "Invalid email format" }),
   parentId: z.null({ message: "Must not have a parent" }).optional(),
-  orgType: z.literal("nation"),
-});
+}).omit({ orgType: true });
 export const NationSelectSchema = createSelectSchema(orgs);
 
 // SECTOR SCHEMA
@@ -95,8 +94,7 @@ export const SectorInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-  orgType: z.literal("sector"),
-});
+}).omit({ orgType: true });
 export const SectorSelectSchema = createSelectSchema(orgs);
 
 // AREA SCHEMA
@@ -106,8 +104,7 @@ export const AreaInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-  orgType: z.literal("area"),
-});
+}).omit({ orgType: true });
 export const AreaSelectSchema = createSelectSchema(orgs);
 
 // REGION SCHEMA
@@ -117,8 +114,7 @@ export const RegionInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-  orgType: z.literal("region"),
-});
+}).omit({ orgType: true });
 export const RegionSelectSchema = createSelectSchema(orgs);
 
 // AO SCHEMA
@@ -128,8 +124,7 @@ export const AOInsertSchema = createInsertSchema(orgs, {
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
   email: (s) => s.email({ message: "Invalid email format" }),
-  orgType: z.literal("ao"),
-});
+}).omit({ orgType: true });
 export const AOSelectSchema = createSelectSchema(orgs);
 
 // ORG SCHEMA
@@ -229,3 +224,17 @@ export const SortingSchema = z
   .array();
 
 export type SortingSchema = z.infer<typeof SortingSchema>;
+
+export const UpdateRequestResponseSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]),
+  updateRequest: createInsertSchema(updateRequests),
+});
+
+export type UpdateRequestResponse = z.infer<typeof UpdateRequestResponseSchema>;
+
+export const DeleteRequestResponseSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]),
+  deleteRequest: createInsertSchema(updateRequests).deepPartial(),
+});
+
+export type DeleteRequestResponse = z.infer<typeof DeleteRequestResponseSchema>;

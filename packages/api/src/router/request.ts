@@ -1,20 +1,25 @@
-import { revalidatePath } from "next/cache";
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { DayOfWeek, OrgType } from "@acme/shared/app/enums";
 import type { EventMeta, UpdateRequestMeta } from "@acme/shared/app/types";
+import type {
+  DeleteRequestResponse,
+  UpdateRequestResponse,
+} from "@acme/validators";
 import {
   aliasedTable,
   and,
   countDistinct,
   eq,
   ilike,
+  inArray,
   or,
   schema,
 } from "@acme/db";
+import { UpdateRequestStatus } from "@acme/shared/app/enums";
 import {
   DeleteRequestSchema,
   RequestInsertSchema,
@@ -23,13 +28,10 @@ import {
 
 import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { getEditableOrgIdsForUser } from "../get-editable-org-ids";
 import { getSortingColumns } from "../get-sorting-columns";
-import {
-  createTRPCRouter,
-  editorProcedure,
-  protectedProcedure,
-  publicProcedure,
-} from "../trpc";
+import { notifyMapChangeRequest } from "../services/map-request-notification";
+import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const requestRouter = createTRPCRouter({
@@ -41,10 +43,13 @@ export const requestRouter = createTRPCRouter({
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
           searchTerm: z.string().optional(),
+          onlyMine: z.boolean().optional(),
+          statuses: z.enum(UpdateRequestStatus).array().optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
+      const onlyMine = input?.onlyMine ?? false;
       const oldAoOrg = aliasedTable(schema.orgs, "old_ao_org");
       const oldRegionOrg = aliasedTable(schema.orgs, "old_region_org");
       const oldLocation = aliasedTable(schema.locations, "old_location");
@@ -55,7 +60,25 @@ export const requestRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
 
+      // Determine if filter by region IDs is needed
+      let editableOrgs: { id: number; type: OrgType }[] = [];
+      let isNationAdmin = false;
+
+      if (onlyMine) {
+        const result = await getEditableOrgIdsForUser(ctx);
+        editableOrgs = result.editableOrgs;
+        isNationAdmin = result.isNationAdmin;
+
+        if (editableOrgs.length === 0 && !isNationAdmin) {
+          // User has no editable orgs and is not a nation admin
+          return { requests: [], totalCount: 0 };
+        }
+      }
+
       const where = and(
+        input?.statuses?.length
+          ? inArray(schema.updateRequests.status, input?.statuses)
+          : undefined,
         input?.searchTerm
           ? or(
               ilike(
@@ -76,6 +99,13 @@ export const requestRouter = createTRPCRouter({
                 schema.updateRequests.locationDescription,
                 `%${input?.searchTerm}%`,
               ),
+            )
+          : undefined,
+        // Filter by editable orgs if onlyMine is true and not a nation admin
+        onlyMine && !isNationAdmin && editableOrgs.length > 0
+          ? inArray(
+              schema.updateRequests.regionId,
+              editableOrgs.map((org) => org.id),
             )
           : undefined,
       );
@@ -263,6 +293,19 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Unable to create a new request");
       }
 
+      // Notify admins and editors about the new delete request
+      if (request.status === "pending") {
+        try {
+          await notifyMapChangeRequest({
+            db: ctx.db,
+            requestId: request.id,
+          });
+        } catch (error) {
+          console.error("Failed to send notification", { error });
+          // Don't fail the request if notification fails
+        }
+      }
+
       return {
         status: "pending",
         updateRequest: request,
@@ -369,71 +412,24 @@ export const requestRouter = createTRPCRouter({
         throw new Error("Failed to find region");
       }
 
-      // Not sending emails for now
-      // const eventNames = await ctx.db
-      //   .select({ name: schema.eventTypes.name })
-      //   .from(schema.eventTypes)
-      //   .where(inArray(schema.eventTypes.id, input.eventTypeIds ?? []));
-
-      // await mail.sendTemplateMessages(Templates.validateSubmission, {
-      //   to: input.submittedBy,
-      //   submissionId: inserted.id,
-      //   token: inserted.token,
-      //   regionName: region?.name,
-      //   eventName: inserted.eventName,
-      //   address: inserted.locationDescription ?? "",
-      //   startTime: inserted.eventStartTime ?? "",
-      //   endTime: inserted.eventEndTime ?? "",
-      //   dayOfWeek: inserted.eventDayOfWeek ?? "",
-      //   types: eventNames?.map((type) => type.name).join(", ") ?? "",
-      //   url: env.NEXT_PUBLIC_URL,
-      // });
+      // Notify admins and editors about the new request
+      if (inserted.status === "pending") {
+        try {
+          await notifyMapChangeRequest({
+            db: ctx.db,
+            requestId: inserted.id,
+          });
+        } catch (error) {
+          console.error("Failed to send notification", { error });
+          // Don't fail the request if notification fails
+        }
+      }
 
       return {
         status: "pending" as const,
         updateRequest: omit(inserted, ["token"]),
       };
     }),
-  // This can be public because it uses a db token for auth
-  validateSubmission: protectedProcedure
-    .input(z.object({ token: z.string(), submissionId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const [updateRequest] = await ctx.db
-        .select()
-        .from(schema.updateRequests)
-        .where(eq(schema.updateRequests.id, input.submissionId));
-
-      if (!updateRequest) {
-        throw new Error("Failed to find update request");
-      }
-
-      if (updateRequest.token !== input.token) {
-        throw new Error("Invalid token");
-      }
-
-      if (updateRequest.regionId == undefined) {
-        throw new Error("Region ID is required");
-      }
-      if (updateRequest.requestType === "delete_event") {
-        const result = await applyDeleteRequest(ctx, {
-          ...updateRequest,
-          regionId: updateRequest.regionId,
-          reviewedBy: "email",
-          // Type check
-          eventDayOfWeek: updateRequest.eventDayOfWeek ?? undefined,
-          eventMeta: updateRequest.eventMeta ?? undefined,
-        });
-        return result;
-      } else {
-        const result = await applyUpdateRequest(ctx, {
-          ...updateRequest,
-          regionId: updateRequest.regionId,
-          reviewedBy: "email",
-        });
-        return result;
-      }
-    }),
-
   validateDeleteByAdmin: editorProcedure
     .input(DeleteRequestSchema)
     .mutation(async ({ ctx, input }) => {
@@ -522,31 +518,30 @@ export const requestRouter = createTRPCRouter({
 
 export const applyDeleteRequest = async (
   ctx: Context,
-  updateRequest: Partial<z.infer<typeof RequestInsertSchema>>,
-) => {
-  if (updateRequest.eventId != undefined) {
+  deleteRequest: Partial<z.infer<typeof RequestInsertSchema>>,
+): Promise<DeleteRequestResponse> => {
+  if (deleteRequest.eventId != undefined) {
     await ctx.db
       .update(schema.updateRequests)
       .set({ eventId: null })
-      .where(eq(schema.updateRequests.eventId, updateRequest.eventId));
+      .where(eq(schema.updateRequests.eventId, deleteRequest.eventId));
     await ctx.db
       .delete(schema.eventsXEventTypes)
-      .where(eq(schema.eventsXEventTypes.eventId, updateRequest.eventId));
+      .where(eq(schema.eventsXEventTypes.eventId, deleteRequest.eventId));
     await ctx.db
       .delete(schema.events)
-      .where(eq(schema.events.id, updateRequest.eventId));
-  } else if (updateRequest.locationId != undefined) {
+      .where(eq(schema.events.id, deleteRequest.eventId));
+  } else if (deleteRequest.locationId != undefined) {
     await ctx.db
       .delete(schema.locations)
-      .where(eq(schema.locations.id, updateRequest.locationId));
+      .where(eq(schema.locations.id, deleteRequest.locationId));
   } else {
     throw new Error("Nothing to delete");
   }
 
-  revalidatePath("/");
   return {
     status: "approved" as const,
-    updateRequest: omit(updateRequest, ["token"]),
+    deleteRequest: omit(deleteRequest, ["token"]),
   };
 };
 
@@ -561,14 +556,10 @@ export const applyUpdateRequest = async (
     eventMeta?: EventMeta | null;
     eventDayOfWeek?: DayOfWeek | null;
   },
-): Promise<{
-  status: "approved" | "rejected" | "pending";
-  updateRequest: Omit<typeof schema.updateRequests.$inferSelect, "token">;
-}> => {
+): Promise<UpdateRequestResponse> => {
   // LOCATION
   if (updateRequest.locationId == undefined) {
     // INSERT LOCATION
-    console.log("inserting location", updateRequest);
     const newLocation: typeof schema.locations.$inferInsert = {
       name: updateRequest.locationName ?? "",
       description: updateRequest.locationDescription ?? "",
@@ -594,7 +585,6 @@ export const applyUpdateRequest = async (
     }
     updateRequest.locationId = location.id;
   } else {
-    console.log("updating location", updateRequest);
     const [location] = await ctx.db
       .update(schema.locations)
       .set({
@@ -626,6 +616,7 @@ export const applyUpdateRequest = async (
       .values({
         parentId: updateRequest.regionId,
         orgType: "ao",
+        website: updateRequest.aoWebsite,
         defaultLocationId: updateRequest.locationId,
         name: updateRequest.aoName ?? "",
         isActive: true,
@@ -649,9 +640,11 @@ export const applyUpdateRequest = async (
     await ctx.db
       .update(schema.orgs)
       .set({
+        parentId: updateRequest.regionId,
+        website: updateRequest.aoWebsite,
+        defaultLocationId: updateRequest.locationId,
         name: updateRequest.aoName ?? ao.name,
         logoUrl: updateRequest.aoLogo,
-        parentId: updateRequest.regionId,
       })
       .where(eq(schema.orgs.id, updateRequest.aoId));
   }
@@ -662,7 +655,6 @@ export const applyUpdateRequest = async (
     reviewedAt: new Date().toISOString(),
   };
 
-  console.log("inserting update request", updateRequestInsertData);
   const [updated] = await ctx.db
     .insert(schema.updateRequests)
     .values(updateRequestInsertData)
@@ -753,7 +745,6 @@ export const applyUpdateRequest = async (
     })) ?? [],
   );
 
-  revalidatePath("/");
   return {
     status: "approved",
     updateRequest: omit(updated, ["token"]),

@@ -167,6 +167,7 @@ export const UpdateLocationModal = ({
     form.setValue("aoId", data.aoId ?? null);
     form.setValue("aoName", data.aoName ?? "");
     form.setValue("aoLogo", data.aoLogo ?? "");
+    form.setValue("aoWebsite", data.aoWebsite ?? "");
 
     form.setValue("eventId", data.eventId ?? null);
     form.setValue("eventName", data.workoutName ?? "");
@@ -182,7 +183,6 @@ export const UpdateLocationModal = ({
       form.setValue("eventDayOfWeek", null);
     }
     form.setValue("eventTypeIds", data.eventTypeIds);
-    form.setValue("eventDescription", data.eventDescription ?? "");
 
     form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
   }, [data, eventTypes, form, session?.email]);
@@ -231,7 +231,7 @@ export const UpdateLocationModal = ({
                   "Save Changes"
                 )}
               </Button>
-              {canEditRegion ? (
+              {canEditRegion?.success ? (
                 <div className="mb-2 text-center text-xs text-destructive">
                   Since you can edit this region, these changes will be
                   reflected immediately

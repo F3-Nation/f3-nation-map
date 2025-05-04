@@ -15,6 +15,13 @@
       "when": 1744373350527,
       "tag": "0001_famous_monster_badoon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746334397565,
+      "tag": "0002_careless_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

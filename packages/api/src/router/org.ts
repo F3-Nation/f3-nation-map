@@ -31,6 +31,7 @@ export const orgRouter = createTRPCRouter({
         searchTerm: z.string().optional(),
         sorting: SortingSchema.optional(),
         statuses: z.enum(IsActiveStatus).array().optional(),
+        parentOrgIds: z.number().array().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -55,14 +56,17 @@ export const orgRouter = createTRPCRouter({
               ilike(org.description, `%${input?.searchTerm}%`),
             )
           : undefined,
+        input?.parentOrgIds?.length
+          ? inArray(org.parentId, input.parentOrgIds)
+          : undefined,
       );
 
       const sortedColumns = getSortingColumns(
         input?.sorting,
         {
           id: org.id,
-          parents: parentOrg.name,
-          location: org.name,
+          name: org.name,
+          parentOrgName: parentOrg.name,
           status: org.isActive,
           created: org.created,
         },
@@ -188,7 +192,6 @@ export const orgRouter = createTRPCRouter({
 
       const orgToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        orgType: input.orgType,
         meta: {
           ...(input.meta as Record<string, string>),
         },

@@ -262,6 +262,7 @@ export const locationRouter = createTRPCRouter({
             lat: schema.locations.latitude,
             lon: schema.locations.longitude,
             orgId: schema.locations.orgId,
+            locationName: schema.locations.name,
             locationMeta: schema.locations.meta,
             locationAddress: schema.locations.addressStreet,
             locationAddress2: schema.locations.addressStreet2,
@@ -276,6 +277,7 @@ export const locationRouter = createTRPCRouter({
             parentId: parentOrg.id,
             parentLogo: parentOrg.logoUrl,
             parentName: parentOrg.name,
+            parentWebsite: parentOrg.website,
             regionId: regionOrg.id,
             regionName: regionOrg.name,
             regionLogo: regionOrg.logoUrl,
@@ -310,7 +312,10 @@ export const locationRouter = createTRPCRouter({
         .from(schema.locations)
         .innerJoin(
           schema.events,
-          eq(schema.locations.id, schema.events.locationId),
+          and(
+            eq(schema.locations.id, schema.events.locationId),
+            eq(schema.events.isActive, true),
+          ),
         )
         .leftJoin(parentOrg, eq(schema.events.orgId, parentOrg.id))
         .leftJoin(
@@ -335,7 +340,12 @@ export const locationRouter = createTRPCRouter({
           schema.eventTypes,
           eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
         )
-        .where(eq(schema.locations.id, input.locationId))
+        .where(
+          and(
+            eq(schema.locations.id, input.locationId),
+            eq(schema.events.isActive, true),
+          ),
+        )
         .groupBy(
           schema.locations.id,
           schema.events.id,
@@ -346,7 +356,6 @@ export const locationRouter = createTRPCRouter({
       const location = results[0]?.location;
       const events = results.map((r) => r.event);
 
-      console.log("location", location);
       if (location?.lat == null || location?.lon == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
