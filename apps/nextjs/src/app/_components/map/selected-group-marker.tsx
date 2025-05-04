@@ -1,142 +1,154 @@
-"use client";
-
-import { memo } from "react";
-import { AdvancedMarker } from "@vis.gl/react-google-maps";
-
-import { dayOfWeekToShortDayOfWeek } from "@acme/shared/app/functions";
-import { cn } from "@acme/ui";
+import type {
+  Cluster,
+  ClusterStats,
+  Marker,
+  Renderer,
+} from "@googlemaps/markerclusterer";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { useMap } from "@vis.gl/react-google-maps";
 
 import type { SparseF3Marker } from "~/utils/types";
-import { groupMarkerClick } from "~/utils/actions/group-marker-click";
-import { isTouchDevice } from "~/utils/is-touch-device";
-import {
-  selectedItemStore,
-  setSelectedItem,
-} from "~/utils/store/selected-item";
+import { mapStore } from "~/utils/store/map";
+import { selectedItemStore } from "~/utils/store/selected-item";
+import { useFilteredMapResults } from "../map/filtered-map-results-provider";
+import { FeatureMarker } from "../map/group-marker";
+import { useWindowSize } from "@react-hook/window-size";
 
-export const MemoSelectedGroupMarker = memo(
-  ({
-    group,
-    selectedIndex,
-    alwaysShowFillInsteadOfOutline,
-    panel,
-  }: {
-    group: SparseF3Marker;
-    selectedIndex: number;
-    alwaysShowFillInsteadOfOutline?: boolean;
-    panel?: boolean;
-  }) => {
-    console.log(
-      "MemoSelectedGroupMarker",
-      group,
-      selectedIndex,
-      alwaysShowFillInsteadOfOutline,
-      panel,
-    );
-    const { lat, lon, events, id } = group;
-    if (lat === null || lon === null) return null;
-    const filteredEvents = events;
+// export const ClusteredMarkers = () => {
+//   const { filteredLocationMarkers } = useFilteredMapResults();
 
-    return (
-      <AdvancedMarker
-        position={{ lat, lng: lon }}
-        // clickable={false}
-        // onMouseEnter={() => console.log("selected onMouseEnter")}
-        onMouseLeave={() => {
-          if (isTouchDevice()) return;
-          if (selectedItemStore.get("locationId") !== id) return;
-          setSelectedItem({
-            locationId: null,
-            eventId: null,
-            showPanel: false,
-          });
-        }}
-      >
-        <div className="relative flex flex-col">
-          <div
-            className="flex flex-row rounded-full ring-[1px] ring-gray-700"
-            style={{ zIndex: 1, width: `${filteredEvents.length * 30 + 4}px` }}
-          >
-            {filteredEvents.map((event, markerIdx, markerArray) => {
-              const dotw = event.dayOfWeek;
-              const isStart = markerIdx === 0;
-              const isEnd = markerIdx === markerArray.length - 1;
-              const dayText = dotw ? dayOfWeekToShortDayOfWeek(dotw) : null;
-              return (
-                <button
-                  key={id + "-" + event.id}
-                  onMouseEnter={() => {
-                    if (isTouchDevice()) return;
-                    const eventId = event.id;
-                    setSelectedItem({
-                      locationId: id,
-                      ...(isNaN(eventId) ? {} : { eventId }),
-                      showPanel: false,
-                    });
-                  }}
-                  onClick={() => {
-                    if (isTouchDevice()) return;
-                    const eventId = event.id;
-                    void groupMarkerClick({ locationId: id, eventId });
-                  }}
-                  className={cn(
-                    "flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
-                    "border-l-2 border-r-2",
-                    `google-eventid-${event.id}`,
-                    {
-                      "rounded-r-full": isEnd,
-                      "rounded-l-full": isStart,
-                      "border-red-600 font-bold dark:bg-red-400":
-                        selectedIndex === markerIdx,
-                      "bg-red-600": true,
-                      //   (!!panel || alwaysShowFillInsteadOfOutline) &&
-                      //  (  selectedIndex === markerIdx || selectedIndex === -1 ),
-                    },
-                  )}
-                >
-                  {dayText}
-                </button>
-              );
-            })}
-          </div>
-          <svg
-            viewBox="0 0 40 40"
-            className="-mt-[10.5px] w-[28px] self-center"
-            style={{ zIndex: 0 }}
-          >
-            <path
-              className={cn("fill-foreground", {
-                "fill-[#dc2626] dark:fill-[#f87171]": false,
-              })}
-              d={
-                filteredEvents.length === 1
-                  ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
-                  : "M34 14.5 L26 24.249 Q20 34.641 14 24.249 L6 14.5"
-              }
-              stroke="none"
-            />
-            <path
-              d={
-                filteredEvents.length === 1
-                  ? "M34 10 L26 24.249 Q20 34.641 14 24.249 L6 10"
-                  : "M34 15 L26 24.249 Q20 34.641 14 24.249 L6 15"
-              }
-              stroke="background"
-              strokeWidth={0.5}
-              fill="none"
-            />
-          </svg>
-        </div>
-      </AdvancedMarker>
-    );
-  },
-  (prev, next) =>
-    prev.panel === next.panel &&
-    prev.group.lat === next.group.lat &&
-    prev.group.lon === next.group.lon &&
-    prev.group.id === next.group.id &&
-    prev.group.events.length === next.group.events.length &&
-    prev.selectedIndex === next.selectedIndex,
-);
+//   const memoFilteredLocationMarkers = useMemo(() => {
+//     if (!filteredLocationMarkers) return null;
+//     return filteredLocationMarkers;
+//   }, [filteredLocationMarkers]);
 
-MemoSelectedGroupMarker.displayName = "MemoSelectedGroupMarker";
+//   return (
+//     <DataProvidedClusteredMarkers
+//       filteredLocationMarkers={memoFilteredLocationMarkers}
+//     />
+//   );
+// };
+
+export const ClusteredMarkers = () => {
+  // console.log("filteredLocationMarkers", filteredLocationMarkers);
+  const { filteredLocationMarkers } = useFilteredMapResults();
+  const selectedLocationId = selectedItemStore.use.locationId();
+  const selectedEventId = selectedItemStore.use.eventId();
+  const panelLocationId = selectedItemStore.use.panelLocationId();
+  const panelEventId = selectedItemStore.use.panelEventId();
+
+  const map = useMap();
+  const [markers, setMarkers] = useState<Record<string, Marker>>({});
+  const modifiedLocationMarkers = mapStore.use.modifiedLocationMarkers();
+  const [width] = useWindowSize();
+
+  const clusterer = useMemo(() => {
+    console.log("clusterer");
+    if (!map) return null;
+
+    return new MarkerClusterer({ map, renderer: new CustomRenderer() });
+  }, [map]);
+
+  useEffect(() => {
+    console.log("markers", Object.keys(markers).length);
+    if (!clusterer) return;
+
+    clusterer.clearMarkers();
+    clusterer.addMarkers(Object.values(markers));
+  }, [clusterer, markers]);
+
+  const setMarkerRef = useCallback((marker: Marker | null, key: string) => {
+    setMarkers((markers) => {
+      if ((marker && markers[key]) ?? (!marker && !markers[key]))
+        return markers;
+
+      if (marker) {
+        return { ...markers, [key]: marker };
+      } else {
+        const { [key]: _, ...newMarkers } = markers;
+
+        return newMarkers;
+      }
+    });
+  }, []);
+
+  const memoFilteredLocationMarkers = useMemo(() => {
+    if (!filteredLocationMarkers) return null;
+    return filteredLocationMarkers.map((marker) => {
+      console.log("rendering marker", marker.id);
+      if (!marker.lat || !marker.lon) return null;
+      const modifiedLocation = modifiedLocationMarkers[marker.id];
+      const position = modifiedLocation ?? { lat: marker.lat, lng: marker.lon };
+      const isCurrentSelectedLocation = selectedLocationId === marker.id;
+      const isCurrentPanelLocation = panelLocationId === marker.id;
+      const selectedEventIdOfEvents =
+        marker.events.find((event) => event.id === selectedEventId)?.id ?? null;
+      const panelEventIdOfEvents =
+        marker.events.find((event) => event.id === panelEventId)?.id ?? null;
+      return (
+        <FeatureMarker
+          key={marker.id}
+          featureId={marker.id.toString()}
+          position={{ lat: marker.lat, lng: marker.lon }}
+          setMarkerRef={setMarkerRef}
+          events={marker.events}
+          selectedEventIdOfEvents={selectedEventIdOfEvents}
+          panelEventIdOfEvents={panelEventIdOfEvents}
+          isCurrentSelectedLocation={isCurrentSelectedLocation}
+          isCurrentPanelLocation={isCurrentPanelLocation}
+        />
+      );
+    });
+  }, [filteredLocationMarkers, setMarkerRef, selectedLocationId, selectedEventId, panelLocationId, panelEventId]);
+
+  return memoFilteredLocationMarkers;
+};
+
+class CustomRenderer implements Renderer {
+  /**
+   * The default render function for the library used by {@link MarkerClusterer}.
+   *
+   * Currently set to use the following:
+   *
+   * ```typescript
+   * // change color if this cluster has more markers than the mean cluster
+   * const color =
+   *   count > Math.max(10, stats.clusters.markers.mean)
+   *     ? "#ff0000"
+   *     : "#0000ff";
+   *
+   * // create svg url with fill color
+   * const svg = window.btoa(`
+   * <svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+   *   <circle cx="120" cy="120" opacity=".6" r="70" />
+   *   <circle cx="120" cy="120" opacity=".3" r="90" />
+   *   <circle cx="120" cy="120" opacity=".2" r="110" />
+   *   <circle cx="120" cy="120" opacity=".1" r="130" />
+   * </svg>`);
+   *
+   * // create marker using svg icon
+   * return new google.maps.Marker({
+   *   position,
+   *   icon: {
+   *     url: `data:image/svg+xml;base64,${svg}`,
+   *     scaledSize: new google.maps.Size(45, 45),
+   *   },
+   *   label: {
+   *     text: String(count),
+   *     color: "rgba(255,255,255,0.9)",
+   *     fontSize: "12px",
+   *   },
+   *   // adjust zIndex to be above other markers
+   *   zIndex: 1000 + count,
+   * });
+   * ```
+   */
+  render({ count, position }: Cluster, stats: ClusterStats): Marker {
+    return new google.maps.marker.AdvancedMarkerElement({
+      position,
+      content: document.createElement("div"),
+      zIndex: 1000 + count,
+    });
+  }
+}
