@@ -31,12 +31,7 @@ import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getEditableOrgIdsForUser } from "../get-editable-org-ids";
 import { getSortingColumns } from "../get-sorting-columns";
 import { notifyMapChangeRequest } from "../services/map-request-notification";
-import {
-  createTRPCRouter,
-  editorProcedure,
-  protectedProcedure,
-  publicProcedure,
-} from "../trpc";
+import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const requestRouter = createTRPCRouter({
@@ -435,46 +430,6 @@ export const requestRouter = createTRPCRouter({
         updateRequest: omit(inserted, ["token"]),
       };
     }),
-  // This can be public because it uses a db token for auth
-  validateSubmission: protectedProcedure
-    .input(z.object({ token: z.string(), submissionId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const [updateRequest] = await ctx.db
-        .select()
-        .from(schema.updateRequests)
-        .where(eq(schema.updateRequests.id, input.submissionId));
-
-      if (!updateRequest) {
-        throw new Error("Failed to find update request");
-      }
-
-      if (updateRequest.token !== input.token) {
-        throw new Error("Invalid token");
-      }
-
-      if (updateRequest.regionId == undefined) {
-        throw new Error("Region ID is required");
-      }
-      if (updateRequest.requestType === "delete_event") {
-        const result = await applyDeleteRequest(ctx, {
-          ...updateRequest,
-          regionId: updateRequest.regionId,
-          reviewedBy: "email",
-          // Type check
-          eventDayOfWeek: updateRequest.eventDayOfWeek ?? undefined,
-          eventMeta: updateRequest.eventMeta ?? undefined,
-        });
-        return result;
-      } else {
-        const result = await applyUpdateRequest(ctx, {
-          ...updateRequest,
-          regionId: updateRequest.regionId,
-          reviewedBy: "email",
-        });
-        return result;
-      }
-    }),
-
   validateDeleteByAdmin: editorProcedure
     .input(DeleteRequestSchema)
     .mutation(async ({ ctx, input }) => {
@@ -661,6 +616,7 @@ export const applyUpdateRequest = async (
       .values({
         parentId: updateRequest.regionId,
         orgType: "ao",
+        website: updateRequest.aoWebsite,
         defaultLocationId: updateRequest.locationId,
         name: updateRequest.aoName ?? "",
         isActive: true,
@@ -684,9 +640,11 @@ export const applyUpdateRequest = async (
     await ctx.db
       .update(schema.orgs)
       .set({
+        parentId: updateRequest.regionId,
+        website: updateRequest.aoWebsite,
+        defaultLocationId: updateRequest.locationId,
         name: updateRequest.aoName ?? ao.name,
         logoUrl: updateRequest.aoLogo,
-        parentId: updateRequest.regionId,
       })
       .where(eq(schema.orgs.id, updateRequest.aoId));
   }

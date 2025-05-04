@@ -178,7 +178,7 @@ export const LocationEventForm = ({
           />
         </div>
 
-        <div className="space-y-2 sm:col-span-2">
+        <div className="mx-2 space-y-2 sm:col-span-2">
           <div className="text-sm font-medium text-muted-foreground">
             Event Description
           </div>
@@ -392,8 +392,8 @@ export const LocationEventForm = ({
               searchPlaceholder="Select"
               className="overflow-hidden"
             />
-            <div className="mx-3 text-xs text-muted-foreground">
-              Select an AO above to move this workout to a different AO
+            <div className="mx-1 mt-1 text-xs text-muted-foreground">
+              Select an AO here to move this workout to a different AO
             </div>
           </div>
           <p className="text-xs text-destructive">
@@ -475,6 +475,21 @@ export const LocationEventForm = ({
           />
           <p className="text-xs text-destructive">
             {form.formState.errors.aoLogo?.message}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-muted-foreground">
+            AO Website
+          </div>
+          <Input {...form.register("aoWebsite")} />
+          <div className="text-xs text-muted-foreground">
+            Only add an <span className="font-semibold">AO</span> website here
+            if it is different than the{" "}
+            <span className="font-semibold">Region</span> website (edited
+            separately). Both show on the map event.
+          </div>
+          <p className="text-xs text-destructive">
+            {form.formState.errors.aoWebsite?.message}
           </p>
         </div>
       </div>
