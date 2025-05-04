@@ -92,6 +92,7 @@ export interface MDTableProps<T> {
   totalCount?: number;
   sorting?: SortingState;
   setSorting?: (updaterOrValue: Updater<SortingState>) => void;
+  emptyMessage?: string;
 }
 
 export const MDTable = <T,>(params: MDTableProps<T>) => {
@@ -116,6 +117,7 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
     totalCount: totalCountParam,
     sorting: sortingParam,
     setSorting: setSortingParam,
+    emptyMessage,
   } = params;
   // Data state management: if data is undefined, we show a loading state
   const cachedData = useRef(data);
@@ -216,14 +218,18 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
           />
           <div>
             {pagination ? (
-              <>
-                Showing {pagination.pageIndex * pagination.pageSize + 1}-
-                {Math.min(
-                  (pagination.pageIndex + 1) * pagination.pageSize,
-                  table.getRowCount(),
-                )}{" "}
-                of {table.getRowCount().toLocaleString()} {rowsName}
-              </>
+              table.getRowCount() === 0 ? (
+                <>Showing 0 {rowsName}</>
+              ) : (
+                <>
+                  Showing {pagination.pageIndex * pagination.pageSize + 1}-
+                  {Math.min(
+                    (pagination.pageIndex + 1) * pagination.pageSize,
+                    table.getRowCount(),
+                  )}{" "}
+                  of {table.getRowCount().toLocaleString()} {rowsName}
+                </>
+              )
             ) : (
               <>
                 Showing {table.getRowModel().rows?.length ?? 0} of{" "}
@@ -335,9 +341,9 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
               <TableRow>
                 <TableCell
                   colSpan={table.getAllColumns().length}
-                  className="h-24 text-center"
+                  className="h-24 text-left"
                 >
-                  No results.
+                  {emptyMessage ?? "No results."}
                 </TableCell>
               </TableRow>
             )}

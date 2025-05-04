@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import omit from "lodash/omit";
 import { z } from "zod";
 
-import type { DayOfWeek } from "@acme/shared/app/enums";
+import type { DayOfWeek, OrgType } from "@acme/shared/app/enums";
 import type { EventMeta, UpdateRequestMeta } from "@acme/shared/app/types";
 import type {
   DeleteRequestResponse,
@@ -15,9 +15,11 @@ import {
   countDistinct,
   eq,
   ilike,
+  inArray,
   or,
   schema,
 } from "@acme/db";
+import { UpdateRequestStatus } from "@acme/shared/app/enums";
 import {
   DeleteRequestSchema,
   RequestInsertSchema,
@@ -26,6 +28,7 @@ import {
 
 import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
+import { getEditableOrgIdsForUser } from "../get-editable-org-ids";
 import { getSortingColumns } from "../get-sorting-columns";
 import {
   createTRPCRouter,
@@ -44,10 +47,13 @@ export const requestRouter = createTRPCRouter({
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
           searchTerm: z.string().optional(),
+          onlyMine: z.boolean().optional(),
+          statuses: z.enum(UpdateRequestStatus).array().optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
+      const onlyMine = input?.onlyMine ?? false;
       const oldAoOrg = aliasedTable(schema.orgs, "old_ao_org");
       const oldRegionOrg = aliasedTable(schema.orgs, "old_region_org");
       const oldLocation = aliasedTable(schema.locations, "old_location");
@@ -58,7 +64,25 @@ export const requestRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
 
+      // Determine if filter by region IDs is needed
+      let editableOrgs: { id: number; type: OrgType }[] = [];
+      let isNationAdmin = false;
+
+      if (onlyMine) {
+        const result = await getEditableOrgIdsForUser(ctx);
+        editableOrgs = result.editableOrgs;
+        isNationAdmin = result.isNationAdmin;
+
+        if (editableOrgs.length === 0 && !isNationAdmin) {
+          // User has no editable orgs and is not a nation admin
+          return { requests: [], totalCount: 0 };
+        }
+      }
+
       const where = and(
+        input?.statuses?.length
+          ? inArray(schema.updateRequests.status, input?.statuses)
+          : undefined,
         input?.searchTerm
           ? or(
               ilike(
@@ -79,6 +103,13 @@ export const requestRouter = createTRPCRouter({
                 schema.updateRequests.locationDescription,
                 `%${input?.searchTerm}%`,
               ),
+            )
+          : undefined,
+        // Filter by editable orgs if onlyMine is true and not a nation admin
+        onlyMine && !isNationAdmin && editableOrgs.length > 0
+          ? inArray(
+              schema.updateRequests.regionId,
+              editableOrgs.map((org) => org.id),
             )
           : undefined,
       );
