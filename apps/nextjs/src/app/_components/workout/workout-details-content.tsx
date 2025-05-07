@@ -142,7 +142,18 @@ export const WorkoutDetailsContent = ({
                 {location.regionWebsite}
               </Link>
             ) : null,
-            Logo: location.regionLogo,
+            Logo: location.regionLogo ? (
+              <ImageWithFallback
+                key={location.regionLogo}
+                src={location.regionLogo}
+                fallbackSrc="/f3_logo.png"
+                loading="lazy"
+                width={64}
+                height={64}
+                alt={location.regionName ?? "F3 logo"}
+                className="rounded-lg bg-black"
+              />
+            ) : null,
           }
         : {},
     [location],
