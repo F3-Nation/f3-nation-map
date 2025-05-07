@@ -44,12 +44,14 @@ export const orgRouter = createTRPCRouter({
 
       const where = and(
         inArray(org.orgType, input.orgTypes),
-        !input?.statuses?.length ||
-          input.statuses.length === IsActiveStatus.length
-          ? undefined
-          : input.statuses.includes("active")
-            ? eq(org.isActive, true)
-            : eq(org.isActive, false),
+        !input.statuses
+          ? eq(org.isActive, true)
+          : !input.statuses.length ||
+              input.statuses.length === IsActiveStatus.length
+            ? undefined
+            : input.statuses.includes("active")
+              ? eq(org.isActive, true)
+              : eq(org.isActive, false),
         input?.searchTerm
           ? or(
               ilike(org.name, `%${input?.searchTerm}%`),

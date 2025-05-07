@@ -42,9 +42,17 @@ export const setupAdminTestEnvironment = async (page: Page) => {
   await page.goto("/?lat=36.211104&lng=-81.660849&zoom=3");
   await page.getByRole("button", { name: "Settings" }).click();
   await page.getByRole("button", { name: "Sign in (Dev Mode)" }).click();
+};
+
+export const turnOnEditMode = async (page: Page) => {
   await page.getByRole("button", { name: "Settings" }).click();
   await page.getByRole("button", { name: "Edit" }).click();
   await page.getByRole("button", { name: "Close" }).click();
+};
+
+export const goToAdminPortal = async (page: Page) => {
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("button", { name: "Admin Portal" }).click();
 };
 
 export const teardownTestEnvironment = async (context: BrowserContext) => {

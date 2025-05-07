@@ -78,4 +78,5 @@ export enum TestId {
   MAP_SEARCHBOX_POPOVER_CONTENT_DESKTOP = "map-searchbox-popover-content-desktop",
   SELECTED_ITEM_MOBILE = "selected-item-mobile",
   SELECTED_ITEM_DESKTOP = "selected-item-desktop",
+  SECTOR_NATION_SELECT = "sector-nation-select",
 }

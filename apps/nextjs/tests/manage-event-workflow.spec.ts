@@ -2,11 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { TestId } from "@acme/shared/common/enums";
 
-import { setupAdminTestEnvironment } from "./helpers";
+import { setupAdminTestEnvironment, turnOnEditMode } from "./helpers";
 
 test.describe("Manage Event Workflow", () => {
   test.beforeEach(async ({ page }) => {
     await setupAdminTestEnvironment(page);
+    await turnOnEditMode(page);
   });
 
   test("Find test AO if it exists and delete it", async ({ page }) => {

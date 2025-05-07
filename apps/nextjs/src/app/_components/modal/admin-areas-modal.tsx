@@ -34,9 +34,14 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { AreaInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 
 export default function AdminAreasModal({
   data,
@@ -391,6 +396,23 @@ export default function AdminAreasModal({
                     ) : (
                       "Save Changes"
                     )}
+                  </Button>
+                </div>
+                <div className="flex space-x-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    // variant="link"
+                    onClick={() => {
+                      closeModal();
+                      openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                        id: area?.id ?? -1,
+                        type: DeleteType.AREA,
+                      });
+                    }}
+                    className="w-full"
+                  >
+                    Delete Area
                   </Button>
                 </div>
               </div>

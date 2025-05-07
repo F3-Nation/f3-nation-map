@@ -412,6 +412,7 @@ export default function AdminAOsModal({
                 <div className="flex space-x-4 pt-4">
                   <Button
                     type="button"
+                    variant="outline"
                     // variant="link"
                     onClick={() => {
                       closeModal();
