@@ -1,0 +1,89 @@
+{
+  "cookies": [
+    {
+      "name": "authjs.csrf-token",
+      "value": "17e236d6ac86a8199ff3de77328040d8107622bb58561fadfe65330a2f24c8c9%7C5b04a8bbafd48df6355d079a74c3637c6f703b0f8b09f0757d9455a9ee8ce92e",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.940535526.1746375771",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1780935774.27251,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "authjs.callback-url",
+      "value": "http%3A%2F%2Flocalhost%3A3000%2F%3Flat%3D36.211104%26lng%3D-81.660849%26zoom%3D3",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "authjs.session-token",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZTBmTW9Nbmp3eVZscVpXMlhyY0FsOUxZMC1YeEdmNi1xNEE5YkREVGFfWTZVS3VKMkpyMTFwRW1qd0NoVGJjUHBYa051T1FCYnZWcGxHQVd6UU5FUXcifQ..5ZzwHKyvyIOt0xDXEV5VkQ.bZ3qzztzDQIM8UfaPkI4h5QhVEA4MjfdMDZSaxwArhkCTNwouzSE-iwd2a8GLegyBxwG9cYheMvu00KXmtgTzsFBI_y3LSVup6eWlAP-v-GXghBcQ_9nAy0C_Ln-MnCxQ7RIAWIg9BQwzBx509RaDUWrQ0JiEiXawsZwUjjBPqsNnhBueci3wKJXZJMEmxyWYQJPlXz_iD4SQQ5tVu8TUmbMkgGWxgg5hc2a-sXghNeMyvA2wGC1bFKCV0_X_vu1PJHVMhSK1DSCLWKIJqr15OQqfQ9G53A7EzcSnrlB8B8.NH6i1qSXhiUb7fTywpXvko58VP7emE8-6KtZOVRZmLA",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1748967774.263634,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_B5E62P7B49_test",
+      "value": "GS1.1.1746375770.1.1.1746375774.0.0.0",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1780935774.2724,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "search-store",
+          "value": "{\"state\":{},\"version\":1}"
+        },
+        {
+          "name": "selected-item-store",
+          "value": "{\"state\":{},\"version\":1}"
+        },
+        {
+          "name": "filter-store",
+          "value": "{\"state\":{},\"version\":1}"
+        },
+        {
+          "name": "app-store",
+          "value": "{\"state\":{\"myEmail\":\"\",\"mode\":\"view\"},\"version\":1}"
+        },
+        {
+          "name": "touch-device",
+          "value": "{\"state\":{},\"version\":1}"
+        },
+        {
+          "name": "map-store",
+          "value": "{\"state\":{\"center\":{\"lat\":36.211104,\"lng\":-81.660849},\"zoom\":3},\"version\":2}"
+        },
+        {
+          "name": "modal",
+          "value": "{\"state\":{},\"version\":1}"
+        }
+      ]
+    }
+  ]
+}
