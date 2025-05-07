@@ -2,9 +2,25 @@ import { expect, test } from "@playwright/test";
 
 import { TestId } from "@acme/shared/common/enums";
 
-import { setupAdminTestEnvironment, turnOnEditMode } from "./helpers";
+import {
+  cleanupTestData,
+  setupAdminTestEnvironment,
+  turnOnEditMode,
+} from "./helpers";
 
 test.describe("Manage Event Workflow", () => {
+  test.beforeAll(async ({ browser }) => {
+    // Create a new page for cleanup only
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Clean up any leftover test data before starting tests
+    await cleanupTestData(page);
+
+    // Close the context when done
+    await context.close();
+  });
+
   test.beforeEach(async ({ page }) => {
     await setupAdminTestEnvironment(page);
     await turnOnEditMode(page);

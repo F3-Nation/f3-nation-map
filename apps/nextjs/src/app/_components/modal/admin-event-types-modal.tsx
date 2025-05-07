@@ -31,9 +31,14 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { EventTypeInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
 const EventTypeInsertForm = EventTypeInsertSchema;
@@ -49,12 +54,12 @@ export default function AdminEventTypesModal({
     { id: data.id ?? -1 },
     { enabled: !!data.id },
   );
-  const { data: orgs } = api.org.all.useQuery({ orgTypes: ["region"] });
-  const sortedOrgs = useMemo(() => {
-    return orgs?.orgs.sort((a, b) => {
+  const { data: regions } = api.org.all.useQuery({ orgTypes: ["region"] });
+  const sortedRegions = useMemo(() => {
+    return regions?.orgs.sort((a, b) => {
       return a.orgType.localeCompare(b.orgType) || a.name.localeCompare(b.name);
     });
-  }, [orgs]);
+  }, [regions]);
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -180,9 +185,9 @@ export default function AdminEventTypesModal({
                     <VirtualizedCombobox
                       value={field.value?.toString()}
                       options={
-                        sortedOrgs?.map((org) => ({
-                          value: org.id.toString(),
-                          label: `${org.orgType}: ${org.name}`,
+                        sortedRegions?.map((region) => ({
+                          value: region.id.toString(),
+                          label: region.name,
                         })) ?? []
                       }
                       searchPlaceholder="Select a region"
@@ -219,7 +224,7 @@ export default function AdminEventTypesModal({
               />
             </div>
             <div className="mb-4 w-full px-2">
-              <div className="flex space-x-4 pt-4">
+              <div className="mb-4 flex space-x-4 pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -247,6 +252,20 @@ export default function AdminEventTypesModal({
                   )}
                 </Button>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  closeModal();
+                  openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                    id: eventType?.id ?? -1,
+                    type: DeleteType.EVENT_TYPE,
+                  });
+                }}
+                className="w-full"
+              >
+                Delete Event
+              </Button>
             </div>
           </div>
         </Form>

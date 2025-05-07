@@ -1,7 +1,8 @@
 import type { PlaywrightTestConfig } from "@playwright/test";
+import { devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
-  testDir: "./tests",
+  testDir: "./e2e",
   timeout: 120000,
   use: {
     baseURL: "http://localhost:3000",
@@ -18,6 +19,19 @@ const config: PlaywrightTestConfig = {
     reuseExistingServer: !process.env.CI,
   },
   retries: 1,
+  projects: [
+    { name: "setup", testMatch: /.*\.setup\.ts/ },
+    {
+      testMatch: /.*\.spec\.ts/,
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Use prepared auth state.
+        storageState: "./e2e/.auth/user.json",
+      },
+      dependencies: ["setup"],
+    },
+  ],
 };
 
 export default config;

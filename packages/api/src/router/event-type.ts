@@ -2,26 +2,106 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { InferInsertModel } from "@acme/db";
-import { count, eq, inArray, isNull, or, schema } from "@acme/db";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  schema,
+} from "@acme/db";
 import { EventTypeInsertSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
+import { withPagination } from "../with-pagination";
 
 export const eventTypeRouter = createTRPCRouter({
   all: publicProcedure
-    .input(z.object({ orgIds: z.number().array().optional() }).optional())
-    .query(async ({ ctx, input }) => {
-      const result = await ctx.db
-        .select({
-          id: schema.eventTypes.id,
-          name: schema.eventTypes.name,
-          description: schema.eventTypes.description,
-          eventCategory: schema.eventTypes.eventCategory,
-          specificOrgId: schema.eventTypes.specificOrgId,
-          specificOrgName: schema.orgs.name,
-          count: count(schema.eventsXEventTypes.eventTypeId),
+    .input(
+      z
+        .object({
+          orgIds: z.number().array().optional(),
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+          searchTerm: z.string().optional(),
+          sorting: z
+            .array(z.object({ id: z.string(), desc: z.boolean() }))
+            .optional(),
         })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input?.pageSize ?? 10;
+      const offset = (input?.pageIndex ?? 0) * limit;
+      const usePagination =
+        input?.pageIndex !== undefined && input?.pageSize !== undefined;
+      const where = and(
+        input?.searchTerm
+          ? or(
+              ilike(schema.eventTypes.name, `%${input?.searchTerm}%`),
+              ilike(schema.eventTypes.description, `%${input?.searchTerm}%`),
+            )
+          : undefined,
+        input?.orgIds?.length
+          ? or(
+              isNull(schema.eventTypes.specificOrgId),
+              inArray(schema.eventTypes.specificOrgId, input?.orgIds),
+            )
+          : undefined,
+        // input?.aoIds?.length ? inArray(parentOrg.id, input.aoIds) : undefined,
+      );
+
+      const sortedColumns = input?.sorting?.map((sorting) => {
+        const direction = sorting.desc ? desc : asc;
+        switch (sorting.id) {
+          case "name":
+            return direction(schema.eventTypes.name);
+          case "description":
+            return direction(schema.eventTypes.description);
+          case "eventCategory":
+            return direction(schema.eventTypes.eventCategory);
+          case "specificOrgName":
+            return direction(schema.orgs.name);
+          case "count":
+            return direction(count(schema.eventsXEventTypes.eventTypeId));
+          case "created":
+            return direction(schema.eventTypes.created);
+          default:
+            return direction(schema.eventTypes.id);
+        }
+      }) ?? [desc(schema.eventTypes.id)];
+
+      const select = {
+        id: schema.eventTypes.id,
+        name: schema.eventTypes.name,
+        description: schema.eventTypes.description,
+        eventCategory: schema.eventTypes.eventCategory,
+        specificOrgId: schema.eventTypes.specificOrgId,
+        specificOrgName: schema.orgs.name,
+        count: count(schema.eventsXEventTypes.eventTypeId),
+      };
+
+      const [countResult] = await ctx.db
+        .select({ count: count(schema.eventTypes.id) })
+        .from(schema.eventTypes)
+        .where(where);
+
+      console.log("countResult", countResult, input?.sorting);
+
+      if (!countResult) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event type not found",
+        });
+      }
+
+      const query = ctx.db
+        .select(select)
         .from(schema.eventTypes)
         .leftJoin(
           schema.eventsXEventTypes,
@@ -31,17 +111,14 @@ export const eventTypeRouter = createTRPCRouter({
           schema.orgs,
           eq(schema.eventTypes.specificOrgId, schema.orgs.id),
         )
-        .where(
-          input?.orgIds?.length
-            ? or(
-                isNull(schema.eventTypes.specificOrgId),
-                inArray(schema.eventTypes.specificOrgId, input?.orgIds),
-              )
-            : undefined,
-        )
+        .where(where)
         .groupBy(schema.eventTypes.id, schema.orgs.name);
 
-      return { eventTypes: result, total: result.length };
+      const eventTypes = usePagination
+        ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
+        : await query;
+
+      return { eventTypes, total: countResult.count };
     }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
@@ -136,6 +213,9 @@ export const eventTypeRouter = createTRPCRouter({
         });
       }
 
+      await ctx.db
+        .delete(schema.eventsXEventTypes)
+        .where(eq(schema.eventsXEventTypes.eventTypeId, input.id));
       await ctx.db
         .delete(schema.eventTypes)
         .where(eq(schema.eventTypes.id, input.id));

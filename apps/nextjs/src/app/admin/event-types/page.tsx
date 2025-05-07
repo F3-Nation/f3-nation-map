@@ -9,7 +9,7 @@ const EventTypesPage = async () => {
     <Layout>
       <div className="flex w-full  flex-col">
         <div className="flex flex-row items-center justify-between">
-          <h1 className="text-2xl font-bold">Locations</h1>
+          <h1 className="text-2xl font-bold">Event Types</h1>
           <div className="flex flex-row items-center justify-start gap-2">
             <AddEventTypeButton />
           </div>

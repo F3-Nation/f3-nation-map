@@ -79,6 +79,9 @@ export default function AdminDeleteModal({
           case DeleteType.LOCATION:
             void utils.location.invalidate();
             break;
+          case DeleteType.EVENT_TYPE:
+            void utils.eventType.invalidate();
+            break;
           default:
             throw new Error(`Invalid delete type: ${data.type}`);
         }

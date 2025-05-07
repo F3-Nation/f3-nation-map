@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
-import { MDTable } from "@acme/ui/md-table";
+import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
@@ -26,8 +26,14 @@ export const EventTypesTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingSchema>([]);
   const [selectedOrgs, setSelectedOrgs] = useState<Org[]>([]);
+  const { pagination, setPagination } = usePagination();
+
   const { data: eventTypes } = api.eventType.all.useQuery({
     orgIds: selectedOrgs.map((org) => org.id),
+    pageIndex: pagination.pageIndex,
+    pageSize: pagination.pageSize,
+    searchTerm: searchTerm,
+    sorting: sorting,
   });
 
   const handleOrgSelect = (org: Org) => {
@@ -40,20 +46,24 @@ export const EventTypesTable = () => {
     });
   };
 
+  console.log(eventTypes);
+
   return (
     <MDTable
+      data={eventTypes?.eventTypes}
+      totalCount={eventTypes?.total}
+      pagination={pagination}
+      setPagination={setPagination}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
-      data={eventTypes?.eventTypes}
+      sorting={sorting}
+      setSorting={setSorting}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
-      totalCount={eventTypes?.total}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_EVENT_TYPES, { id: row.original.id });
       }}
-      sorting={sorting}
-      setSorting={setSorting}
       filterComponent={
         <OrgFilter onOrgSelect={handleOrgSelect} selectedOrgs={selectedOrgs} />
       }

@@ -76,7 +76,7 @@ export default function AdminLocationsModal({
       email: location?.email ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
-      regionId: location?.regionId ?? -1,
+      regionId: location?.regionId ?? undefined,
       latitude: location?.latitude
         ? location.latitude.toString()
         : DEFAULT_CENTER[0].toString(),

@@ -59,6 +59,7 @@ yarn-error.log*
 
 # playwright
 test-results/
+.auth
 
 # sentry
 .env.sentry-build-plugin 

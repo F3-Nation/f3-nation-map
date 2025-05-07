@@ -307,7 +307,7 @@ export default function AdminWorkoutsModal({
                           defaultValue={field.value?.toString()}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a location" />
+                            <SelectValue placeholder="Select an AO" />
                           </SelectTrigger>
                           <SelectContent>
                             {filteredAOs
