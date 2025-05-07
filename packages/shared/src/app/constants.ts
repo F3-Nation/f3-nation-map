@@ -112,7 +112,7 @@ export const MOBILE_SEARCH_RESULT_ITEM_HEIGHT = 128;
 export const MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS = 2;
 
 export const feedbackSchema = z.object({
-  type: z.string(),
+  type: z.enum(["bug", "feature request", "feedback"]),
   subject: z.string(),
   email: z.string(),
   description: z.string(),

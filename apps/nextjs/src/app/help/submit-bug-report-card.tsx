@@ -4,6 +4,7 @@ import * as React from "react";
 
 import type { FeedbackSchema } from "@acme/shared/app/constants";
 import { feedbackSchema } from "@acme/shared/app/constants";
+import { FeedbackType } from "@acme/shared/app/enums";
 import { Button } from "@acme/ui/button";
 import {
   Card,
@@ -30,8 +31,22 @@ import {
   SelectValue,
 } from "@acme/ui/select";
 import { Textarea } from "@acme/ui/textarea";
+import { toast } from "@acme/ui/toast";
 
 import { api } from "~/trpc/react";
+
+const typeToTitle = (type: FeedbackType) => {
+  switch (type) {
+    case "bug":
+      return "Bug Report";
+    case "feature request":
+      return "Feature Request";
+    case "feedback":
+      return "Feedback";
+    default:
+      return "Other";
+  }
+};
 
 export const SubmitBugReportCard = () => {
   const id = React.useId();
@@ -51,6 +66,7 @@ export const SubmitBugReportCard = () => {
   const onSubmit = (values: FeedbackSchema) => {
     console.log("SubmitBugReportCard", values);
     submitFeedback.mutate(values);
+    toast.success(`${typeToTitle(values.type)} submitted`);
     form.reset();
   };
 
@@ -75,12 +91,11 @@ export const SubmitBugReportCard = () => {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="feedback">Feedback</SelectItem>
-                        <SelectItem value="bug">Bug</SelectItem>
-                        <SelectItem value="feature request">
-                          Feature Request
-                        </SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {FeedbackType.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {typeToTitle(type)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -86,3 +86,11 @@ export enum EventCategories {
   "2nd F - Fellowship" = "2nd F - Fellowship",
   "3rd F - Faith" = "3rd F - Faith",
 }
+
+export const FeedbackType = [
+  "bug",
+  "feature request",
+  "feedback",
+  "other",
+] as const;
+export type FeedbackType = (typeof FeedbackType)[number];
