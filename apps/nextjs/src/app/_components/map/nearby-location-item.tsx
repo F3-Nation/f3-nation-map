@@ -86,7 +86,8 @@ export const NearbyLocationItem = (props: {
     <button
       className={cn(
         "text-left text-sm text-foreground",
-        "relative w-full cursor-pointer px-2 py-2",
+        // pl-1 balances the image on left and right
+        "relative w-full cursor-pointer py-2 pl-1 pr-2",
         "bg-background",
         { "bg-muted": isSelected },
       )}
