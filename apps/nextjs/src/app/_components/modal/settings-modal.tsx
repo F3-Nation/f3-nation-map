@@ -15,7 +15,7 @@ import {
   Shield,
   Sun,
 } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useTheme } from "next-themes";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
@@ -32,6 +32,7 @@ import { toast } from "@acme/ui/toast";
 
 import { isProd } from "~/trpc/util";
 import { vanillaApi } from "~/trpc/vanilla";
+import { useAuth } from "~/utils/hooks/use-auth";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import { closeModal, ModalType, openModal } from "~/utils/store/modal";
@@ -42,14 +43,9 @@ export default function SettingsModal() {
   const mode = appStore.use.mode();
   const tiles = mapStore.use.tiles();
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession();
+  const { session, isNationAdmin, isEditorOrAdmin } = useAuth();
   const center = mapStore.use.center();
   const zoom = mapStore.use.zoom();
-  const isNationAdmin = session?.roles?.some(
-    (role) =>
-      ["admin", "editor"].includes(role.roleName) &&
-      role.orgName.toLowerCase().includes("f3 nation"),
-  );
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/?lat=${center.lat}&lng=${center.lng}&zoom=${zoom}`;
@@ -161,7 +157,17 @@ export default function SettingsModal() {
               </button>
               <button
                 disabled={!session}
-                onClick={() => appStore.setState({ mode: "edit" })}
+                onClick={() => {
+                  appStore.setState({ mode: "edit" });
+                  toast.info("Edit mode is on", {
+                    action: {
+                      label: "Learn more",
+                      onClick: () => {
+                        openModal(ModalType.EDIT_MODE_INFO);
+                      },
+                    },
+                  });
+                }}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
                   "disabled:pointer-events-none disabled:opacity-20",
@@ -231,21 +237,18 @@ export default function SettingsModal() {
             <p className="text-sm font-bold text-muted-foreground">Access</p>
             {!session ? (
               <>
-                <Link
-                  href={"/api/auth/signin"}
+                <button
+                  className={cn(
+                    "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
+                  )}
                   onClick={() => {
                     closeModal();
+                    openModal(ModalType.SIGN_IN, { callbackUrl: "/" });
                   }}
                 >
-                  <button
-                    className={cn(
-                      "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90",
-                    )}
-                  >
-                    <LogIn className="size-4" />
-                    <span className="text-xs">Sign in</span>
-                  </button>
-                </Link>
+                  <LogIn className="size-4" />
+                  <span className="text-xs">Sign in</span>
+                </button>
                 {!isProd && (isDevelopment || showDebug) ? (
                   <button
                     className={cn(
@@ -285,13 +288,11 @@ export default function SettingsModal() {
                     </p>
                   ))}
                 </div>
-                {session.roles?.some((role) =>
-                  ["admin", "editor"].includes(role.roleName),
-                ) && (
+                {isEditorOrAdmin && (
                   <Link href={"/admin"}>
                     <button
                       className={cn(
-                        "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-card p-2 text-foreground shadow-sm hover:bg-accent",
+                        "flex w-full flex-row items-center justify-center gap-1 rounded-md bg-background p-2 text-foreground shadow-sm hover:bg-accent",
                       )}
                       onClick={() => {
                         closeModal();

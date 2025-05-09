@@ -21,6 +21,7 @@ import AdminSectorsModal from "./admin-sectors-modal";
 import AdminUsersModal from "./admin-users-modal";
 import AdminWorkoutsModal from "./admin-workouts-modal";
 import DeleteModal from "./delete-modal";
+import { EditModeInfoModal } from "./edit-mode-info-modal";
 import { FullImageModal } from "./full-image-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
@@ -33,8 +34,10 @@ import { WorkoutDetailsModal } from "./workout-details-modal";
 
 export const ModalSwitcher = () => {
   const modal = useOpenModal();
-  const { type, data } = modal ?? {};
   const [width] = useWindowSize();
+
+  if (!modal) return null;
+  const { type, data } = modal;
 
   switch (type) {
     case ModalType.HOW_TO_JOIN:
@@ -122,7 +125,10 @@ export const ModalSwitcher = () => {
       return <MapHelpModal />;
     case ModalType.SIGN_IN:
       return <SignInModal data={data as DataType[ModalType.SIGN_IN]} />;
+    case ModalType.EDIT_MODE_INFO:
+      return <EditModeInfoModal />;
     default:
+      console.error(`Modal type ${type} not found`);
       return null;
   }
 };
