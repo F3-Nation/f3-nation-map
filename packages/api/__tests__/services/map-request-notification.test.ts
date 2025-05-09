@@ -749,7 +749,7 @@ describe("map-request-notification service", () => {
         expect.objectContaining({
           regionName: "Test Region",
           workoutName: "Test Event",
-          requestType: "New Event",
+          requestType: "New Workout",
           submittedBy: "Test User",
           requestsUrl: "https://test.example.com/admin/requests",
           noAdminsNotice: false,
@@ -763,7 +763,7 @@ describe("map-request-notification service", () => {
         expect.objectContaining({
           regionName: "Test Region",
           workoutName: "Test Event",
-          requestType: "New Event",
+          requestType: "New Workout",
           submittedBy: "Test User",
           requestsUrl: "https://test.example.com/admin/requests",
           noAdminsNotice: false,
@@ -832,7 +832,7 @@ describe("map-request-notification service", () => {
       expect(mockSendTemplateMessages).toHaveBeenCalledWith(
         Templates.mapChangeRequest,
         expect.objectContaining({
-          requestType: "Delete Event",
+          requestType: "Delete Workout",
         }),
       );
 

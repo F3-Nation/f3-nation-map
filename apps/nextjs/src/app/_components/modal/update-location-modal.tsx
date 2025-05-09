@@ -60,7 +60,10 @@ export const UpdateLocationModal = ({
   );
 
   const { data: session } = useSession();
-  const { data: eventTypes } = api.event.types.useQuery();
+  const { data: eventTypes } = api.eventType.all.useQuery({
+    pageSize: 200,
+    orgIds: formRegionId ? [formRegionId] : [],
+  });
 
   const onSubmit = form.handleSubmit(
     async (values) => {

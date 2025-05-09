@@ -43,6 +43,7 @@ export const EventTypesTable = () => {
     searchTerm: debouncedSearchTerm,
     pageSize: pagination.pageSize,
     pageIndex: pagination.pageIndex,
+    ignoreNationEventTypes: true,
   });
 
   const handleOrgSelect = (org: Org) => {

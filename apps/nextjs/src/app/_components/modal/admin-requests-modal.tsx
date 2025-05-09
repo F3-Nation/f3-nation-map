@@ -45,8 +45,6 @@ export default function AdminRequestsModal({
   const formId = form.watch("id");
 
   const utils = api.useUtils();
-  const { data: eventTypes } = api.event.types.useQuery();
-
   const validateSubmissionByAdmin =
     api.request.validateSubmissionByAdmin.useMutation();
   const rejectSubmissionByAdmin = api.request.rejectSubmission.useMutation();
@@ -137,7 +135,7 @@ export default function AdminRequestsModal({
       aoWebsite: request.aoWebsite ?? "",
       submittedBy: request.submittedBy ?? "",
     });
-  }, [request, form, eventTypes]);
+  }, [request, form]);
 
   if (!request) return <div>Loading...</div>;
   return (

@@ -78,7 +78,10 @@ export default function AdminWorkoutsModal({
   const { data: locations } = api.location.all.useQuery();
   const { data: aos } = api.org.all.useQuery({ orgTypes: ["ao"] });
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
-  const { data: eventTypes } = api.event.types.useQuery();
+  const { data: eventTypes } = api.eventType.all.useQuery({
+    pageSize: 200,
+    orgIds: event?.regions.map((r) => r.regionId),
+  });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -432,7 +435,7 @@ export default function AdminWorkoutsModal({
                       <VirtualizedCombobox
                         value={field.value?.map(String)}
                         options={
-                          eventTypes?.map((type) => ({
+                          eventTypes?.eventTypes.map((type) => ({
                             value: type.id.toString(),
                             label: type.name,
                           })) ?? []

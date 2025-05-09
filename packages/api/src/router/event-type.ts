@@ -12,16 +12,23 @@ import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
 
 export const eventTypeRouter = createTRPCRouter({
+  /**
+   * By default this gets all the event types available for the orgIds (meaning that general, nation-wide event types are included)
+   * To get only the event types for a specific org, set ignoreNationEventTypes to true
+   */
   all: publicProcedure
     .input(
-      z.object({
-        orgIds: z.number().array().optional(),
-        statuses: z.enum(IsActiveStatus).array().optional(),
-        pageIndex: z.number().optional(),
-        pageSize: z.number().optional(),
-        searchTerm: z.string().optional(),
-        sorting: SortingSchema.optional(),
-      }),
+      z
+        .object({
+          orgIds: z.number().array().optional(),
+          statuses: z.enum(IsActiveStatus).array().optional(),
+          pageIndex: z.number().optional(),
+          pageSize: z.number().optional(),
+          searchTerm: z.string().optional(),
+          sorting: SortingSchema.optional(),
+          ignoreNationEventTypes: z.boolean().optional(),
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const pageSize = input?.pageSize ?? 10;
@@ -41,7 +48,12 @@ export const eventTypeRouter = createTRPCRouter({
 
       const where = and(
         input?.orgIds?.length
-          ? inArray(schema.eventTypes.specificOrgId, input?.orgIds)
+          ? or(
+              inArray(schema.eventTypes.specificOrgId, input?.orgIds),
+              input?.ignoreNationEventTypes
+                ? undefined
+                : isNull(schema.eventTypes.specificOrgId),
+            )
           : undefined,
         !input?.statuses?.length ||
           input.statuses.length === IsActiveStatus.length
@@ -162,13 +174,16 @@ export const eventTypeRouter = createTRPCRouter({
         ...input,
         // eventCategory: (input.eventCategory ?? "first_f") as EventCategory,
       };
-      await ctx.db
+      const result = await ctx.db
         .insert(schema.eventTypes)
         .values(eventTypeData)
         .onConflictDoUpdate({
           target: schema.eventTypes.id,
           set: eventTypeData,
-        });
+        })
+        .returning();
+
+      return result;
     }),
   delete: editorProcedure
     .input(z.object({ id: z.number() }))
