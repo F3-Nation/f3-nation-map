@@ -30,13 +30,15 @@ export default function AdminDeleteRequestModal({
     orgTypes: ["region"],
   });
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<"approving" | "rejecting" | "idle">(
+    "idle",
+  );
   const { data: request } = api.request.byId.useQuery({ id: requestData.id });
 
   const utils = api.useUtils();
 
   const onReject = async () => {
-    setIsSubmitting(true);
+    setStatus("rejecting");
     try {
       await vanillaApi.request.rejectSubmission.mutate({
         id: requestData.id,
@@ -53,23 +55,23 @@ export default function AdminDeleteRequestModal({
       }
       console.error(error);
     } finally {
-      setIsSubmitting(false);
+      setStatus("idle");
     }
   };
 
   const onDelete = async () => {
-    setIsSubmitting(true);
+    setStatus("approving");
     if (!request) {
       toast.error("Request not found");
-      setIsSubmitting(false);
+      setStatus("idle");
       return;
     } else if (request.eventId == undefined || request.regionId == undefined) {
       toast.error("Request is missing eventId or regionId");
-      setIsSubmitting(false);
+      setStatus("idle");
       return;
     } else if (request.requestType !== "delete_event") {
       toast.error("Request is not a delete workout request");
-      setIsSubmitting(false);
+      setStatus("idle");
       return;
     }
 
@@ -93,7 +95,7 @@ export default function AdminDeleteRequestModal({
       }
       console.error(error);
     } finally {
-      setIsSubmitting(false);
+      setStatus("idle");
     }
   };
 
@@ -160,10 +162,10 @@ export default function AdminDeleteRequestModal({
             type="button"
             variant="ghost"
             onClick={onReject}
-            disabled={isSubmitting}
+            disabled={status === "rejecting"}
             className="bg-black text-white hover:bg-black/70 hover:text-white"
           >
-            {isSubmitting ? (
+            {status === "rejecting" ? (
               <div className="flex items-center gap-2">
                 Rejecting... <Spinner className="size-4" />
               </div>
@@ -177,7 +179,7 @@ export default function AdminDeleteRequestModal({
               type="button"
               variant="outline"
               onClick={() => closeModal()}
-              disabled={isSubmitting}
+              disabled={status === "rejecting"}
             >
               Cancel
             </Button>
@@ -186,10 +188,10 @@ export default function AdminDeleteRequestModal({
               type="button"
               variant="primary"
               onClick={onDelete}
-              disabled={isSubmitting}
+              disabled={status === "approving"}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isSubmitting ? (
+              {status === "approving" ? (
                 <div className="flex items-center gap-2">
                   Approving... <Spinner className="size-4" />
                 </div>

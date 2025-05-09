@@ -34,7 +34,9 @@ export default function AdminRequestsModal({
   data: DataType[ModalType.ADMIN_REQUESTS];
 }) {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<"approving" | "rejecting" | "idle">(
+    "idle",
+  );
   const { data: request } = api.request.byId.useQuery({ id: requestData.id });
   const form = useUpdateLocationForm({
     defaultValues: { id: request?.id ?? uuid() },
@@ -52,7 +54,7 @@ export default function AdminRequestsModal({
   const onSubmit = form.handleSubmit(
     async (values) => {
       try {
-        setIsSubmitting(true);
+        setStatus("approving");
         await validateSubmissionByAdmin.mutateAsync({
           ...values,
           eventStartTime: convertHH_mmToHHmm(values.eventStartTime ?? ""),
@@ -80,7 +82,7 @@ export default function AdminRequestsModal({
           toast.error("Failed to approve update");
         }
       } finally {
-        setIsSubmitting(false);
+        setStatus("idle");
       }
     },
     (error) => {
@@ -90,7 +92,7 @@ export default function AdminRequestsModal({
   );
 
   const onReject = async () => {
-    setIsSubmitting(true);
+    setStatus("rejecting");
     console.log("rejecting");
     await rejectSubmissionByAdmin
       .mutateAsync({
@@ -99,7 +101,7 @@ export default function AdminRequestsModal({
       .then(() => {
         void utils.request.invalidate();
         router.refresh();
-        setIsSubmitting(false);
+        setStatus("idle");
         toast.error("Rejected update");
         closeModal();
       });
@@ -159,7 +161,7 @@ export default function AdminRequestsModal({
                 className="bg-foreground text-background hover:bg-foreground/80"
                 onClick={() => onReject()}
               >
-                {isSubmitting ? (
+                {status === "rejecting" ? (
                   <div className="flex items-center gap-2">
                     Rejecting... <Spinner className="size-4" />
                   </div>
@@ -180,7 +182,7 @@ export default function AdminRequestsModal({
                   className="bg-primary text-white hover:bg-primary/80"
                   onClick={() => onSubmit()}
                 >
-                  {isSubmitting ? (
+                  {status === "approving" ? (
                     <div className="flex items-center gap-2">
                       Submitting... <Spinner className="size-4" />
                     </div>
