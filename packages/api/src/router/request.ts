@@ -522,18 +522,16 @@ export const applyDeleteRequest = async (
 ): Promise<DeleteRequestResponse> => {
   if (deleteRequest.eventId != undefined) {
     await ctx.db
-      .update(schema.updateRequests)
-      .set({ eventId: null })
-      .where(eq(schema.updateRequests.eventId, deleteRequest.eventId));
-    await ctx.db
       .delete(schema.eventsXEventTypes)
       .where(eq(schema.eventsXEventTypes.eventId, deleteRequest.eventId));
     await ctx.db
-      .delete(schema.events)
+      .update(schema.events)
+      .set({ isActive: false })
       .where(eq(schema.events.id, deleteRequest.eventId));
   } else if (deleteRequest.locationId != undefined) {
     await ctx.db
-      .delete(schema.locations)
+      .update(schema.locations)
+      .set({ isActive: false })
       .where(eq(schema.locations.id, deleteRequest.locationId));
   } else {
     throw new Error("Nothing to delete");
