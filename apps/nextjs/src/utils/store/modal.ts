@@ -30,6 +30,8 @@ export enum ModalType {
   ABOUT_MAP = "ABOUT_MAP",
   MAP_HELP = "MAP_HELP",
   FULL_IMAGE = "FULL_IMAGE",
+  SIGN_IN = "SIGN_IN",
+  EDIT_MODE_INFO = "EDIT_MODE_INFO",
 }
 export enum DeleteType {
   USER = "USER",
@@ -208,6 +210,11 @@ export interface DataType {
   [ModalType.ADMIN_EVENT_TYPES]: {
     id?: number | null;
   };
+  [ModalType.SIGN_IN]: {
+    callbackUrl?: string;
+    message?: string;
+  };
+  [ModalType.EDIT_MODE_INFO]: null;
 }
 
 export interface Modal<T extends ModalType> {
