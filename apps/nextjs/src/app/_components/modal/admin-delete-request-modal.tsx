@@ -68,7 +68,7 @@ export default function AdminDeleteRequestModal({
       setIsSubmitting(false);
       return;
     } else if (request.requestType !== "delete_event") {
-      toast.error("Request is not a delete event request");
+      toast.error("Request is not a delete workout request");
       setIsSubmitting(false);
       return;
     }
