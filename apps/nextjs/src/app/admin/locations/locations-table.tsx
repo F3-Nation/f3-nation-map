@@ -19,9 +19,13 @@ import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { RegionFilter } from "../_components/region-filter";
 import { LocationIsActiveFilter } from "./location-is-active-table";
 
+type Org = RouterOutputs["org"]["all"]["orgs"][number];
+
 export const LocationsTable = () => {
+  const [selectedRegions, setSelectedRegions] = useState<Org[]>([]);
   const { pagination, setPagination } = usePagination();
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingSchema>([]);
@@ -34,6 +38,7 @@ export const LocationsTable = () => {
     searchTerm: searchTerm,
     sorting: sorting,
     statuses: selectedStatuses,
+    regionIds: selectedRegions.map((region) => region.id),
   });
 
   const handleStatusSelect = (status: IsActiveStatus) => {
@@ -63,10 +68,21 @@ export const LocationsTable = () => {
       sorting={sorting}
       setSorting={setSorting}
       filterComponent={
-        <LocationIsActiveFilter
-          onStatusSelect={handleStatusSelect}
-          selectedStatuses={selectedStatuses}
-        />
+        <>
+          <RegionFilter
+            onRegionSelect={(region) => {
+              const newRegions = selectedRegions.includes(region)
+                ? selectedRegions.filter((r) => r !== region)
+                : [...selectedRegions, region];
+              setSelectedRegions(newRegions);
+            }}
+            selectedRegions={selectedRegions}
+          />
+          <LocationIsActiveFilter
+            onStatusSelect={handleStatusSelect}
+            selectedStatuses={selectedStatuses}
+          />
+        </>
       }
     />
   );
