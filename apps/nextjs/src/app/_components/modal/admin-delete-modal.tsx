@@ -73,6 +73,9 @@ export default function AdminDeleteModal({
           case DeleteType.EVENT:
             void utils.event.invalidate();
             break;
+          case DeleteType.EVENT_TYPE:
+            void utils.eventType.invalidate();
+            break;
           case DeleteType.USER:
             void utils.user.invalidate();
             break;
@@ -80,6 +83,7 @@ export default function AdminDeleteModal({
             void utils.location.invalidate();
             break;
           default:
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new Error(`Invalid delete type: ${data.type}`);
         }
         router.refresh();
@@ -100,11 +104,13 @@ export default function AdminDeleteModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[400px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Delete Record</DialogTitle>
+          <DialogTitle className="text-center">
+            Delete {dataTypeToName(data.type)}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="my-6 w-full px-3">
-          {`Are you sure you want to delete this ${data.type.toLowerCase()}?`}
+          {`Are you sure you want to delete this ${dataTypeToName(data.type)}?`}
         </div>
         <div className="mb-2 w-full px-2">
           <div className="flex space-x-4">
@@ -130,3 +136,31 @@ export default function AdminDeleteModal({
     </Dialog>
   );
 }
+
+const dataTypeToName = (
+  dataType: DataType[ModalType.ADMIN_DELETE_CONFIRMATION]["type"],
+) => {
+  switch (dataType) {
+    case DeleteType.NATION:
+      return "Nation";
+    case DeleteType.SECTOR:
+      return "Sector";
+    case DeleteType.AREA:
+      return "Area";
+    case DeleteType.REGION:
+      return "Region";
+    case DeleteType.AO:
+      return "AO";
+    case DeleteType.EVENT:
+      return "Event";
+    case DeleteType.EVENT_TYPE:
+      return "Event Type";
+    case DeleteType.USER:
+      return "User";
+    case DeleteType.LOCATION:
+      return "Location";
+    default:
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      throw new Error(`Invalid delete type: ${dataType}`);
+  }
+};

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { IsActiveStatus } from "@acme/shared/app/enums";
 import type { SortingSchema } from "@acme/validators";
 import { Button } from "@acme/ui/button";
 import {
@@ -13,21 +14,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
-import { MDTable } from "@acme/ui/md-table";
+import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
 import { api } from "~/trpc/react";
+import { useDebounce } from "~/utils/hooks/use-debounce";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { EventTypeIsActiveFilter } from "./event-type-is-active-filter";
 import { OrgFilter } from "./org-filter";
 
 type Org = RouterOutputs["org"]["all"]["orgs"][number];
 
 export const EventTypesTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
+    "active",
+  ]);
   const [sorting, setSorting] = useState<SortingSchema>([]);
   const [selectedOrgs, setSelectedOrgs] = useState<Org[]>([]);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const { pagination, setPagination } = usePagination({
+    pageSize: 20,
+  });
+
   const { data: eventTypes } = api.eventType.all.useQuery({
     orgIds: selectedOrgs.map((org) => org.id),
+    statuses: selectedStatuses,
+    searchTerm: debouncedSearchTerm,
+    pageSize: pagination.pageSize,
+    pageIndex: pagination.pageIndex,
   });
 
   const handleOrgSelect = (org: Org) => {
@@ -40,6 +55,16 @@ export const EventTypesTable = () => {
     });
   };
 
+  const handleStatusSelect = (status: IsActiveStatus) => {
+    setSelectedStatuses((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      } else {
+        return [...prev, status];
+      }
+    });
+  };
+
   return (
     <MDTable
       searchTerm={searchTerm}
@@ -47,15 +72,26 @@ export const EventTypesTable = () => {
       data={eventTypes?.eventTypes}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
-      totalCount={eventTypes?.total}
+      totalCount={eventTypes?.count}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_EVENT_TYPES, { id: row.original.id });
       }}
       sorting={sorting}
       setSorting={setSorting}
+      pagination={pagination}
+      setPagination={setPagination}
       filterComponent={
-        <OrgFilter onOrgSelect={handleOrgSelect} selectedOrgs={selectedOrgs} />
+        <>
+          <EventTypeIsActiveFilter
+            onStatusSelect={handleStatusSelect}
+            selectedStatuses={selectedStatuses}
+          />
+          <OrgFilter
+            onOrgSelect={handleOrgSelect}
+            selectedOrgs={selectedOrgs}
+          />
+        </>
       }
     />
   );

@@ -338,7 +338,10 @@ export const locationRouter = createTRPCRouter({
         )
         .leftJoin(
           schema.eventTypes,
-          eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+          and(
+            eq(schema.eventTypes.id, schema.eventsXEventTypes.eventTypeId),
+            eq(schema.eventTypes.isActive, true),
+          ),
         )
         .where(
           and(
