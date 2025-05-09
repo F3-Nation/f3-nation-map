@@ -1,7 +1,7 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
@@ -37,6 +37,18 @@ export const RegionsTable = ({
   const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
     "active",
   ]);
+
+  useEffect(() => {
+    const selectedSectorsIds = selectedSectors.map((sector) => sector.id);
+    setSelectedAreas((selectedAreas) =>
+      selectedAreas.filter(
+        (area) =>
+          !selectedSectorsIds.length ||
+          (!!area.parentId && selectedSectorsIds.includes(area.parentId)),
+      ),
+    );
+  }, [areas, selectedSectors]);
+
   const idToAreaMap = useMemo(() => {
     return areas.reduce(
       (acc, area) => {
@@ -129,6 +141,7 @@ export const RegionsTable = ({
             selectedSectors={selectedSectors}
           />
           <AreaFilter
+            selectedSectors={selectedSectors}
             onAreaSelect={handleAreaSelect}
             selectedAreas={selectedAreas}
           />
