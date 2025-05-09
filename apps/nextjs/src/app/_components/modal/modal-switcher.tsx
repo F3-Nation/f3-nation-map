@@ -26,6 +26,7 @@ import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
 import { QRCodeModal } from "./qr-code-modal";
 import SettingsModal from "./settings-modal";
+import SignInModal from "./sign-in-modal";
 import { UpdateLocationModal } from "./update-location-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
 import { WorkoutDetailsModal } from "./workout-details-modal";
@@ -119,6 +120,8 @@ export const ModalSwitcher = () => {
       return <FullImageModal data={data as DataType[ModalType.FULL_IMAGE]} />;
     case ModalType.MAP_HELP:
       return <MapHelpModal />;
+    case ModalType.SIGN_IN:
+      return <SignInModal data={data as DataType[ModalType.SIGN_IN]} />;
     default:
       return null;
   }
