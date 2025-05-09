@@ -41,7 +41,6 @@ export const LocationEventForm = ({
   const formRegionId = form.watch("regionId");
   const formLocationId = form.watch("locationId");
   const formAoId = form.watch("aoId");
-  console.log("form eventTypeIds", form.getValues().eventTypeIds);
 
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();

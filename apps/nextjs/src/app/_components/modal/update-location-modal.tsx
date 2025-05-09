@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TRPCClientError } from "@trpc/client";
 import gte from "lodash/gte";
@@ -60,10 +60,8 @@ export const UpdateLocationModal = ({
   );
 
   const { data: session } = useSession();
-  const { data: eventTypes } = api.eventType.all.useQuery({
-    pageSize: 200,
-    orgIds: formRegionId ? [formRegionId] : [],
-  });
+  const sessionEmailRef = useRef(session?.email);
+  sessionEmailRef.current = session?.email;
 
   const onSubmit = form.handleSubmit(
     async (values) => {
@@ -187,8 +185,8 @@ export const UpdateLocationModal = ({
     }
     form.setValue("eventTypeIds", data.eventTypeIds);
 
-    form.setValue("submittedBy", session?.email || appStore.get("myEmail"));
-  }, [data, eventTypes, form, session?.email]);
+    form.setValue("submittedBy", sessionEmailRef.current || appStore.get("myEmail"));
+  }, [data, form]);
 
   return (
     <Dialog
