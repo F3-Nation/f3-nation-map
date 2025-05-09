@@ -9,6 +9,7 @@ import {
   count,
   eq,
   ilike,
+  inArray,
   isNotNull,
   or,
   schema,
@@ -39,6 +40,7 @@ export const locationRouter = createTRPCRouter({
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
           statuses: z.enum(IsActiveStatus).array().optional(),
+          regionIds: z.number().array().optional(),
         })
         .optional(),
     )
@@ -60,6 +62,9 @@ export const locationRouter = createTRPCRouter({
               ilike(schema.locations.name, `%${input?.searchTerm}%`),
               ilike(schema.locations.description, `%${input?.searchTerm}%`),
             )
+          : undefined,
+        input?.regionIds?.length
+          ? inArray(schema.locations.orgId, input.regionIds)
           : undefined,
       );
 
