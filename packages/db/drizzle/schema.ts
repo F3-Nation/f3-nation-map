@@ -417,6 +417,7 @@ export const eventTypes = pgTable(
       .notNull(),
     specificOrgId: integer("specific_org_id"),
     eventCategory: eventCategory("event_category").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
   },
   (table) => [
     foreignKey({
@@ -616,17 +617,17 @@ export const updateRequests = pgTable(
       columns: [table.eventId],
       foreignColumns: [events.id],
       name: "update_requests_event_id_fkey",
-    }),
+    }).onDelete("no action"),
     foreignKey({
       columns: [table.locationId],
       foreignColumns: [locations.id],
       name: "update_requests_location_id_fkey",
-    }),
+    }).onDelete("no action"),
     foreignKey({
       columns: [table.regionId],
       foreignColumns: [orgs.id],
       name: "update_requests_region_id_fkey",
-    }),
+    }).onDelete("no action"),
   ],
 );
 

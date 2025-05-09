@@ -182,7 +182,10 @@ export default function AdminEventTypesModal({
                       options={
                         sortedOrgs?.map((org) => ({
                           value: org.id.toString(),
-                          label: `${org.orgType}: ${org.name}`,
+                          label:
+                            org.orgType !== "region"
+                              ? `${org.name} (${org.orgType})`
+                              : org.name,
                         })) ?? []
                       }
                       searchPlaceholder="Select a region"
