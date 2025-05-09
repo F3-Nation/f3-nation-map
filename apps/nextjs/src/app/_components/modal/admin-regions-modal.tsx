@@ -134,7 +134,7 @@ export default function AdminRegionsModal({
     <Dialog open={true} onOpenChange={() => closeModal()}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
-        className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[600px]`)}
+        className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
           <DialogTitle className="text-center">Edit Region</DialogTitle>
