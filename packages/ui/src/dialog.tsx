@@ -49,7 +49,7 @@ const DialogContent = React.forwardRef<
         style={{ zIndex: Z_INDEX.DIALOG_CONTENT }}
         className={cn(
           "my-6",
-          "relative grid w-full max-w-[calc(min(90%,768px))] gap-4 bg-card p-6 shadow-lg sm:rounded-lg md:w-full",
+          "relative grid w-full max-w-[calc(min(90%,768px))] gap-4 bg-muted p-6 shadow-lg sm:rounded-lg md:w-full",
           "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
