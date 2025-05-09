@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@acme/ui";
@@ -16,16 +16,28 @@ import type { RouterOutputs } from "~/trpc/types";
 import { api } from "~/trpc/react";
 
 type Area = RouterOutputs["org"]["all"]["orgs"][number];
+type Sector = RouterOutputs["org"]["all"]["orgs"][number];
 
 export const AreaFilter = ({
   onAreaSelect,
   selectedAreas,
+  selectedSectors,
 }: {
   onAreaSelect: (area: Area) => void;
   selectedAreas: Area[];
+  selectedSectors?: Sector[];
 }) => {
   const { data: areas } = api.org.all.useQuery({ orgTypes: ["area"] });
   const [open, setOpen] = useState(false);
+
+  const availableAreas = useMemo(() => {
+    return areas?.orgs.filter((area) => {
+      return (
+        !selectedSectors?.length ||
+        selectedSectors.some((sector) => sector.id === area.parentId)
+      );
+    });
+  }, [areas, selectedSectors]);
 
   return (
     <div className="max-w-80">
@@ -48,7 +60,7 @@ export const AreaFilter = ({
             <CommandInput placeholder="Search statuses..." />
             <CommandEmpty>No statuses found.</CommandEmpty>
             <CommandGroup>
-              {areas?.orgs.map((area) => (
+              {availableAreas?.map((area) => (
                 <CommandItem
                   key={area.id}
                   value={area.name}
