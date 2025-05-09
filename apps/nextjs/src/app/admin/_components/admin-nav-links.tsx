@@ -132,7 +132,7 @@ export const AdminNavLinks = ({
             key={link.href}
             className={cn(
               "flex items-center gap-2 text-sm font-medium",
-              pathname === link.href ? "bg-[#D6D6D6]" : "",
+              pathname === link.href ? "bg-muted" : "",
               linkClassName,
             )}
             href={link.href}

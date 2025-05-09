@@ -33,7 +33,7 @@ const Layout = ({
   return (
     <div className="h-[100vh] w-full overflow-auto">
       <div
-        className="fixed block w-full bg-[#ebebeb] lg:hidden"
+        className="fixed block w-full bg-card lg:hidden"
         style={{ height: ADMIN_HEADER_HEIGHT }}
       >
         <div className="flex h-full w-full flex-row items-center justify-between px-4">
@@ -74,7 +74,7 @@ const Layout = ({
         </div>
       </div>
       <div
-        className="fixed hidden h-full flex-col justify-between bg-[#ebebeb] lg:flex"
+        className="fixed hidden h-full flex-col justify-between bg-muted/20 lg:flex"
         style={{ width: ADMIN_SIDEBAR_WIDTH, zIndex: 1000 }}
       >
         <div className="">

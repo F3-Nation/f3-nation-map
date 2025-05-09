@@ -303,8 +303,8 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
               Array.from(Array(pagination.pageSize)).map((_, index) => (
                 <TableRow
                   key={index}
-                  className={cn(`hover:bg-gray-300`, {
-                    "bg-gray-200": index % 2 === 0,
+                  className={cn(`hover:bg-muted`, {
+                    "bg-muted/20": index % 2 === 0,
                   })}
                 >
                   {table.getAllColumns().map((column) => (
@@ -321,9 +321,9 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => onRowClick?.(row)}
                   className={cn(
-                    `hover:bg-gray-300`,
+                    `hover:bg-muted`,
                     { "hover:cursor-pointer": !!onRowClick },
-                    { "bg-gray-200": index % 2 === 0 },
+                    { "bg-muted/20": index % 2 === 0 },
                     rowClassName?.(row),
                   )}
                 >
@@ -427,7 +427,7 @@ export const MDTable = <T,>(params: MDTableProps<T>) => {
         ) : null}
         {isReloading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-24 w-32 items-center justify-center rounded-lg bg-white/80">
+            <div className="flex h-24 w-32 items-center justify-center rounded-lg bg-card">
               <Loader2 className="size-8 animate-spin" />
             </div>
           </div>
