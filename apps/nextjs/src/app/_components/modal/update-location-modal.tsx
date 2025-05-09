@@ -207,10 +207,10 @@ export const UpdateLocationModal = ({
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
                 {data.requestType === "edit"
-                  ? "Edit Event"
+                  ? "Edit Workout"
                   : data.requestType === "create_location"
                     ? "New Location"
-                    : "New Event"}
+                    : "New Workout"}
                 {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>

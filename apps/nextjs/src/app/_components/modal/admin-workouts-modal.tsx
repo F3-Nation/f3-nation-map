@@ -184,7 +184,7 @@ export default function AdminWorkoutsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Event</DialogTitle>
+          <DialogTitle className="text-center">Edit Workout</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
