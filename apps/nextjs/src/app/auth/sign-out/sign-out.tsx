@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react";
 
 import type { Session } from "@acme/auth";
 
-import { AuthWrapper } from "../wrapper";
+import { AuthWrapper } from "../components/auth-components";
 
 interface SignOutProps {
   session: Session | null;
