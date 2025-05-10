@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 
 export const useAuth = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { isNationAdmin, isEditorOrAdmin, isAdmin } = useMemo(() => {
     if (!session)
       return { isNationAdmin: false, isEditorOrAdmin: false, isAdmin: false };
@@ -26,5 +26,5 @@ export const useAuth = () => {
     return { isNationAdmin, isEditorOrAdmin, isAdmin };
   }, [session]);
 
-  return { session, isNationAdmin, isEditorOrAdmin, isAdmin };
+  return { session, isNationAdmin, isEditorOrAdmin, isAdmin, status };
 };
