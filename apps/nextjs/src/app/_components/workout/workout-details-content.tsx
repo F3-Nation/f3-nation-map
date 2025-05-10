@@ -211,7 +211,7 @@ export const WorkoutDetailsContent = ({
           }}
         >
           <Edit className="h-4 w-4" />
-          <span>Edit Event</span>
+          <span>Edit Workout</span>
         </button>
       ) : null}
 
@@ -269,7 +269,7 @@ export const WorkoutDetailsContent = ({
               }}
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Add Event</span>
+              <span>Add Workout</span>
             </button>
           ) : null}
         </div>
@@ -396,7 +396,7 @@ export const WorkoutDetailsContent = ({
             }}
           >
             <Edit className="h-4 w-4" />
-            <span>Edit Event</span>
+            <span>Edit Workout</span>
           </button>
 
           <button
@@ -438,7 +438,7 @@ export const WorkoutDetailsContent = ({
             }}
           >
             <Trash className="h-4 w-4" />
-            <span>Delete Event</span>
+            <span>Delete Workout</span>
           </button>
         </div>
       ) : null}

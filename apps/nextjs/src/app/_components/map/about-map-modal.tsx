@@ -20,7 +20,7 @@ export function AboutMapModal() {
     <Dialog open={true} onOpenChange={closeModal}>
       <DialogContent
         style={{ zIndex: Z_INDEX.HOW_TO_JOIN_MODAL }}
-        className={cn(`max-w-[90%] rounded-lg bg-muted lg:max-w-[400px]`)}
+        className={cn(`max-w-[90%] rounded-lg lg:max-w-[400px]`)}
       >
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold tracking-tight">

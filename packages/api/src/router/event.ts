@@ -371,9 +371,6 @@ export const eventRouter = createTRPCRouter({
 
       return result;
     }),
-  types: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db.select().from(schema.eventTypes);
-  }),
   eventIdToRegionNameLookup: publicProcedure.query(async ({ ctx }) => {
     const regionOrg = aliasedTable(schema.orgs, "region_org");
     const parentOrg = aliasedTable(schema.orgs, "parent_org");

@@ -146,12 +146,12 @@ const columns: TableOptions<
   //   header: Header,
   //   cell: (cell) => <Cell {...cell} />,
   // },
-  // {
-  //   accessorKey: "email",
-  //   meta: { name: "Email" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
+  {
+    accessorKey: "aoCount",
+    meta: { name: "AO Count" },
+    header: Header,
+    cell: (cell) => <Cell {...cell} />,
+  },
   {
     accessorKey: "lastAnnualReview",
     accessorFn: (row) =>

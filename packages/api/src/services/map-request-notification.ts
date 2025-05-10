@@ -27,13 +27,13 @@ interface Org {
 const formatRequestType = (requestType: RequestType): string => {
   switch (requestType) {
     case "create_event":
-      return "New Event";
+      return "New Workout";
     case "create_location":
       return "New Location";
     case "edit":
       return "Edit Request";
     case "delete_event":
-      return "Delete Event";
+      return "Delete Workout";
     default:
       return requestType;
   }

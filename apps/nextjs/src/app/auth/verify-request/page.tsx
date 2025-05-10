@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { VersionInfo } from "~/app/_components/version-info";
 import { env } from "~/env";
-import { AuthWrapper } from "../wrapper";
+import { AuthWrapper } from "../components/auth-components";
 
 export default function VerifyRequestPage() {
   const url = new URL(env.NEXT_PUBLIC_URL);

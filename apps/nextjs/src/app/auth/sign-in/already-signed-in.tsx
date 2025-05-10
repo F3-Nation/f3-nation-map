@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
-import { AuthWrapper } from "../wrapper";
+import { AuthWrapper } from "../components/auth-components";
 
 export const AlreadySignedIn = () => {
   const { data: session } = useSession();

@@ -16,6 +16,7 @@ import { GeoJsonPane } from "./map/geo-json-pane";
 import { GeolocationMarker } from "./map/geolocation-marker";
 import { HelpButton } from "./map/help-button";
 import { InfoButton } from "./map/info-button";
+import { LayoutEditButton } from "./map/layout-edit-button";
 import { MapProvider } from "./map/map-provider";
 import { MapSearchBoxMobile } from "./map/map-searchbox-mobile";
 import { MobileAllFilters } from "./map/mobile-all-filters";
@@ -66,6 +67,9 @@ export const MapLayoutItems = () => {
           <MapControl position={ControlPosition.RIGHT_BOTTOM}>
             <InfoButton className="mb-1" />
           </MapControl>
+          <MapControl position={ControlPosition.RIGHT_BOTTOM}>
+            <LayoutEditButton className="mb-1" />
+          </MapControl>
           <MapControl position={ControlPosition.TOP_LEFT}>
             <DesktopFilterButtons />
           </MapControl>
@@ -83,6 +87,9 @@ export const MapLayoutItems = () => {
           </MapControl>
           <MapControl position={ControlPosition.RIGHT_TOP}>
             <InfoButton className="mr-[10px] mt-1" />
+          </MapControl>
+          <MapControl position={ControlPosition.RIGHT_TOP}>
+            <LayoutEditButton className="mr-[10px] mt-1" />
           </MapControl>
         </>
       )}

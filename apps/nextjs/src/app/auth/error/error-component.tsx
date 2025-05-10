@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { VersionInfo } from "~/app/_components/version-info";
 import { env } from "~/env";
-import { AuthWrapper } from "../wrapper";
+import { AuthWrapper } from "../components/auth-components";
 
 type Error = "default" | "Configuration" | "AccessDenied" | "Verification";
 

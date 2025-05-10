@@ -141,9 +141,9 @@ const columns: TableOptions<
     cell: ({ row }) => {
       const requestTypeText =
         row.original.requestType === "delete_event"
-          ? "Delete Event"
+          ? "Delete Workout"
           : row.original.requestType === "create_event"
-            ? "Create Event"
+            ? "Create Workout"
             : row.original.requestType === "create_location"
               ? "Create Location"
               : row.original.requestType === "edit"

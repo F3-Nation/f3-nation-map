@@ -39,6 +39,18 @@ steps:
       - "managed"
       - "--allow-unauthenticated"
 
+  # Final notification step - only runs if previous steps succeed
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "notify-success"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud pubsub topics publish projects/pin-mastery/topics/map-build-success \
+          --message="Build succeeded for $_ENVIRONMENT deployment" \
+          --attribute=environment=$_ENVIRONMENT,service=f3-2,status=success,buildId=$BUILD_ID
+        echo "Success notification sent to Pub/Sub"
+
 options:
   logging: CLOUD_LOGGING_ONLY
 
@@ -46,3 +58,7 @@ availableSecrets:
   secretManager:
     - versionName: projects/233824588998/secrets/DOPPLER_TOKEN/versions/latest
       env: "_DOPPLER_TOKEN"
+
+# Default values for substitutions
+substitutions:
+  _ENVIRONMENT: "production" # Default to production if not specified

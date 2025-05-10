@@ -19,7 +19,7 @@ export const AddWorkoutButton = () => {
       )}
     >
       <Plus />
-      Add Event
+      Add Workout
     </button>
   );
 };
