@@ -201,42 +201,12 @@ const columns: TableOptions<
       );
     },
   },
-  // {
-  //   accessorKey: "description",
-  //   meta: { name: "Description" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "website",
-  //   meta: { name: "Website" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "email",
-  //   meta: { name: "Email" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "twitter",
-  //   meta: { name: "Twitter" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "facebook",
-  //   meta: { name: "Facebook" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "instagram",
-  //   meta: { name: "Instagram" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
+  {
+    accessorKey: "aoCount",
+    meta: { name: "AO Count" },
+    header: Header,
+    cell: (cell) => <Cell {...cell} />,
+  },
   {
     accessorKey: "lastAnnualReview",
     accessorFn: (row) =>

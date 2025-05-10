@@ -64,18 +64,12 @@ const columns: TableOptions<Sector>["columns"] = [
       );
     },
   },
-  // {
-  //   accessorKey: "website",
-  //   meta: { name: "Website" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
-  // {
-  //   accessorKey: "email",
-  //   meta: { name: "Email" },
-  //   header: Header,
-  //   cell: (cell) => <Cell {...cell} />,
-  // },
+  {
+    accessorKey: "aoCount",
+    meta: { name: "AO Count" },
+    header: Header,
+    cell: (cell) => <Cell {...cell} />,
+  },
   {
     accessorKey: "lastAnnualReview",
     accessorFn: (row) =>
