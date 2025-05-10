@@ -155,7 +155,10 @@ export default function AdminRequestsModal({
                 {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
-            <LocationEventForm isAdminForm={true} />
+            <LocationEventForm
+              isAdminForm={true}
+              requestType={request.requestType}
+            />
             <div className="mt-4 flex justify-between gap-2">
               <Button
                 type="button"

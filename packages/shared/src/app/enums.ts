@@ -46,6 +46,7 @@ export const RequestType = [
   "move_event_to_different_ao",
   "move_event_to_new_ao",
   "delete_event",
+  "delete_ao", // deletes an ao, its workouts, and possibly the location
 ] as const;
 export type RequestType = (typeof RequestType)[number];
 

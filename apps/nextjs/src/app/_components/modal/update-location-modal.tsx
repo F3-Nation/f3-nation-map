@@ -214,16 +214,34 @@ export const UpdateLocationModal = ({
           >
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold sm:text-4xl">
-                {data.requestType === "edit"
-                  ? "Edit Workout"
-                  : data.requestType === "create_location"
-                    ? "New Location"
-                    : "New Workout"}
+                {data.requestType === "edit" && !data.eventId
+                  ? "Edit AO Details"
+                  : data.requestType === "edit" && data.eventId
+                    ? "Edit Event Details"
+                    : data.requestType === "create_location"
+                      ? "Create New Location, AO & Event"
+                      : data.requestType === "create_event"
+                        ? "Add New Event to Existing AO"
+                        : data.requestType === "move_ao_to_different_region"
+                          ? "Move AO to Different Region"
+                          : data.requestType === "move_ao_to_new_location"
+                            ? "Move AO to New Location"
+                            : data.requestType ===
+                                "move_ao_to_different_location"
+                              ? "Move AO to Different Location"
+                              : data.requestType ===
+                                  "move_event_to_different_ao"
+                                ? "Move Event to Different AO"
+                                : data.requestType === "move_event_to_new_ao"
+                                  ? "Move Event to New AO"
+                                  : data.requestType === "delete_event"
+                                    ? "Delete Event"
+                                    : "Update Location"}
                 {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
 
-            <LocationEventForm />
+            <LocationEventForm requestType={data.requestType} />
 
             <div className="mt-4 flex flex-col items-stretch justify-end gap-2">
               <Button

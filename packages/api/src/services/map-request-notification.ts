@@ -34,6 +34,8 @@ const formatRequestType = (requestType: RequestType): string => {
       return "Edit Request";
     case "delete_event":
       return "Delete Workout";
+    case "delete_ao":
+      return "Delete AO";
     default:
       return requestType;
   }

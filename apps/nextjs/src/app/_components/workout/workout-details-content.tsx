@@ -2,7 +2,6 @@ import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gte from "lodash/gte";
-import { Edit, PlusCircle, Trash } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import { isTruthy } from "@acme/shared/common/functions";
@@ -11,18 +10,10 @@ import { toast } from "@acme/ui/toast";
 
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
-import { vanillaApi } from "~/trpc/vanilla";
 import { getWhenFromWorkout } from "~/utils/get-when-from-workout";
 import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
 import { appStore } from "~/utils/store/app";
-import {
-  DeleteType,
-  eventAndLocationToUpdateRequest,
-  eventDefaults,
-  modalStore,
-  ModalType,
-  openModal,
-} from "~/utils/store/modal";
+import { ModalType, openModal } from "~/utils/store/modal";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
 import { EventChip } from "../map/event-chip";
@@ -195,26 +186,6 @@ export const WorkoutDetailsContent = ({
         </div>
       </div>
 
-      {mode === "edit" ? (
-        <button
-          className={cn(
-            "-mt-2 flex w-fit flex-row items-center gap-2 rounded-sm bg-blue-600 px-2 text-white sm:mt-1",
-          )}
-          onClick={() => {
-            openModal(ModalType.UPDATE_LOCATION, {
-              requestType: "edit",
-              ...eventAndLocationToUpdateRequest({
-                event,
-                location,
-              }),
-            });
-          }}
-        >
-          <Edit className="h-4 w-4" />
-          <span>Edit Workout</span>
-        </button>
-      ) : null}
-
       <div>
         {(results?.location.events.length ?? 0) > 1 ? (
           <span className="text-sm">
@@ -247,31 +218,6 @@ export const WorkoutDetailsContent = ({
               hideName={results.location.events.length === 1}
             />
           ))}
-          {mode === "edit" ? (
-            <button
-              className={cn(
-                "flex cursor-pointer flex-row items-center",
-                "rounded-sm",
-                "text-base text-white",
-                "px-2 shadow",
-                { "pointer-events-auto bg-blue-600": true },
-                { "gap-2 py-0": true },
-              )}
-              onClick={() => {
-                openModal(ModalType.UPDATE_LOCATION, {
-                  requestType: "create_event",
-                  ...eventDefaults,
-                  ...eventAndLocationToUpdateRequest({
-                    event: undefined,
-                    location,
-                  }),
-                });
-              }}
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>Add Workout</span>
-            </button>
-          ) : null}
         </div>
       </div>
 
@@ -380,68 +326,6 @@ export const WorkoutDetailsContent = ({
           <span>Copy Link to Event</span>
         </button>
       </div>
-
-      {mode === "edit" ? (
-        <div className="mt-4 flex flex-col gap-2">
-          <button
-            className="flex flex-row items-center justify-center gap-2 rounded-md bg-blue-600 px-2 py-1 text-white"
-            onClick={() => {
-              openModal(ModalType.UPDATE_LOCATION, {
-                requestType: "edit",
-                ...eventAndLocationToUpdateRequest({
-                  event,
-                  location,
-                }),
-              });
-            }}
-          >
-            <Edit className="h-4 w-4" />
-            <span>Edit Workout</span>
-          </button>
-
-          <button
-            className="flex flex-row items-center justify-center gap-2 rounded-md px-2 py-1 text-red-600"
-            onClick={() => {
-              openModal(ModalType.DELETE_CONFIRMATION, {
-                type: DeleteType.EVENT,
-                onConfirm: () => {
-                  if (location.regionId == null) {
-                    return;
-                  }
-                  if (!results?.location.regionId || !selectedEventId) return;
-
-                  const event = results.location.events.find(
-                    (e) => e.id === selectedEventId,
-                  );
-                  if (!event) return;
-
-                  void vanillaApi.request.submitDeleteRequest
-                    .mutate({
-                      regionId: results.location.regionId,
-                      eventId: event.id,
-                      eventName: event.name,
-                      submittedBy: session?.user?.email ?? "",
-                    })
-                    .then((result) => {
-                      void utils.location.invalidate();
-                      router.refresh();
-                      toast.success(
-                        result.status === "pending"
-                          ? "Delete request submitted"
-                          : "Successfully deleted event",
-                      );
-                      // Close all modals
-                      modalStore.setState({ modals: [] });
-                    });
-                },
-              });
-            }}
-          >
-            <Trash className="h-4 w-4" />
-            <span>Delete Workout</span>
-          </button>
-        </div>
-      ) : null}
     </>
   );
 };

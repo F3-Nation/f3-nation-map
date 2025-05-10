@@ -81,6 +81,7 @@ const ProvidedGoogleMapComponent = memo(
 
     const { isMobileWidth } = useIsMobileWidth();
     const { resolvedTheme } = useTheme();
+    const mode = appStore.use.mode();
 
     const fractionalZoom = mapStore.use.fractionalZoom();
     const tiles = mapStore.use.tiles();
@@ -94,6 +95,9 @@ const ProvidedGoogleMapComponent = memo(
 
     const [width, height] = useWindowSize();
 
+    // Create the class string for the map container based on mode
+    const mapContainerClass = mode === "edit" ? "map-plus-cursor" : "";
+
     // We have to manage mounting the map otherwise there is a mismatch in rendered size
     // Causing it to render as a blank screen. Not sure why "use client" isn't working
     const [isMounted, setIsMounted] = useState(false);
@@ -106,6 +110,7 @@ const ProvidedGoogleMapComponent = memo(
 
     return (
       <div
+        className={mapContainerClass}
         style={{
           height: height,
           width:
@@ -138,6 +143,7 @@ const ProvidedGoogleMapComponent = memo(
             console.log("map on click", e);
             if (appStore.get("mode") === "edit" && e.detail.latLng) {
               const latLng = e.detail.latLng;
+              console.log("Setting updateLocation:", latLng);
               mapStore.setState({ updateLocation: latLng });
             } else {
               setSelectedItem({

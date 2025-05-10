@@ -1,9 +1,8 @@
 import { useMemo } from "react";
-import lt from "lodash/lt";
-import { X } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { z } from "zod";
 
+import type { RequestType } from "@acme/shared/app/enums";
 import { DayOfWeek } from "@acme/shared/app/enums";
 import { Case } from "@acme/shared/common/enums";
 import { convertCase, isTruthy } from "@acme/shared/common/functions";
@@ -12,14 +11,10 @@ import { Input } from "@acme/ui/input";
 import { MultiSelect } from "@acme/ui/multi-select";
 import { ControlledSelect } from "@acme/ui/select";
 import { Textarea } from "@acme/ui/textarea";
-import { toast } from "@acme/ui/toast";
 import { RequestInsertSchema } from "@acme/validators";
 
 import { api } from "~/trpc/react";
 import { useUpdateLocationFormContext } from "~/utils/forms";
-import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
-import { uploadLogo } from "~/utils/image/upload-logo";
-import { mapStore } from "~/utils/store/map";
 import { DebouncedImage } from "../debounced-image";
 import { CountrySelect } from "../modal/country-select";
 import { ControlledTimeInput } from "../time-input";
@@ -33,8 +28,10 @@ type UpdateLocationSchema = z.infer<typeof UpdateLocationSchema>;
 
 export const LocationEventForm = ({
   isAdminForm = false,
+  requestType,
 }: {
   isAdminForm?: boolean;
+  requestType: RequestType;
 }) => {
   const form = useUpdateLocationFormContext();
   const formId = form.watch("id");
@@ -109,442 +106,463 @@ export const LocationEventForm = ({
 
   const changingAos = !!formOriginalAoId && formOriginalAoId !== formAoId;
 
+  // Determine which sections to show based on requestType
+  const showEventSection =
+    requestType === "create_location" ||
+    requestType === "create_event" ||
+    requestType === "edit" ||
+    requestType === "move_event_to_different_ao" ||
+    requestType === "move_event_to_new_ao";
+
+  const showLocationSection =
+    requestType === "create_location" ||
+    requestType === "move_ao_to_new_location" ||
+    requestType === "move_event_to_new_ao" ||
+    requestType === "edit";
+
+  const showAoSection =
+    requestType === "create_location" ||
+    requestType === "edit" ||
+    requestType === "move_ao_to_different_region" ||
+    requestType === "move_ao_to_new_location";
+
+  const showExistingAoPicker = requestType === "move_event_to_different_ao";
+
+  const showExistingLocationPicker =
+    requestType === "move_ao_to_different_location";
+
+  const showDeleteConfirmation =
+    requestType === "delete_event" || requestType === "delete_ao";
+
   return (
     <>
-      <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-        Event Details:
-      </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Workout Name
-          </div>
-          <Input {...form.register("eventName")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.eventName?.message}
-          </p>
-        </div>
+      {/* Event Section */}
+      {showEventSection && (
+        <>
+          <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+            Event Details:
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Workout Name
+              </div>
+              <Input {...form.register("eventName")} />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.eventName?.message}
+              </p>
+            </div>
 
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Day of Week
-          </div>
-          <ControlledSelect
-            control={form.control}
-            name="eventDayOfWeek"
-            options={DayOfWeek.map((day) => ({
-              value: day,
-              label: convertCase({
-                str: day,
-                fromCase: Case.LowerCase,
-                toCase: Case.TitleCase,
-              }),
-            }))}
-            placeholder="Select a day of the week"
-          />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.eventDayOfWeek?.message}
-          </p>
-        </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Day of Week
+              </div>
+              <ControlledSelect
+                control={form.control}
+                name="eventDayOfWeek"
+                options={DayOfWeek.map((day) => ({
+                  value: day,
+                  label: convertCase({
+                    str: day,
+                    fromCase: Case.LowerCase,
+                    toCase: Case.TitleCase,
+                  }),
+                }))}
+                placeholder="Select a day of the week"
+              />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.eventDayOfWeek?.message}
+              </p>
+            </div>
 
-        <div className="space-y-2">
-          <ControlledTimeInput
-            control={form.control}
-            name="eventStartTime"
-            id={"eventStartTime"}
-            label={"Start Time"}
-          />
-        </div>
-        <div className="space-y-2">
-          <ControlledTimeInput
-            control={form.control}
-            name="eventEndTime"
-            id={"eventEndTime"}
-            label={"End Time"}
-          />
-        </div>
+            <div className="space-y-2">
+              <ControlledTimeInput
+                control={form.control}
+                name="eventStartTime"
+                id={"eventStartTime"}
+                label={"Start Time"}
+              />
+            </div>
+            <div className="space-y-2">
+              <ControlledTimeInput
+                control={form.control}
+                name="eventEndTime"
+                id={"eventEndTime"}
+                label={"End Time"}
+              />
+            </div>
 
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Event Types
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Event Types
+              </div>
+              <Controller
+                control={form.control}
+                name="eventTypeIds"
+                render={({ field, fieldState }) => {
+                  return (
+                    <div>
+                      <MultiSelect
+                        hideSelectAll
+                        defaultValue={(field.value ?? []).map(String)}
+                        value={(field.value ?? []).map(String)}
+                        options={
+                          eventTypes?.eventTypes.map((type) => ({
+                            label: type.name,
+                            value: type.id.toString(),
+                          })) ?? []
+                        }
+                        onValueChange={(values) =>
+                          field.onChange(values.map(Number))
+                        }
+                        placeholder="Select event types"
+                      />
+                      {fieldState.error && (
+                        <p className="text-xs text-destructive">
+                          You must select at least one event type
+                        </p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+            </div>
+
+            <div className="mx-2 space-y-2 sm:col-span-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Event Description
+              </div>
+              <Textarea
+                {...form.register("eventDescription")}
+                placeholder="Tell people if there's anything they need to know prior to showing up to the workout"
+              />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.eventDescription?.message}
+              </p>
+            </div>
           </div>
-          <Controller
-            control={form.control}
-            name="eventTypeIds"
-            render={({ field, fieldState }) => {
-              return (
-                <div>
-                  <MultiSelect
-                    hideSelectAll
-                    defaultValue={(field.value ?? []).map(String)}
-                    value={(field.value ?? []).map(String)}
-                    options={
-                      eventTypes?.eventTypes.map((type) => ({
-                        label: type.name,
-                        value: type.id.toString(),
-                      })) ?? []
-                    }
-                    onValueChange={(values) =>
-                      field.onChange(values.map(Number))
-                    }
-                    placeholder="Select event types"
-                  />
-                  {fieldState.error && (
+        </>
+      )}
+
+      {/* Moving Event to Different AO section */}
+      {showExistingAoPicker && (
+        <>
+          <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+            Select Destination AO:
+          </h2>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                AO Location
+              </div>
+              <Controller
+                control={form.control}
+                name="aoId"
+                render={({ field }) => (
+                  <div>
+                    <VirtualizedCombobox
+                      disabled={changingRegions}
+                      options={sortedRegionAoOptions ?? []}
+                      value={field.value?.toString()}
+                      onSelect={(value) => {
+                        field.onChange(Number(value));
+                      }}
+                      searchPlaceholder="Select destination AO"
+                    />
                     <p className="text-xs text-destructive">
-                      You must select at least one event type
+                      {form.formState.errors.aoId?.message}
+                    </p>
+                  </div>
+                )}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Moving AO to Different Location section */}
+      {showExistingLocationPicker && (
+        <>
+          <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+            Select Destination Location:
+          </h2>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Location
+              </div>
+              <Controller
+                control={form.control}
+                name="locationId"
+                render={({ field }) => (
+                  <div>
+                    <VirtualizedCombobox
+                      disabled={changingRegions}
+                      options={sortedRegionLocationOptions ?? []}
+                      value={field.value?.toString()}
+                      onSelect={(value) => {
+                        field.onChange(Number(value));
+                      }}
+                      searchPlaceholder="Select destination location"
+                    />
+                    <p className="text-xs text-destructive">
+                      {form.formState.errors.locationId?.message}
+                    </p>
+                  </div>
+                )}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete Confirmation section */}
+      {showDeleteConfirmation && (
+        <>
+          <div className="my-6 rounded-md bg-red-50 p-4 dark:bg-red-900/20">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Attention Required
+                </h3>
+                <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                  {requestType === "delete_event" ? (
+                    <p>
+                      You are about to request deletion of an event. This action
+                      cannot be undone. Please confirm you want to proceed with
+                      this deletion request.
+                    </p>
+                  ) : (
+                    <p>
+                      You are about to request deletion of an AO. This will
+                      delete the AO, all its workouts, and possibly the location
+                      if no other events exist there. This action cannot be
+                      undone. Please confirm you want to proceed with this
+                      deletion request.
                     </p>
                   )}
                 </div>
-              );
-            }}
-          />
-        </div>
-
-        <div className="mx-2 space-y-2 sm:col-span-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Event Description
-          </div>
-          <Textarea
-            {...form.register("eventDescription")}
-            placeholder="Tell people if there's anything they need to know prior to showing up to the workout"
-          />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.eventDescription?.message}
-          </p>
-        </div>
-      </div>
-      <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-        Physical Location Details:
-      </h2>
-      <div className="text-sm font-medium text-muted-foreground">
-        Location Region
-      </div>
-      <div className="mb-3">
-        <VirtualizedCombobox
-          key={formRegionId?.toString()}
-          disabled={changingLocations}
-          options={
-            regions
-              ?.map((region) => ({
-                label: region.name,
-                value: region.id.toString(),
-              }))
-              .sort((a, b) => a.label.localeCompare(b.label)) ?? []
-          }
-          value={formRegionId?.toString()}
-          onSelect={(item) => {
-            const region = regions?.find(
-              (region) => region.id.toString() === item,
-            );
-            if (region) {
-              form.setValue("regionId", region.id);
-            }
-          }}
-          searchPlaceholder="Select"
-        />
-        <p className="text-xs text-destructive">
-          {form.formState.errors.regionId?.message}
-        </p>
-        <div className="mx-3 text-xs text-muted-foreground">
-          {changingLocations
-            ? "Cannot change region while location is changing"
-            : "Select a location above to move this workout to a different location"}
-        </div>
-      </div>
-      <div className="text-sm font-medium text-muted-foreground">
-        Existing location
-      </div>
-      <div className="mb-3">
-        <VirtualizedCombobox
-          key={formLocationId?.toString()}
-          className="w-full"
-          disabled={changingRegions}
-          options={sortedRegionLocationOptions ?? []}
-          value={formLocationId?.toString()}
-          onSelect={(item) => {
-            const location = locations?.locations.find(
-              ({ id }) => id.toString() === item,
-            );
-            form.setValue("locationId", location?.id ?? null);
-            if (!location) return;
-
-            // Handle different property names between components
-            form.setValue("locationDescription", location.description ?? "");
-            form.setValue("locationAddress", location.addressStreet);
-            form.setValue("locationAddress2", location.addressStreet2);
-            form.setValue("locationCity", location.addressCity);
-            form.setValue("locationState", location.addressState);
-            form.setValue("locationZip", location.addressZip);
-            form.setValue("locationCountry", location.addressCountry);
-
-            // We need to keep the lat lng when the marker has been moved
-            if (!isAdminForm) {
-              const possiblyUpdatedLocation = mapStore.get(
-                "modifiedLocationMarkers",
-              )[location.id];
-              form.setValue(
-                "locationLat",
-                possiblyUpdatedLocation?.lat ?? location.latitude,
-              );
-              form.setValue(
-                "locationLng",
-                possiblyUpdatedLocation?.lng ?? location.longitude,
-              );
-            } else {
-              form.setValue("locationLat", location.latitude);
-              form.setValue("locationLng", location.longitude);
-            }
-
-            if (location?.regionId == undefined) {
-              // @ts-expect-error -- must remove regionId from form
-              form.setValue("regionId", null);
-            } else {
-              form.setValue("regionId", location?.regionId);
-            }
-          }}
-          searchPlaceholder="Select"
-        />
-        <p className="text-xs text-destructive">
-          {form.formState.errors.locationId?.message}
-        </p>
-        <div className="mx-3 text-xs text-muted-foreground">
-          {changingRegions
-            ? "Cannot switch to another existing location while changing regions. To adjust the location, drag the marker on the map"
-            : "Select a location above to move this workout to a different location"}
-        </div>
-      </div>
-      <div className="my-2 text-base font-bold text-foreground">
-        The fields below update the location for all associated workouts
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Description
-          </div>
-          <Textarea
-            {...form.register("locationDescription")}
-            placeholder="Help people unfamiliar with the area find you"
-          />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationDescription?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Address
-          </div>
-          <Input {...form.register("locationAddress")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationAddress?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Address 2
-          </div>
-          <Input {...form.register("locationAddress2")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationAddress2?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location City
-          </div>
-          <Input {...form.register("locationCity")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationCity?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location State
-          </div>
-          <Input {...form.register("locationState")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationState?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Zip
-          </div>
-          <Input {...form.register("locationZip")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationZip?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Country
-          </div>
-          <CountrySelect control={form.control} name="locationCountry" />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationCountry?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Latitude
-          </div>
-          <Input {...form.register("locationLat", { valueAsNumber: true })} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationLat?.message?.toString?.()}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Location Longitude
-          </div>
-          <Input {...form.register("locationLng", { valueAsNumber: true })} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.locationLng?.message?.toString?.()}
-          </p>
-        </div>
-      </div>
-      <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-        AO Details:
-      </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Existing AO
-          </div>
-          <div className="mb-3">
-            <VirtualizedCombobox
-              key={formAoId?.toString()}
-              options={sortedRegionAoOptions}
-              disabled={changingRegions || changingLocations}
-              value={formAoId?.toString()}
-              onSelect={(item) => {
-                const ao = aos?.find((ao) => ao.id.toString() === item);
-                if (ao) {
-                  form.setValue("aoId", ao.id);
-                  form.setValue("aoName", ao.name);
-                  form.setValue("aoLogo", ao.logoUrl);
-                }
-              }}
-              searchPlaceholder="Select"
-              className="overflow-hidden"
-            />
-            <div className="mx-1 mt-1 text-xs text-muted-foreground">
-              {changingRegions
-                ? "When changing regions, the entire AO will be moved to the new region"
-                : changingLocations
-                  ? "When changing locations, the entire AO will be moved to the new location"
-                  : "Select an AO here to move this workout to a different AO"}
+              </div>
             </div>
           </div>
-          <p className="text-xs text-destructive">
-            {form.formState.errors.aoId?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            AO Name
-          </div>
-          <Input {...form.register("aoName")} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.aoName?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            AO Logo
-          </div>
-          <Controller
-            control={form.control}
-            name="aoLogo"
-            render={({ field: { onChange, value } }) => {
-              return (
-                <div className="grid grid-cols-[1fr_64px] items-center">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      if (formRegionId == null) {
-                        toast.error("Please select a region first");
-                        return;
-                      }
-                      console.log("files", e.target.files);
-                      const file = e.target.files?.[0];
-                      if (!file) return;
+        </>
+      )}
 
-                      const blob640 = await scaleAndCropImage(file, 640, 640);
-                      if (!blob640) return;
-                      const url640 = await uploadLogo({
-                        file: blob640,
-                        regionId: formRegionId,
-                        requestId: formId,
-                      });
-                      onChange(url640);
-                      const blob64 = await scaleAndCropImage(file, 64, 64);
-                      if (blob64) {
-                        await uploadLogo({
-                          file: blob64,
-                          regionId: formRegionId,
-                          requestId: formId,
-                          size: 64,
-                        });
-                      }
-                    }}
-                    disabled={lt(formRegionId, 0)}
-                    className="flex-1"
-                  />
-                  {value && (
-                    <button
-                      type="button"
-                      className="relative size-16 cursor-pointer"
-                      onClick={() => onChange("")}
-                    >
-                      <DebouncedImage
-                        src={value}
-                        alt="AO Logo"
-                        onImageFail={() => form.setValue("badImage", true)}
-                        onImageSuccess={() => form.setValue("badImage", false)}
-                      />
-                      <div className="absolute -top-1 right-[-1px] flex size-5 items-center justify-center rounded-full bg-red-500 text-white">
-                        <X className="size-3" />
-                      </div>
-                    </button>
-                  )}
+      {/* Region/AO Section */}
+      {showAoSection && (
+        <>
+          <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+            AO & Region Details:
+          </h2>
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              Region
+            </div>
+            <div className="mb-3">
+              <VirtualizedCombobox
+                key={formRegionId?.toString()}
+                disabled={changingLocations}
+                options={
+                  regions
+                    ?.map((region) => ({
+                      label: region.name,
+                      value: region.id.toString(),
+                    }))
+                    .sort((a, b) => a.label.localeCompare(b.label)) ?? []
+                }
+                value={formRegionId?.toString()}
+                onSelect={(item) => {
+                  const region = regions?.find(
+                    (region) => region.id.toString() === item,
+                  );
+                  if (region) {
+                    form.setValue("regionId", region.id);
+                  }
+                }}
+                searchPlaceholder="Select"
+              />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.regionId?.message}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              AO Name
+            </div>
+            <Input {...form.register("aoName")} />
+            <p className="text-xs text-destructive">
+              {form.formState.errors.aoName?.message}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              AO Website
+            </div>
+            <Input {...form.register("aoWebsite")} placeholder="https://" />
+            <p className="text-xs text-destructive">
+              {form.formState.errors.aoWebsite?.message}
+            </p>
+          </div>
+
+          {!isAdminForm && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  AO Logo URL
                 </div>
-              );
-            }}
-          />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.aoLogo?.message}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            AO Website
+                <Input
+                  {...form.register("aoLogo")}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="my-2">
+            <Controller
+              control={form.control}
+              name="aoLogo"
+              render={({ field }) => {
+                return (
+                  <div className="flex flex-col items-center">
+                    <DebouncedImage
+                      className="max-h-24 rounded-sm object-contain"
+                      src={field.value ?? ""}
+                      width={96}
+                      height={96}
+                      alt="Logo Preview"
+                      onImageFail={() => {
+                        form.setValue("badImage", true);
+                      }}
+                      onImageSuccess={() => {
+                        form.setValue("badImage", false);
+                      }}
+                    />
+                  </div>
+                );
+              }}
+            />
           </div>
-          <Input {...form.register("aoWebsite")} />
-          <div className="text-xs text-muted-foreground">
-            Only add an <span className="font-semibold">AO</span> website here
-            if it is different than the{" "}
-            <span className="font-semibold">Region</span> website (edited
-            separately). Both show on the map event.
+        </>
+      )}
+
+      {/* Physical Location Section */}
+      {showLocationSection && (
+        <>
+          <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
+            Physical Location Details:
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Street Address
+              </div>
+              <Input {...form.register("locationAddress")} />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationAddress?.message}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Address Line 2
+              </div>
+              <Input {...form.register("locationAddress2")} />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationAddress2?.message}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                City
+              </div>
+              <Input {...form.register("locationCity")} />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationCity?.message}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                State/Province
+              </div>
+              <Input {...form.register("locationState")} />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationState?.message}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                ZIP / Postal Code
+              </div>
+              <Input {...form.register("locationZip")} />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationZip?.message}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Country
+              </div>
+              <Controller
+                control={form.control}
+                name="locationCountry"
+                render={({ field }) => {
+                  return (
+                    <CountrySelect
+                      control={form.control}
+                      name="locationCountry"
+                      disabled={false}
+                      placeholder="Select a country"
+                    />
+                  );
+                }}
+              />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationCountry?.message}
+              </p>
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Location Description
+              </div>
+              <Textarea
+                {...form.register("locationDescription")}
+                placeholder="Provide additional details about the meet-up location (e.g. 'Meet at the south entrance', 'The corner of Main and Oak St')"
+              />
+              <p className="text-xs text-destructive">
+                {form.formState.errors.locationDescription?.message}
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-destructive">
-            {form.formState.errors.aoWebsite?.message}
-          </p>
-        </div>
-      </div>
+        </>
+      )}
+
+      {/* Contact information for all forms */}
       <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
-        Other Details:
+        Contact Information:
       </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">
-            Submitter Email
-          </div>
-          <Input {...form.register("submittedBy")} disabled={isAdminForm} />
-          <p className="text-xs text-destructive">
-            {form.formState.errors.submittedBy?.message}
-          </p>
+      <div className="space-y-2">
+        <div className="text-sm font-medium text-muted-foreground">
+          Your Email
         </div>
+        <Input
+          {...form.register("submittedBy")}
+          placeholder="your.email@example.com"
+        />
+        <p className="text-xs text-muted-foreground">
+          We will send you a confirmation email when your update request is
+          approved.
+        </p>
+        <p className="text-xs text-destructive">
+          {form.formState.errors.submittedBy?.message}
+        </p>
       </div>
     </>
   );
