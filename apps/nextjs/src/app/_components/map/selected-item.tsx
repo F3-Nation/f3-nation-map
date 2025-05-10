@@ -44,6 +44,13 @@ export const SelectedItem = (props: {
           "overflow-hidden overflow-y-auto rounded-lg p-2 text-sm text-foreground shadow-xl transition-all",
           "dark:border-[1px] dark:border-muted",
         )}
+        onMouseEnter={() => {
+          setSelectedItem({
+            locationId: selectedLocation.id,
+            eventId: selectedEvent.id,
+            showPanel: false,
+          });
+        }}
         onMouseLeave={() => {
           if (!isTouchDevice()) {
             // This is caused a bug where clicking on a workout details modal on mobile

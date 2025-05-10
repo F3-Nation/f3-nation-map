@@ -12,6 +12,7 @@ export type SelectedItemStore = {
   panelLocationId: number | null;
   panelEventId: number | null;
   isEditDragging: boolean;
+  pendingDeselectId: number;
 };
 
 // TODO Rename to hoveredItemStore
@@ -23,6 +24,7 @@ export const selectedItemStore = new ZustandStore<SelectedItemStore>({
     panelLocationId: null,
     panelEventId: null,
     isEditDragging: false,
+    pendingDeselectId: 0,
   },
   persistOptions: {
     name: "selected-item-store",
@@ -31,6 +33,13 @@ export const selectedItemStore = new ZustandStore<SelectedItemStore>({
     getStorage: () => localStorage,
   },
 });
+
+// Used to prevent deselecting the item when the user is dragging the map
+const incrementPendingDeselectId = () => {
+  selectedItemStore.setState({
+    pendingDeselectId: selectedItemStore.getState().pendingDeselectId + 1,
+  });
+};
 
 export const hideSelectedItem = () => {
   selectedItemStore.setState({ hideSelectedItem: true });
@@ -56,6 +65,7 @@ export const setSelectedItem = (item: {
   eventId?: number | null;
   showPanel: boolean;
 }) => {
+  incrementPendingDeselectId();
   // Get caller information from stack trace
   if (isDevelopment) {
     const stackTrace = new Error().stack;
@@ -104,4 +114,23 @@ export const closePanel = () => {
     panelLocationId: null,
     panelEventId: null,
   });
+};
+
+export const delayedDeselect = () => {
+  const currentSelectedItem = selectedItemStore.getState();
+  const currentPendingDeselectId = selectedItemStore.get("pendingDeselectId");
+  setTimeout(() => {
+    const selectedItem = selectedItemStore.getState();
+    if (
+      currentSelectedItem.locationId === selectedItem.locationId &&
+      currentSelectedItem.eventId === selectedItem.eventId &&
+      currentPendingDeselectId === selectedItemStore.get("pendingDeselectId")
+    ) {
+      setSelectedItem({
+        locationId: null,
+        eventId: null,
+        showPanel: false,
+      });
+    }
+  }, 500);
 };
