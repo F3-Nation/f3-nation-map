@@ -50,6 +50,7 @@ export class ZustandStore<T extends Record<string, unknown>> {
   useBoundStore: WithSelectors<UseBoundStore<StoreApi<T>>>;
   use: WithSelectors<UseBoundStore<StoreApi<T>>>["use"];
   name: string;
+  hasHydrated = false;
   constructor(props: {
     initialState: T;
     persistOptions: {
@@ -83,6 +84,7 @@ export class ZustandStore<T extends Record<string, unknown>> {
             } else {
               props.persistOptions.onRehydrateStorage?.(hydratedState);
               const hydratedStateString = JSON.stringify(hydratedState);
+              this.hasHydrated = true;
               ZUSTAND_STORE_LOGS &&
                 console.log(
                   `${this.name} store hydration finished`,
