@@ -1,6 +1,7 @@
 import { ZustandStore } from "@acme/shared/common/classes";
 import { isDevelopment } from "@acme/shared/common/constants";
 
+import { queryClientUtils } from "~/trpc/react";
 import { appStore } from "./app";
 import { ModalType, openModal } from "./modal";
 
@@ -60,6 +61,11 @@ export const clearSelectedItem = () => {
   });
 };
 
+/**
+ * if a value is undefined then ignore it
+ * null means set it to null
+ * number means set it to the number
+ */
 export const setSelectedItem = (item: {
   locationId?: number | null;
   eventId?: number | null;
@@ -75,15 +81,32 @@ export const setSelectedItem = (item: {
     console.log("setSelectedItem called by:", callerInfo, "with params:", item);
   }
 
+  const currentSelectedItemStore = selectedItemStore.getState();
+  const currentLocationId = currentSelectedItemStore.locationId;
+  const currentEventId = currentSelectedItemStore.eventId;
+
   const isMobileDeviceWidth = appStore.get("isMobileDeviceWidth");
   const newSelectedItemStore: Partial<SelectedItemStore> = {
     hideSelectedItem: false,
   };
 
+  // Can be null or a value | undefined means use the current value
+  newSelectedItemStore.locationId =
+    item.locationId === undefined ? currentLocationId : item.locationId;
+  newSelectedItemStore.eventId =
+    item.eventId === undefined ? currentEventId : item.eventId;
+
   // Update selected item always
-  if (item.locationId !== undefined)
-    newSelectedItemStore.locationId = item.locationId;
-  if (item.eventId !== undefined) newSelectedItemStore.eventId = item.eventId;
+  if (
+    newSelectedItemStore.locationId !== null &&
+    newSelectedItemStore.eventId == null
+  ) {
+    const dataArray = queryClientUtils.location.getMapEventAndLocationData
+      .getData()
+      ?.find((location) => location[0] === item.locationId);
+    const events = dataArray?.[6];
+    newSelectedItemStore.eventId = events?.[0]?.[0] ?? null;
+  }
 
   if (isMobileDeviceWidth) {
     // on mobile width always have panelIds as null
@@ -92,10 +115,10 @@ export const setSelectedItem = (item: {
   } else if (item.showPanel) {
     // on desktop show panel if showPanel is true
     newSelectedItemStore.hideSelectedItem = true;
-    if (item.locationId !== undefined)
-      newSelectedItemStore.panelLocationId = item.locationId;
-    if (item.eventId !== undefined)
-      newSelectedItemStore.panelEventId = item.eventId;
+    newSelectedItemStore.panelLocationId =
+      item.locationId === undefined ? currentLocationId : item.locationId;
+    newSelectedItemStore.panelEventId =
+      item.eventId === undefined ? currentEventId : item.eventId;
   }
 
   selectedItemStore.setState(newSelectedItemStore);
