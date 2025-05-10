@@ -243,6 +243,7 @@ const _reseedJustData = async () => {
 
 export const seed = async (db?: AppDb) => {
   const _db = db ?? getDb();
+
   // await insertUsers();
   // await _reseedFromScratch();
   // await _deleteSeededData()
@@ -251,16 +252,6 @@ export const seed = async (db?: AppDb) => {
   // await insertRandomUsers();
 };
 
-if (require.main === module) {
-  void seed()
-    .then(() => SEED_LOGS && console.log("Seed done"))
-    .catch((e) => {
-      SEED_LOGS && console.log("Seed failed", e);
-    })
-    .finally(() => {
-      process.exit();
-    });
-}
 const SEED_LOGS = false;
 
 export async function insertUsers() {
@@ -1072,3 +1063,65 @@ const getCleanedEventType = (eventTypeRaw: string) => {
     return "Run";
   return eventTypeRaw;
 };
+
+const withTriggerManagement = async (db: AppDb, fn: () => Promise<void>) => {
+  await db.execute(sql`SELECT toggle_ao_count_trigger(TRUE)`);
+  await fn();
+  await db.execute(sql`SELECT toggle_ao_count_trigger(FALSE)`);
+
+  // Run a one-time recalculation of all counts
+  await db.execute(sql`
+  -- Update regions
+  UPDATE orgs region
+  SET ao_count = (
+    SELECT COUNT(*)
+    FROM orgs ao
+    WHERE ao.parent_id = region.id
+      AND ao.org_type = 'ao'
+      AND ao.is_active = true
+  )
+  WHERE region.org_type = 'region';
+
+  -- Update areas
+  UPDATE orgs area
+  SET ao_count = (
+    SELECT COUNT(*)
+    FROM orgs ao
+    JOIN orgs region ON ao.parent_id = region.id
+    WHERE region.parent_id = area.id
+      AND ao.org_type = 'ao'
+      AND region.org_type = 'region'
+      AND ao.is_active = true
+      AND region.is_active = true
+  )
+  WHERE area.org_type = 'area';
+
+  -- Update sectors
+  UPDATE orgs sector
+  SET ao_count = (
+    SELECT COUNT(*)
+    FROM orgs ao
+    JOIN orgs region ON ao.parent_id = region.id
+    JOIN orgs area ON region.parent_id = area.id
+    WHERE area.parent_id = sector.id
+      AND ao.org_type = 'ao'
+      AND region.org_type = 'region'
+      AND area.org_type = 'area'
+      AND ao.is_active = true
+      AND region.is_active = true
+      AND area.is_active = true
+  )
+  WHERE sector.org_type = 'sector';
+`);
+};
+
+if (require.main === module) {
+  void withTriggerManagement(db, seed)
+    .then(() => SEED_LOGS && console.log("Seed done"))
+    .catch((e) => {
+      SEED_LOGS && console.log("Seed failed", e);
+    })
+    .finally(() => {
+      process.exit();
+    });
+}

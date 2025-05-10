@@ -98,6 +98,7 @@ export const orgRouter = createTRPCRouter({
         created: org.created,
         parentOrgName: parentOrg.name,
         parentOrgType: parentOrg.orgType,
+        aoCount: org.aoCount,
       };
       const query = ctx.db
         .select(select)
@@ -130,6 +131,7 @@ export const orgRouter = createTRPCRouter({
         facebook: string | null;
         instagram: string | null;
         lastAnnualReview: string | null;
+        aoCount: number;
         meta: OrgMeta;
         created: string;
         parentOrgName: string;

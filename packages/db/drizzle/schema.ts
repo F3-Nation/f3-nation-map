@@ -444,6 +444,7 @@ export const orgs = pgTable(
     facebook: varchar(),
     instagram: varchar(),
     lastAnnualReview: date("last_annual_review"),
+    aoCount: integer("ao_count").default(0),
     meta: json().$type<OrgMeta>(),
     created: timestamp({ mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
