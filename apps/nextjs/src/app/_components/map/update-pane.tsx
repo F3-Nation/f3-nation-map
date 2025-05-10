@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import { MapPin, MapPinPlusInside, X } from "lucide-react";
+import { ArrowDownToDot, MapPin, MapPinPlusInside, X } from "lucide-react";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
 import { TestId } from "@acme/shared/common/enums";
@@ -14,26 +14,6 @@ import {
   ModalType,
   openModal,
 } from "~/utils/store/modal";
-
-// Custom arrow-to-dot icon component for moving existing things to a new location
-const ArrowToDot = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="18" cy="12" r="3" />
-    <path d="M14 12H4" />
-    <path d="M7 8l-3 4 3 4" />
-  </svg>
-);
 
 export const UpdatePane = () => {
   const updateLocation = mapStore.use.updateLocation();
@@ -129,7 +109,7 @@ export const UpdatePane = () => {
                   className="absolute size-8 fill-blue-500 text-foreground dark:fill-blue-600"
                 />
                 <div
-                  className="absolute top-[110%] z-50 w-[300px]"
+                  className="absolute top-[110%] z-50"
                   style={{
                     left: "50%",
                     bottom: "20px",
@@ -137,37 +117,33 @@ export const UpdatePane = () => {
                   }}
                 >
                   <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                    <div className="mb-1 text-center font-medium">
-                      Create options
-                    </div>
-
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-blue-500 bg-blue-500 text-white hover:border-blue-600 hover:bg-blue-600 hover:text-white"
+                      className="grid grid-cols-[20px_1fr] border-blue-500 bg-blue-500 text-white hover:border-blue-600 hover:bg-blue-600 hover:text-white"
                       onClick={handleCreateNew}
                     >
-                      <MapPin className="mr-2 h-4 w-4" />
+                      <MapPin className="h-4 w-4" />
                       New location with new AO
                     </Button>
 
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-green-500 bg-green-500 text-white hover:border-green-600 hover:bg-green-600 hover:text-white"
+                      className="grid grid-cols-[20px_1fr] border-blue-500 bg-blue-500 text-white hover:border-blue-600 hover:bg-blue-600 hover:text-white"
                       onClick={handleMoveAO}
                     >
-                      <ArrowToDot className="mr-2 h-4 w-4" />
+                      <ArrowDownToDot className="h-4 w-4" />
                       Move existing AO here
                     </Button>
 
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-purple-500 bg-purple-500 text-white hover:border-purple-600 hover:bg-purple-600 hover:text-white"
+                      className="grid grid-cols-[20px_1fr] border-blue-500 bg-blue-500 text-white hover:border-blue-600 hover:bg-blue-600 hover:text-white"
                       onClick={handleMoveEvent}
                     >
-                      <ArrowToDot className="mr-2 h-4 w-4" />
+                      <ArrowDownToDot className="h-4 w-4" />
                       Move existing event here
                     </Button>
                   </div>

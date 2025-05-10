@@ -243,10 +243,10 @@ export const UpdateLocationModal = ({
 
             <LocationEventForm requestType={data.requestType} />
 
-            <div className="mt-4 flex flex-col items-stretch justify-end gap-2">
+            <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
               <Button
                 type="button"
-                className="bg-blue-600 text-white hover:bg-blue-600/80"
+                className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
                 onClick={() => onSubmit()}
               >
                 {isSubmitting ? (
@@ -267,6 +267,7 @@ export const UpdateLocationModal = ({
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => closeModal()}
               >
                 Cancel
