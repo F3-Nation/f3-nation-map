@@ -13,6 +13,7 @@ import { groupMarkerClick } from "~/utils/actions/group-marker-click";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
 import {
+  delayedDeselect,
   selectedItemStore,
   setSelectedItem,
 } from "~/utils/store/selected-item";
@@ -48,7 +49,6 @@ export const FeatureMarker = ({
     (s) => s.modifiedLocationMarkers[id],
   );
   const position = modifiedLocation ?? _position;
-  // const position = _position;
 
   const events = filteredLocationMarkers?.find(
     (marker) => marker.id === id,
@@ -162,6 +162,10 @@ export const FeatureMarker = ({
                 }}
                 onMouseEnter={(e) => {
                   handleHover({ locationId: id, eventId: event.id });
+                  e.stopPropagation();
+                }}
+                onMouseLeave={(e) => {
+                  delayedDeselect();
                   e.stopPropagation();
                 }}
                 className={cn(
