@@ -39,8 +39,11 @@ export const LocationEventForm = ({
   const form = useUpdateLocationFormContext();
   const formId = form.watch("id");
   const formRegionId = form.watch("regionId");
+  const formOriginalRegionId = form.watch("originalRegionId");
   const formLocationId = form.watch("locationId");
+  const formOriginalLocationId = form.watch("originalLocationId");
   const formAoId = form.watch("aoId");
+  const formOriginalAoId = form.watch("originalAoId");
 
   // Get form values
   const { data: regions } = api.location.getRegions.useQuery();
@@ -52,39 +55,59 @@ export const LocationEventForm = ({
   const aos = useMemo(() => allAoData?.orgs, [allAoData]);
 
   const sortedRegionLocationOptions = useMemo(() => {
-    return locations?.locations
-      ?.filter((l) => !formRegionId || l.regionId === formRegionId)
-      ?.sort((a, b) =>
-        a.regionId === formRegionId && b.regionId !== formRegionId
-          ? -1
-          : a.regionId !== formRegionId && b.regionId === formRegionId
-            ? 1
-            : a.locationName.localeCompare(b.locationName),
-      )
-      ?.map((l) => ({
-        labelComponent: (
-          <span>
-            {`${l.locationName}${l.regionName ? ` (${l.regionName})` : ""}`}
-            <span className="text-foreground/30">{` ${[l.addressStreet, l.addressStreet2, l.addressCity, l.addressState, l.addressZip, l.addressCountry].filter(isTruthy).join(", ")}`}</span>
-          </span>
-        ),
-        label: `${l.locationName}${l.regionName ? ` (${l.regionName})` : ""} ${[l.addressStreet, l.addressStreet2, l.addressCity, l.addressState, l.addressZip, l.addressCountry].filter(isTruthy).join(", ")}`,
-        value: l.id.toString(),
-        regionId: l.regionId,
-      }));
-  }, [locations, formRegionId]);
+    return (
+      locations?.locations
+        // If we have an original regionId, only show those, otherwise use the formRegionId
+        ?.filter((l) =>
+          formOriginalRegionId
+            ? l.regionId === formOriginalRegionId
+            : l.regionId === formRegionId,
+        )
+        ?.sort((a, b) =>
+          a.regionId === formRegionId && b.regionId !== formRegionId
+            ? -1
+            : a.regionId !== formRegionId && b.regionId === formRegionId
+              ? 1
+              : a.locationName.localeCompare(b.locationName),
+        )
+        ?.map((l) => ({
+          labelComponent: (
+            <span>
+              {`${l.locationName}${l.regionName ? ` (${l.regionName})` : ""}`}
+              <span className="text-foreground/30">{` ${[l.addressStreet, l.addressStreet2, l.addressCity, l.addressState, l.addressZip, l.addressCountry].filter(isTruthy).join(", ")}`}</span>
+            </span>
+          ),
+          label: `${l.locationName}${l.regionName ? ` (${l.regionName})` : ""} ${[l.addressStreet, l.addressStreet2, l.addressCity, l.addressState, l.addressZip, l.addressCountry].filter(isTruthy).join(", ")}`,
+          value: l.id.toString(),
+          regionId: l.regionId,
+        }))
+    );
+  }, [locations?.locations, formOriginalRegionId, formRegionId]);
 
   const sortedRegionAoOptions = useMemo(() => {
     return (
       aos
-        ?.filter((a) => !formRegionId || a.parentId === formRegionId)
+        // If we have an original regionId, only show those, otherwise use the formRegionId
+        ?.filter((a) =>
+          formOriginalRegionId
+            ? a.parentId === formOriginalRegionId
+            : a.parentId === formRegionId,
+        )
         ?.map((ao) => ({
           label: `${ao.name} (${ao.parentOrgName})`,
           value: ao.id.toString(),
         }))
         ?.sort((a, b) => a.label.localeCompare(b.label)) ?? []
     );
-  }, [aos, formRegionId]);
+  }, [aos, formOriginalRegionId, formRegionId]);
+
+  const changingRegions =
+    !!formOriginalRegionId && formOriginalRegionId !== formRegionId;
+
+  const changingLocations =
+    !!formOriginalLocationId && formOriginalLocationId !== formLocationId;
+
+  const changingAos = !!formOriginalAoId && formOriginalAoId !== formAoId;
 
   return (
     <>
@@ -199,6 +222,7 @@ export const LocationEventForm = ({
       <div className="mb-3">
         <VirtualizedCombobox
           key={formRegionId?.toString()}
+          disabled={changingLocations}
           options={
             regions
               ?.map((region) => ({
@@ -221,6 +245,11 @@ export const LocationEventForm = ({
         <p className="text-xs text-destructive">
           {form.formState.errors.regionId?.message}
         </p>
+        <div className="mx-3 text-xs text-muted-foreground">
+          {changingLocations
+            ? "Cannot change region while location is changing"
+            : "Select a location above to move this workout to a different location"}
+        </div>
       </div>
       <div className="text-sm font-medium text-muted-foreground">
         Existing location
@@ -229,6 +258,7 @@ export const LocationEventForm = ({
         <VirtualizedCombobox
           key={formLocationId?.toString()}
           className="w-full"
+          disabled={changingRegions}
           options={sortedRegionLocationOptions ?? []}
           value={formLocationId?.toString()}
           onSelect={(item) => {
@@ -274,8 +304,13 @@ export const LocationEventForm = ({
           }}
           searchPlaceholder="Select"
         />
+        <p className="text-xs text-destructive">
+          {form.formState.errors.locationId?.message}
+        </p>
         <div className="mx-3 text-xs text-muted-foreground">
-          Select a location above to move this workout to a different location
+          {changingRegions
+            ? "Cannot switch to another existing location while changing regions. To adjust the location, drag the marker on the map"
+            : "Select a location above to move this workout to a different location"}
         </div>
       </div>
       <div className="my-2 text-base font-bold text-foreground">
@@ -379,6 +414,7 @@ export const LocationEventForm = ({
             <VirtualizedCombobox
               key={formAoId?.toString()}
               options={sortedRegionAoOptions}
+              disabled={changingRegions || changingLocations}
               value={formAoId?.toString()}
               onSelect={(item) => {
                 const ao = aos?.find((ao) => ao.id.toString() === item);
@@ -392,7 +428,11 @@ export const LocationEventForm = ({
               className="overflow-hidden"
             />
             <div className="mx-1 mt-1 text-xs text-muted-foreground">
-              Select an AO here to move this workout to a different AO
+              {changingRegions
+                ? "When changing regions, the entire AO will be moved to the new region"
+                : changingLocations
+                  ? "When changing locations, the entire AO will be moved to the new location"
+                  : "Select an AO here to move this workout to a different AO"}
             </div>
           </div>
           <p className="text-xs text-destructive">

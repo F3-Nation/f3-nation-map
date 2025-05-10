@@ -15,5 +15,9 @@ export const {
     eventEndTime: z.string().regex(/^\d{2}:\d{2}$/, {
       message: "End time must be in 24hr format (HH:mm)",
     }),
+    // Need originals to prevent changes in some scenarios (e.g. changing region)
+    originalRegionId: z.number().nullable(),
+    originalAoId: z.number().nullable(),
+    originalLocationId: z.number().nullable(),
   }),
 );

@@ -185,7 +185,14 @@ export const UpdateLocationModal = ({
     }
     form.setValue("eventTypeIds", data.eventTypeIds);
 
-    form.setValue("submittedBy", sessionEmailRef.current || appStore.get("myEmail"));
+    form.setValue(
+      "submittedBy",
+      sessionEmailRef.current || appStore.get("myEmail"),
+    );
+
+    form.setValue("originalRegionId", data.regionId);
+    form.setValue("originalAoId", data.aoId);
+    form.setValue("originalLocationId", data.locationId);
   }, [data, form]);
 
   return (

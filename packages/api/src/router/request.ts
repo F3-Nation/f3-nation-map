@@ -30,6 +30,7 @@ import type { Context } from "../trpc";
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getEditableOrgIdsForUser } from "../get-editable-org-ids";
 import { getSortingColumns } from "../get-sorting-columns";
+import { moveLocationsForOrg } from "../lib/move-locations-for-org";
 import { notifyMapChangeRequest } from "../services/map-request-notification";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
@@ -555,6 +556,10 @@ export const applyUpdateRequest = async (
     eventDayOfWeek?: DayOfWeek | null;
   },
 ): Promise<UpdateRequestResponse> => {
+  // Only needed if we move the ao to a new region
+  // Have to keep track of the new location id so we can update the event with the new location id
+  let regionChangeNewLocationId: number | undefined;
+
   // LOCATION
   if (updateRequest.locationId == undefined) {
     // INSERT LOCATION
@@ -583,6 +588,7 @@ export const applyUpdateRequest = async (
     }
     updateRequest.locationId = location.id;
   } else {
+    // locationId is defined
     const [location] = await ctx.db
       .update(schema.locations)
       .set({
@@ -634,6 +640,20 @@ export const applyUpdateRequest = async (
       throw new Error("Failed to find ao to update. Does the AO exist?");
     }
 
+    // If the parentId is changing, we need to move the locations for the org
+    if (updateRequest.regionId !== ao.parentId && ao.parentId !== null) {
+      const { newLocationIds } = await moveLocationsForOrg(ctx, {
+        oldParentId: ao.parentId,
+        oldOrgId: updateRequest.aoId,
+        newParentId: updateRequest.regionId,
+      });
+      const [newLocationId] = newLocationIds;
+      if (!newLocationId) {
+        throw new Error("Failed to move locations for org");
+      }
+      regionChangeNewLocationId = newLocationId;
+    }
+
     // UPDATE AO
     await ctx.db
       .update(schema.orgs)
@@ -666,6 +686,11 @@ export const applyUpdateRequest = async (
     throw new Error("Failed to update update request");
   }
 
+  // Need to handle the location id for the event
+  // Case 1: the region is changing, and we generated a new location id
+  // Case 2: the region is not changing, and we didn't generate a new location id
+  // Case 3: the region is not changing, and we moved to a new location
+
   // EVENT
   let eventId: number;
   if (updateRequest.eventId != undefined) {
@@ -673,7 +698,8 @@ export const applyUpdateRequest = async (
       .update(schema.events)
       .set({
         name: updateRequest.eventName,
-        locationId: updateRequest.locationId,
+        // If the region is changing, we need to update the location id
+        locationId: regionChangeNewLocationId ?? updateRequest.locationId,
         description: updateRequest.eventDescription,
         // Use undefined to not remove the existing value
         startDate: updateRequest.eventStartDate ?? undefined,

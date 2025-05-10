@@ -250,6 +250,7 @@ export const seed = async (db?: AppDb) => {
   await _reseedJustData();
   // await _reseedUsers();
   // await insertRandomUsers();
+  await _resetSequences();
 };
 
 const SEED_LOGS = false;
@@ -1125,3 +1126,37 @@ if (require.main === module) {
       process.exit();
     });
 }
+const _resetSequences = async () => {
+  // Update the orgs id sequence to handle the manual id insertion
+  // Keywords don't have an id sequence
+  const [maxOrgId] = await db
+    .select({ max: sql<number>`max(${schema.orgs.id})` })
+    .from(schema.orgs);
+  const [maxEventId] = await db
+    .select({ max: sql<number>`max(${schema.events.id})` })
+    .from(schema.events);
+  const [maxLocationId] = await db
+    .select({ max: sql<number>`max(${schema.locations.id})` })
+    .from(schema.locations);
+  if (
+    maxOrgId == undefined ||
+    maxLocationId == undefined ||
+    maxEventId == undefined
+  ) {
+    console.error("Failed to get max ids", {
+      maxOrgId,
+      maxLocationId,
+      maxEventId,
+    });
+    throw new Error("Failed to get max ids");
+  }
+  await db.execute(sql`
+    SELECT setval('orgs_id_seq', (${maxOrgId.max} + 1));
+  `);
+  await db.execute(sql`
+    SELECT setval('locations_id_seq', (${maxLocationId.max} + 1));
+  `);
+  await db.execute(sql`
+    SELECT setval('events_id_seq', (${maxEventId.max} + 1));
+  `);
+};

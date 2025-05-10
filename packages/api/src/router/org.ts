@@ -18,8 +18,30 @@ import { OrgInsertSchema, SortingSchema } from "@acme/validators";
 
 import { checkHasRoleOnOrg } from "../check-has-role-on-org";
 import { getSortingColumns } from "../get-sorting-columns";
+import { moveLocationsForOrg } from "../lib/move-locations-for-org";
 import { adminProcedure, createTRPCRouter, editorProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
+
+interface Org {
+  id: number;
+  parentId: number | null;
+  name: string;
+  orgType: "ao" | "region" | "area" | "sector" | "nation";
+  defaultLocationId: number | null;
+  description: string | null;
+  isActive: boolean;
+  logoUrl: string | null;
+  website: string | null;
+  email: string | null;
+  twitter: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  lastAnnualReview: string | null;
+  meta: OrgMeta;
+  created: string;
+  parentOrgName: string;
+  parentOrgType: "ao" | "region" | "area" | "sector" | "nation";
+}
 
 export const orgRouter = createTRPCRouter({
   all: editorProcedure
@@ -116,28 +138,6 @@ export const orgRouter = createTRPCRouter({
         : await query;
 
       // Something is broken with org to org types
-      interface Org {
-        id: number;
-        parentId: number | null;
-        name: string;
-        orgType: "ao" | "region" | "area" | "sector" | "nation";
-        defaultLocationId: number | null;
-        description: string | null;
-        isActive: boolean;
-        logoUrl: string | null;
-        website: string | null;
-        email: string | null;
-        twitter: string | null;
-        facebook: string | null;
-        instagram: string | null;
-        lastAnnualReview: string | null;
-        aoCount: number;
-        meta: OrgMeta;
-        created: string;
-        parentOrgName: string;
-        parentOrgType: "ao" | "region" | "area" | "sector" | "nation";
-      }
-
       return { orgs: orgs_untyped as Org[], total: orgCount?.count ?? 0 };
     }),
 
@@ -175,29 +175,64 @@ export const orgRouter = createTRPCRouter({
       if (!roleCheckResult.success) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "You are not authorized to update this AO",
+          message: "You are not authorized to update this org",
+        });
+      }
+      console.log("input", input);
+
+      // CASE 1: Create new org
+      if (!input.id) {
+        const [result] = await ctx.db
+          .insert(schema.orgs)
+          .values({
+            ...input,
+            meta: input.meta as Record<string, string>,
+          })
+          .returning();
+
+        return result;
+      }
+
+      // CASE 2: Update existing org
+      const [existingOrg] = await ctx.db
+        .select()
+        .from(schema.orgs)
+        .where(eq(schema.orgs.id, input.id));
+
+      if (!existingOrg) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Org not found",
         });
       }
 
-      if (input.id) {
-        const [existingOrg] = await ctx.db
-          .select()
-          .from(schema.orgs)
-          .where(eq(schema.orgs.id, input.id));
-        if (existingOrg?.orgType !== input.orgType) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `org to edit is not a ${input.orgType}`,
-          });
-        }
+      if (existingOrg?.orgType !== input.orgType) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `org to edit is not a ${input.orgType}`,
+        });
       }
+
+      // If the parentId is changing, we need to move the locations for the org
+      if (
+        input.parentId &&
+        existingOrg.parentId &&
+        input.parentId !== existingOrg.parentId
+      ) {
+        await moveLocationsForOrg(ctx, {
+          oldParentId: existingOrg.parentId,
+          oldOrgId: existingOrg.id,
+          newParentId: input.parentId,
+        });
+      }
+
+      // 2. Update the org with the new values
 
       const orgToCrupdate: typeof schema.orgs.$inferInsert = {
         ...input,
-        meta: {
-          ...(input.meta as Record<string, string>),
-        },
+        meta: input.meta as Record<string, string>,
       };
+
       const [result] = await ctx.db
         .insert(schema.orgs)
         .values(orgToCrupdate)
@@ -220,7 +255,7 @@ export const orgRouter = createTRPCRouter({
       if (!roleCheckResult.success) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "You are not authorized to delete this AO",
+          message: "You are not authorized to delete this org",
         });
       }
       await ctx.db

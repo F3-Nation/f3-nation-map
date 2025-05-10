@@ -134,6 +134,9 @@ export default function AdminRequestsModal({
       aoLogo: request.aoLogo ?? "",
       aoWebsite: request.aoWebsite ?? "",
       submittedBy: request.submittedBy ?? "",
+      originalRegionId: request.regionId,
+      originalAoId: request.aoId,
+      originalLocationId: request.locationId,
     });
   }, [request, form]);
 
