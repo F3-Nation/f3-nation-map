@@ -5,7 +5,6 @@ import { Edit } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import { cn } from "@acme/ui";
-import { toast } from "@acme/ui/toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 
 import { appStore } from "~/utils/store/app";
@@ -26,14 +25,6 @@ export const LayoutEditButton = ({
             if (mode === "edit") {
               appStore.setState({ mode: "view" });
             } else {
-              toast.info("Edit mode is on", {
-                action: {
-                  label: "Learn more",
-                  onClick: () => {
-                    openModal(ModalType.EDIT_MODE_INFO);
-                  },
-                },
-              });
               appStore.setState({ mode: "edit" });
             }
           } else {

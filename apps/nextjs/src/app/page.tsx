@@ -9,6 +9,7 @@ import { InitialLocationProvider } from "~/app/_components/map/initial-location-
 import { ReactQueryHydrator } from "~/app/_components/map/react-query-hydrator";
 import { TextSearchResultsProvider } from "~/app/_components/map/search-results-provider";
 import { ssg } from "~/trpc/ssg";
+import { SecondaryEffectsProvider } from "~/utils/secondary-effects-provider";
 import { TouchDeviceProvider } from "~/utils/touch-device-provider";
 
 export default async function MapPage() {
@@ -32,6 +33,7 @@ export default async function MapPage() {
                 <main className="pointer-events-auto relative h-dvh w-full">
                   {/* Must have relative so that absolute things show up on the map */}
                   <Suspense>
+                    <SecondaryEffectsProvider />
                     <GoogleMapComponent />
                   </Suspense>
                 </main>

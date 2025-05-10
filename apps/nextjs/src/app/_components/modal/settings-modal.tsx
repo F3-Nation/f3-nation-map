@@ -159,14 +159,6 @@ export default function SettingsModal() {
                 disabled={!session}
                 onClick={() => {
                   appStore.setState({ mode: "edit" });
-                  toast.info("Edit mode is on", {
-                    action: {
-                      label: "Learn more",
-                      onClick: () => {
-                        openModal(ModalType.EDIT_MODE_INFO);
-                      },
-                    },
-                  });
                 }}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-md bg-card p-2 shadow-sm hover:bg-accent",
