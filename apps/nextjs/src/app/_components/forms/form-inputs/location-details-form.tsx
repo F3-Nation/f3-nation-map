@@ -86,7 +86,7 @@ export const LocationDetailsForm = () => {
           <div className="text-sm font-medium text-muted-foreground">
             Latitude
           </div>
-          <Input {...form.register("locationLat")} type="number" />
+          <Input {...form.register("locationLat", { valueAsNumber: true })} />
           <p className="text-xs text-destructive">
             {form.formState.errors.locationLat?.message?.toString()}
           </p>
@@ -105,10 +105,12 @@ export const LocationDetailsForm = () => {
           <div className="text-sm font-medium text-muted-foreground">
             Location Description
           </div>
-          <Textarea
-            {...form.register("locationDescription")}
-            placeholder="Provide additional details about the meet-up location (e.g. 'Meet at the south entrance', 'The corner of Main and Oak St')"
-          />
+          <div className="px-1">
+            <Textarea
+              {...form.register("locationDescription")}
+              placeholder="Provide additional details about the meet-up location (e.g. 'Meet at the south entrance', 'The corner of Main and Oak St')"
+            />
+          </div>
           <p className="text-xs text-destructive">
             {form.formState.errors.locationDescription?.message?.toString()}
           </p>

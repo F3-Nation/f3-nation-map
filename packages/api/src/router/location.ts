@@ -367,7 +367,7 @@ export const locationRouter = createTRPCRouter({
       if (location?.lat == null || location?.lon == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Location not found for location id: ${input.locationId}`,
+          message: `Lat lng not found for location id: ${input.locationId}`,
         });
       }
 

@@ -11,6 +11,9 @@ import {
 } from "@acme/db/schema/schema";
 import { DayOfWeek } from "@acme/shared/app/enums";
 
+// Export the new request schemas
+export * from "./request-schemas";
+
 // USER SCHEMA
 export const UserSelectSchema = createSelectSchema(users);
 export const UserInsertSchema = createInsertSchema(users);

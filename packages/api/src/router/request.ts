@@ -27,6 +27,7 @@ import { getSortingColumns } from "../get-sorting-columns";
 import { applyDeleteRequest } from "../lib/apply-delete-request";
 import { applyUpdateRequest } from "../lib/apply-update-request";
 import { checkUpdatePermissions } from "../lib/check-update-permissions";
+import { recordUpdateRequest } from "../lib/update-request-handlers";
 import { notifyMapChangeRequest } from "../services/map-request-notification";
 import { createTRPCRouter, editorProcedure, publicProcedure } from "../trpc";
 import { withPagination } from "../with-pagination";
@@ -370,22 +371,7 @@ export const requestRouter = createTRPCRouter({
         eventMeta: input.eventMeta as EventMeta,
       };
 
-      const [inserted] = await ctx.db
-        .insert(schema.updateRequests)
-        .values(updateRequest)
-        .returning();
-
-      if (!inserted) {
-        throw new Error("Failed to insert update request");
-      }
-      const [region] = await ctx.db
-        .select()
-        .from(schema.orgs)
-        .where(eq(schema.orgs.id, input.regionId));
-
-      if (!region) {
-        throw new Error("Failed to find region");
-      }
+      const inserted = await recordUpdateRequest(ctx, updateRequest);
 
       // Notify admins and editors about the new request
       if (inserted.status === "pending") {

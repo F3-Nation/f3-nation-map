@@ -28,10 +28,27 @@ const formatRequestType = (requestType: RequestType): string => {
   switch (requestType) {
     case "create_event":
       return "New Workout";
-    case "create_location":
-      return "New Location";
+    case "create_location_and_event":
+      return "New Location and Workout";
+
     case "edit":
       return "Edit Request";
+    case "edit-event":
+      return "Edit Workout";
+    case "edit-ao-and-location":
+      return "Edit AO and Location";
+
+    case "move_ao_to_different_region":
+      return "Move AO to Different Region";
+    case "move_ao_to_new_location":
+      return "Move AO to New Location";
+    case "move_ao_to_different_location":
+      return "Move AO to Different Location";
+    case "move_event_to_different_ao":
+      return "Move Workout to Different AO";
+    case "move_event_to_new_location":
+      return "Move Workout to New Location";
+
     case "delete_event":
       return "Delete Workout";
     case "delete_ao":
