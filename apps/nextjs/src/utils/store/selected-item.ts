@@ -116,9 +116,13 @@ export const setSelectedItem = (item: {
     // on desktop show panel if showPanel is true
     newSelectedItemStore.hideSelectedItem = true;
     newSelectedItemStore.panelLocationId =
-      item.locationId === undefined ? currentLocationId : item.locationId;
+      newSelectedItemStore.locationId === undefined
+        ? currentLocationId
+        : newSelectedItemStore.locationId;
     newSelectedItemStore.panelEventId =
-      item.eventId === undefined ? currentEventId : item.eventId;
+      newSelectedItemStore.eventId === undefined
+        ? currentEventId
+        : newSelectedItemStore.eventId;
   }
 
   selectedItemStore.setState(newSelectedItemStore);
