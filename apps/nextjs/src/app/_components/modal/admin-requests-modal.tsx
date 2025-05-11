@@ -156,10 +156,7 @@ export default function AdminRequestsModal({
                 {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
-            <RequestFormSelector
-              requestType={request.requestType}
-              isAdminForm={true}
-            />
+            <RequestFormSelector requestType={request.requestType} />
             <div className="mt-4 flex justify-between gap-2">
               <Button
                 type="button"

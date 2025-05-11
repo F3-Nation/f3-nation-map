@@ -123,7 +123,7 @@ export const locationRouter = createTRPCRouter({
         ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
         : await query;
 
-      return { locations, total: locationCount?.count ?? 0 };
+      return { locations, totalCount: locationCount?.count ?? 0 };
     }),
   getMapEventAndLocationData: publicProcedure.query(async ({ ctx }) => {
     const aoOrg = aliasedTable(schema.orgs, "ao_org");

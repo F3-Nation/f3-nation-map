@@ -58,7 +58,7 @@ export const LocationsTable = () => {
       data={locations?.locations}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
-      totalCount={locations?.total}
+      totalCount={locations?.totalCount}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_LOCATIONS, { id: row.original.id });

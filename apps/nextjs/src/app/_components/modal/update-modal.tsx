@@ -6,7 +6,10 @@ import gte from "lodash/gte";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import { Z_INDEX } from "@acme/shared/app/constants";
-import { convertHH_mmToHHmm } from "@acme/shared/app/functions";
+import {
+  convertHH_mmToHHmm,
+  requestTypeToTitle,
+} from "@acme/shared/app/functions";
 import { Button } from "@acme/ui/button";
 import {
   Dialog,
@@ -221,25 +224,7 @@ const dataToTitle = (data: DataType[ModalType.UPDATE]) => {
         return "Edit Location Details";
       }
       throw new Error("Invalid request type");
-    case "create_location_and_event":
-      return "Create New Location, AO & Event";
-    case "create_event":
-      return "Add New Event to Existing AO";
-    case "move_ao_to_different_region":
-      return "Move AO to Different Region";
-    case "move_ao_to_new_location":
-      return "Move AO to New Location";
-    case "move_ao_to_different_location":
-      return "Move AO to Different Location";
-    case "move_event_to_different_ao":
-      return "Move Event to Different AO";
-    case "move_event_to_new_location":
-      return "Move Event to New AO";
-    case "edit-ao-and-location":
-      return "Edit AO & Location";
-    case "edit-event":
-      return "Edit Event";
     default:
-      return "Update Location";
+      return requestTypeToTitle(data.requestType);
   }
 };

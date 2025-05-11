@@ -201,7 +201,7 @@ export const eventRouter = createTRPCRouter({
         location: getFullAddress(event),
       }));
 
-      return { events: eventsWithLocation, total: eventCount?.count ?? 0 };
+      return { events: eventsWithLocation, totalCount: eventCount?.count ?? 0 };
     }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))

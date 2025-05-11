@@ -82,6 +82,9 @@ export default function AdminDeleteModal({
           case DeleteType.LOCATION:
             void utils.location.invalidate();
             break;
+          case DeleteType.EVENT_TYPE:
+            void utils.eventType.invalidate();
+            break;
           default:
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new Error(`Invalid delete type: ${data.type}`);
