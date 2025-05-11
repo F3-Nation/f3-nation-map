@@ -24,9 +24,10 @@ import { toast } from "@acme/ui/toast";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
-import { useUpdateLocationForm } from "~/utils/forms";
+import { useUpdateForm } from "~/utils/forms";
 import { closeModal } from "~/utils/store/modal";
-import { FormDebugData, LocationEventForm } from "../forms/location-event-form";
+import { FormDebugData } from "../forms/dev-debug-component";
+import { RequestFormSelector } from "../forms/request-form-selector";
 
 export default function AdminRequestsModal({
   data: requestData,
@@ -38,7 +39,7 @@ export default function AdminRequestsModal({
     "idle",
   );
   const { data: request } = api.request.byId.useQuery({ id: requestData.id });
-  const form = useUpdateLocationForm({
+  const form = useUpdateForm({
     defaultValues: { id: request?.id ?? uuid() },
   });
 
@@ -155,9 +156,9 @@ export default function AdminRequestsModal({
                 {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
-            <LocationEventForm
-              isAdminForm={true}
+            <RequestFormSelector
               requestType={request.requestType}
+              isAdminForm={true}
             />
             <div className="mt-4 flex justify-between gap-2">
               <Button

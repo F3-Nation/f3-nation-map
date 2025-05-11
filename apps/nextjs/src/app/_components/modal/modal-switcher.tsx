@@ -20,7 +20,8 @@ import AdminRequestsModal from "./admin-requests-modal";
 import AdminSectorsModal from "./admin-sectors-modal";
 import AdminUsersModal from "./admin-users-modal";
 import AdminWorkoutsModal from "./admin-workouts-modal";
-import DeleteModal from "./delete-modal";
+import DeleteConfirmationModal from "./delete-confirmation-modal";
+import { DeleteModal } from "./delete-modal";
 import { EditModeInfoModal } from "./edit-mode-info-modal";
 import { FullImageModal } from "./full-image-modal";
 import HowToJoinModal from "./how-to-join-modal";
@@ -28,7 +29,7 @@ import { MapInfoModal } from "./map-info-modal";
 import { QRCodeModal } from "./qr-code-modal";
 import SettingsModal from "./settings-modal";
 import SignInModal from "./sign-in-modal";
-import { UpdateLocationModal } from "./update-location-modal";
+import { UpdateModal } from "./update-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
 import { WorkoutDetailsModal } from "./workout-details-modal";
 
@@ -44,12 +45,8 @@ export const ModalSwitcher = () => {
       return <HowToJoinModal data={data as DataType[ModalType.HOW_TO_JOIN]} />;
     case ModalType.USER_LOCATION_INFO:
       return <UserLocationInfoModal />;
-    case ModalType.UPDATE_LOCATION:
-      return (
-        <UpdateLocationModal
-          data={data as DataType[ModalType.UPDATE_LOCATION]}
-        />
-      );
+    case ModalType.UPDATE:
+      return <UpdateModal data={data as DataType[ModalType.UPDATE]} />;
     case ModalType.WORKOUT_DETAILS:
       // Hide on desktop
       return width >= Number(BreakPoints.LG) ? null : (
@@ -107,8 +104,12 @@ export const ModalSwitcher = () => {
       );
     case ModalType.DELETE_CONFIRMATION:
       return (
-        <DeleteModal data={data as DataType[ModalType.DELETE_CONFIRMATION]} />
+        <DeleteConfirmationModal
+          data={data as DataType[ModalType.DELETE_CONFIRMATION]}
+        />
       );
+    case ModalType.DELETE:
+      return <DeleteModal data={data as DataType[ModalType.DELETE]} />;
     case ModalType.ADMIN_DELETE_REQUEST:
       return (
         <AdminDeleteRequestModal

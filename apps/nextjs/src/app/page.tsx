@@ -21,14 +21,15 @@ export default async function MapPage() {
   RERENDER_LOGS && console.log("MapPage rerender");
 
   return (
-    <ReactQueryHydrator mapEventAndLocationData={mapEventAndLocationData}>
+    <ReactQueryHydrator
+      mapEventAndLocationData={mapEventAndLocationData}
+      regionsWithLocationData={regionsWithLocationData}
+    >
       <TouchDeviceProvider>
         <InitialLocationProvider>
           <FilteredMapResultsProvider>
             {/* Textsearch results provider must be inside FilteredMapResultsProvider */}
-            <TextSearchResultsProvider
-              regionsWithLocationData={regionsWithLocationData}
-            >
+            <TextSearchResultsProvider>
               <MapPageWrapper>
                 <main className="pointer-events-auto relative h-dvh w-full">
                   {/* Must have relative so that absolute things show up on the map */}

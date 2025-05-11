@@ -9,12 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 
-import {
-  eventDefaults,
-  locationDefaults,
-  ModalType,
-  openModal,
-} from "~/utils/store/modal";
+import { openRequestModal } from "~/utils/store/modal";
 
 interface LocationEditButtonsProps {
   locationId: number;
@@ -54,13 +49,10 @@ export const LocationEditButtons = ({
           <DropdownMenuItem
             className="flex cursor-pointer items-center px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30"
             onClick={() => {
-              openModal(ModalType.UPDATE_LOCATION, {
-                requestType: "edit",
-                ...eventDefaults,
-                ...locationDefaults,
+              openRequestModal({
+                type: "edit-ao-and-location",
                 locationId,
-                lat: 0, // Will be updated by data fetch
-                lng: 0, // Will be updated by data fetch
+                eventId,
               });
             }}
           >
@@ -75,13 +67,10 @@ export const LocationEditButtons = ({
           <DropdownMenuItem
             className="flex cursor-pointer items-center px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30"
             onClick={() => {
-              openModal(ModalType.UPDATE_LOCATION, {
-                requestType: "move_ao_to_different_region",
-                ...eventDefaults,
-                ...locationDefaults,
+              openRequestModal({
+                type: "move_ao_to_different_region",
                 locationId,
-                lat: 0, // Will be updated by data fetch
-                lng: 0, // Will be updated by data fetch
+                eventId,
               });
             }}
           >
@@ -98,14 +87,7 @@ export const LocationEditButtons = ({
           <DropdownMenuItem
             className="flex cursor-pointer items-center px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
             onClick={() => {
-              openModal(ModalType.UPDATE_LOCATION, {
-                requestType: "delete_ao",
-                ...eventDefaults,
-                ...locationDefaults,
-                locationId,
-                lat: 0, // Will be updated by data fetch
-                lng: 0, // Will be updated by data fetch
-              });
+              openRequestModal({ type: "delete_ao", locationId });
             }}
           >
             <span className="inline-flex items-center">
@@ -139,15 +121,7 @@ export const LocationEditButtons = ({
             <DropdownMenuItem
               className="flex cursor-pointer items-center px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30"
               onClick={() => {
-                openModal(ModalType.UPDATE_LOCATION, {
-                  requestType: "edit",
-                  ...eventDefaults,
-                  ...locationDefaults,
-                  locationId,
-                  eventId,
-                  lat: 0, // Will be updated by data fetch
-                  lng: 0, // Will be updated by data fetch
-                });
+                openRequestModal({ type: "edit", locationId, eventId });
               }}
             >
               <span className="inline-flex items-center">
@@ -161,14 +135,10 @@ export const LocationEditButtons = ({
             <DropdownMenuItem
               className="flex cursor-pointer items-center px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30"
               onClick={() => {
-                openModal(ModalType.UPDATE_LOCATION, {
-                  requestType: "move_event_to_different_ao",
-                  ...eventDefaults,
-                  ...locationDefaults,
+                openRequestModal({
+                  type: "move_event_to_different_ao",
                   locationId,
                   eventId,
-                  lat: 0, // Will be updated by data fetch
-                  lng: 0, // Will be updated by data fetch
                 });
               }}
             >
@@ -185,14 +155,10 @@ export const LocationEditButtons = ({
             <DropdownMenuItem
               className="flex cursor-pointer items-center px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
               onClick={() => {
-                openModal(ModalType.UPDATE_LOCATION, {
-                  requestType: "delete_event",
-                  ...eventDefaults,
-                  ...locationDefaults,
+                openRequestModal({
+                  type: "delete_event",
                   locationId,
                   eventId,
-                  lat: 0, // Will be updated by data fetch
-                  lng: 0, // Will be updated by data fetch
                 });
               }}
             >
@@ -212,13 +178,9 @@ export const LocationEditButtons = ({
         variant="outline"
         className="w-full justify-start border-blue-500 bg-blue-500 text-white transition-colors hover:border-blue-600 hover:bg-blue-600 hover:text-white"
         onClick={() => {
-          openModal(ModalType.UPDATE_LOCATION, {
-            requestType: "create_event",
-            ...eventDefaults,
-            ...locationDefaults,
+          openRequestModal({
+            type: "create_event",
             locationId,
-            lat: 0, // Will be updated by data fetch
-            lng: 0, // Will be updated by data fetch
           });
         }}
       >

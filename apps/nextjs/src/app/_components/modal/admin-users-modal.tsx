@@ -76,13 +76,13 @@ export default function UserModal({
     if (user) {
       form.reset({
         id: user.id ?? undefined,
-        //name: user?.name ?? "",
         f3Name: user?.f3Name ?? "",
         firstName: user?.firstName ?? "",
         lastName: user?.lastName ?? "",
         email: user?.email ?? "",
         roles: user?.roles,
         status: user?.status ?? "active",
+        phone: user?.phone ?? "",
       });
     }
   }, [form, user]);

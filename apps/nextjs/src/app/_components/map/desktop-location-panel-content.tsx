@@ -64,7 +64,7 @@ export const DesktopLocationPanelContent = () => {
         <div className="mb-4">
           <LocationEditButtons
             locationId={panelLocationId}
-            eventId={panelEventId ?? undefined}
+            eventId={panelEventId}
             aoName={aoName}
             eventName={eventName}
             timeDisplay={timeDisplay}

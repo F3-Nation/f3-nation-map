@@ -367,12 +367,15 @@ export const locationRouter = createTRPCRouter({
       if (location?.lat == null || location?.lon == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Location not found",
+          message: `Location not found for location id: ${input.locationId}`,
         });
       }
 
       const locationWithEvents = {
         ...location,
+        // Need to handle empty string values for parent and region logos
+        parentLogo: !location.parentLogo ? null : location.parentLogo,
+        regionLogo: !location.regionLogo ? null : location.regionLogo,
         lat: location.lat,
         lon: location.lon,
         fullAddress: getFullAddress(location),

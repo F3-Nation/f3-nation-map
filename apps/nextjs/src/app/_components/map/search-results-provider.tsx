@@ -5,7 +5,6 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
 
-import type { RouterOutputs } from "~/trpc/types";
 import type {
   F3LocationMapSearchResult,
   F3RegionMapSearchResult,
@@ -36,11 +35,11 @@ const TextSearchResultsContext = createContext<{
 
 export const TextSearchResultsProvider = ({
   children,
-  regionsWithLocationData,
 }: {
   children: React.ReactNode;
-  regionsWithLocationData: RouterOutputs["location"]["getRegionsWithLocation"];
 }) => {
+  const { data: regionsWithLocationData } =
+    api.location.getRegionsWithLocation.useQuery();
   const { data: eventIdToRegionNameLookup } =
     api.event.eventIdToRegionNameLookup.useQuery();
   const isMobileWidth = useIsMobileWidth();

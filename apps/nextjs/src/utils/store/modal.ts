@@ -1,15 +1,19 @@
+/* eslint-disable no-case-declarations */
 import type { ReactNode } from "react";
 
 import type { DayOfWeek, RequestType } from "@acme/shared/app/enums";
 import { ZustandStore } from "@acme/shared/common/classes";
+import { toast } from "@acme/ui/toast";
 
 import type { RouterOutputs } from "~/trpc/types";
+import { queryClientUtils } from "~/trpc/react";
 import { mapStore } from "./map";
 
 export enum ModalType {
   HOW_TO_JOIN = "HOW_TO_JOIN",
   USER_LOCATION_INFO = "USER_LOCATION_INFO",
-  UPDATE_LOCATION = "UPDATE_LOCATION",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
   WORKOUT_DETAILS = "WORKOUT_DETAILS",
   INFO = "INFO",
   SETTINGS = "SETTINGS",
@@ -24,8 +28,8 @@ export enum ModalType {
   ADMIN_AOS = "ADMIN_AOS",
   ADMIN_EVENT_TYPES = "ADMIN_EVENT_TYPES",
   ADMIN_DELETE_CONFIRMATION = "ADMIN_DELETE_CONFIRMATION",
-  DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
   ADMIN_DELETE_REQUEST = "ADMIN_DELETE_REQUEST",
+  DELETE_CONFIRMATION = "DELETE_CONFIRMATION",
   QR_CODE = "QR_CODE",
   ABOUT_MAP = "ABOUT_MAP",
   MAP_HELP = "MAP_HELP",
@@ -84,7 +88,7 @@ export const eventAndLocationToUpdateRequest = ({
   location: NonNullable<
     RouterOutputs["location"]["getLocationWorkoutData"]
   >["location"];
-}): Omit<DataType[ModalType.UPDATE_LOCATION], "mode" | "requestType"> => {
+}): Omit<DataType[ModalType.UPDATE], "mode" | "requestType"> => {
   const possiblyEditedLoc = mapStore.get("modifiedLocationMarkers")[
     location.id
   ];
@@ -123,8 +127,8 @@ export interface DataType {
   [ModalType.HOW_TO_JOIN]: {
     content?: ReactNode;
   };
-  [ModalType.UPDATE_LOCATION]: {
-    requestType: RequestType;
+  [ModalType.UPDATE]: {
+    requestType: Exclude<RequestType, "delete_ao" | "delete_event">;
     locationId: number | null;
     eventId: number | null;
     regionId: number | null;
@@ -215,6 +219,12 @@ export interface DataType {
     message?: string;
   };
   [ModalType.EDIT_MODE_INFO]: null;
+  [ModalType.DELETE]: {
+    requestType: "delete_event" | "delete_ao";
+    eventId: number | null;
+    aoId: number | null;
+    regionId: number;
+  };
 }
 
 export interface Modal<T extends ModalType> {
@@ -278,4 +288,82 @@ export const closeModal = (open?: boolean, type?: ModalType | "all") => {
       body.style.pointerEvents = "auto";
     }
   }, 500);
+};
+
+export const openRequestModal = (params: {
+  type: RequestType;
+  locationId?: number | null;
+  eventId?: number | null;
+}) => {
+  const { type, locationId, eventId } = params;
+  const center = mapStore.get("center");
+  const locationDetails = locationId
+    ? queryClientUtils.location.getLocationWorkoutData.getData({
+        locationId,
+      })?.location
+    : null;
+
+  const eventDetails = locationDetails?.events.find((e) => e.id === eventId);
+  console.log("eventDetails", eventDetails);
+
+  const updatedLocation = locationId
+    ? mapStore.get("modifiedLocationMarkers")[locationId]
+    : null;
+
+  switch (type) {
+    case "create_location_and_event":
+    case "create_event":
+    case "edit-event":
+    case "edit-ao-and-location":
+    case "move_ao_to_different_region":
+    case "move_ao_to_new_location":
+    case "edit":
+    case "move_ao_to_different_location":
+    case "move_event_to_different_ao":
+    case "move_event_to_new_location":
+      openModal(ModalType.UPDATE, {
+        requestType: type,
+        locationId: locationId ?? null,
+        eventId: eventId ?? null,
+        aoId: eventDetails?.aoId ?? null,
+        aoName: eventDetails?.aoName ?? null,
+        aoLogo: eventDetails?.aoLogo ?? null,
+        aoWebsite: eventDetails?.aoWebsite ?? null,
+        eventTypeIds: eventDetails?.eventTypes.map((type) => type.id) ?? [],
+        eventDescription: eventDetails?.description ?? null,
+        startTime: eventDetails?.startTime ?? null,
+        workoutName: eventDetails?.name ?? null,
+        lat: updatedLocation?.lat ?? locationDetails?.lat ?? center.lat,
+        lng: updatedLocation?.lng ?? locationDetails?.lon ?? center.lng,
+        endTime: eventDetails?.endTime ?? null,
+        dayOfWeek: eventDetails?.dayOfWeek ?? null,
+        locationAddress: locationDetails?.locationAddress ?? null,
+        locationAddress2: locationDetails?.locationAddress2 ?? null,
+        locationCity: locationDetails?.locationCity ?? null,
+        locationState: locationDetails?.locationState ?? null,
+        locationZip: locationDetails?.locationZip ?? null,
+        locationCountry: locationDetails?.locationCountry ?? null,
+        locationDescription: locationDetails?.locationDescription ?? null,
+        regionId: locationDetails?.regionId ?? null,
+        regionWebsite: locationDetails?.regionWebsite ?? null,
+      });
+      break;
+    case "delete_ao":
+    case "delete_event":
+      const regionId = locationDetails?.regionId;
+      if (!regionId) {
+        toast.error("Region not found");
+        return;
+      }
+      const aoId = eventDetails?.aoId;
+      openModal(ModalType.DELETE, {
+        requestType: type,
+        eventId: eventId ?? null,
+        aoId: aoId ?? null,
+        regionId,
+      });
+      break;
+    default:
+      throw new Error("Not implemented");
+  }
 };

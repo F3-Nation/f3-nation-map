@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { TRPCClientError } from "@trpc/client";
 import gte from "lodash/gte";
 
+import type { PartialBy } from "@acme/shared/common/types";
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { convertHH_mmToHHmm } from "@acme/shared/app/functions";
 import { Button } from "@acme/ui/button";
 import {
   Dialog,
@@ -16,25 +18,28 @@ import { Form } from "@acme/ui/form";
 import { Spinner } from "@acme/ui/spinner";
 import { toast } from "@acme/ui/toast";
 
-import type { DeleteFormValues, useUpdateForm } from "~/utils/forms";
+import type { UpdateLocationFormValues } from "~/utils/forms";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
 import { vanillaApi } from "~/trpc/vanilla";
-import { useDeleteForm } from "~/utils/forms";
+import { useUpdateForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
 import { closeModal } from "~/utils/store/modal";
 import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
 import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
-import { loadDataIntoDeleteForm } from "../forms/load-data-into-form";
+import { loadDataIntoUpdateForm } from "../forms/load-data-into-form";
 import { RequestFormSelector } from "../forms/request-form-selector";
 
-export const DeleteModal = ({ data }: { data: DataType[ModalType.DELETE] }) => {
+export const UpdateModal = ({ data }: { data: DataType[ModalType.UPDATE] }) => {
   const router = useRouter();
   const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useDeleteForm({
+  const form = useUpdateForm({
+    defaultValues: {
+      locationCountry: "United States",
+    },
     mode: "onBlur",
   });
 
@@ -44,29 +49,37 @@ export const DeleteModal = ({ data }: { data: DataType[ModalType.DELETE] }) => {
     { enabled: !!formRegionId && formRegionId !== -1 },
   );
 
-  const handleSubmission = async (values: DeleteFormValues) => {
+  const handleSubmission = async (
+    values: PartialBy<UpdateLocationFormValues, "badImage">,
+  ) => {
     try {
       console.log("onSubmit values", values);
       setIsSubmitting(true);
+      if (values.badImage && !!values.aoLogo) {
+        form.setError("aoLogo", { message: "Invalid image URL" });
+        throw new Error("Invalid image URL");
+      }
       appStore.setState({ myEmail: values.submittedBy });
 
-      const deleteRequestData = {
+      const updateRequestData = {
         ...values,
+        eventStartTime: convertHH_mmToHHmm(values.eventStartTime ?? ""),
+        eventEndTime: convertHH_mmToHHmm(values.eventEndTime ?? ""),
         eventId: gte(data.eventId, 0) ? data.eventId ?? null : null,
       };
 
       const result =
-        await vanillaApi.request.submitDeleteRequest.mutate(deleteRequestData);
+        await vanillaApi.request.submitUpdateRequest.mutate(updateRequestData);
       if (result.status === "pending") {
         toast.success(
-          "Delete request submitted. An admin will review your submission soon.",
+          "Request submitted. An admin will review your submission soon.",
         );
       } else if (result.status === "rejected") {
-        toast.error("Failed to submit delete request");
-        throw new Error("Failed to submit delete request");
+        toast.error("Failed to submit update request");
+        throw new Error("Failed to submit update request");
       } else if (result.status === "approved") {
         void utils.invalidate();
-        toast.success("Delete request automatically applied");
+        toast.success("Update request automatically applied");
         router.refresh();
       }
 
@@ -74,7 +87,7 @@ export const DeleteModal = ({ data }: { data: DataType[ModalType.DELETE] }) => {
     } catch (error) {
       console.error(error);
       if (!(error instanceof Error)) {
-        toast.error("Failed to submit delete request");
+        toast.error("Failed to submit update request");
         return;
       }
 
@@ -83,7 +96,15 @@ export const DeleteModal = ({ data }: { data: DataType[ModalType.DELETE] }) => {
         return;
       }
 
-      toast.error("Failed to submit delete request");
+      if (error.message.includes("End time must be after start time")) {
+        form.setError("eventEndTime", {
+          message: "End time must be after start time",
+        });
+        toast.error("End time must be after start time");
+        throw new Error("End time must be after start time");
+      } else {
+        toast.error("Failed to submit update request");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +113,7 @@ export const DeleteModal = ({ data }: { data: DataType[ModalType.DELETE] }) => {
   // );
 
   useEffect(() => {
-    loadDataIntoDeleteForm(form, data);
+    loadDataIntoUpdateForm(form, data);
   }, [data, form]);
 
   return (
@@ -128,17 +149,17 @@ export const DeleteModal = ({ data }: { data: DataType[ModalType.DELETE] }) => {
             <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
               <Button
                 type="button"
-                className="w-full bg-destructive text-white hover:bg-destructive/80 sm:w-auto"
+                className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
                 onClick={() =>
                   form.handleSubmit(handleSubmission, handleSubmissionError)()
                 }
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
-                    Deleting... <Spinner className="size-4" />
+                    Submitting... <Spinner className="size-4" />
                   </div>
                 ) : (
-                  "Delete"
+                  "Save Changes"
                 )}
               </Button>
               {canEditRegion?.success ? (
@@ -189,15 +210,36 @@ const handleSubmissionError = (
   console.log("Form validation errors:", errors);
 };
 
-const dataToTitle = (data: DataType[ModalType.DELETE]) => {
+const dataToTitle = (data: DataType[ModalType.UPDATE]) => {
   switch (data.requestType) {
-    case "delete_event":
-      return "Delete Event";
-    case "delete_ao":
-      return "Delete AO";
-    // case "delete_location":
-    //   return "Delete Location";
-    default:
+    case "edit":
+      if (data.eventId) {
+        return "Edit Event Details";
+      } else if (data.aoId) {
+        return "Edit AO Details";
+      } else if (data.locationId) {
+        return "Edit Location Details";
+      }
       throw new Error("Invalid request type");
+    case "create_location_and_event":
+      return "Create New Location, AO & Event";
+    case "create_event":
+      return "Add New Event to Existing AO";
+    case "move_ao_to_different_region":
+      return "Move AO to Different Region";
+    case "move_ao_to_new_location":
+      return "Move AO to New Location";
+    case "move_ao_to_different_location":
+      return "Move AO to Different Location";
+    case "move_event_to_different_ao":
+      return "Move Event to Different AO";
+    case "move_event_to_new_location":
+      return "Move Event to New AO";
+    case "edit-ao-and-location":
+      return "Edit AO & Location";
+    case "edit-event":
+      return "Edit Event";
+    default:
+      return "Update Location";
   }
 };

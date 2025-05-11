@@ -37,16 +37,18 @@ export const EventCategory = ["first_f", "second_f", "third_f"] as const;
 export type EventCategory = (typeof EventCategory)[number];
 
 export const RequestType = [
-  "create_location", // creates an ao and an event
+  "create_location_and_event", // creates an ao and an event
   "create_event", // at an existing ao
-  "edit", // edits event, ao, location, and region details
+  "edit-event", // edits event, ao, location, and region details
+  "edit-ao-and-location", // edits event, ao, location, and region details
   "move_ao_to_different_region",
   "move_ao_to_new_location",
   "move_ao_to_different_location",
   "move_event_to_different_ao",
-  "move_event_to_new_ao",
+  "move_event_to_new_location",
   "delete_event",
   "delete_ao", // deletes an ao, its workouts, and possibly the location
+  "edit", // I might need this for legacy purposes
 ] as const;
 export type RequestType = (typeof RequestType)[number];
 

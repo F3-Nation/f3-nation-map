@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import gte from "lodash/gte";
-import { useSession } from "next-auth/react";
 
 import { isTruthy } from "@acme/shared/common/functions";
 import { cn } from "@acme/ui";
@@ -12,7 +10,6 @@ import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
 import { getWhenFromWorkout } from "~/utils/get-when-from-workout";
 import { useUpdateEventSearchParams } from "~/utils/hooks/use-update-event-search-params";
-import { appStore } from "~/utils/store/app";
 import { ModalType, openModal } from "~/utils/store/modal";
 import textLink from "~/utils/text-link";
 import { ImageWithFallback } from "../image-with-fallback";
@@ -30,9 +27,6 @@ export const WorkoutDetailsContent = ({
   providedEventId,
   chipSize,
 }: WorkoutDetailsContentProps) => {
-  const router = useRouter();
-  const utils = api.useUtils();
-  const { data: session } = useSession();
   const { data: results, isLoading } =
     api.location.getLocationWorkoutData.useQuery(
       { locationId },
@@ -43,8 +37,6 @@ export const WorkoutDetailsContent = ({
     if (providedEventId) return providedEventId;
     return results?.location.events?.[0]?.id ?? null;
   }, [providedEventId, results]);
-
-  const mode = appStore.use.mode();
 
   const event = useMemo(
     () =>

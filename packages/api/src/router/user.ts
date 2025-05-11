@@ -170,6 +170,7 @@ export const userRouter = createTRPCRouter({
           lastName: schema.users.lastName,
           email: schema.users.email,
           status: schema.users.status,
+          phone: schema.users.phone,
           roles: sql<
             { orgId: number; orgName: string; roleName: UserRole }[]
           >`COALESCE(

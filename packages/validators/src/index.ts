@@ -138,8 +138,10 @@ export const OrgInsertSchema = createInsertSchema(orgs, {
 export const OrgSelectSchema = createSelectSchema(orgs);
 
 export const DeleteRequestSchema = z.object({
-  eventId: z.number(),
-  eventName: z.string(),
+  eventId: z.number().nullish(),
+  eventName: z.string().nullish(),
+  aoId: z.number().nullish(),
+  aoName: z.string().nullish(),
   regionId: z.number(),
   submittedBy: z.string(),
 });
@@ -148,13 +150,8 @@ export const DeleteRequestSchema = z.object({
 export const RequestInsertSchema = createInsertSchema(updateRequests, {
   eventTypeIds: (s) =>
     s.min(1, { message: "Please select at least one event type" }),
-  eventName: (s) => s.min(1, { message: "Workout name is required" }),
   // We don't want to require an event description
   // eventDescription: (s) => s.min(1, { message: "Description is required" }),
-  eventDayOfWeek: z.enum(DayOfWeek, {
-    message: "Day of the week is required",
-  }),
-  aoName: (s) => s.min(1, { message: "AO name is required" }),
   // Location fields are optional
   // locationAddress: (s) => s.min(1, { message: "Location address is required" }),
   // locationCity: (s) => s.min(1, { message: "Location city is required" }),
@@ -175,6 +172,7 @@ export const RequestInsertSchema = createInsertSchema(updateRequests, {
   id: z.string(),
   eventMeta: z.record(z.string(), z.unknown()).optional(),
 });
+export type RequestInsertType = z.infer<typeof RequestInsertSchema>;
 
 export const UpdateRequestSelectSchema = createSelectSchema(updateRequests);
 

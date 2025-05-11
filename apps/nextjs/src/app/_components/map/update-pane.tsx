@@ -7,12 +7,7 @@ import { Button } from "@acme/ui/button";
 
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
-import {
-  eventDefaults,
-  locationDefaults,
-  ModalType,
-  openModal,
-} from "~/utils/store/modal";
+import { openRequestModal } from "~/utils/store/modal";
 
 export const UpdatePane = () => {
   const updateLocation = mapStore.use.updateLocation();
@@ -28,39 +23,21 @@ export const UpdatePane = () => {
   const handleCreateNew = () => {
     if (!updateLocation) return;
 
-    openModal(ModalType.UPDATE_LOCATION, {
-      requestType: "create_location",
-      ...eventDefaults,
-      ...locationDefaults,
-      lat: updateLocation.lat,
-      lng: updateLocation.lng,
-    });
+    openRequestModal({ type: "create_location_and_event" });
   };
 
   // Move existing AO to this location
   const handleMoveAO = () => {
     if (!updateLocation) return;
 
-    openModal(ModalType.UPDATE_LOCATION, {
-      requestType: "move_ao_to_new_location",
-      ...eventDefaults,
-      ...locationDefaults,
-      lat: updateLocation.lat,
-      lng: updateLocation.lng,
-    });
+    openRequestModal({ type: "move_ao_to_new_location" });
   };
 
   // Move existing event to new AO here
   const handleMoveEvent = () => {
     if (!updateLocation) return;
 
-    openModal(ModalType.UPDATE_LOCATION, {
-      requestType: "move_event_to_new_ao",
-      ...eventDefaults,
-      ...locationDefaults,
-      lat: updateLocation.lat,
-      lng: updateLocation.lng,
-    });
+    openRequestModal({ type: "move_event_to_new_location" });
   };
 
   if (!updateLocation || mode !== "edit") return null;
@@ -102,7 +79,7 @@ export const UpdatePane = () => {
               onTouchEnd={handleCreateNew}
             >
               <MapPin className="h-4 w-4" />
-              New location with new AO
+              New location, AO, & event
             </Button>
 
             <Button

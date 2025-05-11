@@ -24,3 +24,8 @@ pnpm doppler upload
 
 - this app uses a GCE instance to run PgBouncer in the f3data project
 - gcloud compute ssh f3data-pgbouncer-vm --project f3data
+
+# WIP
+
+- Need to show the different updates differently in the admin portal
+- Need to create ui and non ui testing for each type of update
