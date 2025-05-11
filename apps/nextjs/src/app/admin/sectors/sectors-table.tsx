@@ -1,9 +1,11 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
+import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { IsActiveStatus } from "@acme/shared/app/enums";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -14,25 +16,40 @@ import {
 import { MDTable } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
+import { IsActiveFilter } from "~/app/admin/_components/is-active-filter";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
 
 type Sector = RouterOutputs["org"]["all"]["orgs"][number];
 
 export const SectorsTable = ({ sectors }: { sectors: Sector[] }) => {
+  const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
+    "active",
+  ]);
+
+  const filteredSectors = sectors.filter((sector) => {
+    return selectedStatuses.includes(sector.isActive ? "active" : "inactive");
+  });
+
   return (
     <MDTable
-      data={sectors}
+      data={filteredSectors}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_SECTORS, { id: row.original.id });
       }}
-      // rowClassName={(row) => {
-      //   if (row.original.submitterValidated === true) {
-      //     return "opacity-30";
-      //   }
-      // }}
+      filterComponent={
+        <IsActiveFilter
+          onStatusSelect={(status) => {
+            const newStatuses = selectedStatuses.includes(status)
+              ? selectedStatuses.filter((s) => s !== status)
+              : [...selectedStatuses, status];
+            setSelectedStatuses(newStatuses);
+          }}
+          selectedStatuses={selectedStatuses}
+        />
+      }
     />
   );
 };

@@ -44,9 +44,14 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { EventInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { ControlledTimeInput } from "../time-input";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
@@ -555,6 +560,20 @@ export default function AdminWorkoutsModal({
                   </Button>
                 </div>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  closeModal();
+                  openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                    id: event?.id ?? -1,
+                    type: DeleteType.EVENT,
+                  });
+                }}
+                className="w-full"
+              >
+                Delete Event
+              </Button>
             </div>
           </form>
         </Form>
