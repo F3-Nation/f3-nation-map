@@ -152,7 +152,7 @@ export const FeatureMarker = ({
             const dotw = event.dayOfWeek;
             const isStart = eventIdx === 0;
             const isEnd = eventIdx === eventArray.length - 1;
-            const dayText = dotw ? dayOfWeekToShortDayOfWeek(dotw) : null;
+            const dayText = dotw ? dayOfWeekToShortDayOfWeek(dotw) : " ";
             return (
               <button
                 key={id + "-" + event.id}
@@ -169,8 +169,9 @@ export const FeatureMarker = ({
                   e.stopPropagation();
                 }}
                 className={cn(
-                  "flex-1 cursor-pointer border-b-2 border-t-2 border-foreground bg-foreground py-2 text-center text-background",
-                  "border-l-2 border-r-2",
+                  // min-h-[32.5px] so it doesn't collapse with no text
+                  "min-h-[32.5px] flex-1 cursor-pointer bg-foreground py-2 text-center text-background",
+                  "border-b-2 border-l-2 border-r-2 border-t-2 border-foreground ",
                   `google-eventid-${event.id}`,
                   {
                     "rounded-r-full": isEnd,
