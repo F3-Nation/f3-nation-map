@@ -142,6 +142,7 @@ export const locationRouter = createTRPCRouter({
           dayOfWeek: schema.events.dayOfWeek,
           startTime: schema.events.startTime,
           endTime: schema.events.endTime,
+          updated: schema.events.updated,
           name: schema.events.name,
           eventTypes: sql<{ id: number; name: string }[]>`COALESCE(
             json_agg(
@@ -242,6 +243,7 @@ export const locationRouter = createTRPCRouter({
           event.dayOfWeek,
           event.startTime,
           event.eventTypes,
+          event.updated,
         ]),
     ]);
 
