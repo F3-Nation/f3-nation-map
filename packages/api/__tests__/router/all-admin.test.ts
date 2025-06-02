@@ -241,7 +241,7 @@ describe("all admin routers", () => {
       expect(result).toBeDefined();
     });
 
-    it("should delete event", async () => {
+    it("should delete workout", async () => {
       if (!eventId) {
         throw new Error("Event ID is undefined");
       }

@@ -150,6 +150,7 @@ export const LocationEventForm = ({
             control={form.control}
             name="eventTypeIds"
             render={({ field, fieldState }) => {
+              console.log("eventTypes", eventTypes, field.value);
               return (
                 <div>
                   <MultiSelect

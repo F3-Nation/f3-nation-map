@@ -41,7 +41,10 @@ export const eventTypeRouter = createTRPCRouter({
 
       const where = and(
         input?.orgIds?.length
-          ? inArray(schema.eventTypes.specificOrgId, input?.orgIds)
+          ? or(
+              inArray(schema.eventTypes.specificOrgId, input?.orgIds),
+              isNull(schema.eventTypes.specificOrgId),
+            )
           : undefined,
         !input?.statuses?.length ||
           input.statuses.length === IsActiveStatus.length
@@ -103,6 +106,23 @@ export const eventTypeRouter = createTRPCRouter({
         : await query;
 
       return { eventTypes, count: countAmount };
+    }),
+  byOrgId: publicProcedure
+    .input(z.object({ orgId: z.number(), isActive: z.boolean().optional() }))
+    .query(async ({ ctx, input }) => {
+      const eventTypes = await ctx.db
+        .select()
+        .from(schema.eventTypes)
+        .where(
+          and(
+            eq(schema.eventTypes.specificOrgId, input.orgId),
+            input.isActive
+              ? eq(schema.eventTypes.isActive, input.isActive)
+              : eq(schema.eventTypes.isActive, true),
+          ),
+        );
+
+      return eventTypes;
     }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))

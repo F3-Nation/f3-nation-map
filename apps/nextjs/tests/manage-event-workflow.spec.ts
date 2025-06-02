@@ -43,7 +43,7 @@ test.describe("Manage Event Workflow", () => {
     });
 
     const deleteButton = page
-      .getByRole("button", { name: "Delete Event" })
+      .getByRole("button", { name: "Delete Workout" })
       .first();
     await deleteButton.click();
     await page.waitForTimeout(500);
@@ -109,7 +109,7 @@ test.describe("Manage Event Workflow", () => {
     await expect(panel).toBeVisible();
     await expect(panel).toContainText("Test Event");
 
-    const editButton = page.getByRole("button", { name: "Edit Event" }).first();
+    const editButton = page.getByRole("button", { name: "Edit Workout" }).first();
     await editButton.click();
     await page.locator('input[name="eventName"]').click();
     await page.locator('input[name="eventName"]').fill("Test Event 1234");
