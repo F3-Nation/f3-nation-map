@@ -43,6 +43,7 @@ export const notifyWebhooks = async (mapData: {
     version: "1.0",
     timestamp: new Date().toISOString(),
     action,
+    channel: env.NEXT_PUBLIC_CHANNEL,
     data: { eventId, locationId, orgId },
   };
   for (const webhook of webhooks) {
