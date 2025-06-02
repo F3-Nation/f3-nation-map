@@ -799,7 +799,7 @@ describe("map-request-notification service", () => {
       // Test for "create_location" request type
       await db
         .update(schema.updateRequests)
-        .set({ requestType: "create_location" })
+        .set({ requestType: "create_location_and_event" })
         .where(eq(schema.updateRequests.id, TEST_REQUEST_ID));
 
       mockSendTemplateMessages.mockClear();

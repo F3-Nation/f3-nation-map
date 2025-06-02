@@ -1,19 +1,21 @@
-import { z } from "zod";
+import type { z as zType } from "zod";
 
 import { ShadCNFormFactory } from "@acme/ui/form";
-import { RequestInsertSchema } from "@acme/validators";
+import {
+  DeleteRequestSchema,
+  UpdateLocationFormSchema,
+} from "@acme/validators";
 
 export const {
-  useSchemaForm: useUpdateLocationForm,
-  useSchemaFormContext: useUpdateLocationFormContext,
-} = ShadCNFormFactory(
-  RequestInsertSchema.extend({
-    badImage: z.boolean().default(false),
-    eventStartTime: z.string().regex(/^\d{2}:\d{2}$/, {
-      message: "Start time must be in 24hr format (HH:mm)",
-    }),
-    eventEndTime: z.string().regex(/^\d{2}:\d{2}$/, {
-      message: "End time must be in 24hr format (HH:mm)",
-    }),
-  }),
-);
+  useSchemaForm: useUpdateForm,
+  useSchemaFormContext: useUpdateFormContext,
+} = ShadCNFormFactory(UpdateLocationFormSchema);
+
+export const DeleteFormSchema = DeleteRequestSchema;
+
+export type DeleteFormValues = zType.infer<typeof DeleteFormSchema>;
+
+export const {
+  useSchemaForm: useDeleteForm,
+  useSchemaFormContext: useDeleteFormContext,
+} = ShadCNFormFactory(DeleteFormSchema);

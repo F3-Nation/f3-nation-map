@@ -138,43 +138,58 @@ export const OrgInsertSchema = createInsertSchema(orgs, {
 export const OrgSelectSchema = createSelectSchema(orgs);
 
 export const DeleteRequestSchema = z.object({
-  eventId: z.number(),
-  eventName: z.string(),
-  regionId: z.number(),
+  eventId: z.number().nullish(),
+  eventName: z.string().nullish(),
+  aoName: z.string().nullish(),
+  originalAoId: z.number().nullish(),
+  originalLocationId: z.number().nullish(),
+  originalRegionId: z.number(),
   submittedBy: z.string(),
+  requestType: z.enum(["delete_event", "delete_ao"]),
 });
+
+export type DeleteRequestType = z.infer<typeof DeleteRequestSchema>;
 
 // REQUEST UPDATE SCHEMA
 export const RequestInsertSchema = createInsertSchema(updateRequests, {
-  eventTypeIds: (s) =>
-    s.min(1, { message: "Please select at least one event type" }),
-  eventName: (s) => s.min(1, { message: "Workout name is required" }),
+  // eventTypeIds: (s) =>
+  //   s.min(1, { message: "Please select at least one event type" }).optional(),
   // We don't want to require an event description
   // eventDescription: (s) => s.min(1, { message: "Description is required" }),
-  eventDayOfWeek: z.enum(DayOfWeek, {
-    message: "Day of the week is required",
-  }),
-  aoName: (s) => s.min(1, { message: "AO name is required" }),
   // Location fields are optional
   // locationAddress: (s) => s.min(1, { message: "Location address is required" }),
   // locationCity: (s) => s.min(1, { message: "Location city is required" }),
   // locationState: (s) => s.min(1, { message: "Location state is required" }),
   // locationZip: (s) => s.min(1, { message: "Location zip is required" }),
   // locationCountry: (s) => s.min(1, { message: "Location country is required" }),
-  regionId: z.number({ invalid_type_error: "Region is required" }),
+  regionId: z.number({ invalid_type_error: "Region is required" }).nullable(),
   eventStartTime: (s) =>
-    s.regex(/^\d{4}$/, {
-      message: "Start time must be in 24hr format (HHmm)",
-    }),
+    s
+      .regex(/^\d{4}$/, {
+        message: "Start time must be in 24hr format (HHmm)",
+      })
+      // Must have literal empty string or else it fails on undefined
+      .or(z.literal(""))
+      .optional(),
   eventEndTime: (s) =>
-    s.regex(/^\d{4}$/, {
-      message: "End time must be in 24hr format (HHmm)",
-    }),
+    s
+      .regex(/^\d{4}$/, {
+        message: "End time must be in 24hr format (HHmm)",
+      })
+      // Must have literal empty string or else it fails on undefined
+      .or(z.literal(""))
+      .optional(),
   submittedBy: (s) => s.email({ message: "Invalid email address" }),
 }).extend({
   id: z.string(),
   eventMeta: z.record(z.string(), z.unknown()).optional(),
+  // Need originals to prevent changes in some scenarios (e.g. changing region)
+  originalRegionId: z.number().nullable(), // must be nullable for new events and locs
+  originalAoId: z.number().nullable(),
+  originalLocationId: z.number().nullable(),
 });
+
+export type RequestInsertType = z.infer<typeof RequestInsertSchema>;
 
 export const UpdateRequestSelectSchema = createSelectSchema(updateRequests);
 
@@ -238,3 +253,21 @@ export const DeleteRequestResponseSchema = z.object({
 });
 
 export type DeleteRequestResponse = z.infer<typeof DeleteRequestResponseSchema>;
+
+export const UpdateLocationFormSchema = RequestInsertSchema.extend({
+  badImage: z.boolean().default(false),
+  eventStartTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, {
+      message: "Start time must be in 24hr format (HH:mm)",
+    })
+    .optional(),
+  eventEndTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, {
+      message: "End time must be in 24hr format (HH:mm)",
+    })
+    .optional(),
+});
+
+export type UpdateLocationFormValues = z.infer<typeof UpdateLocationFormSchema>;
