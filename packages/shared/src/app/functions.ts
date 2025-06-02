@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { DayOfWeek } from "./enums";
+import type { DayOfWeek, RequestType } from "./enums";
 import { MAX_PLACES_AUTOCOMPLETE_RADIUS } from "./constants";
 
 export function zoomToRadius(zoom: number): number {
@@ -126,4 +126,38 @@ export const getFullAddress = (location: {
       .replace(/, ,/g, ",") // Clean up any double commas
       .replace(/,\s*$/, "") || null
   ); // Remove trailing comma
+};
+
+export const requestTypeToTitle = (requestType: RequestType) => {
+  switch (requestType) {
+    case "create_event":
+      return "New Workout";
+    case "create_location_and_event":
+      return "New Location and Workout";
+
+    case "edit":
+      return "Edit Request";
+    case "edit_event":
+      return "Edit Workout";
+    case "edit_ao_and_location":
+      return "Edit AO and Location";
+
+    case "move_ao_to_different_region":
+      return "Move AO to Different Region";
+    case "move_ao_to_new_location":
+      return "Move AO to New Location";
+    case "move_ao_to_different_location":
+      return "Move AO to Different Location";
+    case "move_event_to_different_ao":
+      return "Move Workout to Different AO";
+    case "move_event_to_new_location":
+      return "Move Workout to New Location";
+
+    case "delete_event":
+      return "Delete Workout";
+    case "delete_ao":
+      return "Delete AO";
+    default:
+      return "Update";
+  }
 };

@@ -32,7 +32,7 @@ export const onClickPlaceRowF3Location = (
     setTimeout(() => {
       setSelectedItem({
         locationId: result.destination.item.locationId,
-        eventId: result.destination.item.id,
+        eventId: result.destination.item.eventId,
         showPanel: false,
       });
     }, 250);
@@ -56,7 +56,7 @@ export const PlaceRowF3Location = ({
         } else {
           setSelectedItem({
             locationId: result.destination.item.locationId,
-            eventId: result.destination.item.id,
+            eventId: result.destination.item.eventId,
             showPanel: false,
           });
         }
@@ -64,7 +64,7 @@ export const PlaceRowF3Location = ({
       onFocus={() => {
         setSelectedItem({
           locationId: result.destination.item.locationId,
-          eventId: result.destination.item.id,
+          eventId: result.destination.item.eventId,
           showPanel: false,
         });
       }}

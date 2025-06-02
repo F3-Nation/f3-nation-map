@@ -63,7 +63,7 @@ export const WorkoutsTable = () => {
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_EVENTS, { id: row.original.id });
       }}
-      totalCount={workouts?.total}
+      totalCount={workouts?.totalCount}
       pagination={pagination}
       setPagination={setPagination}
       searchTerm={searchTerm}

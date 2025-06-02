@@ -43,6 +43,8 @@ export const EventTypesTable = () => {
     searchTerm: debouncedSearchTerm,
     pageSize: pagination.pageSize,
     pageIndex: pagination.pageIndex,
+    ignoreNationEventTypes: true,
+    sorting: sorting,
   });
 
   const handleOrgSelect = (org: Org) => {
@@ -67,20 +69,20 @@ export const EventTypesTable = () => {
 
   return (
     <MDTable
+      data={eventTypes?.eventTypes}
+      totalCount={eventTypes?.totalCount}
+      pagination={pagination}
+      setPagination={setPagination}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
-      data={eventTypes?.eventTypes}
+      sorting={sorting}
+      setSorting={setSorting}
       cellClassName="p-1"
       paginationOptions={{ pageSize: 20 }}
-      totalCount={eventTypes?.count}
       columns={columns}
       onRowClick={(row) => {
         openModal(ModalType.ADMIN_EVENT_TYPES, { id: row.original.id });
       }}
-      sorting={sorting}
-      setSorting={setSorting}
-      pagination={pagination}
-      setPagination={setPagination}
       filterComponent={
         <>
           <EventTypeIsActiveFilter

@@ -19,9 +19,7 @@ export const groupMarkerClick = async ({
     selectedItemStore.get("locationId") === locationId &&
     selectedItemStore.get("eventId") === eventId;
   const location = await queryClientUtils.location.getLocationWorkoutData.fetch(
-    {
-      locationId,
-    },
+    { locationId },
   );
   if (!location) return;
 

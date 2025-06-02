@@ -156,7 +156,7 @@ export const userRouter = createTRPCRouter({
           ...user,
           name: `${user.firstName} ${user.lastName}`,
         })),
-        count: userCount?.count ?? 0,
+        totalCount: userCount?.count ?? 0,
       };
     }),
   byId: editorProcedure
@@ -170,6 +170,7 @@ export const userRouter = createTRPCRouter({
           lastName: schema.users.lastName,
           email: schema.users.email,
           status: schema.users.status,
+          phone: schema.users.phone,
           roles: sql<
             { orgId: number; orgName: string; roleName: UserRole }[]
           >`COALESCE(

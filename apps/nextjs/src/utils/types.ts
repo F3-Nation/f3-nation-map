@@ -55,19 +55,14 @@ export interface F3RegionMapSearchResult {
 export interface F3LocationMapSearchResult {
   header: string;
   type: "location";
-  // description: string;
   destination: {
     id: number;
     lat: number;
     lng: number;
     logo: string;
     item: {
-      id: number;
+      eventId: number | null;
       locationId: number;
-      name: string;
-      dayOfWeek: DayOfWeek | null;
-      startTime: string | null;
-      eventTypes: { id: number; name: string }[];
     };
     placeId: null;
     regionName: string | null;

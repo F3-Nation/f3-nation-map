@@ -7,10 +7,9 @@
 import { useCallback } from "react";
 
 import type { DayOfWeek } from "@acme/shared/app/enums";
-import { getReadableDayOfWeek } from "@acme/shared/app/functions";
 import { cn } from "@acme/ui";
 
-import { dayjs } from "~/utils/frontendDayjs";
+import { getWhenFromWorkout } from "~/utils/get-when-from-workout";
 import { setView } from "~/utils/set-view";
 import { setSelectedItem } from "~/utils/store/selected-item";
 import BootSvgComponent from "../SVGs/boot-camp";
@@ -45,17 +44,10 @@ export const EventChip = (props: {
     selected,
     variant = "interactive",
   } = props;
-  const startTimeRaw =
-    event.startTime === null
-      ? undefined
-      : dayjs(event.startTime, "HHmm").format("h:mmA");
 
   const iconSize = size === "small" ? 16 : size === "medium" ? 16 : 24;
 
   const isInteractive = variant === "interactive";
-
-  const startTime =
-    size === "large" ? startTimeRaw : startTimeRaw?.replace(":00", "");
 
   const name =
     event.name && !props.hideName ? (
@@ -63,13 +55,6 @@ export const EventChip = (props: {
         <b>{event.name}</b> -
       </>
     ) : null;
-
-  const duration = event.endTime
-    ? dayjs(event.endTime, "HHmm").diff(
-        dayjs(event.startTime, "HHmm"),
-        "minutes",
-      )
-    : null;
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -101,6 +86,13 @@ export const EventChip = (props: {
     },
     [event.id, event.locationId],
   );
+
+  const when = getWhenFromWorkout({
+    dayOfWeek: event.dayOfWeek,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    condensed: true,
+  });
 
   return (
     <div
@@ -135,17 +127,28 @@ export const EventChip = (props: {
           </div>
         ) : null}
         <div className="line-clamp-1 flex-shrink-0 text-left">
-          {getReadableDayOfWeek(event.dayOfWeek)} {startTime}
+          {when || "No time"}
         </div>
-        {size === "small" || !duration ? null : ` (${duration}m)`}
       </div>
       <div>
         {event.eventTypes.some((et) => et.name === "Bootcamp") ? (
-          <BootSvgComponent height={iconSize} width={iconSize} />
+          <BootSvgComponent
+            height={iconSize}
+            width={iconSize}
+            fill={selected && isInteractive ? "background" : undefined}
+          />
         ) : event.eventTypes.some((et) => et.name === "Ruck") ? (
-          <RuckSvgComponent height={iconSize} width={iconSize} />
+          <RuckSvgComponent
+            height={iconSize}
+            width={iconSize}
+            fill={selected && isInteractive ? "background" : undefined}
+          />
         ) : event.eventTypes.some((et) => et.name === "Run") ? (
-          <RunSvgComponent height={iconSize} width={iconSize} />
+          <RunSvgComponent
+            height={iconSize}
+            width={iconSize}
+            fill={selected && isInteractive ? "background" : undefined}
+          />
         ) : null}
       </div>
       {/* Show a +badge if there are more than 1 event type */}

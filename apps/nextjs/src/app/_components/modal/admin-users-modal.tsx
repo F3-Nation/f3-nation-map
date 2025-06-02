@@ -76,13 +76,13 @@ export default function UserModal({
     if (user) {
       form.reset({
         id: user.id ?? undefined,
-        //name: user?.name ?? "",
         f3Name: user?.f3Name ?? "",
         firstName: user?.firstName ?? "",
         lastName: user?.lastName ?? "",
         email: user?.email ?? "",
         roles: user?.roles,
         status: user?.status ?? "active",
+        phone: user?.phone ?? "",
       });
     }
   }, [form, user]);
@@ -118,7 +118,9 @@ export default function UserModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit User</DialogTitle>
+          <DialogTitle className="text-center">
+            {user?.id ? "Edit" : "Add"} User
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>

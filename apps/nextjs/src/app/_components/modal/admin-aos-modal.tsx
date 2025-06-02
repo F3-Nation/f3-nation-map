@@ -35,10 +35,15 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { AOInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { env } from "~/env";
 import { api } from "~/trpc/react";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
 export default function AdminAOsModal({
@@ -64,7 +69,7 @@ export default function AdminAOsModal({
       name: ao?.name ?? "",
       parentId: ao?.parentId ?? -1,
       defaultLocationId: ao?.defaultLocationId ?? null,
-      isActive: ao?.isActive,
+      isActive: ao?.isActive ?? true,
       description: ao?.description ?? "",
       logoUrl: ao?.logoUrl ?? null,
       website: ao?.website ?? null,
@@ -86,7 +91,9 @@ export default function AdminAOsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit AO</DialogTitle>
+          <DialogTitle className="text-center">
+            {ao?.id ? "Edit" : "Add"} AO
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -352,7 +359,7 @@ export default function AdminAOsModal({
                   )}
                 />
               </div>
-              <div className="mb-4 w-full px-2">
+              <div className="mb-4 flex w-full flex-col px-2">
                 <div className="flex space-x-4 pt-4">
                   <Button
                     type="button"
@@ -403,6 +410,23 @@ export default function AdminAOsModal({
                       (DEV) Fake data
                     </Button>
                   ) : null}
+                </div>
+                <div className="flex space-x-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    // variant="link"
+                    onClick={() => {
+                      closeModal();
+                      openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                        id: ao?.id ?? -1,
+                        type: DeleteType.AO,
+                      });
+                    }}
+                    className="w-full"
+                  >
+                    Delete AO
+                  </Button>
                 </div>
               </div>
             </div>

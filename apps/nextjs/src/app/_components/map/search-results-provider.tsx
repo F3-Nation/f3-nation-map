@@ -4,8 +4,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import { MIN_TEXT_LENGTH_FOR_SEARCH_RESULTS } from "@acme/shared/app/constants";
 import { RERENDER_LOGS } from "@acme/shared/common/constants";
+import { isTruthy } from "@acme/shared/common/functions";
 
-import type { RouterOutputs } from "~/trpc/types";
 import type {
   F3LocationMapSearchResult,
   F3RegionMapSearchResult,
@@ -36,19 +36,15 @@ const TextSearchResultsContext = createContext<{
 
 export const TextSearchResultsProvider = ({
   children,
-  regionsWithLocationData,
 }: {
   children: React.ReactNode;
-  regionsWithLocationData: RouterOutputs["location"]["getRegionsWithLocation"];
 }) => {
+  const { data: regions } =
+    api.location.getRegionsWithLocation.useQuery(undefined);
   const { data: eventIdToRegionNameLookup } =
     api.event.eventIdToRegionNameLookup.useQuery();
   const isMobileWidth = useIsMobileWidth();
   RERENDER_LOGS && console.log("TextSearchResultsProvider rerender");
-  const { data: regions } = api.location.getRegionsWithLocation.useQuery(
-    undefined,
-    { initialData: regionsWithLocationData },
-  );
   const text = searchStore.use.text();
   const { filteredLocationMarkers } = useFilteredMapResults();
 
@@ -87,6 +83,26 @@ export const TextSearchResultsProvider = ({
 
     const _f3Results = [
       ...(filteredLocationMarkers
+        ?.filter((data) =>
+          data.aoName?.toLowerCase().includes(text.toLowerCase()),
+        )
+        .map((data) => {
+          const searchResult: F3LocationMapSearchResult = {
+            type: "location",
+            header: data.aoName ?? "",
+            destination: {
+              id: data.id,
+              lat: data.lat ?? 0,
+              lng: data.lon ?? 0,
+              logo: data.logo ?? "",
+              item: { eventId: null, locationId: data.id },
+              placeId: null,
+              regionName: eventIdToRegionNameLookup?.[data.id] ?? null,
+            },
+          };
+          return searchResult;
+        }) ?? []),
+      ...(filteredLocationMarkers
         ?.flatMap((location) =>
           location.events
             .filter((event) =>
@@ -95,17 +111,6 @@ export const TextSearchResultsProvider = ({
             .slice(0, 1)
             .map((event) => ({ event, location })),
         )
-        // .filter(({ location: itemLocation }, index, arr) => {
-        //   if (
-        //     arr.findIndex(
-        //       ({ event: checkLocation }) =>
-        //         itemLocation.id === checkLocation.id,
-        //     ) !== index
-        //   ) {
-        //     return false;
-        //   }
-        //   return true;
-        // })
         .map(({ event, location }) => {
           const searchResult: F3LocationMapSearchResult = {
             type: "location",
@@ -116,14 +121,14 @@ export const TextSearchResultsProvider = ({
               lat: location.lat ?? 0,
               lng: location.lon ?? 0,
               logo: location.logo ?? "",
-              item: { ...event, locationId: location.id },
+              item: { eventId: event.id, locationId: location.id },
               placeId: null,
               regionName: eventIdToRegionNameLookup?.[event.id] ?? null,
             },
           };
           return searchResult;
         }) ?? []),
-    ];
+    ].filter(isTruthy);
 
     setF3LocationResults(_f3Results);
 

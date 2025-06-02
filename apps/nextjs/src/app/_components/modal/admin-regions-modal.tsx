@@ -36,11 +36,16 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { RegionInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
 import { uploadLogo } from "~/utils/image/upload-logo";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { DebouncedImage } from "../debounced-image";
 
 export default function AdminRegionsModal({
@@ -137,7 +142,9 @@ export default function AdminRegionsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Region</DialogTitle>
+          <DialogTitle className="text-center">
+            {region?.id ? "Edit" : "Add"} Region
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -482,6 +489,23 @@ export default function AdminRegionsModal({
                     ) : (
                       "Save Changes"
                     )}
+                  </Button>
+                </div>
+                <div className="flex space-x-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    // variant="link"
+                    onClick={() => {
+                      closeModal();
+                      openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                        id: region?.id ?? -1,
+                        type: DeleteType.REGION,
+                      });
+                    }}
+                    className="w-full"
+                  >
+                    Delete Region
                   </Button>
                 </div>
               </div>

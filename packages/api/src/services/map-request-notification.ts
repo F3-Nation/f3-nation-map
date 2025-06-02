@@ -1,9 +1,10 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import type { AppDb } from "@acme/db/client";
-import type { OrgType, RegionRole, RequestType } from "@acme/shared/app/enums";
+import type { OrgType, RegionRole } from "@acme/shared/app/enums";
 import { schema } from "@acme/db";
 import { env } from "@acme/env";
+import { requestTypeToTitle } from "@acme/shared/app/functions";
 
 import { mail, Templates } from "../mail";
 
@@ -20,24 +21,6 @@ interface Org {
   name: string;
   parentId: number | null;
 }
-
-/**
- * Formats the request type for better display in emails
- */
-const formatRequestType = (requestType: RequestType): string => {
-  switch (requestType) {
-    case "create_event":
-      return "New Workout";
-    case "create_location":
-      return "New Location";
-    case "edit":
-      return "Edit Request";
-    case "delete_event":
-      return "Delete Workout";
-    default:
-      return requestType;
-  }
-};
 
 /**
  * Gets admin and editor users for a specific org
@@ -238,7 +221,7 @@ export const notifyMapChangeRequest = async ({
     : env.NEXT_PUBLIC_URL ?? "";
 
   const requestsUrl = `${baseUrl}/admin/requests`;
-  const formattedRequestType = formatRequestType(request.requestType);
+  const title = requestTypeToTitle(request.requestType);
 
   // Send emails
   const emailPromises = recipients.map(async (recipient) => {
@@ -247,7 +230,7 @@ export const notifyMapChangeRequest = async ({
         to: recipient.email,
         regionName: request.regionName ?? "Unknown",
         workoutName: request.eventName ?? "Unknown",
-        requestType: formattedRequestType,
+        requestType: title,
         submittedBy: request.submittedBy,
         requestsUrl,
         noAdminsNotice,

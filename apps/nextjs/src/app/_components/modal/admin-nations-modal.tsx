@@ -110,7 +110,9 @@ export default function AdminNationsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Nation</DialogTitle>
+          <DialogTitle className="text-center">
+            {nation?.id ? "Edit" : "Add"} Nation
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>

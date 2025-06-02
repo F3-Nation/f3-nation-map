@@ -446,3 +446,9 @@ export const normalizeEmail = (identifier: string) => {
   domain = domain?.split(",")[0];
   return `${local}@${domain}`;
 };
+
+export const removeUndefinedFromObject = (obj: Record<string, unknown>) => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, value]) => value !== undefined),
+  );
+};

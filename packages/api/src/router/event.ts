@@ -47,12 +47,11 @@ export const eventRouter = createTRPCRouter({
       const usePagination =
         input?.pageIndex !== undefined && input?.pageSize !== undefined;
       const where = and(
-        !input?.statuses?.length ||
-          input.statuses.length === IsActiveStatus.length
-          ? undefined
-          : input.statuses.includes("active")
-            ? eq(schema.events.isActive, true)
-            : eq(schema.events.isActive, false),
+        !input?.statuses?.length // no statuses provided, default to active
+          ? eq(schema.events.isActive, true)
+          : input.statuses.length === IsActiveStatus.length
+            ? undefined
+            : eq(schema.events.isActive, input.statuses.includes("active")),
         input?.searchTerm
           ? or(
               ilike(schema.events.name, `%${input?.searchTerm}%`),
@@ -201,7 +200,7 @@ export const eventRouter = createTRPCRouter({
         location: getFullAddress(event),
       }));
 
-      return { events: eventsWithLocation, total: eventCount?.count ?? 0 };
+      return { events: eventsWithLocation, totalCount: eventCount?.count ?? 0 };
     }),
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
@@ -371,9 +370,6 @@ export const eventRouter = createTRPCRouter({
 
       return result;
     }),
-  types: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db.select().from(schema.eventTypes);
-  }),
   eventIdToRegionNameLookup: publicProcedure.query(async ({ ctx }) => {
     const regionOrg = aliasedTable(schema.orgs, "region_org");
     const parentOrg = aliasedTable(schema.orgs, "parent_org");

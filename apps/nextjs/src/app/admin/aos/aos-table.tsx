@@ -1,10 +1,11 @@
 "use client";
 
 import type { TableOptions } from "@tanstack/react-table";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 import type { RouterOutputs } from "@acme/api";
+import type { IsActiveStatus } from "@acme/shared/app/enums";
 import type { SortingSchema } from "@acme/validators";
 import { Button } from "@acme/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
 import { MDTable, usePagination } from "@acme/ui/md-table";
 import { Cell, Header } from "@acme/ui/table";
 
+import { IsActiveFilter } from "~/app/admin/_components/is-active-filter";
 import { RegionFilter } from "~/app/admin/_components/region-filter";
 import { api } from "~/trpc/react";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
@@ -25,6 +27,9 @@ type Org = RouterOutputs["org"]["all"]["orgs"][number];
 export const AOsTable = () => {
   const { pagination, setPagination } = usePagination();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<IsActiveStatus[]>([
+    "active",
+  ]);
   const [sorting, setSorting] = useState<SortingSchema>([]);
   const [selectedRegions, setSelectedRegions] = useState<Org[]>([]);
 
@@ -35,7 +40,19 @@ export const AOsTable = () => {
     searchTerm: searchTerm,
     sorting: sorting,
     parentOrgIds: selectedRegions.map((region) => region.id),
+    statuses: selectedStatuses,
   });
+
+  const handleStatusSelect = useCallback((status: IsActiveStatus) => {
+    setSelectedStatuses((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      } else {
+        return [...prev, status];
+      }
+    });
+  }, []);
+
   return (
     <MDTable
       data={aos?.orgs}
@@ -54,15 +71,21 @@ export const AOsTable = () => {
       sorting={sorting}
       setSorting={setSorting}
       filterComponent={
-        <RegionFilter
-          onRegionSelect={(region) => {
-            const newRegions = selectedRegions.includes(region)
-              ? selectedRegions.filter((r) => r !== region)
-              : [...selectedRegions, region];
-            setSelectedRegions(newRegions);
-          }}
-          selectedRegions={selectedRegions}
-        />
+        <>
+          <RegionFilter
+            onRegionSelect={(region) => {
+              const newRegions = selectedRegions.includes(region)
+                ? selectedRegions.filter((r) => r !== region)
+                : [...selectedRegions, region];
+              setSelectedRegions(newRegions);
+            }}
+            selectedRegions={selectedRegions}
+          />
+          <IsActiveFilter
+            onStatusSelect={handleStatusSelect}
+            selectedStatuses={selectedStatuses}
+          />
+        </>
       }
     />
   );

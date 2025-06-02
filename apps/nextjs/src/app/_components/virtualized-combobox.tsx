@@ -240,7 +240,7 @@ export function VirtualizedCombobox<T>({
             {required ? <span className="text-red-500">*</span> : null}
           </label>
           <div className={cn("w-full text-left text-sm font-normal leading-3")}>
-            {selectedOptions.length === 0 ? (
+            {!selectedOptions?.length ? (
               searchPlaceholder
             ) : selectedOptions.length === 1 ? (
               valueToLabel[selectedOptions[0]!]

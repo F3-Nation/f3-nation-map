@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Z_INDEX } from "@acme/shared/app/constants";
+import { TestId } from "@acme/shared/common/enums";
 import { cn } from "@acme/ui";
 import { Button } from "@acme/ui/button";
 import {
@@ -34,9 +35,14 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { SectorInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 
 export default function AdminSectorsModal({
   data,
@@ -112,7 +118,9 @@ export default function AdminSectorsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Sector</DialogTitle>
+          <DialogTitle className="text-center">
+            {sector?.id ? "Edit" : "Add"} Sector
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -187,6 +195,7 @@ export default function AdminSectorsModal({
                         value={field.value?.toString()}
                         onValueChange={(value) => field.onChange(Number(value))}
                         defaultValue={field.value?.toString()}
+                        data-testid={TestId.SECTOR_NATION_SELECT}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a nation" />
@@ -391,6 +400,23 @@ export default function AdminSectorsModal({
                     ) : (
                       "Save Changes"
                     )}
+                  </Button>
+                </div>
+                <div className="flex space-x-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    // variant="link"
+                    onClick={() => {
+                      closeModal();
+                      openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                        id: sector?.id ?? -1,
+                        type: DeleteType.SECTOR,
+                      });
+                    }}
+                    className="w-full"
+                  >
+                    Delete Sector
                   </Button>
                 </div>
               </div>

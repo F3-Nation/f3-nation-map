@@ -12,10 +12,14 @@ import { api } from "~/trpc/react";
  */
 export const ReactQueryHydrator = (params: {
   mapEventAndLocationData: RouterOutputs["location"]["getMapEventAndLocationData"];
+  regionsWithLocationData: RouterOutputs["location"]["getRegionsWithLocation"];
   children: ReactNode;
 }) => {
   api.location.getMapEventAndLocationData.useQuery(undefined, {
     initialData: params.mapEventAndLocationData,
+  });
+  api.location.getRegionsWithLocation.useQuery(undefined, {
+    initialData: params.regionsWithLocationData,
   });
 
   return <>{params.children}</>;

@@ -36,10 +36,15 @@ import {
 } from "@acme/ui/tooltip";
 import { LocationInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { GoogleMapSimple } from "../map/google-map-simple";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
@@ -71,7 +76,7 @@ export default function AdminLocationsModal({
       email: location?.email ?? "",
       description: location?.description ?? "",
       isActive: location?.isActive ?? true,
-      regionId: location?.regionId ?? -1,
+      regionId: location?.regionId ?? undefined,
       latitude: location?.latitude
         ? location.latitude.toString()
         : DEFAULT_CENTER[0].toString(),
@@ -115,7 +120,9 @@ export default function AdminLocationsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[1024px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Location</DialogTitle>
+          <DialogTitle className="text-center">
+            {location?.id ? "Edit" : "Add"} Location
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-wrap">
@@ -441,7 +448,7 @@ export default function AdminLocationsModal({
                       )}
                     />
                   </div>
-                  <div className="mb-4 w-full px-2">
+                  <div className="w-full px-2">
                     <div className="flex space-x-4 pt-4">
                       <Button
                         type="button"
@@ -462,8 +469,26 @@ export default function AdminLocationsModal({
                       </Button>
                     </div>
                   </div>
+                  <div className="w-full px-2">
+                    <div className="flex space-x-4 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          closeModal();
+                          openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                            id: location?.id ?? -1,
+                            type: DeleteType.LOCATION,
+                          });
+                        }}
+                        className="w-full"
+                      >
+                        Delete Location
+                      </Button>
+                    </div>
+                  </div>
                   {!isProd && (
-                    <div className="mb-4 w-full px-2">
+                    <div className="w-full px-2">
                       <div className="flex space-x-4 pt-4">
                         <Button
                           type="button"

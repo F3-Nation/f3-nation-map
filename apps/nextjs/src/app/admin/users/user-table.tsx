@@ -208,7 +208,7 @@ export const UserTable = () => {
         cellClassName="p-1"
         columns={columns}
         pagination={pagination}
-        totalCount={data?.count}
+        totalCount={data?.totalCount}
         setPagination={setPagination}
         onRowClick={(row) => {
           openModal(ModalType.ADMIN_USERS, { id: row.original.id });

@@ -259,7 +259,7 @@ export const FiltersAll = (props: ComponentProps<"div">) => {
                     ) : (
                       <item.img
                         className="h-full w-full"
-                        fillcolor={filters[item.name] ? "#3B82F6" : "#6B7280"}
+                        fill={filters[item.name] ? "#3B82F6" : "#6B7280"}
                       />
                     )}
                   </div>

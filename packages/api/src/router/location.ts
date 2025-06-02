@@ -123,7 +123,7 @@ export const locationRouter = createTRPCRouter({
         ? await withPagination(query.$dynamic(), sortedColumns, offset, limit)
         : await query;
 
-      return { locations, total: locationCount?.count ?? 0 };
+      return { locations, totalCount: locationCount?.count ?? 0 };
     }),
   getMapEventAndLocationData: publicProcedure.query(async ({ ctx }) => {
     const aoOrg = aliasedTable(schema.orgs, "ao_org");
@@ -367,12 +367,15 @@ export const locationRouter = createTRPCRouter({
       if (location?.lat == null || location?.lon == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Location not found",
+          message: `Lat lng not found for location id: ${input.locationId}`,
         });
       }
 
       const locationWithEvents = {
         ...location,
+        // Need to handle empty string values for parent and region logos
+        parentLogo: !location.parentLogo ? null : location.parentLogo,
+        regionLogo: !location.regionLogo ? null : location.regionLogo,
         lat: location.lat,
         lon: location.lon,
         fullAddress: getFullAddress(location),
@@ -411,7 +414,10 @@ export const locationRouter = createTRPCRouter({
       })
       .from(region)
       .innerJoin(ao, eq(ao.parentId, region.id))
-      .innerJoin(schema.locations, eq(schema.locations.orgId, region.id));
+      .innerJoin(schema.locations, eq(schema.locations.orgId, region.id))
+      .where(
+        and(eq(schema.locations.isActive, true), eq(region.isActive, true)),
+      );
 
     const uniqueRegionsWithLocation = regionsWithLocation
       .map((rwl) =>

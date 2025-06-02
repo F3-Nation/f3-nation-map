@@ -79,8 +79,9 @@ export default function AdminDeleteRequestModal({
       await vanillaApi.request.validateDeleteByAdmin.mutate({
         eventId: request.eventId,
         eventName: request.eventName,
-        regionId: request.regionId,
+        originalRegionId: request.regionId,
         submittedBy: request.submittedBy,
+        requestType: "delete_event",
       });
 
       router.refresh();
@@ -118,7 +119,7 @@ export default function AdminDeleteRequestModal({
             <Trash className="h-12 w-12 text-destructive" />
             <div className="flex flex-col">
               <p className="text-2xl font-medium">
-                {request.eventName || "N/A"}
+                {request.eventName ?? "N/A"}
               </p>
               <p className="text-sm text-muted-foreground">Event</p>
             </div>

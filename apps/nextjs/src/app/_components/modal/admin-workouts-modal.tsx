@@ -44,9 +44,14 @@ import { Textarea } from "@acme/ui/textarea";
 import { toast } from "@acme/ui/toast";
 import { EventInsertSchema } from "@acme/validators";
 
-import type { DataType, ModalType } from "~/utils/store/modal";
+import type { DataType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
-import { closeModal } from "~/utils/store/modal";
+import {
+  closeModal,
+  DeleteType,
+  ModalType,
+  openModal,
+} from "~/utils/store/modal";
 import { ControlledTimeInput } from "../time-input";
 import { VirtualizedCombobox } from "../virtualized-combobox";
 
@@ -78,7 +83,10 @@ export default function AdminWorkoutsModal({
   const { data: locations } = api.location.all.useQuery();
   const { data: aos } = api.org.all.useQuery({ orgTypes: ["ao"] });
   const { data: event } = api.event.byId.useQuery({ id: data.id ?? -1 });
-  const { data: eventTypes } = api.event.types.useQuery();
+  const { data: eventTypes } = api.eventType.all.useQuery({
+    pageSize: 200,
+    orgIds: event?.regions.map((r) => r.regionId),
+  });
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,7 +192,9 @@ export default function AdminWorkoutsModal({
         className={cn(`max-w-[90%] rounded-lg lg:max-w-[600px]`)}
       >
         <DialogHeader>
-          <DialogTitle className="text-center">Edit Workout</DialogTitle>
+          <DialogTitle className="text-center">
+            {event?.id ? "Edit" : "Add"} Event
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -302,7 +312,7 @@ export default function AdminWorkoutsModal({
                           defaultValue={field.value?.toString()}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a location" />
+                            <SelectValue placeholder="Select an AO" />
                           </SelectTrigger>
                           <SelectContent>
                             {filteredAOs
@@ -432,7 +442,7 @@ export default function AdminWorkoutsModal({
                       <VirtualizedCombobox
                         value={field.value?.map(String)}
                         options={
-                          eventTypes?.map((type) => ({
+                          eventTypes?.eventTypes.map((type) => ({
                             value: type.id.toString(),
                             label: type.name,
                           })) ?? []
@@ -552,6 +562,20 @@ export default function AdminWorkoutsModal({
                   </Button>
                 </div>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  closeModal();
+                  openModal(ModalType.ADMIN_DELETE_CONFIRMATION, {
+                    id: event?.id ?? -1,
+                    type: DeleteType.EVENT,
+                  });
+                }}
+                className="w-full"
+              >
+                Delete Event
+              </Button>
             </div>
           </form>
         </Form>
