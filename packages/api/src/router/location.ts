@@ -441,7 +441,21 @@ export const locationRouter = createTRPCRouter({
     const [result] = await ctx.db
       .select({ count: count() })
       .from(schema.events)
-      .where(isNotNull(schema.events.locationId));
+      .where(
+        and(
+          isNotNull(schema.events.locationId),
+          eq(schema.events.isActive, true),
+        ),
+      );
+
+    return { count: result?.count };
+  }),
+  getRegionCount: publicProcedure.query(async ({ ctx }) => {
+    const regionOrg = aliasedTable(schema.orgs, "region_org");
+    const [result] = await ctx.db
+      .select({ count: count() })
+      .from(regionOrg)
+      .where(eq(regionOrg.isActive, true));
 
     return { count: result?.count };
   }),
