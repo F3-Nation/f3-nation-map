@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { env } from "@acme/env";
+
 // You guys both wanted webhooks to let you know when the map data is updated, right? I now have that functional, but will need your hardcoded webhook urls. Can you share those with me? In the future I’ll allow them to be dynamic but for now was hoping to doing something light. It will just send a post or get (whichever you want) whenever the data changes. I will likely send a payload like this:
 // {
 // eventId?: number,
@@ -14,13 +16,35 @@ interface Webhook {
 }
 
 const webhooks: Webhook[] = [
-  // {
-  //   url: "https://58898a233cdb.ngrok.app/api/trpc/ping",
-  //   method: "GET",
-  // },
+  {
+    url: `${env.NEXT_PUBLIC_URL}/api/trpc/ping`,
+    method: "GET",
+  },
 ];
+if (env.NEXT_PUBLIC_CHANNEL === "prod") {
+  webhooks.push({
+    url: "https://us-central1-f3-workout.cloudfunctions.net/mapWebhook",
+    method: "POST",
+  });
+  webhooks.push({
+    url: "https://f3-nation-slack-bot-419868269651.us-central1.run.app/map-update",
+    method: "POST",
+  });
+}
 
-export const notifyWebhooks = async (data?: unknown) => {
+export const notifyWebhooks = async (mapData: {
+  eventId?: number;
+  locationId?: number;
+  orgId?: number;
+  action: "map.updated" | "map.created" | "map.deleted";
+}) => {
+  const { eventId, locationId, orgId, action } = mapData;
+  const data = {
+    version: "1.0",
+    timestamp: new Date().toISOString(),
+    action,
+    data: { eventId, locationId, orgId },
+  };
   for (const webhook of webhooks) {
     if (webhook.method === "POST") {
       await axios.post(webhook.url, data, {

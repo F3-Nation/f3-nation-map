@@ -439,5 +439,7 @@ export const eventRouter = createTRPCRouter({
         .where(
           and(eq(schema.events.id, input.id), eq(schema.events.isActive, true)),
         );
+
+      return { eventId: input.id };
     }),
 });

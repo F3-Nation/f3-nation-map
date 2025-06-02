@@ -570,5 +570,7 @@ export const locationRouter = createTRPCRouter({
             eq(schema.locations.isActive, true),
           ),
         );
+
+      return { locationId: input.id };
     }),
 });

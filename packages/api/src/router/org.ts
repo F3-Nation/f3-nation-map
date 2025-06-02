@@ -270,6 +270,7 @@ export const orgRouter = createTRPCRouter({
             eq(schema.orgs.isActive, true),
           ),
         );
+      return { orgId: input.id };
     }),
   revalidate: adminProcedure.mutation(async ({ ctx }) => {
     const [nation] = await ctx.db

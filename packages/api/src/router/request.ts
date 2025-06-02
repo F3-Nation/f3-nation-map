@@ -314,7 +314,7 @@ export const requestRouter = createTRPCRouter({
 
       return {
         status: "pending",
-        updateRequest: request,
+        deleteRequest: request,
       };
     }),
   submitUpdateRequest: publicProcedure

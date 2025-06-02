@@ -1,14 +1,13 @@
+/* eslint-disable no-case-declarations */
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import type {
-  DeleteRequestResponse,
-  UpdateRequestResponse,
-} from "@acme/validators";
 import { appRouter, createTRPCContext } from "@acme/api";
 import { notifyWebhooks } from "@acme/api/lib/notify-webhooks";
 import { auth } from "@acme/auth";
+
+import type { RouterOutputs } from "~/trpc/types";
 
 const updateDataPath = [
   "event.crupdate",
@@ -19,18 +18,28 @@ const updateDataPath = [
   "org.delete",
   "request.validateSubmissionByAdmin",
   "request.validateDeleteByAdmin",
-  "request.validateSubmission",
-];
+] as const;
 
 const conditionalDataPath = [
   "request.submitUpdateRequest",
   "request.submitDeleteRequest",
-];
+] as const;
 const REQUEST_FAILED_ERROR = "Request failed";
 const NO_TRPC_ROUTE_ERROR = "No trpc route found";
+const NO_DATA_MODIFICATION_ERROR = "No data modification found";
 
 interface TrpcResponse<
-  T extends UpdateRequestResponse | DeleteRequestResponse,
+  T extends
+    | RouterOutputs["event"]["crupdate"]
+    | RouterOutputs["event"]["delete"]
+    | RouterOutputs["location"]["crupdate"]
+    | RouterOutputs["location"]["delete"]
+    | RouterOutputs["org"]["crupdate"]
+    | RouterOutputs["org"]["delete"]
+    | RouterOutputs["request"]["submitUpdateRequest"]
+    | RouterOutputs["request"]["submitDeleteRequest"]
+    | RouterOutputs["request"]["validateSubmissionByAdmin"]
+    | RouterOutputs["request"]["validateDeleteByAdmin"],
 > {
   result: { data: { json: T } };
 }
@@ -69,48 +78,172 @@ const handler = auth(async (req) => {
     },
   });
 
+  setCorsHeaders(response);
+
   try {
-    let didUpdateData = false;
-
-    const trpcRoute = req.url.match(/.*\/api\/trpc\/(.*)$/)?.[1];
-    if (!trpcRoute) throw new Error(NO_TRPC_ROUTE_ERROR);
-
     if (!response.ok) throw new Error(REQUEST_FAILED_ERROR);
 
-    if (updateDataPath.includes(trpcRoute)) {
-      didUpdateData = true;
-    } else if (conditionalDataPath.includes(trpcRoute)) {
-      const clonedResponse = response.clone();
-      if (trpcRoute === "request.submitUpdateRequest") {
-        const body =
-          (await clonedResponse.json()) as TrpcResponse<UpdateRequestResponse>;
-        const data = body?.result?.data?.json;
-        didUpdateData = data.status === "approved";
-      } else if (trpcRoute === "request.submitDeleteRequest") {
-        const body =
-          (await clonedResponse.json()) as TrpcResponse<DeleteRequestResponse>;
-        const data = body?.result?.data?.json;
-        didUpdateData = data.status === "approved";
-      }
+    const _trpcRoute = req.url.match(/.*\/api\/trpc\/(.*)$/)?.[1];
+    if (!_trpcRoute) throw new Error(NO_TRPC_ROUTE_ERROR);
+
+    const trpcRoute = _trpcRoute as
+      | (typeof updateDataPath)[number]
+      | (typeof conditionalDataPath)[number];
+
+    if (![...updateDataPath, ...conditionalDataPath].includes(trpcRoute)) {
+      throw new Error(NO_DATA_MODIFICATION_ERROR);
     }
 
-    if (didUpdateData) {
-      console.log("didUpdateData is true!");
+    const clonedResponse = response.clone();
+
+    const payload = await getPayload(clonedResponse, trpcRoute);
+
+    if (payload) {
+      console.log("sending data to webhooks", payload);
       after(() => {
         console.log("revalidating path", "/");
         revalidatePath("/");
-        void notifyWebhooks();
+        void notifyWebhooks(payload);
       });
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    if (![NO_TRPC_ROUTE_ERROR, REQUEST_FAILED_ERROR].includes(message)) {
+    if (
+      ![
+        NO_TRPC_ROUTE_ERROR,
+        REQUEST_FAILED_ERROR,
+        NO_DATA_MODIFICATION_ERROR,
+      ].includes(message)
+    ) {
       console.error("Error evaluating response for revalidation", message);
     }
   }
-
-  setCorsHeaders(response);
   return response;
 });
 
 export { handler as GET, handler as POST };
+
+const getPayload = async (
+  response: Response,
+  trpcRoute:
+    | (typeof updateDataPath)[number]
+    | (typeof conditionalDataPath)[number],
+): Promise<
+  | {
+      eventId?: number;
+      locationId?: number;
+      orgId?: number;
+      action: "map.updated" | "map.created" | "map.deleted";
+    }
+  | undefined
+> => {
+  const clonedResponse = response.clone();
+  let payload:
+    | {
+        eventId?: number;
+        locationId?: number;
+        orgId?: number;
+        action: "map.updated" | "map.created" | "map.deleted";
+      }
+    | undefined = undefined;
+
+  switch (trpcRoute) {
+    case "event.crupdate":
+      payload = {
+        eventId: (
+          (await clonedResponse.json()) as TrpcResponse<
+            RouterOutputs["event"]["crupdate"]
+          >
+        )?.result?.data?.json?.id,
+        action: "map.updated",
+      };
+      break;
+    case "event.delete":
+      payload = {
+        eventId: (
+          (await clonedResponse.json()) as TrpcResponse<
+            RouterOutputs["event"]["delete"]
+          >
+        )?.result?.data?.json?.eventId,
+        action: "map.deleted",
+      };
+      break;
+    case "location.crupdate":
+      payload = {
+        locationId: (
+          (await clonedResponse.json()) as TrpcResponse<
+            RouterOutputs["location"]["crupdate"]
+          >
+        )?.result?.data?.json?.id,
+        action: "map.updated",
+      };
+      break;
+    case "location.delete":
+      payload = {
+        locationId: (
+          (await clonedResponse.json()) as TrpcResponse<
+            RouterOutputs["location"]["delete"]
+          >
+        )?.result?.data?.json?.locationId,
+        action: "map.deleted",
+      };
+      break;
+    case "org.crupdate":
+      payload = {
+        orgId: (
+          (await clonedResponse.json()) as TrpcResponse<
+            RouterOutputs["org"]["crupdate"]
+          >
+        )?.result?.data?.json?.id,
+        action: "map.updated",
+      };
+      break;
+    case "org.delete":
+      payload = {
+        orgId: (
+          (await clonedResponse.json()) as TrpcResponse<
+            RouterOutputs["org"]["delete"]
+          >
+        )?.result?.data?.json?.orgId,
+        action: "map.deleted",
+      };
+      break;
+    case "request.submitUpdateRequest":
+      const requestSubmitUpdateRequestJson =
+        (await clonedResponse.json()) as TrpcResponse<
+          RouterOutputs["request"]["submitUpdateRequest"]
+        >;
+      payload = {
+        action: "map.updated",
+        eventId:
+          requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
+            .eventId ?? undefined,
+        locationId:
+          requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
+            .locationId ?? undefined,
+        orgId:
+          requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
+            .regionId ?? undefined,
+      };
+      break;
+    case "request.submitDeleteRequest":
+      const requestSubmitDeleteRequestJson =
+        (await clonedResponse.json()) as TrpcResponse<
+          RouterOutputs["request"]["submitDeleteRequest"]
+        >;
+      payload = {
+        action: "map.deleted",
+        eventId:
+          requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
+            ?.eventId ?? undefined,
+        locationId:
+          requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
+            .locationId ?? undefined,
+        orgId:
+          requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
+            .regionId ?? undefined,
+      };
+      break;
+  }
+  return payload;
+};
