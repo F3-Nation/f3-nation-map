@@ -49,7 +49,7 @@ export const EventInsertSchema = createInsertSchema(events, {
     s
       .min(1, { message: "Please select an location" })
       .refine((value) => value !== -1, { message: "Invalid selection" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
   startTime: (s) =>
     s.regex(/^\d{4}$/, {
       message: "Start time must be in 24hr format (HHmm)",
@@ -82,7 +82,7 @@ export type EventInsertType = z.infer<typeof CreateEventSchema>;
 // NATION SCHEMA
 export const NationInsertSchema = createInsertSchema(orgs, {
   name: (s) => s.min(1, { message: "Name is required" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
   parentId: z.null({ message: "Must not have a parent" }).optional(),
 }).omit({ orgType: true });
 export const NationSelectSchema = createSelectSchema(orgs);
@@ -93,7 +93,7 @@ export const SectorInsertSchema = createInsertSchema(orgs, {
   parentId: z
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
 }).omit({ orgType: true });
 export const SectorSelectSchema = createSelectSchema(orgs);
 
@@ -103,7 +103,7 @@ export const AreaInsertSchema = createInsertSchema(orgs, {
   parentId: z
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
 }).omit({ orgType: true });
 export const AreaSelectSchema = createSelectSchema(orgs);
 
@@ -113,7 +113,7 @@ export const RegionInsertSchema = createInsertSchema(orgs, {
   parentId: z
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
 }).omit({ orgType: true });
 export const RegionSelectSchema = createSelectSchema(orgs);
 
@@ -123,7 +123,7 @@ export const AOInsertSchema = createInsertSchema(orgs, {
   parentId: z
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
 }).omit({ orgType: true });
 export const AOSelectSchema = createSelectSchema(orgs);
 
@@ -133,7 +133,7 @@ export const OrgInsertSchema = createInsertSchema(orgs, {
   parentId: z
     .number({ message: "Must have a parent" })
     .nonnegative({ message: "Invalid selection" }),
-  email: (s) => s.email({ message: "Invalid email format" }),
+  email: (s) => s.email({ message: "Invalid email format" }).or(z.literal("")),
 });
 export const OrgSelectSchema = createSelectSchema(orgs);
 
