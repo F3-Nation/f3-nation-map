@@ -455,7 +455,9 @@ export const locationRouter = createTRPCRouter({
     const [result] = await ctx.db
       .select({ count: count() })
       .from(regionOrg)
-      .where(eq(regionOrg.isActive, true));
+      .where(
+        and(eq(regionOrg.isActive, true), eq(regionOrg.orgType, "region")),
+      );
 
     return { count: result?.count };
   }),
