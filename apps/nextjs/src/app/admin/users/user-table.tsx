@@ -29,6 +29,9 @@ import { Cell, Header } from "@acme/ui/table";
 import { api } from "~/trpc/react";
 import { useDebounce } from "~/utils/hooks/use-debounce";
 import { DeleteType, ModalType, openModal } from "~/utils/store/modal";
+import { OrgFilter } from "./org-filter";
+
+type Org = RouterOutputs["org"]["all"]["orgs"][number];
 
 const UserRoleFilter = ({
   onRoleSelect,
@@ -50,8 +53,8 @@ const UserRoleFilter = ({
             className="w-full justify-between"
           >
             {selectedRoles.length > 0
-              ? `${selectedRoles.length} role${selectedRoles.length > 1 ? "s" : ""} selected`
-              : "Filter by role"}
+              ? `${selectedRoles.length} role${selectedRoles.length > 1 ? "s" : ""}`
+              : "Roles"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -106,9 +109,12 @@ const UserStatusFilter = ({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {selectedStatuses.length > 0
-              ? `${selectedStatuses.length} status${selectedStatuses.length > 1 ? "es" : ""} selected`
-              : "Filter by status"}
+            {selectedStatuses.length === 1 && selectedStatuses[0] === "active"
+              ? "Active"
+              : selectedStatuses.length === 1 &&
+                  selectedStatuses[0] === "inactive"
+                ? "Inactive"
+                : "All statuses"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -152,6 +158,7 @@ export const UserTable = () => {
     "admin",
     "editor",
   ]);
+  const [selectedOrgs, setSelectedOrgs] = useState<Org[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { pagination, setPagination } = usePagination({
@@ -179,12 +186,23 @@ export const UserTable = () => {
     });
   }, []);
 
+  const handleOrgSelect = useCallback((org: Org) => {
+    setSelectedOrgs((prev) => {
+      if (prev.includes(org)) {
+        return prev.filter((o) => o !== org);
+      } else {
+        return [...prev, org];
+      }
+    });
+  }, []);
+
   const { data } = api.user.all.useQuery({
     roles: selectedRoles,
     statuses: selectedStatuses,
     searchTerm: debouncedSearchTerm,
     pageSize: pagination.pageSize,
     pageIndex: pagination.pageIndex,
+    orgIds: selectedOrgs.map((org) => org.id),
   });
 
   return (
@@ -195,6 +213,10 @@ export const UserTable = () => {
         setSearchTerm={setSearchTerm}
         filterComponent={
           <>
+            <OrgFilter
+              onOrgSelect={handleOrgSelect}
+              selectedOrgs={selectedOrgs}
+            />
             <UserStatusFilter
               onStatusSelect={handleStatusSelect}
               selectedStatuses={selectedStatuses}

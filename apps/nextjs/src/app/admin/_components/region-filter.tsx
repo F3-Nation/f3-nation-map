@@ -34,7 +34,7 @@ export const RegionFilter = ({
             onRegionSelect(region);
           }
         }}
-        searchPlaceholder="Select a region"
+        searchPlaceholder="Region"
       />
     </div>
   );

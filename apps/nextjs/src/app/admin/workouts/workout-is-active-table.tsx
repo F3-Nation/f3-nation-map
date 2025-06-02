@@ -34,9 +34,12 @@ export const WorkoutIsActiveFilter = ({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {selectedStatuses.length > 0
-              ? `${selectedStatuses.length} status${selectedStatuses.length > 1 ? "es" : ""} selected`
-              : "Filter by status"}
+            {selectedStatuses.length === 1 && selectedStatuses[0] === "active"
+              ? "Active"
+              : selectedStatuses.length === 1 &&
+                  selectedStatuses[0] === "inactive"
+                ? "Inactive"
+                : "All statuses"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>

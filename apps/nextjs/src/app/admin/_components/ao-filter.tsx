@@ -32,7 +32,7 @@ export const AOSFilter = ({
             onAoSelect(ao);
           }
         }}
-        searchPlaceholder="Select an AO"
+        searchPlaceholder="AO"
       />
     </div>
   );

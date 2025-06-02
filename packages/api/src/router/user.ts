@@ -33,6 +33,7 @@ export const userRouter = createTRPCRouter({
           pageSize: z.number().optional(),
           sorting: SortingSchema.optional(),
           statuses: z.array(z.enum(UserStatus)).optional(),
+          orgIds: z.number().array().optional(),
         })
         .optional(),
     )
@@ -59,6 +60,9 @@ export const userRouter = createTRPCRouter({
               ilike(schema.users.lastName, `%${input?.searchTerm}%`),
               ilike(schema.users.email, `%${input?.searchTerm}%`),
             )
+          : undefined,
+        input?.orgIds?.length
+          ? inArray(schema.rolesXUsersXOrg.orgId, input.orgIds)
           : undefined,
       );
 
