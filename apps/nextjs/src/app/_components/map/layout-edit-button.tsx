@@ -75,8 +75,8 @@ export const LayoutEditButton = ({
               location
             </p>
             <p>
-              • Be sure to submit your changes! If you are not an admin or editor
-              for the region, your changes will be sent to an admin for
+              • Be sure to submit your changes! If you are not an admin or
+              editor for the region, your changes will be sent to an admin for
               approval.
             </p>
           </div>

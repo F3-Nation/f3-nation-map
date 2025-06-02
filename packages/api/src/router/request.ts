@@ -212,24 +212,30 @@ export const requestRouter = createTRPCRouter({
         .where(eq(schema.updateRequests.id, input.id));
       return request;
     }),
-  canEditRegion: publicProcedure
-    .input(z.object({ orgId: z.number() }))
+  canEditRegions: publicProcedure
+    .input(z.object({ orgIds: z.array(z.number()) }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.session) {
-        return {
+      const session = ctx.session;
+      if (!session) {
+        return input.orgIds.map((orgId) => ({
           success: false,
           mode: "public",
-          orgId: input.orgId,
+          orgId,
           roleName: "editor",
-        };
+        }));
       }
-      const result = await checkHasRoleOnOrg({
-        orgId: input.orgId,
-        session: ctx.session,
-        db: ctx.db,
-        roleName: "editor",
-      });
-      return result;
+
+      const results = await Promise.all(
+        input.orgIds.map((orgId) =>
+          checkHasRoleOnOrg({
+            orgId,
+            session,
+            db: ctx.db,
+            roleName: "editor",
+          }),
+        ),
+      );
+      return results;
     }),
   submitDeleteRequest: publicProcedure
     .input(DeleteRequestSchema)

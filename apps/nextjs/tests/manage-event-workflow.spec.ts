@@ -109,7 +109,9 @@ test.describe("Manage Event Workflow", () => {
     await expect(panel).toBeVisible();
     await expect(panel).toContainText("Test Event");
 
-    const editButton = page.getByRole("button", { name: "Edit Workout" }).first();
+    const editButton = page
+      .getByRole("button", { name: "Edit Workout" })
+      .first();
     await editButton.click();
     await page.locator('input[name="eventName"]').click();
     await page.locator('input[name="eventName"]').fill("Test Event 1234");

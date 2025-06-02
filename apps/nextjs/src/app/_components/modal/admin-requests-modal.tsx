@@ -45,7 +45,7 @@ export default function AdminRequestsModal({
   const formId = form.watch("id");
 
   const utils = api.useUtils();
-  const { data: eventTypes } = api.event.types.useQuery();
+  const { data: eventTypes } = api.eventType.all.useQuery();
 
   const validateSubmissionByAdmin =
     api.request.validateSubmissionByAdmin.useMutation();

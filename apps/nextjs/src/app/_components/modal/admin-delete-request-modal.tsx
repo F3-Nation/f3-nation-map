@@ -79,9 +79,8 @@ export default function AdminDeleteRequestModal({
       await vanillaApi.request.validateDeleteByAdmin.mutate({
         eventId: request.eventId,
         eventName: request.eventName,
-        originalRegionId: request.regionId,
+        regionId: request.regionId,
         submittedBy: request.submittedBy,
-        requestType: "delete_event",
       });
 
       router.refresh();

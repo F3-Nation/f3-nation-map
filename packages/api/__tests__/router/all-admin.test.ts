@@ -522,16 +522,31 @@ describe("all admin routers", () => {
         id: createdSectorId,
         orgType: "sector",
       });
+      console.log("result", result);
       expect(result?.isActive).toBe(false);
     });
 
-    it("should get all sectors", async () => {
-      const result = await caller.org.all({ orgTypes: ["sector"] });
+    it("should get all sectors (active and inactive)", async () => {
+      const result = await caller.org.all({
+        orgTypes: ["sector"],
+        statuses: ["active", "inactive"],
+      });
       expect(result).toBeDefined();
       // Verify deleted sector is not included
       expect(
         result.orgs.find((sector) => sector.id === createdSectorId)?.isActive,
       ).toBe(false);
+    });
+
+    it("should get all sectors (active only)", async () => {
+      const result = await caller.org.all({
+        orgTypes: ["sector"],
+      });
+      expect(result).toBeDefined();
+      // Verify deleted sector is not included
+      expect(result.orgs.find((sector) => sector.id === createdSectorId)).toBe(
+        undefined,
+      );
     });
   });
 

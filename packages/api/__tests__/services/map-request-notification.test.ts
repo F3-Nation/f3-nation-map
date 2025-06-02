@@ -812,7 +812,7 @@ describe("map-request-notification service", () => {
       expect(mockSendTemplateMessages).toHaveBeenCalledWith(
         Templates.mapChangeRequest,
         expect.objectContaining({
-          requestType: "New Location",
+          requestType: "Update",
         }),
       );
 

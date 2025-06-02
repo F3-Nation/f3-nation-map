@@ -269,7 +269,7 @@ describe("all editor routers", () => {
     });
 
     it("should get event types", async () => {
-      const result = await caller.event.types();
+      const result = await caller.eventType.all();
       expect(result).toBeDefined();
     });
 
@@ -546,8 +546,8 @@ describe("all editor routers", () => {
     });
 
     it("should check can edit region", async () => {
-      const result = await caller.request.canEditRegion({
-        orgId: MY_REGION_ID,
+      const result = await caller.request.canEditRegions({
+        orgIds: [MY_REGION_ID],
       });
       expect(result).toBeDefined();
     });

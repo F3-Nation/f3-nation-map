@@ -54,13 +54,13 @@ export const UpdateLocationModal = ({
   });
 
   const formRegionId = form.watch("regionId");
-  const { data: canEditRegion } = api.request.canEditRegion.useQuery(
-    { orgId: formRegionId },
+  const { data: canEditRegion } = api.request.canEditRegions.useQuery(
+    { orgIds: [formRegionId] },
     { enabled: !!formRegionId && formRegionId !== -1 },
   );
 
   const { data: session } = useSession();
-  const { data: eventTypes } = api.event.types.useQuery();
+  const { data: eventTypes } = api.eventType.all.useQuery();
 
   const onSubmit = form.handleSubmit(
     async (values) => {
@@ -231,7 +231,7 @@ export const UpdateLocationModal = ({
                   "Save Changes"
                 )}
               </Button>
-              {canEditRegion?.success ? (
+              {canEditRegion?.every((result) => result.success) ? (
                 <div className="mb-2 text-center text-xs text-destructive">
                   Since you can edit this region, these changes will be
                   reflected immediately

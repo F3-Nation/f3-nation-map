@@ -31,9 +31,7 @@ export const getWhenFromWorkout = (params: {
     ? startTimeRaw
     : startTimeRaw?.replace(":00", "");
 
-  const endTime = !condensed
-    ? endTimeRaw
-    : endTimeRaw?.replace(":00", "");
+  const endTime = !condensed ? endTimeRaw : endTimeRaw?.replace(":00", "");
 
   const duration =
     event.endTime && event.startTime
@@ -46,9 +44,13 @@ export const getWhenFromWorkout = (params: {
   const dayOfTheWeek = getReadableDayOfWeek(event.dayOfWeek);
 
   const dayOfTheWeekText = dayOfTheWeek ? `${dayOfTheWeek} ` : "";
-  const timeText = startTime && endTime ? `${startTime} - ${endTime} ` : startTime ? `${startTime} ` : "";
+  const timeText =
+    startTime && endTime
+      ? `${startTime} - ${endTime} `
+      : startTime
+        ? `${startTime} `
+        : "";
   const durationText = duration ? `(${duration}min)` : "";
 
-
-  return `${dayOfTheWeekText}${timeText}${durationText}`.trim()
+  return `${dayOfTheWeekText}${timeText}${durationText}`.trim();
 };
