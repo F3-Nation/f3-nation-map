@@ -142,13 +142,13 @@ export function MapSearchBox({
                 "transition-all",
               )}
               onChange={(e) => {
-                setIsLoading(true);
                 shouldRedirectOnResult.current = true;
                 searchStore.setState({ text: e.target.value });
 
                 if (!e.target.value) {
                   searchStore.setState({ placesResults: [] });
                 } else if (e.target.value.length > 2) {
+                  setIsLoading(true);
                   void placesAutocomplete({
                     input: e.target.value,
                     center: mapStore.get("center") ?? {
