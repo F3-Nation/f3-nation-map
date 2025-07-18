@@ -28,7 +28,13 @@ export default function AdminDeleteModal({
   const router = useRouter();
   const utils = api.useUtils();
 
-  let mutation: ({ id }: { id: number }) => Promise<void>;
+  let mutation: ({ id }: { id: number }) => Promise<{
+    orgId?: number;
+    eventTypeId?: number;
+    eventId?: number;
+    locationId?: number;
+    userId?: number;
+  } | void>;
 
   switch (data.type) {
     case DeleteType.NATION:

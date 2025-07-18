@@ -230,6 +230,11 @@ export const eventTypeRouter = createTRPCRouter({
   delete: editorProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const [existingEventType] = await ctx.db
+        .select()
+        .from(schema.eventTypes)
+        .where(eq(schema.eventTypes.id, input.id));
+
       const [nationOrg] = await ctx.db
         .select({ id: schema.orgs.id })
         .from(schema.orgs)
@@ -242,7 +247,7 @@ export const eventTypeRouter = createTRPCRouter({
         });
       }
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId: nationOrg.id,
+        orgId: existingEventType?.specificOrgId ?? nationOrg.id,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",
