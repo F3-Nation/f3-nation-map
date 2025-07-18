@@ -187,11 +187,20 @@ export const eventTypeRouter = createTRPCRouter({
           message: "Nation organization not found",
         });
       }
+
+      const orgIdForPermissionCheck = existingEventType?.specificOrgId
+        ? // If this is editting a specific org's event type, then they need those permissinos
+          existingEventType.specificOrgId
+        : existingEventType
+          ? // If this is a new event type for the nation, then they need to be an editor for the nation org
+            nationOrg.id
+          : // If this is a new event type in a specific org then they need to be an editor of that org
+            input.specificOrgId ??
+            // Otherwise they need to be an editor of the nation
+            nationOrg.id;
+
       const roleCheckResult = await checkHasRoleOnOrg({
-        orgId:
-          existingEventType?.specificOrgId ??
-          input.specificOrgId ??
-          nationOrg.id, // check nation if no specific org
+        orgId: orgIdForPermissionCheck,
         session: ctx.session,
         db: ctx.db,
         roleName: "editor",
