@@ -24,9 +24,10 @@ import { toast } from "@acme/ui/toast";
 import type { DataType, ModalType } from "~/utils/store/modal";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
-import { useUpdateLocationForm } from "~/utils/forms";
+import { useUpdateForm } from "~/utils/forms";
 import { closeModal } from "~/utils/store/modal";
-import { FormDebugData, LocationEventForm } from "../forms/location-event-form";
+import { FormDebugData } from "../forms/dev-debug-component";
+import { RequestFormSelector } from "../forms/request-form-selector";
 
 export default function AdminRequestsModal({
   data: requestData,
@@ -38,15 +39,13 @@ export default function AdminRequestsModal({
     "idle",
   );
   const { data: request } = api.request.byId.useQuery({ id: requestData.id });
-  const form = useUpdateLocationForm({
+  const form = useUpdateForm({
     defaultValues: { id: request?.id ?? uuid() },
   });
 
   const formId = form.watch("id");
 
   const utils = api.useUtils();
-  const { data: eventTypes } = api.eventType.all.useQuery();
-
   const validateSubmissionByAdmin =
     api.request.validateSubmissionByAdmin.useMutation();
   const rejectSubmissionByAdmin = api.request.rejectSubmission.useMutation();
@@ -136,8 +135,11 @@ export default function AdminRequestsModal({
       aoLogo: request.aoLogo ?? "",
       aoWebsite: request.aoWebsite ?? "",
       submittedBy: request.submittedBy ?? "",
+      originalRegionId: request.regionId,
+      originalAoId: request.aoId,
+      originalLocationId: request.locationId,
     });
-  }, [request, form, eventTypes]);
+  }, [request, form]);
 
   if (!request) return <div>Loading...</div>;
   return (
@@ -154,7 +156,7 @@ export default function AdminRequestsModal({
                 {!isProd && <FormDebugData />}
               </DialogTitle>
             </DialogHeader>
-            <LocationEventForm isAdminForm={true} />
+            <RequestFormSelector requestType={request.requestType} />
             <div className="mt-4 flex justify-between gap-2">
               <Button
                 type="button"
