@@ -33,6 +33,13 @@ export enum ModalType {
   FULL_IMAGE = "FULL_IMAGE",
   SIGN_IN = "SIGN_IN",
   EDIT_MODE_INFO = "EDIT_MODE_INFO",
+  AO_EDIT = "AO_EDIT",
+  EVENT_EDIT = "EVENT_EDIT", 
+  LOCATION_EDIT = "LOCATION_EDIT",
+  CREATE_EVENT = "CREATE_EVENT",
+  CREATE_LOCATION_AND_EVENT = "CREATE_LOCATION_AND_EVENT",
+  MOVE_AO_TO_NEW_LOCATION = "MOVE_AO_TO_NEW_LOCATION",
+  MOVE_EVENT_TO_NEW_LOCATION = "MOVE_EVENT_TO_NEW_LOCATION",
 }
 export enum DeleteType {
   USER = "USER",
@@ -152,6 +159,153 @@ export interface DataType {
     locationZip: string | null;
     locationCountry: string | null;
     locationDescription: string | null;
+    originalRegionId: number | null;
+    originalAoId: number | null;
+    originalLocationId: number | null;
+  };
+  [ModalType.AO_EDIT]: {
+    requestType: Extract<RequestType, "edit_ao_and_location">;
+    locationId: number | null;
+    eventId: number | null;
+    aoId: number | null;
+    aoName: string | null;
+    aoLogo: string | null;
+    aoWebsite: string | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    lat: number | null;
+    lng: number | null;
+    originalRegionId: number | null;
+    originalAoId: number | null;
+    originalLocationId: number | null;
+  };
+  [ModalType.EVENT_EDIT]: {
+    requestType: Extract<RequestType, "edit_event">;
+    eventId: number | null;
+    workoutName: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    dayOfWeek: DayOfWeek | null;
+    eventTypeIds: number[] | null;
+    eventDescription: string | null;
+    aoId: number | null;
+    aoName: string | null;
+    aoLogo: string | null;
+    aoWebsite: string | null;
+    originalRegionId: number | null;
+    originalAoId: number | null;
+    originalLocationId: number | null;
+  };
+  [ModalType.LOCATION_EDIT]: {
+    locationId: number | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    // TODO: add other fields
+  };
+  [ModalType.CREATE_EVENT]: {
+    requestType: Extract<RequestType, "create_event">;
+    locationId: number | null;
+    aoId: number | null;
+    aoName: string | null;
+    aoLogo: string | null;
+    aoWebsite: string | null;
+    lat: number | null;
+    lng: number | null;
+    originalRegionId: number | null;
+    workoutName: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    dayOfWeek: DayOfWeek | null;
+    eventTypeIds: number[] | null;
+    eventDescription: string | null;
+    regionId: number | null;
+    regionWebsite: string | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    originalAoId: number | null;
+  };
+  [ModalType.CREATE_LOCATION_AND_EVENT]: {
+    requestType: Extract<RequestType, "create_location_and_event">;
+    locationId: number | null;
+    aoId: number | null;
+    aoName: string | null;
+    aoLogo: string | null;
+    aoWebsite: string | null;
+    lat: number | null;
+    lng: number | null;
+    originalRegionId: number | null;
+    workoutName: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    dayOfWeek: DayOfWeek | null;
+    eventTypeIds: number[] | null;
+    eventDescription: string | null;
+    regionId: number | null;
+    regionWebsite: string | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    originalAoId: number | null;
+  };
+  [ModalType.MOVE_AO_TO_NEW_LOCATION]: {
+    requestType: Extract<RequestType, "move_ao_to_new_location">;
+    locationId: number | null;
+    aoId: number | null;
+    aoName: string | null;
+    aoLogo: string | null;
+    aoWebsite: string | null;
+    lat: number | null;
+    lng: number | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    regionId: number | null;
+    regionWebsite: string | null;
+    originalRegionId: number | null;
+    originalAoId: number | null;
+    originalLocationId: number | null;
+  };
+  [ModalType.MOVE_EVENT_TO_NEW_LOCATION]: {
+    requestType: Extract<RequestType, "move_event_to_new_location">;
+    eventId: number | null;
+    aoId: number | null;
+    aoName: string | null;
+    aoLogo: string | null;
+    aoWebsite: string | null;
+    lat: number | null;
+    lng: number | null;
+    locationAddress: string | null;
+    locationAddress2: string | null;
+    locationCity: string | null;
+    locationState: string | null;
+    locationZip: string | null;
+    locationCountry: string | null;
+    locationDescription: string | null;
+    regionId: number | null;
+    regionWebsite: string | null;
     originalRegionId: number | null;
     originalAoId: number | null;
     originalLocationId: number | null;

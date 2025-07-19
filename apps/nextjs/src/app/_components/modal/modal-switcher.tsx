@@ -20,12 +20,18 @@ import AdminRequestsModal from "./admin-requests-modal";
 import AdminSectorsModal from "./admin-sectors-modal";
 import AdminUsersModal from "./admin-users-modal";
 import AdminWorkoutsModal from "./admin-workouts-modal";
+import { AoEditModal } from "./ao-edit-modal";
+import { CreateEventModal } from "./create-event-modal";
+import { CreateLocationAndEventModal } from "./create-location-and-event-modal";
 import DeleteConfirmationModal from "./delete-confirmation-modal";
 import { DeleteModal } from "./delete-modal";
 import { EditModeInfoModal } from "./edit-mode-info-modal";
+import { EventEditModal } from "./event-edit-modal";
 import { FullImageModal } from "./full-image-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
+import { MoveAOToNewLocationModal } from "./move-ao-to-new-location-modal";
+import { MoveEventToNewLocationModal } from "./move-event-to-new-location-modal";
 import { QRCodeModal } from "./qr-code-modal";
 import SettingsModal from "./settings-modal";
 import SignInModal from "./sign-in-modal";
@@ -47,6 +53,18 @@ export const ModalSwitcher = () => {
       return <UserLocationInfoModal />;
     case ModalType.UPDATE:
       return <UpdateModal data={data as DataType[ModalType.UPDATE]} />;
+    case ModalType.AO_EDIT:
+      return <AoEditModal data={data as DataType[ModalType.AO_EDIT]} />;
+    case ModalType.EVENT_EDIT:
+      return <EventEditModal data={data as DataType[ModalType.EVENT_EDIT]} />;
+    case ModalType.CREATE_EVENT:
+      return <CreateEventModal data={data as DataType[ModalType.CREATE_EVENT]} />;
+    case ModalType.CREATE_LOCATION_AND_EVENT:
+      return <CreateLocationAndEventModal data={data as DataType[ModalType.CREATE_LOCATION_AND_EVENT]} />;
+    case ModalType.MOVE_AO_TO_NEW_LOCATION:
+      return <MoveAOToNewLocationModal data={data as DataType[ModalType.MOVE_AO_TO_NEW_LOCATION]} />;
+    case ModalType.MOVE_EVENT_TO_NEW_LOCATION:
+      return <MoveEventToNewLocationModal data={data as DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION]} />;
     case ModalType.WORKOUT_DETAILS:
       // Hide on desktop
       return width >= Number(BreakPoints.LG) ? null : (

@@ -70,7 +70,7 @@ export const openRequestModal = (params: {
         toastError(requestType, "Location not found");
         return;
       }
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.CREATE_LOCATION_AND_EVENT, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         ...updateLocation, // lat & lng
         originalRegionId,
@@ -80,7 +80,7 @@ export const openRequestModal = (params: {
 
     // Update pane 2
     case "move_ao_to_new_location": // Move existing AO here, Move AO to New Location
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.MOVE_AO_TO_NEW_LOCATION, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         ...updateLocation,
         requestType,
@@ -89,8 +89,9 @@ export const openRequestModal = (params: {
 
     // Update pane 3
     case "move_event_to_new_location": // Move existing event here, Move Workout to New Location
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.MOVE_EVENT_TO_NEW_LOCATION, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
+        ...updateLocation,
         originalRegionId,
         requestType,
       });
@@ -105,7 +106,7 @@ export const openRequestModal = (params: {
         toastError(requestType, "AO id not found");
         return;
       }
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.CREATE_EVENT, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         originalRegionId,
         originalAoId,
@@ -126,7 +127,7 @@ export const openRequestModal = (params: {
         toastError(requestType, "Event details not found");
         return;
       }
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.EVENT_EDIT, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         originalRegionId,
         eventId: originalEventId,
@@ -148,7 +149,7 @@ export const openRequestModal = (params: {
         toastError(requestType, "Location id not found");
         return;
       }
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.AO_EDIT, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         originalRegionId,
         originalLocationId,

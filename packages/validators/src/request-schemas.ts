@@ -6,7 +6,7 @@ import { RequestInsertSchema } from ".";
 
 // Event-related fields
 export const EventFields = z.object({
-  eventId: z.number().positive("Event ID is required"),
+  eventId: z.number().optional().nullable(),
   eventName: z.string().min(3, "Event name must be at least 3 characters"),
   eventDayOfWeek: z.enum(DayOfWeek),
   eventStartTime: z.string().regex(/^\d{4}$/, {
@@ -82,7 +82,9 @@ export const CreateEventSchema = BaseSchema.extend({
 }).merge(EventFields);
 
 // EDIT EVENT (edit-event)
-export const EditEventSchema = BaseSchema.merge(EventFields.partial());
+export const EditEventSchema = BaseSchema.extend({
+  requestType: z.literal("edit_event"),
+}).merge(EventFields.partial());
 
 // EDIT AO AND LOCATION (edit-ao-and-location)
 export const EditAoAndLocationSchema = BaseSchema.extend({
