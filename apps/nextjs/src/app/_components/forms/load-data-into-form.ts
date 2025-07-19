@@ -109,7 +109,6 @@ export const loadDataIntoAOEditForm = (
   form.setValue("originalLocationId", data.locationId);
 };
 
-// TODO: remove data that aren't needed
 export const loadDataIntoEventForm = (
   form: ReturnType<typeof useUpdateForm>,
   data: DataType[ModalType.EVENT_EDIT],
@@ -120,7 +119,6 @@ export const loadDataIntoEventForm = (
   // Set basic form values
   form.setValue("requestType", "edit_event");
   form.setValue("regionId", data.originalRegionId);
-  form.setValue("badImage", false);
 
   // Set event fields
   form.setValue("eventId", data.eventId ?? null);
@@ -137,12 +135,6 @@ export const loadDataIntoEventForm = (
   form.setValue("eventDayOfWeek", data.dayOfWeek ?? null);
   form.setValue("eventTypeIds", data.eventTypeIds ?? []);
 
-  // Set AO fields
-  form.setValue("aoId", data.aoId ?? null);
-  form.setValue("aoName", data.aoName ?? "");
-  form.setValue("aoLogo", data.aoLogo ?? "");
-  form.setValue("aoWebsite", data.aoWebsite ?? "");
-
   // Set contact and original values
   form.setValue("submittedBy", appStore.get("myEmail"));
   form.setValue("originalRegionId", data.originalRegionId);
@@ -150,7 +142,6 @@ export const loadDataIntoEventForm = (
   form.setValue("originalLocationId", data.originalLocationId);
 };
 
-// TODO: remove data that aren't needed
 export const loadDataIntoCreateEventForm = (
   form: ReturnType<typeof useUpdateForm>,
   data: DataType[ModalType.CREATE_EVENT],
@@ -161,27 +152,14 @@ export const loadDataIntoCreateEventForm = (
   // Set basic form values
   form.setValue("requestType", "create_event");
   form.setValue("regionId", data.originalRegionId);
-  form.setValue("badImage", false);
-
-  // Set location fields
-  form.setValue("locationId", data.locationId ?? null);
-  form.setValue("locationLat", data.lat ?? null);
-  form.setValue("locationLng", data.lng ?? null);
-
-  // Set AO fields
-  form.setValue("aoId", data.aoId ?? null);
-  form.setValue("aoName", data.aoName ?? "");
-  form.setValue("aoLogo", data.aoLogo ?? "");
-  form.setValue("aoWebsite", data.aoWebsite ?? "");
 
   // Set contact and original values
   form.setValue("submittedBy", appStore.get("myEmail"));
   form.setValue("originalRegionId", data.originalRegionId);
-  form.setValue("originalAoId", data.aoId);
+  form.setValue("originalAoId", data.originalAoId);
   form.setValue("originalLocationId", data.locationId);
 };
 
-// TODO: remove data that aren't needed
 export const loadDataIntoCreateLocationAndEventForm = (
   form: ReturnType<typeof useUpdateForm>,
   data: DataType[ModalType.CREATE_LOCATION_AND_EVENT],

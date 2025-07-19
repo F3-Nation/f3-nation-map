@@ -145,7 +145,6 @@ export const CreateEventModal = ({
                 type="button"
                 className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
                 onClick={() => {
-                  console.log("form.getValues()", form.getValues());
                   void form.handleSubmit(
                     handleSubmission,
                     handleSubmissionError,

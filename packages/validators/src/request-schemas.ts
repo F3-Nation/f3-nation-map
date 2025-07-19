@@ -78,7 +78,7 @@ export const CreateLocationAndEventSchema = BaseSchema.extend({
 // CREATE EVENT (create_event)
 export const CreateEventSchema = BaseSchema.extend({
   requestType: z.literal("create_event"),
-  aoId: z.number().positive("AO ID is required"),
+  originalAoId: z.number().positive("AO ID is required"),
 }).merge(EventFields);
 
 // EDIT EVENT (edit-event)
