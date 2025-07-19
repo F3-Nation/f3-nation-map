@@ -244,6 +244,18 @@ const getPayload = async (
             .regionId ?? undefined,
       };
       break;
+    case "request.validateSubmissionByAdmin":
+      const requestValidateSubmissionByAdminJson =
+        (await clonedResponse.json()) as TrpcResponse<
+          RouterOutputs["request"]["validateSubmissionByAdmin"]
+        >;
+      payload = {
+        action: "map.updated",
+        eventId:
+          requestValidateSubmissionByAdminJson?.result?.data?.json
+            ?.updateRequest?.eventId ?? undefined,
+      };
+      break;
   }
   return payload;
 };
