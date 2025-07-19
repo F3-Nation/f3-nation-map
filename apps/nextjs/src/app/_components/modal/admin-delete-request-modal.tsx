@@ -83,6 +83,7 @@ export default function AdminDeleteRequestModal({
         submittedBy: request.submittedBy,
       });
 
+      void utils.request.all.invalidate();
       router.refresh();
       toast.success("Delete request submitted");
       modalStore.setState({ modals: [] });
