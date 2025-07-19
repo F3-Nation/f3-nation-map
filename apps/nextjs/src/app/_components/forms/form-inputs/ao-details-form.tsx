@@ -3,10 +3,14 @@ import { Controller } from "react-hook-form";
 import { Input } from "@acme/ui/input";
 
 import { useUpdateFormContext } from "~/utils/forms";
+import { scaleAndCropImage } from "~/utils/image/scale-and-crop-image";
+import { uploadLogo } from "~/utils/image/upload-logo";
 import { DebouncedImage } from "../../debounced-image";
 
 export const AODetailsForm = () => {
   const form = useUpdateFormContext();
+  const formRegionId = form.watch("regionId");
+  const formId = form.watch("id");
   return (
     <>
       <h2 className="mb-2 mt-4 text-xl font-semibold text-muted-foreground">
@@ -36,35 +40,60 @@ export const AODetailsForm = () => {
           <div className="text-sm font-medium text-muted-foreground">
             AO Logo URL
           </div>
-          <Input
-            {...form.register("aoLogo")}
-            placeholder="https://example.com/image.jpg"
+          <Controller
+            control={form.control}
+            name="aoLogo"
+            render={({ field: { onChange, value } }) => {
+              return (
+                <div className="space-y-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      console.log("files", e.target.files);
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      const blob640 = await scaleAndCropImage(file, 640, 640);
+                      if (!blob640) return;
+                      const url640 = await uploadLogo({
+                        file: blob640,
+                        regionId: formRegionId ?? 0,
+                        requestId: formId,
+                      });
+                      onChange(url640);
+                      const blob64 = await scaleAndCropImage(file, 64, 64);
+                      if (blob64) {
+                        void uploadLogo({
+                          file: blob64,
+                          regionId: formRegionId ?? 0,
+                          requestId: formId ?? "",
+                          size: 64,
+                        });
+                      }
+                    }}
+                    disabled={
+                      typeof formRegionId !== "number" || formRegionId <= -1
+                    }
+                    className="flex-1"
+                  />
+                  {value && (
+                    <div className="flex justify-center">
+                      <DebouncedImage
+                        src={value}
+                        alt="AO Logo"
+                        onImageFail={() => form.setValue("badImage", true)}
+                        onImageSuccess={() => form.setValue("badImage", false)}
+                        width={96}
+                        height={96}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            }}
           />
         </div>
-      </div>
-
-      <div className="my-2">
-        <Controller
-          control={form.control}
-          name="aoLogo"
-          render={({ field }) => (
-            <div className="flex flex-col items-center">
-              <DebouncedImage
-                className="max-h-24 rounded-sm object-contain"
-                src={field.value ?? ""}
-                width={96}
-                height={96}
-                alt="Logo Preview"
-                onImageFail={() => {
-                  form.setValue("badImage", true);
-                }}
-                onImageSuccess={() => {
-                  form.setValue("badImage", false);
-                }}
-              />
-            </div>
-          )}
-        />
       </div>
     </>
   );

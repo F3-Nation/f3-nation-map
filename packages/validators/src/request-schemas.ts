@@ -25,8 +25,14 @@ export const EventFields = z.object({
 export const AOFields = z.object({
   aoId: z.number().nullable(),
   aoName: z.string().min(2, "AO name must be at least 2 characters"),
-  aoLogo: z.string().url("Must be a valid URL").optional().nullable(),
-  aoWebsite: z.string().url("Must be a valid URL").optional().nullable(),
+  aoLogo: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.string().url("Must be a valid URL").optional().nullable(),
+  ),
+  aoWebsite: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.string().url("Must be a valid URL").optional().nullable(),
+  ),
 });
 
 // Location-related fields
