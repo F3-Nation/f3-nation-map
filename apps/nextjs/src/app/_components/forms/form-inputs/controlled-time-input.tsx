@@ -1,10 +1,10 @@
 import type { FieldPath } from "react-hook-form";
 import { Controller } from "react-hook-form";
 
+import type { UpdateLocationFormValues } from "@acme/validators";
 import { FormControl, FormItem, FormLabel, FormMessage } from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
 
-import type { UpdateLocationFormValues } from "@acme/validators";
 import { useUpdateFormContext } from "~/utils/forms";
 
 interface TimeInputProps {

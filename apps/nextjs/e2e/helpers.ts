@@ -240,7 +240,9 @@ export const editItemAndVerify = async (params: {
   const oldName = `${prefix} ${name}`;
   const newName = `${prefix} ${name} ${order}`;
   await searchTableRowsForText(page, oldName, true);
-  await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(oldName);
+  await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(
+    oldName,
+  );
   await page.getByRole("textbox", { name: "Name" }).fill(newName);
   await extraSteps?.();
   await page.getByRole("button", { name: "Save Changes" }).click();

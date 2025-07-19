@@ -1,7 +1,10 @@
 import { eq } from "drizzle-orm";
 
 import { inArray, schema } from "@acme/db";
-import { isTruthy, removeUndefinedFromObject } from "@acme/shared/common/functions";
+import {
+  isTruthy,
+  removeUndefinedFromObject,
+} from "@acme/shared/common/functions";
 
 import type { Context } from "../trpc";
 import { moveAOLocsToNewRegion } from "./move-ao-locs-to-new-region";
@@ -110,5 +113,3 @@ export const getLocationIdsForAO = async (ctx: Context, aoId: number) => {
 
   return locationIds.map((l) => l.id);
 };
-
-

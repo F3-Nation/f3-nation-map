@@ -5,9 +5,9 @@ import { Z_INDEX } from "@acme/shared/app/constants";
 import { TestId } from "@acme/shared/common/enums";
 import { Button } from "@acme/ui/button";
 
+import { openRequestModal } from "~/utils/open-request-modal";
 import { appStore } from "~/utils/store/app";
 import { mapStore } from "~/utils/store/map";
-import { openRequestModal } from "~/utils/open-request-modal";
 
 export const UpdatePane = () => {
   const updateLocation = mapStore.use.updateLocation();
