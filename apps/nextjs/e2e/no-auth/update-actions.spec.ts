@@ -87,7 +87,7 @@ test.describe("Update Actions", () => {
 
     // Select day of week
     await page.getByText("Day of Week").scrollIntoViewIfNeeded();
-    await page.getByRole("combobox", { name: "Day of Week" }).click();
+    await page.locator("#eventDayOfWeek").click();
     await page.getByRole("option", { name: "Wednesday" }).click();
 
     // Set times
@@ -97,8 +97,7 @@ test.describe("Update Actions", () => {
     await page.keyboard.type("0700A");
 
     // Select event types
-    await page.getByText("Event Types").scrollIntoViewIfNeeded();
-    await page.getByPlaceholder("Select event types").click();
+    await page.getByRole("button", { name: "Select event types" }).click();
     await page.waitForTimeout(500);
     const eventTypeOption = page.getByRole("option").first();
     await eventTypeOption.click();
@@ -112,13 +111,17 @@ test.describe("Update Actions", () => {
     await page.getByText("AO Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="aoName"]').fill("MAP TEST AO");
     await page.locator('input[name="aoWebsite"]').fill("https://example.com");
+    await page
+      .locator('input[name="aoLogo"]')
+      .setInputFiles("apps/nextjs/public/f3_logo.png");
 
     // 5. Fill Contact Details
-    await page.getByText("Contact Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="submittedBy"]').fill("test@example.com");
 
     // Submit the form
-    await page.getByRole("button", { name: "Save Changes" }).click();
+    await page
+      .getByRole("button", { name: "Create Location, AO & Event" })
+      .click();
     await page.waitForTimeout(2000);
 
     // Search for the newly created item

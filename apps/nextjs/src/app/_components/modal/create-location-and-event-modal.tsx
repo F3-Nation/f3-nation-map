@@ -96,7 +96,7 @@ export const CreateLocationAndEventModal = ({
   };
 
   return (
-    <BaseModal title="Create New Location, AO & Event">
+    <BaseModal title="New Location, AO & Event">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
@@ -121,7 +121,7 @@ export const CreateLocationAndEventModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Create Location, AO & Event"
+                "Save Changes"
               )}
             </Button>
 

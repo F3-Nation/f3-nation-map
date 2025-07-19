@@ -118,7 +118,7 @@ export const CreateEventModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Create Event"
+                "Save Changes"
               )}
             </Button>
 

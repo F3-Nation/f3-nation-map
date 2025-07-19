@@ -1,3 +1,4 @@
+import path from "path";
 import { expect, test } from "@playwright/test";
 import { SIDEBAR_WIDTH } from "node_modules/@acme/shared/src/app/constants";
 
@@ -41,9 +42,8 @@ test.describe("Admin Map Actions", () => {
     await page.getByRole("combobox").first().click();
     await expect(
       page
-        .getByRole("dialog", { name: "New Location and Workout" })
-        .getByRole("dialog")
-        .getByText("Aggieland"),
+        .getByRole("dialog", { name: "New Location, AO & Event" })
+        .getByText("Boone"),
     ).toBeVisible({ timeout: 2000 });
     await page.keyboard.type("Boone");
     await expect(page.getByRole("option", { name: "Boone" })).toBeVisible({
@@ -75,9 +75,8 @@ test.describe("Admin Map Actions", () => {
     await page.getByText("AO Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="aoName"]').fill(`${prefix} AO1`);
     await page.locator('input[name="aoWebsite"]').fill("https://ao1.com");
-    await page
-      .locator('input[name="aoLogo"]')
-      .fill("https://placehold.co/100x100");
+    const filePath = path.resolve(process.cwd(), "e2e/tests/image.png");
+    await page.locator('input[type="file"]').setInputFiles(filePath);
     await page.getByText("Event Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="eventName"]').fill(`${prefix} EVENT1`);
     await page.locator("#eventDayOfWeek").click();
@@ -107,7 +106,7 @@ test.describe("Admin Map Actions", () => {
     };
     await page.mouse.click(width / 2 + 50, height / 2 + 50);
     await expect(page.getByTestId(TestId.UPDATE_PANE_MARKER)).toBeVisible({
-      timeout: 5000,
+      timeout: 2000,
     });
     await page
       .getByRole("button", { name: "Move existing AO here", exact: true })
@@ -161,9 +160,8 @@ test.describe("Admin Map Actions", () => {
     await page
       .locator('input[name="aoWebsite"]')
       .fill("https://ao1-updated.com");
-    await page
-      .locator('input[name="aoLogo"]')
-      .fill("https://placehold.co/200x200");
+    const filePath = path.resolve(process.cwd(), "e2e/tests/image.png");
+    await page.locator('input[type="file"]').setInputFiles(filePath);
     await page.locator('input[name="locationAddress"]').fill("201 Test St");
     await page.locator('input[name="locationCity"]').fill("Updated City");
     await page.locator('input[name="locationState"]').fill("NC");
@@ -277,9 +275,8 @@ test.describe("Admin Map Actions", () => {
     await page.getByText("AO Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="aoName"]').fill(`${prefix} AO2`);
     await page.locator('input[name="aoWebsite"]').fill("https://ao2.com");
-    await page
-      .locator('input[name="aoLogo"]')
-      .fill("https://placehold.co/300x300");
+    const filePath = path.resolve(process.cwd(), "e2e/tests/image.png");
+    await page.locator('input[type="file"]').setInputFiles(filePath);
     await page.getByText("Event Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="eventName"]').fill(`${prefix} EVENT2`);
     await page.locator("#eventDayOfWeek").click();
@@ -357,10 +354,14 @@ test.describe("Admin Map Actions", () => {
     // Click Move to different AO
     await page.getByRole("menuitem", { name: "Move to different AO" }).click();
     await page.getByRole("combobox").first().click();
+    await page.getByPlaceholder("Select Region").click();
+    await page.getByRole("option", { name: "Boone" }).first().click();
+    await page.getByRole("combobox").nth(1).click();
+    await page.getByPlaceholder("Select AO").click();
     await page.keyboard.type(`${prefix} AO1 Updated`);
     await page.waitForTimeout(500);
     await page
-      .getByRole("option", { name: `${prefix} AO1 Updated` })
+      .getByRole("option", { name: `${prefix} AO1 Updated (Boone)` })
       .first()
       .click();
     await page.getByRole("button", { name: "Save Changes" }).click();
@@ -388,10 +389,10 @@ test.describe("Admin Map Actions", () => {
     await page.waitForTimeout(500);
     await page.getByRole("option", { name: "Boone" }).first().click();
     await page.getByRole("combobox").nth(1).click();
-    await page.keyboard.type(`${prefix} AO2`);
+    await page.keyboard.type(`${prefix} AO2 (Boone)`);
     await page.waitForTimeout(500);
     await page
-      .getByRole("option", { name: `${prefix} AO2` })
+      .getByRole("option", { name: `${prefix} AO2 (Boone)` })
       .first()
       .click();
     await page.getByRole("combobox").nth(2).click();

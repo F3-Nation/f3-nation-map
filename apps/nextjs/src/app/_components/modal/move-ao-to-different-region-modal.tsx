@@ -88,7 +88,7 @@ export const MoveAOToDifferentRegionModal = ({
   };
 
   return (
-    <BaseModal title="Move AO to Different Region">
+    <BaseModal title="Move to different region">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
@@ -121,7 +121,7 @@ export const MoveAOToDifferentRegionModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Move AO to Different Region"
+                "Save Changes"
               )}
             </Button>
 

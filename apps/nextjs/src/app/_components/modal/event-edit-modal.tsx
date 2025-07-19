@@ -94,7 +94,7 @@ export const EventEditModal = ({
   };
 
   return (
-    <BaseModal title="Edit Event Details">
+    <BaseModal title="Edit workout details">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"

@@ -120,7 +120,7 @@ export const MoveEventToDifferentAoModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Move Event to Different AO"
+                "Save Changes"
               )}
             </Button>
 

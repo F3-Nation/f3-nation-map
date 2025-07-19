@@ -38,7 +38,7 @@ export const AODetailsForm = () => {
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="text-sm font-medium text-muted-foreground">
-            AO Logo URL
+            AO Logo
           </div>
           <Controller
             control={form.control}

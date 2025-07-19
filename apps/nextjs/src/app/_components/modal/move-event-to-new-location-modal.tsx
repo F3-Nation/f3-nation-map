@@ -113,7 +113,7 @@ export const MoveEventToNewLocationModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Move Event to New Location"
+                "Save Changes"
               )}
             </Button>
 

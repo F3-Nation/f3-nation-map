@@ -113,7 +113,7 @@ export const MoveAOToNewLocationModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Move AO to New Location"
+                "Save Changes"
               )}
             </Button>
 
