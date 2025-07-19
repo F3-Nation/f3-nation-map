@@ -79,10 +79,12 @@ export default function AdminDeleteRequestModal({
       await vanillaApi.request.validateDeleteByAdmin.mutate({
         eventId: request.eventId,
         eventName: request.eventName,
-        regionId: request.regionId,
+        originalRegionId: request.regionId,
         submittedBy: request.submittedBy,
+        requestType: "delete_event",
       });
 
+      void utils.request.invalidate();
       router.refresh();
       toast.success("Delete request submitted");
       modalStore.setState({ modals: [] });
