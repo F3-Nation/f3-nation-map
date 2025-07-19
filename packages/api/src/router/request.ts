@@ -479,14 +479,20 @@ export const requestRouter = createTRPCRouter({
           eventDayOfWeek: input.eventDayOfWeek ?? undefined,
           eventMeta: input.eventMeta ?? undefined,
         });
-        return result;
+        return {
+          status: result.status,
+          deleteRequest: result.deleteRequest,
+        };
       } else {
         const result = await applyUpdateRequest(ctx, {
           ...input,
           regionId: input.regionId,
           reviewedBy: "email",
         });
-        return result;
+        return {
+          status: result.status,
+          updateRequest: result.updateRequest,
+        };
       }
     }),
   rejectSubmission: editorProcedure
@@ -653,26 +659,7 @@ export const applyUpdateRequest = async (
       .where(eq(schema.orgs.id, updateRequest.aoId));
   }
 
-  const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {
-    ...updateRequest,
-    status: "approved",
-    reviewedAt: new Date().toISOString(),
-  };
-
-  const [updated] = await ctx.db
-    .insert(schema.updateRequests)
-    .values(updateRequestInsertData)
-    .onConflictDoUpdate({
-      target: [schema.updateRequests.id],
-      set: updateRequestInsertData,
-    })
-    .returning();
-
-  if (!updated) {
-    throw new Error("Failed to update update request");
-  }
-
-  // EVENT
+  // EVENT - Handle event first to get eventId
   let eventId: number;
   if (updateRequest.eventId != undefined) {
     const [_updated] = await ctx.db
@@ -735,6 +722,27 @@ export const applyUpdateRequest = async (
       throw new Error("Failed to insert event");
     }
     eventId = _inserted.id;
+  }
+
+  // Now update the request with the eventId
+  const updateRequestInsertData: typeof schema.updateRequests.$inferInsert = {
+    ...updateRequest,
+    eventId, // Use the eventId we just got from creating/updating the event
+    status: "approved",
+    reviewedAt: new Date().toISOString(),
+  };
+
+  const [updated] = await ctx.db
+    .insert(schema.updateRequests)
+    .values(updateRequestInsertData)
+    .onConflictDoUpdate({
+      target: [schema.updateRequests.id],
+      set: updateRequestInsertData,
+    })
+    .returning();
+
+  if (!updated) {
+    throw new Error("Failed to update update request");
   }
 
   // Update event types
