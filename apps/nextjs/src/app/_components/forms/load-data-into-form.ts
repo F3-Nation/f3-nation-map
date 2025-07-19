@@ -14,8 +14,8 @@ export const loadDataIntoUpdateForm = (
   data: DataType[ModalType.UPDATE],
 ) => {
   console.log("loadDataIntoUpdateForm", data);
-  form.setValue("id", uuid());
   form.setValue("requestType", data.requestType);
+  form.setValue("id", uuid());
   form.setValue("regionId", data.regionId);
 
   form.setValue("locationId", data.locationId ?? null);
@@ -71,16 +71,15 @@ export const loadDataIntoDeleteForm = (
   form.setValue("submittedBy", appStore.get("myEmail"));
 };
 
-// TODO: remove data that aren't needed
 export const loadDataIntoAOEditForm = (
   form: ReturnType<typeof useUpdateForm>,
   data: DataType[ModalType.AO_EDIT],
 ) => {
   console.log("loadDataIntoAOEditForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "edit_ao_and_location");
 
   // Set basic form values
-  form.setValue("requestType", "edit_ao_and_location");
+  form.setValue("id", uuid());
   form.setValue("regionId", data.originalRegionId);
   form.setValue("badImage", false);
 
@@ -105,7 +104,7 @@ export const loadDataIntoAOEditForm = (
   // // Set contact and original values
   form.setValue("submittedBy", appStore.get("myEmail"));
   form.setValue("originalRegionId", data.originalRegionId);
-  form.setValue("originalAoId", data.aoId);
+  form.setValue("originalAoId", data.originalAoId);
   form.setValue("originalLocationId", data.locationId);
 };
 
@@ -114,10 +113,10 @@ export const loadDataIntoEventForm = (
   data: DataType[ModalType.EVENT_EDIT],
 ) => {
   console.log("loadDataIntoEventForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "edit_event");
 
   // Set basic form values
-  form.setValue("requestType", "edit_event");
+  form.setValue("id", uuid());
   form.setValue("regionId", data.originalRegionId);
 
   // Set event fields
@@ -147,10 +146,10 @@ export const loadDataIntoCreateEventForm = (
   data: DataType[ModalType.CREATE_EVENT],
 ) => {
   console.log("loadDataIntoCreateEventForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "create_event");
 
   // Set basic form values
-  form.setValue("requestType", "create_event");
+  form.setValue("id", uuid());
   form.setValue("regionId", data.originalRegionId);
 
   // Set contact and original values
@@ -165,10 +164,10 @@ export const loadDataIntoCreateLocationAndEventForm = (
   data: DataType[ModalType.CREATE_LOCATION_AND_EVENT],
 ) => {
   console.log("loadDataIntoCreateLocationAndEventForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "create_location_and_event");
 
   // Set basic form values
-  form.setValue("requestType", "create_location_and_event");
+  form.setValue("id", uuid());
   form.setValue("regionId", data.originalRegionId);
   form.setValue("badImage", false);
 
@@ -215,10 +214,10 @@ export const loadDataIntoMoveAOToNewLocationForm = (
   data: DataType[ModalType.MOVE_AO_TO_NEW_LOCATION],
 ) => {
   console.log("loadDataIntoMoveAOToNewLocationForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "move_ao_to_new_location");
 
   // Set basic form values
-  form.setValue("requestType", "move_ao_to_new_location");
+  form.setValue("id", uuid());
 
   // Set location fields
   form.setValue("locationLat", data.lat ?? null);
@@ -245,10 +244,10 @@ export const loadDataIntoMoveEventToNewLocationForm = (
   data: DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION],
 ) => {
   console.log("loadDataIntoMoveEventToNewLocationForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "move_event_to_new_location");
 
   // Set basic form values
-  form.setValue("requestType", "move_event_to_new_location");
+  form.setValue("id", uuid());
 
   // Set location fields
   form.setValue("locationLat", data.lat ?? null);
@@ -276,10 +275,10 @@ export const loadDataIntoMoveAOToDifferentRegionForm = (
   data: DataType[ModalType.MOVE_AO_TO_DIFFERENT_REGION],
 ) => {
   console.log("loadDataIntoMoveAOToDifferentRegionForm", data);
-  form.setValue("id", uuid());
+  form.setValue("requestType", "move_ao_to_different_region");
 
   // Set basic form values
-  form.setValue("requestType", "move_ao_to_different_region");
+  form.setValue("id", uuid());
 
   // Set region fields
   form.setValue("regionId", data.regionId);

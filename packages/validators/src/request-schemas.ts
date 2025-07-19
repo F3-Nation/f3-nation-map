@@ -105,7 +105,7 @@ export const MoveAoToDifferentRegionSchema = BaseSchema.extend({
 export const MoveAoToNewLocationSchema = BaseSchema.extend({
   requestType: z.literal("move_ao_to_new_location"),
   aoId: z.number().positive("AO ID is required"),
-}).merge(LocationFields);
+}).merge(LocationFields.omit({ locationId: true }));
 
 // MOVE AO TO DIFFERENT LOCATION (move_ao_to_different_location)
 export const MoveAoToDifferentLocationSchema = BaseSchema.extend({

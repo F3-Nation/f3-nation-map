@@ -1,19 +1,10 @@
-import type { FieldErrors } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { TRPCClientError } from "@trpc/client";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import type { UpdateLocationFormValues } from "@acme/validators";
 import { validateMoveEventToDifferentAORequest } from "@acme/api/lib/validate-request";
-import { Z_INDEX } from "@acme/shared/app/constants";
 import { Button } from "@acme/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@acme/ui/dialog";
 import { Form } from "@acme/ui/form";
 import { Spinner } from "@acme/ui/spinner";
 import { toast } from "@acme/ui/toast";
@@ -29,6 +20,8 @@ import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
 import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
 import { loadDataIntoMoveEventToDifferentAoForm } from "../forms/load-data-into-form";
 import { MoveEventToDifferentAOForm } from "../forms/request-forms/move-event-to-different-ao-form";
+import { BaseModal } from "./base-modal";
+import { handleSubmissionError } from "./utils/handle-submission-error";
 
 export const MoveEventToDifferentAoModal = ({
   data,
@@ -88,99 +81,61 @@ export const MoveEventToDifferentAoModal = ({
 
       closeModal();
     } catch (error) {
-      console.error(error);
-      if (!(error instanceof Error)) {
-        toast.error("Failed to submit update request");
-        return;
-      }
-
-      if (!(error instanceof TRPCClientError)) {
-        toast.error(error.message);
-        return;
-      }
-
-      toast.error("Failed to submit update request");
+      handleSubmissionError(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSubmissionError = (
-    errors: FieldErrors<UpdateLocationFormValues>,
-  ) => {
-    console.error("Form validation errors:", errors);
-  };
-
   return (
-    <Dialog
-      open={true}
-      onOpenChange={() => {
-        closeModal();
-      }}
-    >
-      <DialogContent
-        style={{ zIndex: Z_INDEX.WORKOUT_DETAILS_MODAL }}
-        className="mb-40 rounded-lg px-4 sm:px-6 lg:px-8"
-      >
-        <Form {...form}>
-          <form
-            className="w-[inherit] overflow-x-hidden p-[1px]"
-            onSubmit={form.handleSubmit(
-              handleSubmission,
-              handleSubmissionError,
-            )}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold sm:text-4xl">
-                Move Event to Different AO
-                {!isProd && <FormDebugData />}
-              </DialogTitle>
-            </DialogHeader>
+    <BaseModal title="Move Event to Different AO">
+      <Form {...form}>
+        <form
+          className="w-[inherit] overflow-x-hidden p-[1px]"
+          onSubmit={form.handleSubmit(handleSubmission)}
+        >
+          {!isProd && <FormDebugData />}
 
-            <div className="space-y-4">
-              <p>Moving Event ID: {data?.eventId}</p>
-              <p>From AO ID: {data?.originalAoId}</p>
-              <p>Original Region ID: {data?.originalRegionId}</p>
-            </div>
+          {/* TODO */}
+          <div>
+            <p>Moving Event ID: {data?.eventId}</p>
+            <p>From AO ID: {data?.originalAoId}</p>
+            <p>Original Region ID: {data?.originalRegionId}</p>
+          </div>
 
-            <MoveEventToDifferentAOForm />
+          <MoveEventToDifferentAOForm />
+          <ContactDetailsForm />
 
-            <ContactDetailsForm />
+          <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
+            <Button
+              type="button"
+              className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
+              onClick={() => {
+                console.log("form.getValues()", form.getValues());
+                void form.handleSubmit(handleSubmission)();
+              }}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  Submitting... <Spinner className="size-4" />
+                </div>
+              ) : (
+                "Move Event to Different AO"
+              )}
+            </Button>
 
-            <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
-              <Button
-                type="button"
-                className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
-                onClick={() => {
-                  console.log("form.getValues()", form.getValues());
-                  void form.handleSubmit(
-                    handleSubmission,
-                    handleSubmissionError,
-                  )();
-                }}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    Submitting... <Spinner className="size-4" />
-                  </div>
-                ) : (
-                  "Move Event to Different AO"
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => closeModal()}
-              >
-                Cancel
-              </Button>
-              {!isProd && <DevLoadTestData />}
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => closeModal()}
+            >
+              Cancel
+            </Button>
+            {!isProd && <DevLoadTestData />}
+          </div>
+        </form>
+      </Form>
+    </BaseModal>
   );
 };

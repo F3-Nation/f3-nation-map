@@ -375,12 +375,16 @@ export const handleMoveEventToDifferentAo = async (
     throw new Error("Event ID is required to move an event");
   }
 
-  if (!request.originalAoId) {
+  if (!request.aoId) {
     throw new Error("Target AO ID is required");
   }
 
+  if (!request.originalAoId) {
+    throw new Error("Original AO ID is required");
+  }
+
   // 1. Get the location ID for the AO
-  const [locationId] = await getLocationIdsForAO(ctx, request.originalAoId);
+  const [locationId] = await getLocationIdsForAO(ctx, request.aoId);
   if (!locationId) {
     throw new Error("AO does not have any locations");
   }
@@ -388,7 +392,7 @@ export const handleMoveEventToDifferentAo = async (
   // 2. Update the event
   await updateEvent(
     ctx,
-    { ...request, eventId: request.eventId, aoId: request.originalAoId },
+    { ...request, eventId: request.eventId, aoId: request.aoId },
     locationId,
   );
 
