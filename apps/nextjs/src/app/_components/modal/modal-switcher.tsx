@@ -30,7 +30,10 @@ import { EventEditModal } from "./event-edit-modal";
 import { FullImageModal } from "./full-image-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
+import { MoveAOToDifferentLocationModal } from "./move-ao-to-different-location-modal";
+import { MoveAOToDifferentRegionModal } from "./move-ao-to-different-region-modal";
 import { MoveAOToNewLocationModal } from "./move-ao-to-new-location-modal";
+import { MoveEventToDifferentAoModal } from "./move-event-to-different-ao-modal";
 import { MoveEventToNewLocationModal } from "./move-event-to-new-location-modal";
 import { QRCodeModal } from "./qr-code-modal";
 import SettingsModal from "./settings-modal";
@@ -58,13 +61,45 @@ export const ModalSwitcher = () => {
     case ModalType.EVENT_EDIT:
       return <EventEditModal data={data as DataType[ModalType.EVENT_EDIT]} />;
     case ModalType.CREATE_EVENT:
-      return <CreateEventModal data={data as DataType[ModalType.CREATE_EVENT]} />;
+      return (
+        <CreateEventModal data={data as DataType[ModalType.CREATE_EVENT]} />
+      );
     case ModalType.CREATE_LOCATION_AND_EVENT:
-      return <CreateLocationAndEventModal data={data as DataType[ModalType.CREATE_LOCATION_AND_EVENT]} />;
+      return (
+        <CreateLocationAndEventModal
+          data={data as DataType[ModalType.CREATE_LOCATION_AND_EVENT]}
+        />
+      );
     case ModalType.MOVE_AO_TO_NEW_LOCATION:
-      return <MoveAOToNewLocationModal data={data as DataType[ModalType.MOVE_AO_TO_NEW_LOCATION]} />;
+      return (
+        <MoveAOToNewLocationModal
+          data={data as DataType[ModalType.MOVE_AO_TO_NEW_LOCATION]}
+        />
+      );
     case ModalType.MOVE_EVENT_TO_NEW_LOCATION:
-      return <MoveEventToNewLocationModal data={data as DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION]} />;
+      return (
+        <MoveEventToNewLocationModal
+          data={data as DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION]}
+        />
+      );
+    case ModalType.MOVE_AO_TO_DIFFERENT_LOCATION:
+      return (
+        <MoveAOToDifferentLocationModal
+          data={data as DataType[ModalType.MOVE_AO_TO_DIFFERENT_LOCATION]}
+        />
+      );
+    case ModalType.MOVE_AO_TO_DIFFERENT_REGION:
+      return (
+        <MoveAOToDifferentRegionModal
+          data={data as DataType[ModalType.MOVE_AO_TO_DIFFERENT_REGION]}
+        />
+      );
+    case ModalType.MOVE_EVENT_TO_DIFFERENT_AO:
+      return (
+        <MoveEventToDifferentAoModal
+          data={data as DataType[ModalType.MOVE_EVENT_TO_DIFFERENT_AO]}
+        />
+      );
     case ModalType.WORKOUT_DETAILS:
       // Hide on desktop
       return width >= Number(BreakPoints.LG) ? null : (

@@ -10,7 +10,10 @@ import {
   CreateLocationAndEventSchema,
   EditAoAndLocationSchema,
   EditEventSchema,
+  MoveAoToDifferentLocationSchema,
+  MoveAoToDifferentRegionSchema,
   MoveAoToNewLocationSchema,
+  MoveEventToDifferentAoSchema,
   MoveEventToNewLocationSchema,
   RequestSchema,
 } from "@acme/validators/request-schemas";
@@ -48,7 +51,6 @@ export const validateCreateEventRequest = (
 export const validateCreateLocationAndEventRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof CreateLocationAndEventSchema> => {
-  console.log("validateCreateLocationAndEventRequest", values);
   const request = CreateLocationAndEventSchema.parse(values);
   return request;
 };
@@ -64,5 +66,26 @@ export const validateMoveEventToNewLocationRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof MoveEventToNewLocationSchema> => {
   const request = MoveEventToNewLocationSchema.parse(values);
+  return request;
+};
+
+export const validateMoveAOToDifferentLocationRequest = (
+  values: PartialBy<UpdateLocationFormValues, "badImage">,
+): z.infer<typeof MoveAoToDifferentLocationSchema> => {
+  const request = MoveAoToDifferentLocationSchema.parse(values);
+  return request;
+};
+
+export const validateMoveAOToDifferentRegionRequest = (
+  values: PartialBy<UpdateLocationFormValues, "badImage">,
+): z.infer<typeof MoveAoToDifferentRegionSchema> => {
+  const request = MoveAoToDifferentRegionSchema.parse(values);
+  return request;
+};
+
+export const validateMoveEventToDifferentAORequest = (
+  values: PartialBy<UpdateLocationFormValues, "badImage">,
+): z.infer<typeof MoveEventToDifferentAoSchema> => {
+  const request = MoveEventToDifferentAoSchema.parse(values);
   return request;
 };

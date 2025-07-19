@@ -169,11 +169,10 @@ export const openRequestModal = (params: {
         toastError(requestType, "Original AO id not found");
         return;
       }
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.MOVE_AO_TO_DIFFERENT_REGION, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         originalRegionId,
         originalAoId,
-        originalLocationId,
         requestType,
       });
       break;
@@ -195,7 +194,7 @@ export const openRequestModal = (params: {
         return;
       }
 
-      openModal(ModalType.UPDATE, {
+      openModal(ModalType.MOVE_EVENT_TO_DIFFERENT_AO, {
         ...OPEN_REQUEST_MODAL_DEFAULTS,
         originalRegionId,
         originalAoId,

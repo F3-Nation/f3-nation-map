@@ -157,7 +157,7 @@ export const loadDataIntoCreateEventForm = (
   form.setValue("submittedBy", appStore.get("myEmail"));
   form.setValue("originalRegionId", data.originalRegionId);
   form.setValue("originalAoId", data.originalAoId);
-  form.setValue("originalLocationId", data.locationId);
+  form.setValue("originalLocationId", data.originalLocationId);
 };
 
 export const loadDataIntoCreateLocationAndEventForm = (
@@ -219,10 +219,8 @@ export const loadDataIntoMoveAOToNewLocationForm = (
 
   // Set basic form values
   form.setValue("requestType", "move_ao_to_new_location");
-  form.setValue("regionId", data.regionId);
 
   // Set location fields
-  form.setValue("locationId", data.locationId ?? null);
   form.setValue("locationLat", data.lat ?? null);
   form.setValue("locationLng", data.lng ?? null);
   form.setValue("locationAddress", data.locationAddress ?? "");
@@ -251,7 +249,6 @@ export const loadDataIntoMoveEventToNewLocationForm = (
 
   // Set basic form values
   form.setValue("requestType", "move_event_to_new_location");
-  form.setValue("regionId", data.regionId);
 
   // Set location fields
   form.setValue("locationLat", data.lat ?? null);
@@ -272,4 +269,35 @@ export const loadDataIntoMoveEventToNewLocationForm = (
   form.setValue("originalRegionId", data.originalRegionId);
   form.setValue("originalAoId", data.originalAoId);
   form.setValue("originalLocationId", data.originalLocationId);
+};
+
+export const loadDataIntoMoveAOToDifferentRegionForm = (
+  form: ReturnType<typeof useUpdateForm>,
+  data: DataType[ModalType.MOVE_AO_TO_DIFFERENT_REGION],
+) => {
+  console.log("loadDataIntoMoveAOToDifferentRegionForm", data);
+  form.setValue("id", uuid());
+
+  // Set basic form values
+  form.setValue("requestType", "move_ao_to_different_region");
+
+  // Set region fields
+  form.setValue("regionId", data.regionId);
+
+  // Set contact and original values
+  form.setValue("submittedBy", appStore.get("myEmail"));
+  form.setValue("originalRegionId", data.originalRegionId);
+  form.setValue("originalAoId", data.originalAoId);
+};
+
+export const loadDataIntoMoveEventToDifferentAoForm = (
+  form: ReturnType<typeof useUpdateForm>,
+  data: DataType[ModalType.MOVE_EVENT_TO_DIFFERENT_AO],
+) => {
+  console.log("loadDataIntoMoveEventToDifferentAoForm", data);
+  form.setValue("id", uuid());
+  form.setValue("eventId", data.eventId);
+  form.setValue("aoId", data.aoId);
+  form.setValue("originalAoId", data.originalAoId);
+  form.setValue("requestType", "move_event_to_different_ao");
 };
