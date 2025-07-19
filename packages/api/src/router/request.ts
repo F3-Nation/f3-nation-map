@@ -212,6 +212,21 @@ export const requestRouter = createTRPCRouter({
         .where(eq(schema.updateRequests.id, input.id));
       return request;
     }),
+  canDeleteEvent: publicProcedure
+    .input(z.object({ eventId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const [request] = await ctx.db
+        .select()
+        .from(schema.updateRequests)
+        .where(
+          and(
+            eq(schema.updateRequests.eventId, input.eventId),
+            eq(schema.updateRequests.requestType, "delete_event"),
+            eq(schema.updateRequests.status, "pending"),
+          ),
+        );
+      return !!request;
+    }),
   canEditRegions: publicProcedure
     .input(z.object({ orgIds: z.array(z.number()) }))
     .query(async ({ ctx, input }) => {
@@ -540,6 +555,15 @@ export const applyDeleteRequest = async (
       .update(schema.events)
       .set({ isActive: false })
       .where(eq(schema.events.id, deleteRequest.eventId));
+    await ctx.db
+      .update(schema.updateRequests)
+      .set({ status: "approved" })
+      .where(
+        and(
+          eq(schema.updateRequests.requestType, "delete_event"),
+          eq(schema.updateRequests.eventId, deleteRequest.eventId),
+        ),
+      );
   } else if (deleteRequest.locationId != undefined) {
     await ctx.db
       .update(schema.locations)

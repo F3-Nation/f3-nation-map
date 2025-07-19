@@ -53,6 +53,11 @@ export const WorkoutDetailsContent = ({
     return results?.location.events?.[0]?.id ?? null;
   }, [providedEventId, results]);
 
+  const { data: canDeleteEvent } = api.request.canDeleteEvent.useQuery(
+    { eventId: selectedEventId ?? 0 },
+    { enabled: !!selectedEventId },
+  );
+
   const mode = appStore.use.mode();
 
   const event = useMemo(
@@ -400,7 +405,14 @@ export const WorkoutDetailsContent = ({
           </button>
 
           <button
-            className="flex flex-row items-center justify-center gap-2 rounded-md px-2 py-1 text-red-600"
+            className={cn(
+              "flex flex-row items-center justify-center gap-2 rounded-md px-2 py-1",
+              {
+                "text-red-600 hover:text-red-700": !canDeleteEvent,
+                "cursor-not-allowed text-gray-400": canDeleteEvent,
+              },
+            )}
+            disabled={!!canDeleteEvent}
             onClick={() => {
               openModal(ModalType.DELETE_CONFIRMATION, {
                 type: DeleteType.EVENT,
@@ -424,6 +436,7 @@ export const WorkoutDetailsContent = ({
                     })
                     .then((result) => {
                       void utils.location.invalidate();
+                      void utils.request.canDeleteEvent.invalidate();
                       router.refresh();
                       toast.success(
                         result.status === "pending"
@@ -438,7 +451,9 @@ export const WorkoutDetailsContent = ({
             }}
           >
             <Trash className="h-4 w-4" />
-            <span>Delete Workout</span>
+            <span>
+              {canDeleteEvent ? "Delete Request Submitted" : "Delete Workout"}
+            </span>
           </button>
         </div>
       ) : null}
