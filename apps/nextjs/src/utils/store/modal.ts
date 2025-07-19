@@ -304,9 +304,10 @@ export interface DataType {
   [ModalType.MOVE_EVENT_TO_DIFFERENT_AO]: {
     requestType: Extract<RequestType, "move_event_to_different_ao">;
     eventId: number | null;
+    aoId: number | null;
     originalRegionId: number | null;
     originalAoId: number | null;
-    aoId: number | null;
+    originalLocationId: number | null;
   };
   [ModalType.WORKOUT_DETAILS]: {
     locationId?: number | null;

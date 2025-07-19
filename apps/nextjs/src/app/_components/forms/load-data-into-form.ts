@@ -295,9 +295,16 @@ export const loadDataIntoMoveEventToDifferentAoForm = (
   data: DataType[ModalType.MOVE_EVENT_TO_DIFFERENT_AO],
 ) => {
   console.log("loadDataIntoMoveEventToDifferentAoForm", data);
+  form.setValue("requestType", "move_event_to_different_ao");
+
   form.setValue("id", uuid());
   form.setValue("eventId", data.eventId);
   form.setValue("aoId", data.aoId);
   form.setValue("originalAoId", data.originalAoId);
-  form.setValue("requestType", "move_event_to_different_ao");
+  form.setValue("originalLocationId", data.originalLocationId);
+
+  // Set contact and original values
+  form.setValue("submittedBy", appStore.get("myEmail"));
+  form.setValue("originalRegionId", data.originalRegionId);
+  form.setValue("originalAoId", data.originalAoId);
 };

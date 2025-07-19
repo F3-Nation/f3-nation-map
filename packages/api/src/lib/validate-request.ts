@@ -25,7 +25,6 @@ export const validateRequest = (
   return request;
 };
 
-// TODO: probably need to update the EditAoAndLocationSchema
 export const validateEditAoAndLocationRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof EditAoAndLocationSchema> => {
