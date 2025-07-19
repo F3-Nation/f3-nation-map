@@ -30,7 +30,6 @@ export const validateEditAoAndLocationRequest = (
   return request;
 };
 
-// TODO: probably need to update the EditEventSchema
 export const validateEventEditRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof EditEventSchema> => {
@@ -38,7 +37,6 @@ export const validateEventEditRequest = (
   return request;
 };
 
-// TODO: probably need to update the CreateEventSchema
 export const validateCreateEventRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof CreateEventSchema> => {
@@ -55,7 +53,6 @@ export const validateCreateLocationAndEventRequest = (
   return request;
 };
 
-// Validation function for MOVE_AO_TO_NEW_LOCATION requests
 export const validateMoveAOToNewLocationRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof MoveAoToNewLocationSchema> => {
@@ -63,7 +60,6 @@ export const validateMoveAOToNewLocationRequest = (
   return request;
 };
 
-// Validation function for MOVE_EVENT_TO_NEW_LOCATION requests
 export const validateMoveEventToNewLocationRequest = (
   values: PartialBy<UpdateLocationFormValues, "badImage">,
 ): z.infer<typeof MoveEventToNewLocationSchema> => {

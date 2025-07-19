@@ -127,7 +127,7 @@ export const MoveEventToDifferentAoSchema = BaseSchema.extend({
 export const MoveEventToNewLocationSchema = BaseSchema.extend({
   requestType: z.literal("move_event_to_new_location"),
   eventId: z.number().positive("Event ID is required"),
-}).merge(LocationFields);
+}).merge(LocationFields.omit({ locationId: true }));
 
 // DELETE EVENT (delete_event)
 export const DeleteEventSchema = BaseSchema.extend({

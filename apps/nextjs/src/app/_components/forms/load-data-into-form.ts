@@ -210,7 +210,6 @@ export const loadDataIntoCreateLocationAndEventForm = (
   form.setValue("originalLocationId", data.locationId);
 };
 
-// TODO: remove data that aren't needed
 export const loadDataIntoMoveAOToNewLocationForm = (
   form: ReturnType<typeof useUpdateForm>,
   data: DataType[ModalType.MOVE_AO_TO_NEW_LOCATION],
@@ -221,7 +220,6 @@ export const loadDataIntoMoveAOToNewLocationForm = (
   // Set basic form values
   form.setValue("requestType", "move_ao_to_new_location");
   form.setValue("regionId", data.regionId);
-  form.setValue("badImage", false);
 
   // Set location fields
   form.setValue("locationId", data.locationId ?? null);
@@ -235,11 +233,7 @@ export const loadDataIntoMoveAOToNewLocationForm = (
   form.setValue("locationCountry", data.locationCountry ?? "United States");
   form.setValue("locationDescription", data.locationDescription ?? "");
 
-  // Set AO fields
   form.setValue("aoId", data.aoId ?? null);
-  form.setValue("aoName", data.aoName ?? "");
-  form.setValue("aoLogo", data.aoLogo ?? "");
-  form.setValue("aoWebsite", data.aoWebsite ?? "");
 
   // Set contact and original values
   form.setValue("submittedBy", appStore.get("myEmail"));
@@ -248,7 +242,6 @@ export const loadDataIntoMoveAOToNewLocationForm = (
   form.setValue("originalLocationId", data.originalLocationId);
 };
 
-// TODO: remove data that aren't needed
 export const loadDataIntoMoveEventToNewLocationForm = (
   form: ReturnType<typeof useUpdateForm>,
   data: DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION],
@@ -259,7 +252,6 @@ export const loadDataIntoMoveEventToNewLocationForm = (
   // Set basic form values
   form.setValue("requestType", "move_event_to_new_location");
   form.setValue("regionId", data.regionId);
-  form.setValue("badImage", false);
 
   // Set location fields
   form.setValue("locationLat", data.lat ?? null);
@@ -271,12 +263,6 @@ export const loadDataIntoMoveEventToNewLocationForm = (
   form.setValue("locationZip", data.locationZip ?? "");
   form.setValue("locationCountry", data.locationCountry ?? "United States");
   form.setValue("locationDescription", data.locationDescription ?? "");
-
-  // Set AO fields
-  form.setValue("aoId", data.aoId ?? null);
-  form.setValue("aoName", data.aoName ?? "");
-  form.setValue("aoLogo", data.aoLogo ?? "");
-  form.setValue("aoWebsite", data.aoWebsite ?? "");
 
   // Set event fields
   form.setValue("eventId", data.eventId ?? null);

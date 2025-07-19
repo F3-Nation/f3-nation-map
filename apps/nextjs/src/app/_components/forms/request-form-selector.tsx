@@ -24,7 +24,6 @@ export const RequestFormSelector = ({
   switch (requestType) {
     case "edit_ao_and_location":
       return <EditAOAndLocationForm />;
-    // DOING:currentlychecking this one
     case "create_location_and_event":
       return <CreateLocationAndAOAndEventForm />;
     case "create_event":
