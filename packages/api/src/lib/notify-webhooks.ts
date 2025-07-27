@@ -21,15 +21,14 @@ const webhooks: Webhook[] = [
     method: "GET",
   },
 ];
-if (env.NEXT_PUBLIC_CHANNEL === "prod") {
-  webhooks.push({
-    url: "https://us-central1-f3-workout.cloudfunctions.net/mapWebhook",
-    method: "POST",
-  });
-  webhooks.push({
-    url: "https://f3-nation-slack-bot-419868269651.us-central1.run.app/map-update",
-    method: "POST",
-  });
+
+if (env.NOTIFY_WEBHOOK_URLS_COMMA_SEPARATED) {
+  webhooks.push(
+    ...env.NOTIFY_WEBHOOK_URLS_COMMA_SEPARATED.split(",").map((url) => ({
+      url,
+      method: "POST" as const,
+    })),
+  );
 }
 
 export const notifyWebhooks = async (mapData: {
