@@ -19,6 +19,7 @@ const SHOWN_NAMES: (typeof COUNTRIES)["features"][number]["properties"]["NAME"][
     "Thailand",
     "Uganda",
     "United Kingdom",
+    "France",
     // Need other states
     "Alaska",
     "Alabama",
