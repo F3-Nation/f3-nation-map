@@ -268,12 +268,25 @@ describe("all editor routers", () => {
       await expect(caller.event.crupdate(eventData)).rejects.toThrow();
     });
 
-    it("should get event types", async () => {
-      const result = await caller.eventType.all();
+    it("should add event types", async () => {
+      const result = await caller.eventType.crupdate({
+        name: "Test Event Type",
+        specificOrgId: MY_REGION_ID,
+        eventCategory: "first_f",
+      });
       expect(result).toBeDefined();
     });
 
-    it("should delete workout", async () => {
+    it("should get event types", async () => {
+      const result = await caller.eventType.all({
+        pageSize: 200,
+        orgIds: [MY_REGION_ID],
+      });
+      expect(result).toBeDefined();
+      expect(result.eventTypes.length).toBeGreaterThan(0);
+    });
+
+    it("should delete event", async () => {
       if (!eventId) {
         throw new Error("Event ID is undefined");
       }
@@ -573,6 +586,9 @@ describe("all editor routers", () => {
         submittedBy: "test@example.com",
         eventMeta: { key: "value" },
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       const result = await caller.request.submitUpdateRequest(requestData);
@@ -638,6 +654,9 @@ describe("all editor routers", () => {
         submittedBy: "test@example.com",
         eventMeta: { key: "value" },
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       const result = await caller.request.submitUpdateRequest(requestData);
@@ -666,6 +685,9 @@ describe("all editor routers", () => {
         submittedBy: "test@example.com",
         eventMeta: { autoApprove: true },
         requestType: "edit" as const,
+        originalRegionId: MY_REGION_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       const result = await caller.request.submitUpdateRequest(requestData);
@@ -693,6 +715,9 @@ describe("all editor routers", () => {
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       await expect(
@@ -720,6 +745,9 @@ describe("all editor routers", () => {
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: MY_REGION_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       await expect(
@@ -762,6 +790,9 @@ describe("all editor routers", () => {
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       const request = await caller.request.submitUpdateRequest(requestData);
@@ -796,6 +827,9 @@ describe("all editor routers", () => {
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
       const request = await caller.request.submitUpdateRequest(requestData);
