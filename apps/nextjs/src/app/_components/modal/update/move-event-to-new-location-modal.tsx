@@ -3,31 +3,33 @@ import { useRouter } from "next/navigation";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import type { UpdateLocationFormValues } from "@acme/validators";
-import { validateEditAoAndLocationRequest } from "@acme/api/lib/validate-request";
-import { convertHH_mmToHHmm } from "@acme/shared/app/functions";
+import { validateMoveEventToNewLocationRequest } from "@acme/api/lib/validate-request";
 import { Button } from "@acme/ui/button";
 import { Form } from "@acme/ui/form";
 import { Spinner } from "@acme/ui/spinner";
 import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
+import {
+  DevLoadTestData,
+  FormDebugData,
+} from "~/app/_components/forms/dev-debug-component";
+import { ContactDetailsForm } from "~/app/_components/forms/form-inputs/contact-details-form";
+import { loadDataIntoMoveEventToNewLocationForm } from "~/app/_components/forms/load-data-into-form";
+import { RequestFormSelector } from "~/app/_components/forms/request-form-selector";
+import { BaseModal } from "~/app/_components/modal/base-modal";
+import { handleSubmissionError } from "~/app/_components/modal/utils/handle-submission-error";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
 import { vanillaApi } from "~/trpc/vanilla";
 import { useUpdateForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
 import { closeModal } from "~/utils/store/modal";
-import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
-import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
-import { loadDataIntoAOEditForm } from "../forms/load-data-into-form";
-import { RequestFormSelector } from "../forms/request-form-selector";
-import { BaseModal } from "./base-modal";
-import { handleSubmissionError } from "./utils/handle-submission-error";
 
-export const AoEditModal = ({
+export const MoveEventToNewLocationModal = ({
   data,
 }: {
-  data: DataType[ModalType.AO_EDIT];
+  data: DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION];
 }) => {
   const router = useRouter();
   const utils = api.useUtils();
@@ -41,7 +43,10 @@ export const AoEditModal = ({
   });
 
   useEffect(() => {
-    loadDataIntoAOEditForm(form, data);
+    // Load move event to new location data into form
+    if (data) {
+      loadDataIntoMoveEventToNewLocationForm(form, data);
+    }
   }, [data, form]);
 
   const handleSubmission = async (
@@ -51,26 +56,15 @@ export const AoEditModal = ({
       console.log("onSubmit values", values);
       setIsSubmitting(true);
 
-      if (values.badImage && !!values.aoLogo) {
-        form.setError("aoLogo", { message: "Invalid image URL" });
-        throw new Error("Invalid image URL");
-      }
-
       appStore.setState({ myEmail: values.submittedBy });
 
       const updateRequestData = {
         ...values,
-        requestType: "edit_ao_and_location" as const,
-        eventStartTime: values.eventStartTime
-          ? convertHH_mmToHHmm(values.eventStartTime)
-          : undefined,
-        eventEndTime: values.eventEndTime
-          ? convertHH_mmToHHmm(values.eventEndTime)
-          : undefined,
+        requestType: "move_event_to_new_location" as const,
       };
 
       const validatedValues =
-        validateEditAoAndLocationRequest(updateRequestData);
+        validateMoveEventToNewLocationRequest(updateRequestData);
 
       const result =
         await vanillaApi.request.submitUpdateRequest.mutate(validatedValues);
@@ -97,14 +91,15 @@ export const AoEditModal = ({
   };
 
   return (
-    <BaseModal title="Edit AO Details">
+    <BaseModal title="Move Event to New Location">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
           onSubmit={form.handleSubmit(handleSubmission, handleSubmissionError)}
         >
           {!isProd && <FormDebugData />}
-          <RequestFormSelector requestType="edit_ao_and_location" />
+
+          <RequestFormSelector requestType="move_event_to_new_location" />
           <ContactDetailsForm />
 
           <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
@@ -124,7 +119,7 @@ export const AoEditModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Save Changes"
+                "Move Event to New Location"
               )}
             </Button>
 

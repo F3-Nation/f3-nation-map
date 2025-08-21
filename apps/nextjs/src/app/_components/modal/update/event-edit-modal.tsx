@@ -3,30 +3,35 @@ import { useRouter } from "next/navigation";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import type { UpdateLocationFormValues } from "@acme/validators";
-import { validateMoveAOToDifferentRegionRequest } from "@acme/api/lib/validate-request";
+import { validateEventEditRequest } from "@acme/api/lib/validate-request";
+import { convertHH_mmToHHmm } from "@acme/shared/app/functions";
+import { TestId } from "@acme/shared/common/enums";
 import { Button } from "@acme/ui/button";
 import { Form } from "@acme/ui/form";
 import { Spinner } from "@acme/ui/spinner";
 import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
+import {
+  DevLoadTestData,
+  FormDebugData,
+} from "~/app/_components/forms/dev-debug-component";
+import { ContactDetailsForm } from "~/app/_components/forms/form-inputs/contact-details-form";
+import { loadDataIntoEventForm } from "~/app/_components/forms/load-data-into-form";
+import { RequestFormSelector } from "~/app/_components/forms/request-form-selector";
+import { BaseModal } from "~/app/_components/modal/base-modal";
+import { handleSubmissionError } from "~/app/_components/modal/utils/handle-submission-error";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
 import { vanillaApi } from "~/trpc/vanilla";
 import { useUpdateForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
 import { closeModal } from "~/utils/store/modal";
-import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
-import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
-import { loadDataIntoMoveAOToDifferentRegionForm } from "../forms/load-data-into-form";
-import { RequestFormSelector } from "../forms/request-form-selector";
-import { BaseModal } from "./base-modal";
-import { handleSubmissionError } from "./utils/handle-submission-error";
 
-export const MoveAOToDifferentRegionModal = ({
+export const EventEditModal = ({
   data,
 }: {
-  data: DataType[ModalType.MOVE_AO_TO_DIFFERENT_REGION];
+  data: DataType[ModalType.EVENT_EDIT];
 }) => {
   const router = useRouter();
   const utils = api.useUtils();
@@ -40,9 +45,9 @@ export const MoveAOToDifferentRegionModal = ({
   });
 
   useEffect(() => {
-    // Load move AO to different region data into form
+    // Load event data into form
     if (data) {
-      loadDataIntoMoveAOToDifferentRegionForm(form, data);
+      loadDataIntoEventForm(form, data);
     }
   }, [data, form]);
 
@@ -57,11 +62,16 @@ export const MoveAOToDifferentRegionModal = ({
 
       const updateRequestData = {
         ...values,
-        requestType: "move_ao_to_different_region" as const,
+        requestType: "edit_event" as const,
+        eventStartTime: values.eventStartTime
+          ? convertHH_mmToHHmm(values.eventStartTime)
+          : undefined,
+        eventEndTime: values.eventEndTime
+          ? convertHH_mmToHHmm(values.eventEndTime)
+          : undefined,
       };
 
-      const validatedValues =
-        validateMoveAOToDifferentRegionRequest(updateRequestData);
+      const validatedValues = validateEventEditRequest(updateRequestData);
 
       const result =
         await vanillaApi.request.submitUpdateRequest.mutate(validatedValues);
@@ -88,7 +98,7 @@ export const MoveAOToDifferentRegionModal = ({
   };
 
   return (
-    <BaseModal title="Move to different region">
+    <BaseModal title="Edit workout details">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
@@ -96,15 +106,7 @@ export const MoveAOToDifferentRegionModal = ({
         >
           {!isProd && <FormDebugData />}
 
-          {/* TODO: */}
-          <div>
-            <p>Moving AO ID: {data?.originalAoId}</p>
-            <p>From Region ID: {data?.originalRegionId}</p>
-            <p>To Region ID: {data?.regionId}</p>
-          </div>
-
-          <RequestFormSelector requestType="move_ao_to_different_region" />
-
+          <RequestFormSelector requestType="edit_event" />
           <ContactDetailsForm />
 
           <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
@@ -120,11 +122,14 @@ export const MoveAOToDifferentRegionModal = ({
               }}
             >
               {isSubmitting ? (
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2"
+                  data-testid={TestId.UPDATE_MODAL_SUBMIT_BUTTON}
+                >
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Save Changes"
+                "Update Event"
               )}
             </Button>
 

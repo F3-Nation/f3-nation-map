@@ -48,6 +48,7 @@ export const AODetailsForm = () => {
                 <div className="space-y-2">
                   <Input
                     type="file"
+                    name="aoLogo"
                     accept="image/*"
                     onChange={async (e) => {
                       console.log("files", e.target.files);

@@ -258,6 +258,7 @@ export const deleteItemAndVerify = async (params: {
   await goToSection(page, section);
   await searchTableRowsForText(page, name, true);
   await page.getByRole("button", { name: "Delete" }).click();
+  await page.waitForSelector("text=Are you sure");
   await page.getByRole("button", { name: "Delete" }).click();
   await verifyTableRowDoesNotExist(page, name);
 };
