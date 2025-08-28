@@ -151,7 +151,8 @@ export class MailService {
             secure: false,
             auth: { user, pass },
           }))
-        : env.EMAIL_SERVER;
+        : // Email now comes from F3 sendgrid
+          env.EMAIL_SERVER;
       this.transporter = nodemailer.createTransport(transporterOptions);
     }
     return this.transporter;
