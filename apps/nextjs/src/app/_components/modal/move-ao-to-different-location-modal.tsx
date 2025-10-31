@@ -94,7 +94,7 @@ export const MoveAOToDifferentLocationModal = ({
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
-          onSubmit={form.handleSubmit(handleSubmission)}
+          onSubmit={form.handleSubmit(handleSubmission, handleSubmissionError)}
         >
           {!isProd && <FormDebugData />}
 
@@ -115,7 +115,10 @@ export const MoveAOToDifferentLocationModal = ({
               className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
               onClick={() => {
                 console.log("form.getValues()", form.getValues());
-                void form.handleSubmit(handleSubmission)();
+                void form.handleSubmit(
+                  handleSubmission,
+                  handleSubmissionError,
+                )();
               }}
             >
               {isSubmitting ? (

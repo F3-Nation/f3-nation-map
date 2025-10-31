@@ -19,7 +19,7 @@ import { closeModal } from "~/utils/store/modal";
 import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
 import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
 import { loadDataIntoMoveAOToNewLocationForm } from "../forms/load-data-into-form";
-import { MoveAOToNewLocationForm } from "../forms/request-forms/move-ao-to-new-location-form";
+import { RequestFormSelector } from "../forms/request-form-selector";
 import { BaseModal } from "./base-modal";
 import { handleSubmissionError } from "./utils/handle-submission-error";
 
@@ -92,11 +92,11 @@ export const MoveAOToNewLocationModal = ({
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
-          onSubmit={form.handleSubmit(handleSubmission)}
+          onSubmit={form.handleSubmit(handleSubmission, handleSubmissionError)}
         >
           {!isProd && <FormDebugData />}
 
-          <MoveAOToNewLocationForm />
+          <RequestFormSelector requestType="move_ao_to_new_location" />
           <ContactDetailsForm />
 
           <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
@@ -105,7 +105,10 @@ export const MoveAOToNewLocationModal = ({
               className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
               onClick={() => {
                 console.log("form.getValues()", form.getValues());
-                void form.handleSubmit(handleSubmission)();
+                void form.handleSubmit(
+                  handleSubmission,
+                  handleSubmissionError,
+                )();
               }}
             >
               {isSubmitting ? (

@@ -287,6 +287,7 @@ export const loadDataIntoMoveAOToDifferentRegionForm = (
   form.setValue("submittedBy", appStore.get("myEmail"));
   form.setValue("originalRegionId", data.originalRegionId);
   form.setValue("originalAoId", data.originalAoId);
+  form.setValue("originalLocationId", null);
 };
 
 export const loadDataIntoMoveEventToDifferentAoForm = (
