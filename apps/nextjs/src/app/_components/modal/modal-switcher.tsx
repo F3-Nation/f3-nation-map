@@ -20,15 +20,25 @@ import AdminRequestsModal from "./admin-requests-modal";
 import AdminSectorsModal from "./admin-sectors-modal";
 import AdminUsersModal from "./admin-users-modal";
 import AdminWorkoutsModal from "./admin-workouts-modal";
-import DeleteModal from "./delete-modal";
+import { AoEditModal } from "./ao-edit-modal";
+import { CreateEventModal } from "./create-event-modal";
+import { CreateLocationAndEventModal } from "./create-location-and-event-modal";
+import DeleteConfirmationModal from "./delete-confirmation-modal";
+import { DeleteModal } from "./delete-modal";
 import { EditModeInfoModal } from "./edit-mode-info-modal";
+import { EventEditModal } from "./event-edit-modal";
 import { FullImageModal } from "./full-image-modal";
 import HowToJoinModal from "./how-to-join-modal";
 import { MapInfoModal } from "./map-info-modal";
+import { MoveAOToDifferentLocationModal } from "./move-ao-to-different-location-modal";
+import { MoveAOToDifferentRegionModal } from "./move-ao-to-different-region-modal";
+import { MoveAOToNewLocationModal } from "./move-ao-to-new-location-modal";
+import { MoveEventToDifferentAoModal } from "./move-event-to-different-ao-modal";
+import { MoveEventToNewLocationModal } from "./move-event-to-new-location-modal";
 import { QRCodeModal } from "./qr-code-modal";
 import SettingsModal from "./settings-modal";
 import SignInModal from "./sign-in-modal";
-import { UpdateLocationModal } from "./update-location-modal";
+import { UpdateModal } from "./update-modal";
 import UserLocationInfoModal from "./user-location-info-modal";
 import { WorkoutDetailsModal } from "./workout-details-modal";
 
@@ -44,10 +54,50 @@ export const ModalSwitcher = () => {
       return <HowToJoinModal data={data as DataType[ModalType.HOW_TO_JOIN]} />;
     case ModalType.USER_LOCATION_INFO:
       return <UserLocationInfoModal />;
-    case ModalType.UPDATE_LOCATION:
+    case ModalType.UPDATE:
+      return <UpdateModal data={data as DataType[ModalType.UPDATE]} />;
+    case ModalType.AO_EDIT:
+      return <AoEditModal data={data as DataType[ModalType.AO_EDIT]} />;
+    case ModalType.EVENT_EDIT:
+      return <EventEditModal data={data as DataType[ModalType.EVENT_EDIT]} />;
+    case ModalType.CREATE_EVENT:
       return (
-        <UpdateLocationModal
-          data={data as DataType[ModalType.UPDATE_LOCATION]}
+        <CreateEventModal data={data as DataType[ModalType.CREATE_EVENT]} />
+      );
+    case ModalType.CREATE_LOCATION_AND_EVENT:
+      return (
+        <CreateLocationAndEventModal
+          data={data as DataType[ModalType.CREATE_LOCATION_AND_EVENT]}
+        />
+      );
+    case ModalType.MOVE_AO_TO_NEW_LOCATION:
+      return (
+        <MoveAOToNewLocationModal
+          data={data as DataType[ModalType.MOVE_AO_TO_NEW_LOCATION]}
+        />
+      );
+    case ModalType.MOVE_EVENT_TO_NEW_LOCATION:
+      return (
+        <MoveEventToNewLocationModal
+          data={data as DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION]}
+        />
+      );
+    case ModalType.MOVE_AO_TO_DIFFERENT_LOCATION:
+      return (
+        <MoveAOToDifferentLocationModal
+          data={data as DataType[ModalType.MOVE_AO_TO_DIFFERENT_LOCATION]}
+        />
+      );
+    case ModalType.MOVE_AO_TO_DIFFERENT_REGION:
+      return (
+        <MoveAOToDifferentRegionModal
+          data={data as DataType[ModalType.MOVE_AO_TO_DIFFERENT_REGION]}
+        />
+      );
+    case ModalType.MOVE_EVENT_TO_DIFFERENT_AO:
+      return (
+        <MoveEventToDifferentAoModal
+          data={data as DataType[ModalType.MOVE_EVENT_TO_DIFFERENT_AO]}
         />
       );
     case ModalType.WORKOUT_DETAILS:
@@ -107,8 +157,12 @@ export const ModalSwitcher = () => {
       );
     case ModalType.DELETE_CONFIRMATION:
       return (
-        <DeleteModal data={data as DataType[ModalType.DELETE_CONFIRMATION]} />
+        <DeleteConfirmationModal
+          data={data as DataType[ModalType.DELETE_CONFIRMATION]}
+        />
       );
+    case ModalType.DELETE:
+      return <DeleteModal data={data as DataType[ModalType.DELETE]} />;
     case ModalType.ADMIN_DELETE_REQUEST:
       return (
         <AdminDeleteRequestModal

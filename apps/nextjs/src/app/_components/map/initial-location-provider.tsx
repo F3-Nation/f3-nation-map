@@ -68,6 +68,7 @@ const SuspendedInitialLocationProvider = (params: { children: ReactNode }) => {
           ? { lat: queryLat, lng: queryLon }
           : null;
 
+    // TODO: i don't think we're allowed to do this. I think it is causing error messages
     mapStore.setState({
       didSetQueryParamLocation: !!center.current,
     });
