@@ -1,3 +1,4 @@
+import path from "path";
 import { expect, test } from "@playwright/test";
 
 import { TestId } from "@acme/shared/common/enums";
@@ -111,17 +112,19 @@ test.describe("Update Actions", () => {
     await page.getByText("AO Details:").scrollIntoViewIfNeeded();
     await page.locator('input[name="aoName"]').fill("MAP TEST AO");
     await page.locator('input[name="aoWebsite"]').fill("https://example.com");
-    await page
-      .locator('input[name="aoLogo"]')
-      .setInputFiles("apps/nextjs/public/f3_logo.png");
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.locator('input[name="aoLogo"]').click();
+    const fileChooser = await fileChooserPromise;
+    // Base is apps/nextjs
+    const logoPath = path.join(process.cwd(), "public/f3_logo.png");
+    console.log("logoPath", logoPath);
+    await fileChooser.setFiles("public/f3_logo.png");
 
     // 5. Fill Contact Details
     await page.locator('input[name="submittedBy"]').fill("test@example.com");
 
     // Submit the form
-    await page
-      .getByRole("button", { name: "Create Location, AO & Event" })
-      .click();
+    await page.getByTestId(TestId.UPDATE_MODAL_SUBMIT_BUTTON).click();
     await page.waitForTimeout(2000);
 
     // Search for the newly created item

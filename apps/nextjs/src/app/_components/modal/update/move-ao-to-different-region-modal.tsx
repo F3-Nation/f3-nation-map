@@ -3,28 +3,34 @@ import { useRouter } from "next/navigation";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import type { UpdateLocationFormValues } from "@acme/validators";
-import { validateMoveAOToDifferentLocationRequest } from "@acme/api/lib/validate-request";
+import { validateMoveAOToDifferentRegionRequest } from "@acme/api/lib/validate-request";
+import { TestId } from "@acme/shared/common/enums";
 import { Button } from "@acme/ui/button";
 import { Form } from "@acme/ui/form";
 import { Spinner } from "@acme/ui/spinner";
 import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
+import {
+  DevLoadTestData,
+  FormDebugData,
+} from "~/app/_components/forms/dev-debug-component";
+import { ContactDetailsForm } from "~/app/_components/forms/form-inputs/contact-details-form";
+import { loadDataIntoMoveAOToDifferentRegionForm } from "~/app/_components/forms/load-data-into-form";
+import { RequestFormSelector } from "~/app/_components/forms/request-form-selector";
+import { BaseModal } from "~/app/_components/modal/base-modal";
+import { handleSubmissionError } from "~/app/_components/modal/utils/handle-submission-error";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
 import { vanillaApi } from "~/trpc/vanilla";
 import { useUpdateForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
 import { closeModal } from "~/utils/store/modal";
-import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
-import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
-import { BaseModal } from "./base-modal";
-import { handleSubmissionError } from "./utils/handle-submission-error";
 
-export const MoveAOToDifferentLocationModal = ({
+export const MoveAOToDifferentRegionModal = ({
   data,
 }: {
-  data: DataType[ModalType.MOVE_AO_TO_DIFFERENT_LOCATION];
+  data: DataType[ModalType.MOVE_AO_TO_DIFFERENT_REGION];
 }) => {
   const router = useRouter();
   const utils = api.useUtils();
@@ -38,13 +44,9 @@ export const MoveAOToDifferentLocationModal = ({
   });
 
   useEffect(() => {
-    // Load move AO to different location data into form
+    // Load move AO to different region data into form
     if (data) {
-      form.setValue("aoId", data.aoId);
-      form.setValue("locationId", data.locationId);
-      form.setValue("originalLocationId", data.originalLocationId);
-      form.setValue("originalRegionId", data.originalRegionId);
-      form.setValue("originalAoId", data.originalAoId);
+      loadDataIntoMoveAOToDifferentRegionForm(form, data);
     }
   }, [data, form]);
 
@@ -59,11 +61,11 @@ export const MoveAOToDifferentLocationModal = ({
 
       const updateRequestData = {
         ...values,
-        requestType: "move_ao_to_different_location" as const,
+        requestType: "move_ao_to_different_region" as const,
       };
 
       const validatedValues =
-        validateMoveAOToDifferentLocationRequest(updateRequestData);
+        validateMoveAOToDifferentRegionRequest(updateRequestData);
 
       const result =
         await vanillaApi.request.submitUpdateRequest.mutate(validatedValues);
@@ -90,7 +92,7 @@ export const MoveAOToDifferentLocationModal = ({
   };
 
   return (
-    <BaseModal title="Move AO to Different Location">
+    <BaseModal title="Move to different region">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
@@ -98,20 +100,21 @@ export const MoveAOToDifferentLocationModal = ({
         >
           {!isProd && <FormDebugData />}
 
-          {/* TODO: Add form fields for selecting target location */}
+          {/* TODO: */}
           <div>
-            <p>Moving AO ID: {data?.aoId}</p>
-            <p>From Location ID: {data?.originalLocationId}</p>
-            <p>To Location ID: {data?.locationId}</p>
-            <p>Original Region ID: {data?.originalRegionId}</p>
-            <p>Original AO ID: {data?.originalAoId}</p>
+            <p>Moving AO ID: {data?.originalAoId}</p>
+            <p>From Region ID: {data?.originalRegionId}</p>
+            <p>To Region ID: {data?.regionId}</p>
           </div>
+
+          <RequestFormSelector requestType="move_ao_to_different_region" />
 
           <ContactDetailsForm />
 
           <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
             <Button
               type="button"
+              data-testid={TestId.UPDATE_MODAL_SUBMIT_BUTTON}
               className="w-full bg-blue-600 text-white hover:bg-blue-600/80 sm:w-auto"
               onClick={() => {
                 console.log("form.getValues()", form.getValues());
@@ -126,7 +129,7 @@ export const MoveAOToDifferentLocationModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Move AO to Different Location"
+                `Move AO`
               )}
             </Button>
 

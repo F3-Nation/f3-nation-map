@@ -29,7 +29,7 @@ const config: PlaywrightTestConfig = {
       use: {
         ...devices["Desktop Chrome"],
         // Use prepared auth state.
-        storageState: "./e2e/.auth/user.json",
+        storageState: "./e2e/setup/.auth/user.json",
       },
       // Only run this if we need to reauthenticate
       // dependencies: ["setup"],

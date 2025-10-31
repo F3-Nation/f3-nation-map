@@ -3,30 +3,33 @@ import { useRouter } from "next/navigation";
 
 import type { PartialBy } from "@acme/shared/common/types";
 import type { UpdateLocationFormValues } from "@acme/validators";
-import { validateMoveEventToNewLocationRequest } from "@acme/api/lib/validate-request";
+import { validateMoveEventToDifferentAORequest } from "@acme/api/lib/validate-request";
 import { Button } from "@acme/ui/button";
 import { Form } from "@acme/ui/form";
 import { Spinner } from "@acme/ui/spinner";
 import { toast } from "@acme/ui/toast";
 
 import type { DataType, ModalType } from "~/utils/store/modal";
+import {
+  DevLoadTestData,
+  FormDebugData,
+} from "~/app/_components/forms/dev-debug-component";
+import { ContactDetailsForm } from "~/app/_components/forms/form-inputs/contact-details-form";
+import { loadDataIntoMoveEventToDifferentAoForm } from "~/app/_components/forms/load-data-into-form";
+import { RequestFormSelector } from "~/app/_components/forms/request-form-selector";
+import { BaseModal } from "~/app/_components/modal/base-modal";
+import { handleSubmissionError } from "~/app/_components/modal/utils/handle-submission-error";
 import { api } from "~/trpc/react";
 import { isProd } from "~/trpc/util";
 import { vanillaApi } from "~/trpc/vanilla";
 import { useUpdateForm } from "~/utils/forms";
 import { appStore } from "~/utils/store/app";
 import { closeModal } from "~/utils/store/modal";
-import { DevLoadTestData, FormDebugData } from "../forms/dev-debug-component";
-import { ContactDetailsForm } from "../forms/form-inputs/contact-details-form";
-import { loadDataIntoMoveEventToNewLocationForm } from "../forms/load-data-into-form";
-import { RequestFormSelector } from "../forms/request-form-selector";
-import { BaseModal } from "./base-modal";
-import { handleSubmissionError } from "./utils/handle-submission-error";
 
-export const MoveEventToNewLocationModal = ({
+export const MoveEventToDifferentAoModal = ({
   data,
 }: {
-  data: DataType[ModalType.MOVE_EVENT_TO_NEW_LOCATION];
+  data: DataType[ModalType.MOVE_EVENT_TO_DIFFERENT_AO];
 }) => {
   const router = useRouter();
   const utils = api.useUtils();
@@ -40,9 +43,9 @@ export const MoveEventToNewLocationModal = ({
   });
 
   useEffect(() => {
-    // Load move event to new location data into form
+    // Load move event to different AO data into form
     if (data) {
-      loadDataIntoMoveEventToNewLocationForm(form, data);
+      loadDataIntoMoveEventToDifferentAoForm(form, data);
     }
   }, [data, form]);
 
@@ -57,11 +60,11 @@ export const MoveEventToNewLocationModal = ({
 
       const updateRequestData = {
         ...values,
-        requestType: "move_event_to_new_location" as const,
+        requestType: "move_event_to_different_ao" as const,
       };
 
       const validatedValues =
-        validateMoveEventToNewLocationRequest(updateRequestData);
+        validateMoveEventToDifferentAORequest(updateRequestData);
 
       const result =
         await vanillaApi.request.submitUpdateRequest.mutate(validatedValues);
@@ -88,7 +91,7 @@ export const MoveEventToNewLocationModal = ({
   };
 
   return (
-    <BaseModal title="Move Event to New Location">
+    <BaseModal title="Move Event to Different AO">
       <Form {...form}>
         <form
           className="w-[inherit] overflow-x-hidden p-[1px]"
@@ -96,7 +99,14 @@ export const MoveEventToNewLocationModal = ({
         >
           {!isProd && <FormDebugData />}
 
-          <RequestFormSelector requestType="move_event_to_new_location" />
+          {/* TODO */}
+          <div>
+            <p>Moving Event ID: {data?.eventId}</p>
+            <p>From AO ID: {data?.originalAoId}</p>
+            <p>Original Region ID: {data?.originalRegionId}</p>
+          </div>
+
+          <RequestFormSelector requestType="move_event_to_different_ao" />
           <ContactDetailsForm />
 
           <div className="pb-safe sticky bottom-0 -mx-[1px] mt-4 flex flex-col items-stretch justify-end gap-2 border-t border-border bg-background p-4 shadow-lg sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
@@ -116,7 +126,7 @@ export const MoveEventToNewLocationModal = ({
                   Submitting... <Spinner className="size-4" />
                 </div>
               ) : (
-                "Save Changes"
+                "Move Event to Different AO"
               )}
             </Button>
 
