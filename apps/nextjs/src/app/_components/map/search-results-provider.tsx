@@ -43,6 +43,8 @@ export const TextSearchResultsProvider = ({
     api.location.getRegionsWithLocation.useQuery(undefined);
   const { data: eventIdToRegionNameLookup } =
     api.event.eventIdToRegionNameLookup.useQuery();
+  const { data: locationIdToRegionNameLookup } =
+    api.location.locationIdToRegionNameLookup.useQuery();
   const isMobileWidth = useIsMobileWidth();
   RERENDER_LOGS && console.log("TextSearchResultsProvider rerender");
   const text = searchStore.use.text();
@@ -97,7 +99,7 @@ export const TextSearchResultsProvider = ({
               logo: data.logo ?? "",
               item: { eventId: null, locationId: data.id },
               placeId: null,
-              regionName: eventIdToRegionNameLookup?.[data.id] ?? null,
+              regionName: locationIdToRegionNameLookup?.[data.id] ?? null,
             },
           };
           return searchResult;
