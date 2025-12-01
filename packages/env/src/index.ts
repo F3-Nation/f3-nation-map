@@ -1,10 +1,10 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-// Only override DATABASE_URL from --url flag if in non-production (i.e., development or test) environment
+import { isProductionNodeEnv, vercelInfo } from "@acme/shared/common/constants";
 
-const nodeEnv = process.env.NODE_ENV || "development";
-if (nodeEnv !== "production") {
+// Don't override DATABASE_URL if it's already set by vercelInfo
+if (!isProductionNodeEnv && !vercelInfo) {
   const args = process.argv;
   const urlFlagIndex = args.indexOf("--url");
   if (urlFlagIndex !== -1 && args[urlFlagIndex + 1]) {
@@ -12,13 +12,28 @@ if (nodeEnv !== "production") {
   }
 }
 
+console.log("Vercel info", vercelInfo);
+
 export const env = createEnv({
   server: {
     AUTH_SECRET:
       process.env.NODE_ENV === "production"
         ? z.string().min(1)
         : z.string().min(1).optional(),
-    DATABASE_URL: z.string().min(1),
+    DATABASE_URL: z
+      .string()
+      .min(1)
+      .transform((val) => {
+        if (vercelInfo?.isPreviewDeployment && vercelInfo.gitCommitRef) {
+          console.log(
+            "Overriding DATABASE_URL with vercel.databaseUrl",
+            vercelInfo.databaseUrl,
+          );
+          return vercelInfo.databaseUrl;
+        } else {
+          return val;
+        }
+      }),
     EMAIL_SERVER: z.string().min(1),
     EMAIL_FROM: z.string().min(1),
     NODE_ENV: z

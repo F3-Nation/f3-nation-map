@@ -448,6 +448,9 @@ importers:
 
   packages/env:
     dependencies:
+      '@acme/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@t3-oss/env-nextjs':
         specifier: ^0.9.2
         version: 0.9.2(typescript@5.3.3)(zod@3.24.1)
