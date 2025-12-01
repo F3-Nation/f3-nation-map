@@ -79,4 +79,5 @@ export enum TestId {
   SELECTED_ITEM_MOBILE = "selected-item-mobile",
   SELECTED_ITEM_DESKTOP = "selected-item-desktop",
   SECTOR_NATION_SELECT = "sector-nation-select",
+  UPDATE_MODAL_SUBMIT_BUTTON = "update-modal-submit-button",
 }

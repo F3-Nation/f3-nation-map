@@ -113,5 +113,5 @@ export const checkHasRoleOnOrg = async ({
     };
   }
 
-  return { success: false, orgId: null, roleName: null, mode: "no-permission" };
+  return { success: false, orgId, roleName, mode: "no-permission" };
 };

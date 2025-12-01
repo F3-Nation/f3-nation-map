@@ -24,3 +24,12 @@ pnpm doppler upload
 
 - this app uses a GCE instance to run PgBouncer in the f3data project
 - gcloud compute ssh f3data-pgbouncer-vm --project f3data
+
+# WIP
+
+- ensure we can't submit with no time and no events for new events
+- add tests for approvals in the admin portal
+- test image issues
+- better text of where we're moving aos and regions
+- decide which things you can change region and and which you can't
+- TODO: Think through AO and location appearance

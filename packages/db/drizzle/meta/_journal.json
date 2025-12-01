@@ -43,6 +43,13 @@
       "when": 1764243370285,
       "tag": "0005_loud_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764548676100,
+      "tag": "0006_noisy_joseph",
+      "breakpoints": true
     }
   ]
 }

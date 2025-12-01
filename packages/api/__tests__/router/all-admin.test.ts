@@ -138,7 +138,6 @@ describe("all admin routers", () => {
       if (!areaResult) {
         throw new Error("Area result is undefined");
       }
-      console.log("areaResult", areaResult);
       createdAreaId = areaResult.id;
       const result = await caller.org.byId({
         id: areaResult.id,
@@ -350,9 +349,7 @@ describe("all admin routers", () => {
       });
       expect(result2).toBeDefined();
       expect(result2?.name).toBe(name);
-      console.log("nation", result2);
       const nations = await caller.org.all({ orgTypes: ["nation"] });
-      console.log("nations", nations);
     });
 
     it("should get all orgs", async () => {
@@ -522,7 +519,6 @@ describe("all admin routers", () => {
         id: createdSectorId,
         orgType: "sector",
       });
-      console.log("result", result);
       expect(result?.isActive).toBe(false);
     });
 

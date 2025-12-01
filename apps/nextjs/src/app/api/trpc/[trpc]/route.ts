@@ -36,10 +36,18 @@ interface TrpcResponse<
     | RouterOutputs["location"]["delete"]
     | RouterOutputs["org"]["crupdate"]
     | RouterOutputs["org"]["delete"]
-    | RouterOutputs["request"]["submitUpdateRequest"]
-    | RouterOutputs["request"]["submitDeleteRequest"]
-    | RouterOutputs["request"]["validateSubmissionByAdmin"]
-    | RouterOutputs["request"]["validateDeleteByAdmin"],
+    // TODO: Ensure all these are handled correctly
+    // | RouterOutputs["request"]["submitCreateEventRequest"]
+    // | RouterOutputs["request"]["submitCreateAOAndLocationAndEventRequest"]
+    // | RouterOutputs["request"]["submitEditEventRequest"]
+    // | RouterOutputs["request"]["submitEditAOAndLocationRequest"]
+    // | RouterOutputs["request"]["submitMoveAOToDifferentRegionRequest"]
+    // | RouterOutputs["request"]["submitMoveAOToNewLocationRequest"]
+    // | RouterOutputs["request"]["submitMoveAOToDifferentLocationRequest"]
+    // | RouterOutputs["request"]["submitMoveEventToDifferentAoRequest"]
+    // | RouterOutputs["request"]["submitMoveEventToNewLocationRequest"]
+    // | RouterOutputs["request"]["submitDeleteEventRequest"]
+    // | RouterOutputs["request"]["submitDeleteAORequest"]
 > {
   result: { data: { json: T } };
 }
@@ -208,54 +216,54 @@ const getPayload = async (
         action: "map.deleted",
       };
       break;
-    case "request.submitUpdateRequest":
-      const requestSubmitUpdateRequestJson =
-        (await clonedResponse.json()) as TrpcResponse<
-          RouterOutputs["request"]["submitUpdateRequest"]
-        >;
-      payload = {
-        action: "map.updated",
-        eventId:
-          requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
-            .eventId ?? undefined,
-        locationId:
-          requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
-            .locationId ?? undefined,
-        orgId:
-          requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
-            .regionId ?? undefined,
-      };
-      break;
-    case "request.submitDeleteRequest":
-      const requestSubmitDeleteRequestJson =
-        (await clonedResponse.json()) as TrpcResponse<
-          RouterOutputs["request"]["submitDeleteRequest"]
-        >;
-      payload = {
-        action: "map.deleted",
-        eventId:
-          requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
-            ?.eventId ?? undefined,
-        locationId:
-          requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
-            .locationId ?? undefined,
-        orgId:
-          requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
-            .regionId ?? undefined,
-      };
-      break;
-    case "request.validateSubmissionByAdmin":
-      const requestValidateSubmissionByAdminJson =
-        (await clonedResponse.json()) as TrpcResponse<
-          RouterOutputs["request"]["validateSubmissionByAdmin"]
-        >;
-      payload = {
-        action: "map.updated",
-        eventId:
-          requestValidateSubmissionByAdminJson?.result?.data?.json
-            ?.updateRequest?.eventId ?? undefined,
-      };
-      break;
+    // case "request.submitUpdateRequest":
+    //   const requestSubmitUpdateRequestJson =
+    //     (await clonedResponse.json()) as TrpcResponse<
+    //       RouterOutputs["request"]["submitUpdateRequest"]
+    //     >;
+    //   payload = {
+    //     action: "map.updated",
+    //     eventId:
+    //       requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
+    //         .eventId ?? undefined,
+    //     locationId:
+    //       requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
+    //         .locationId ?? undefined,
+    //     orgId:
+    //       requestSubmitUpdateRequestJson?.result?.data?.json?.updateRequest
+    //         .regionId ?? undefined,
+    //   };
+    //   break;
+    // case "request.submitDeleteRequest":
+    //   const requestSubmitDeleteRequestJson =
+    //     (await clonedResponse.json()) as TrpcResponse<
+    //       RouterOutputs["request"]["submitDeleteRequest"]
+    //     >;
+    //   payload = {
+    //     action: "map.deleted",
+    //     eventId:
+    //       requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
+    //         ?.eventId ?? undefined,
+    //     locationId:
+    //       requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
+    //         .locationId ?? undefined,
+    //     orgId:
+    //       requestSubmitDeleteRequestJson?.result?.data?.json?.deleteRequest
+    //         .regionId ?? undefined,
+    //   };
+    //   break;
+    // case "request.validateSubmissionByAdmin":
+    //   const requestValidateSubmissionByAdminJson =
+    //     (await clonedResponse.json()) as TrpcResponse<
+    //       RouterOutputs["request"]["validateSubmissionByAdmin"]
+    //     >;
+    //   payload = {
+    //     action: "map.updated",
+    //     eventId:
+    //       requestValidateSubmissionByAdminJson?.result?.data?.json
+    //         ?.updateRequest?.eventId ?? undefined,
+    //   };
+    //   break;
   }
   return payload;
 };

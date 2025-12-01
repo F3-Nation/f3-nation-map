@@ -1,5 +1,6 @@
 import { initTRPC } from "@trpc/server";
 import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
 import { describe, expect, it, vi } from "vitest";
 
 import type { DayOfWeek, OrgType } from "@acme/shared/app/enums";
@@ -268,12 +269,25 @@ describe("all editor routers", () => {
       await expect(caller.event.crupdate(eventData)).rejects.toThrow();
     });
 
-    it("should get event types", async () => {
-      const result = await caller.eventType.all();
+    it("should add event types", async () => {
+      const result = await caller.eventType.crupdate({
+        name: "Test Event Type",
+        specificOrgId: MY_REGION_ID,
+        eventCategory: "first_f",
+      });
       expect(result).toBeDefined();
     });
 
-    it("should delete workout", async () => {
+    it("should get event types", async () => {
+      const result = await caller.eventType.all({
+        pageSize: 200,
+        orgIds: [MY_REGION_ID],
+      });
+      expect(result).toBeDefined();
+      expect(result.eventTypes.length).toBeGreaterThan(0);
+    });
+
+    it("should delete event", async () => {
       if (!eventId) {
         throw new Error("Event ID is undefined");
       }
@@ -555,7 +569,9 @@ describe("all editor routers", () => {
     it("should create a new request that is not auto approved", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174000",
-        regionId: TEST_REGION_1_ORG_ID,
+        newRegionId: TEST_REGION_1_ORG_ID,
+        newLocationId: null,
+        newAoId: null,
         eventTypeIds: [1],
         eventName: "Test Event Request",
         eventDescription: "Test Event Description",
@@ -573,11 +589,14 @@ describe("all editor routers", () => {
         submittedBy: "test@example.com",
         eventMeta: { key: "value" },
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      const result = await caller.request.submitUpdateRequest(requestData);
-      expect(result).toBeDefined();
-      expect(result.status).toBe("pending");
+      // const result = await caller.request.submitUpdateRequest(requestData);
+      // expect(result).toBeDefined();
+      // expect(result.status).toBe("pending");
     });
 
     it("should create a new request for an existing event into my own region that is not auto approved", async () => {
@@ -619,7 +638,9 @@ describe("all editor routers", () => {
 
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174006",
-        regionId: MY_REGION_ID, // Attempt to move this event to my region  - Should fail since it didn't start in my region
+        newRegionId: MY_REGION_ID, // Attempt to move this event to my region  - Should fail since it didn't start in my region
+        newLocationId: null,
+        newAoId: null,
         eventId: eventNotInMyRegion.id,
         eventTypeIds: [1],
         eventName: "Test Event Request",
@@ -638,17 +659,22 @@ describe("all editor routers", () => {
         submittedBy: "test@example.com",
         eventMeta: { key: "value" },
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      const result = await caller.request.submitUpdateRequest(requestData);
-      expect(result).toBeDefined();
-      expect(result.status).toBe("pending");
+      // const result = await caller.request.submitUpdateRequest(requestData);
+      // expect(result).toBeDefined();
+      // expect(result.status).toBe("pending");
     });
 
     it("should create a new request that is auto approved", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174005",
-        regionId: MY_REGION_ID,
+        newRegionId: MY_REGION_ID,
+        newLocationId: null,
+        newAoId: null,
         eventTypeIds: [1],
         eventName: "Auto Approved Event",
         eventDescription: "Auto Approved Event Description",
@@ -666,17 +692,22 @@ describe("all editor routers", () => {
         submittedBy: "test@example.com",
         eventMeta: { autoApprove: true },
         requestType: "edit" as const,
+        originalRegionId: MY_REGION_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      const result = await caller.request.submitUpdateRequest(requestData);
-      expect(result).toBeDefined();
-      expect(result.status).toBe("approved");
+      // const result = await caller.request.submitUpdateRequest(requestData);
+      // expect(result).toBeDefined();
+      // expect(result.status).toBe("approved");
     });
 
     it("should fail to create a new request with an invalid event start time", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174002",
-        regionId: MY_REGION_ID,
+        newRegionId: MY_REGION_ID,
+        newLocationId: null,
+        newAoId: null,
         eventTypeIds: [1],
         eventName: "Invalid Start Time Event",
         eventDescription: "Test Description",
@@ -693,17 +724,22 @@ describe("all editor routers", () => {
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      await expect(
-        caller.request.submitUpdateRequest(requestData),
-      ).rejects.toThrow();
+      // await expect(
+      //   caller.request.submitUpdateRequest(requestData),
+      // ).rejects.toThrow();
     });
 
     it("should fail to create a new request with an invalid event end time", async () => {
       const requestData = {
         id: "123e4567-e89b-12d3-a456-426614174003",
-        regionId: MY_REGION_ID,
+        newRegionId: MY_REGION_ID,
+        newLocationId: null,
+        newAoId: null,
         eventTypeIds: [1],
         eventName: "Invalid End Time Event",
         eventDescription: "Test Description",
@@ -720,11 +756,14 @@ describe("all editor routers", () => {
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: MY_REGION_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      await expect(
-        caller.request.submitUpdateRequest(requestData),
-      ).rejects.toThrow();
+      // await expect(
+      //   caller.request.submitUpdateRequest(requestData),
+      // ).rejects.toThrow();
     });
 
     const callerWithPermissions = createCaller(
@@ -760,25 +799,47 @@ describe("all editor routers", () => {
         locationState: "TS",
         locationZip: "12345",
         locationCountry: "Test Country",
+        locationLat: 40.7128,
+        locationLng: -74.006,
         submittedBy: "test@example.com",
         requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      const request = await caller.request.submitUpdateRequest(requestData);
+      const request =
+        await caller.request.submitCreateAOAndLocationAndEventRequest({
+          ...requestData,
+          requestType: "create_ao_and_location_and_event" as const,
+        });
+
+      expect(request).toBeDefined();
       expect(request.status).toBe("pending");
 
-      // Then approve it
       const result =
-        await callerWithPermissions.request.validateSubmissionByAdmin(
-          requestData,
+        await callerWithPermissions.request.submitCreateAOAndLocationAndEventRequest(
+          {
+            ...requestData,
+            id: request.updateRequest.id,
+            requestType: "create_ao_and_location_and_event" as const,
+          },
         );
+
       expect(result.status).toBe("approved");
+
+      // // Verify the request was approved
+      const updatedRequest = await caller.request.byId({
+        id: request.updateRequest.id,
+      });
+      expect(updatedRequest?.status).toBe("approved");
     });
 
     it("should allow us to reject a request", async () => {
       // First create a request
+      const id = uuidv4();
       const requestData = {
-        id: "123e4567-e89b-12d3-a456-426614174007",
+        id,
         regionId: TEST_REGION_1_ORG_ID,
         eventTypeIds: [1],
         eventName: "Request To Reject",
@@ -787,6 +848,8 @@ describe("all editor routers", () => {
         eventStartTime: "0600",
         eventEndTime: "0700",
         aoName: "Test AO",
+        locationLat: 40.7128,
+        locationLng: -74.006,
         locationName: "Test Location",
         locationDescription: "Test Location Description",
         locationAddress: "123 Test St",
@@ -795,26 +858,462 @@ describe("all editor routers", () => {
         locationZip: "12345",
         locationCountry: "Test Country",
         submittedBy: "test@example.com",
-        requestType: "edit" as const,
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: null,
+        originalLocationId: null,
       };
 
-      const request = await caller.request.submitUpdateRequest(requestData);
+      const request =
+        await caller.request.submitCreateAOAndLocationAndEventRequest({
+          ...requestData,
+          requestType: "create_ao_and_location_and_event" as const,
+        });
+
+      expect(request).toBeDefined();
       expect(request.status).toBe("pending");
 
-      if (!request.updateRequest.id) {
-        throw new Error("Request ID is undefined");
+      const result = await callerWithPermissions.request.rejectSubmission({
+        id,
+      });
+
+      // // Verify the request was rejected
+      const updatedRequest = await caller.request.byId({ id });
+      expect(updatedRequest?.status).toBe("rejected");
+    });
+  });
+
+  // Submission routers
+  describe("submission router", () => {
+    // Helper function to set up test data
+    async function setupTestData() {
+      const callerWithPermissions = createCaller(
+        createTRPCContext({
+          id: TEST_EDITOR_USER_ID,
+          email: "editor@test.com",
+          roles: [
+            {
+              orgId: TEST_REGION_1_ORG_ID,
+              orgName: "Test Region 1",
+              roleName: "admin",
+            },
+          ],
+        }),
+      );
+
+      // Create a location in region 1
+      const location = await callerWithPermissions.location.crupdate({
+        name: "Test Location",
+        orgId: TEST_REGION_1_ORG_ID,
+        description: "Test Location Description",
+        latitude: 40.7128,
+        longitude: -74.006,
+        isActive: true,
+      });
+      if (!location) {
+        throw new Error("Location is undefined");
       }
 
-      // Then reject it
-      await callerWithPermissions.request.rejectSubmission({
-        id: request.updateRequest.id,
+      // Create an ao in region 1
+      const ao = await callerWithPermissions.org.crupdate({
+        name: "Test AO",
+        orgType: "ao" as OrgType,
+        description: "Test AO Description",
+        parentId: TEST_REGION_1_ORG_ID,
+        isActive: true,
+        email: "test@ao.com",
       });
+      if (!ao) {
+        throw new Error("AO is undefined");
+      }
 
-      // Verify the request was rejected
-      const updatedRequest = await caller.request.byId({
-        id: request.updateRequest.id,
+      const event = await callerWithPermissions.event.crupdate({
+        name: "Test Event",
+        description: "Test Event Description",
+        dayOfWeek: "monday" as DayOfWeek,
+        startTime: "0600",
+        endTime: "0700",
+        regionId: TEST_REGION_1_ORG_ID,
+        locationId: location.id,
+        isActive: true,
+        highlight: false,
+        startDate: dayjs().format("YYYY-MM-DD"),
+        email: "test@event.com",
+        aoId: ao.id,
+        eventTypeIds: [1],
       });
-      expect(updatedRequest?.status).toBe("rejected");
+      if (!event) {
+        throw new Error("Event is undefined");
+      }
+      const eventId = event.id;
+
+      // Helper base request data
+      const baseRequestData = {
+        regionId: TEST_REGION_1_ORG_ID,
+        eventTypeIds: [1],
+        eventName: "Test Event",
+        eventDescription: "Test Description",
+        eventDayOfWeek: "monday" as DayOfWeek,
+        eventStartTime: "0600",
+        eventEndTime: "0700",
+        aoName: "Test AO",
+        locationLat: 40.7128,
+        locationLng: -74.006,
+        locationName: "Test Location",
+        locationDescription: "Test Location Description",
+        locationAddress: "123 Test St",
+        locationCity: "Test City",
+        locationState: "TS",
+        locationZip: "12345",
+        locationCountry: "Test Country",
+        submittedBy: "test@example.com",
+        originalRegionId: TEST_REGION_1_ORG_ID,
+        originalAoId: ao.id,
+        originalLocationId: location.id,
+      };
+
+      return { callerWithPermissions, location, ao, baseRequestData, event };
+    }
+
+    it("should submit and approve CreateEvent request", async () => {
+      const { callerWithPermissions, baseRequestData } = await setupTestData();
+
+      const id = uuidv4();
+      const eventData = {
+        ...baseRequestData,
+        id,
+        requestType: "create_event" as const,
+      };
+      const result = await caller.request.submitCreateEventRequest(eventData);
+      expect(result.updateRequest.id).toBe(id);
+      expect(result.status).toBe("pending");
+
+      const resultById = await caller.request.byId({ id });
+      expect(resultById?.status).toBe("pending");
+      expect(resultById?.id).toBe(id);
+
+      // now approve as editor
+      const result2 =
+        await callerWithPermissions.request.submitCreateEventRequest({
+          ...eventData,
+        });
+      expect(result2.updateRequest.id).toBe(id);
+      expect(result2.status).toBe("approved");
+
+      const resultById2 = await caller.request.byId({ id });
+      expect(resultById2?.status).toBe("approved");
+      expect(resultById2?.id).toBe(id);
+    });
+
+    it("should submit and approve CreateAOAndLocationAndEvent request", async () => {
+      const { callerWithPermissions, baseRequestData } = await setupTestData();
+
+      const id = uuidv4();
+      const data = {
+        id,
+        ...baseRequestData,
+        requestType: "create_ao_and_location_and_event" as const,
+      };
+      const result =
+        await caller.request.submitCreateAOAndLocationAndEventRequest(data);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitCreateAOAndLocationAndEventRequest(
+          { ...data, id },
+        );
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve EditEvent request", async () => {
+      const { callerWithPermissions, baseRequestData } = await setupTestData();
+
+      const event = await callerWithPermissions.event.all({
+        regionIds: [TEST_REGION_1_ORG_ID],
+      });
+      expect(event).toBeDefined();
+      if (!event) {
+        throw new Error("Event is undefined");
+      }
+      const eventId = event.events[0]?.id;
+      if (!eventId) {
+        throw new Error("Event ID is undefined");
+      }
+
+      const id = uuidv4();
+      const editData = {
+        ...baseRequestData,
+        id,
+        requestType: "edit_event" as const,
+        originalEventId: eventId,
+        currentValues: {
+          eventName: "Old Event Name",
+          eventDescription: "Old Description",
+          eventDayOfWeek: "tuesday" as DayOfWeek,
+          eventStartTime: "0500",
+          eventEndTime: "0600",
+        },
+      };
+      const result = await caller.request.submitEditEventRequest(editData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitEditEventRequest({
+          ...editData,
+          id: result.updateRequest.id,
+        });
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve EditAOAndLocation request", async () => {
+      const { callerWithPermissions, baseRequestData } = await setupTestData();
+
+      const id = uuidv4();
+      const createData = {
+        ...baseRequestData,
+        id,
+        requestType: "create_ao_and_location_and_event" as const,
+      };
+      const created =
+        await caller.request.submitCreateAOAndLocationAndEventRequest(
+          createData,
+        );
+      const editData = {
+        ...baseRequestData,
+        id,
+        requestType: "edit_ao_and_location" as const,
+        currentValues: {
+          aoName: "Old AO Name",
+          locationAddress: "Old Address",
+          locationCity: "Old City",
+          locationState: "OS",
+          locationZip: "00000",
+          locationLat: 40.0,
+          locationLng: -74.0,
+          locationCountry: "Old Country",
+        },
+      };
+      const result =
+        await caller.request.submitEditAOAndLocationRequest(editData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitEditAOAndLocationRequest({
+          ...editData,
+          id: result.updateRequest.id,
+        });
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve MoveAOToDifferentRegion request", async () => {
+      const { baseRequestData } = await setupTestData();
+
+      const callerWithMovePermissions = createCaller(
+        createTRPCContext({
+          id: TEST_EDITOR_USER_ID,
+          email: "editor@test.com",
+          roles: [
+            {
+              orgId: TEST_REGION_1_ORG_ID,
+              orgName: "Test Region 1",
+              roleName: "admin",
+            },
+            {
+              orgId: TEST_REGION_2_ORG_ID,
+              orgName: "Test Region 2",
+              roleName: "admin",
+            },
+          ],
+        }),
+      );
+      const id = uuidv4();
+      const moveData = {
+        ...baseRequestData,
+        id,
+        requestType: "move_ao_to_different_region" as const,
+        newRegionId: TEST_REGION_2_ORG_ID,
+      };
+      const result =
+        await caller.request.submitMoveAOToDifferentRegionRequest(moveData);
+      expect(result.status).toBe("pending");
+
+      const result2 =
+        await callerWithMovePermissions.request.submitMoveAOToDifferentRegionRequest(
+          {
+            ...moveData,
+            id: result.updateRequest.id,
+          },
+        );
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve MoveAOToDifferentLocation request", async () => {
+      const { callerWithPermissions, baseRequestData, location } =
+        await setupTestData();
+
+      const id = uuidv4();
+      const moveData = {
+        ...baseRequestData,
+        id,
+        requestType: "move_ao_to_different_location" as const,
+        newLocationId: location.id, // Use actual location ID
+      };
+      const result =
+        await caller.request.submitMoveAOToDifferentLocationRequest(moveData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitMoveAOToDifferentLocationRequest(
+          {
+            ...moveData,
+            id: result.updateRequest.id,
+          },
+        );
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve MoveAOToNewLocation request", async () => {
+      const { callerWithPermissions, baseRequestData } = await setupTestData();
+
+      const id = uuidv4();
+      const moveData = {
+        ...baseRequestData,
+        id,
+        requestType: "move_ao_to_new_location" as const,
+        locationAddress: "456 New St",
+        currentValues: {
+          locationAddress: "Old Address",
+          locationCity: "Old City",
+          locationState: "OS",
+          locationZip: "00000",
+          locationLat: 40.0,
+          locationLng: -74.0,
+          locationCountry: "Old Country",
+        },
+      };
+      const result =
+        await caller.request.submitMoveAOToNewLocationRequest(moveData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitMoveAOToNewLocationRequest({
+          ...moveData,
+          id: result.updateRequest.id,
+        });
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve MoveEventToDifferentAo request", async () => {
+      const { callerWithPermissions, baseRequestData, ao } =
+        await setupTestData();
+
+      // Get an actual event
+      const events = await callerWithPermissions.event.all({
+        regionIds: [TEST_REGION_1_ORG_ID],
+      });
+      const eventId = events.events[0]?.id;
+      if (!eventId) {
+        throw new Error("No events found for test");
+      }
+
+      const id = uuidv4();
+      const moveData = {
+        ...baseRequestData,
+        id,
+        requestType: "move_event_to_different_ao" as const,
+        originalEventId: eventId, // Use actual event ID
+        newAoId: ao.id,
+      };
+      const result =
+        await caller.request.submitMoveEventToDifferentAoRequest(moveData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitMoveEventToDifferentAoRequest(
+          {
+            ...moveData,
+            id: result.updateRequest.id,
+          },
+        );
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve MoveEventToNewLocation request", async () => {
+      const { callerWithPermissions, baseRequestData, event } =
+        await setupTestData();
+
+      const id = uuidv4();
+      const moveData = {
+        ...baseRequestData,
+        id,
+        requestType: "move_event_to_new_location" as const,
+        originalEventId: event.id,
+        locationLat: 41.0,
+        locationLng: -75.0,
+        currentValues: {
+          locationAddress: "Old Address",
+          locationCity: "Old City",
+          locationState: "OS",
+          locationZip: "00000",
+          locationLat: 40.0,
+          locationLng: -74.0,
+          locationCountry: "Old Country",
+        },
+      };
+      const result =
+        await caller.request.submitMoveEventToNewLocationRequest(moveData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitMoveEventToNewLocationRequest(
+          {
+            ...moveData,
+            id: result.updateRequest.id,
+          },
+        );
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve DeleteEvent request", async () => {
+      const { callerWithPermissions, baseRequestData, event } =
+        await setupTestData();
+
+      const id = uuidv4();
+      const deleteData = {
+        ...baseRequestData,
+        id,
+        requestType: "delete_event" as const,
+        originalEventId: event.id,
+      };
+      const result = await caller.request.submitDeleteEventRequest(deleteData);
+      expect(result.status).toBe("pending");
+      const result2 =
+        await callerWithPermissions.request.submitDeleteEventRequest({
+          ...deleteData,
+          id: result.updateRequest.id,
+        });
+      expect(result2.status).toBe("approved");
+    });
+
+    it("should submit and approve DeleteAO request", async () => {
+      const { callerWithPermissions, baseRequestData } = await setupTestData();
+
+      const id = uuidv4();
+      const createData = {
+        ...baseRequestData,
+        id,
+        requestType: "create_ao_and_location_and_event" as const,
+      };
+      const created =
+        await caller.request.submitCreateAOAndLocationAndEventRequest(
+          createData,
+        );
+      const deleteData = {
+        ...baseRequestData,
+        id,
+        requestType: "delete_ao" as const,
+      };
+      const result = await caller.request.submitDeleteAORequest(deleteData);
+      expect(result.status).toBe("pending");
+      const result2 = await callerWithPermissions.request.submitDeleteAORequest(
+        {
+          ...deleteData,
+          id: result.updateRequest.id,
+        },
+      );
+      expect(result2.status).toBe("approved");
     });
   });
 

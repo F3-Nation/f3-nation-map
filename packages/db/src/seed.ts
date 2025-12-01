@@ -805,7 +805,7 @@ export async function insertData(data: {
           postalCode: events[0]?.["Postal Code"],
           country:
             events[0]?.Country.toLowerCase() === "united states"
-              ? "US"
+              ? "United States"
               : events[0]?.Country,
           mapSeed: true,
         },
