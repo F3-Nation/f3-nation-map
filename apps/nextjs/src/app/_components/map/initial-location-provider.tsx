@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, Suspense, useContext, useRef } from "react";
+import { createContext, Suspense, useContext, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -52,8 +52,9 @@ const SuspendedInitialLocationProvider = (params: { children: ReactNode }) => {
 
   const center = useRef<google.maps.LatLngLiteral | null>(null);
   const zoom = useRef<number | null>(null);
-  const hasAttemptedSetInitialSelectedItem = useRef(false);
+  const hasInitialized = useRef(false);
 
+  // Calculate initial values during render (reading is safe)
   if (center.current === null) {
     const locationLatLng = utils.location.getMapEventAndLocationData
       .getData()
@@ -61,29 +62,18 @@ const SuspendedInitialLocationProvider = (params: { children: ReactNode }) => {
     const locLat = locationLatLng?.[3];
     const locLon = locationLatLng?.[4];
 
-    center.current =
+    const calculatedCenter =
       locLat != null && locLon != null
         ? { lat: locLat, lng: locLon }
         : queryLat != null && queryLon != null
           ? { lat: queryLat, lng: queryLon }
           : null;
 
-    // TODO: i don't think we're allowed to do this. I think it is causing error messages
-    mapStore.setState({
-      didSetQueryParamLocation: !!center.current,
-    });
-    center.current ??= mapStore.get("center") ?? {
-      lat: DEFAULT_CENTER[0],
-      lng: DEFAULT_CENTER[1],
-    };
-
-    mapStore.setState({
-      nearbyLocationCenter: {
-        ...center.current,
-        name: "",
-        type: "default",
-      },
-    });
+    center.current = calculatedCenter ??
+      mapStore.get("center") ?? {
+        lat: DEFAULT_CENTER[0],
+        lng: DEFAULT_CENTER[1],
+      };
   }
 
   if (zoom.current === null) {
@@ -97,8 +87,44 @@ const SuspendedInitialLocationProvider = (params: { children: ReactNode }) => {
           mapStore.get("zoom") ?? DEFAULT_ZOOM;
   }
 
-  if (!hasAttemptedSetInitialSelectedItem.current) {
-    hasAttemptedSetInitialSelectedItem.current = true;
+  // Perform state updates in useEffect (not during render)
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    const locationLatLng = utils.location.getMapEventAndLocationData
+      .getData()
+      ?.find((location) => location[0] === queryLocationId);
+    const locLat = locationLatLng?.[3];
+    const locLon = locationLatLng?.[4];
+
+    const calculatedCenter =
+      locLat != null && locLon != null
+        ? { lat: locLat, lng: locLon }
+        : queryLat != null && queryLon != null
+          ? { lat: queryLat, lng: queryLon }
+          : null;
+
+    const didSetQueryParamLocation = !!calculatedCenter;
+
+    mapStore.setState({
+      didSetQueryParamLocation,
+    });
+
+    const finalCenter = calculatedCenter ??
+      mapStore.get("center") ?? {
+        lat: DEFAULT_CENTER[0],
+        lng: DEFAULT_CENTER[1],
+      };
+
+    mapStore.setState({
+      nearbyLocationCenter: {
+        ...finalCenter,
+        name: "",
+        type: "default",
+      },
+    });
+
     if (queryLocationId != null) {
       setSelectedItem({
         locationId: queryLocationId,
@@ -106,7 +132,7 @@ const SuspendedInitialLocationProvider = (params: { children: ReactNode }) => {
         showPanel: true,
       });
     }
-  }
+  }, [utils, queryLocationId, queryEventId, queryLat, queryLon]);
 
   return (
     <InitialLocationContext.Provider
